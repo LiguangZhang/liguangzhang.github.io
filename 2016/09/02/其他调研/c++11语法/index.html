@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
+  </script>
+
+  <meta name="description" content="Effective Modern C++ 11 笔记  1. 型别推导1.1. 条款1 理解模型型别推导 理解 auto 和 decltype  伪代码: 123template&lt;typename T&gt;void f(ParamType param);f(expr); &#x2F;&#x2F;以表达式调用f 编译期间, 编译器通过expr推导两个型别: T 和 ParamTypeT的型别推导结果, 不仅仅">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Effective Modern C++ 11 笔记">
+<meta property="og:url" content="https://liguangzhang.github.io/2016/09/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/c++11%E8%AF%AD%E6%B3%95/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="Effective Modern C++ 11 笔记  1. 型别推导1.1. 条款1 理解模型型别推导 理解 auto 和 decltype  伪代码: 123template&lt;typename T&gt;void f(ParamType param);f(expr); &#x2F;&#x2F;以表达式调用f 编译期间, 编译器通过expr推导两个型别: T 和 ParamTypeT的型别推导结果, 不仅仅">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2016-09-02T05:47:23.000Z">
+<meta property="article:modified_time" content="2024-04-16T10:05:21.353Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="C++11">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2016/09/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/c++11%E8%AF%AD%E6%B3%95/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Effective Modern C++ 11 笔记 | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2016/09/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/c++11%E8%AF%AD%E6%B3%95/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Effective Modern C++ 11 笔记
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2016-09-02 13:47:23" itemprop="dateCreated datePublished" datetime="2016-09-02T13:47:23+08:00">2016-09-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 18:05:21" itemprop="dateModified" datetime="2024-04-16T18:05:21+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/C/" itemprop="url" rel="index"><span itemprop="name">C++</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/C/%E8%AF%BB%E4%B9%A6/" itemprop="url" rel="index"><span itemprop="name">读书</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>Effective Modern C++ 11 笔记</p>
+</blockquote>
+<h1 id="1-型别推导"><a href="#1-型别推导" class="headerlink" title="1. 型别推导"></a>1. 型别推导</h1><h2 id="1-1-条款1-理解模型型别推导"><a href="#1-1-条款1-理解模型型别推导" class="headerlink" title="1.1. 条款1 理解模型型别推导"></a>1.1. 条款1 理解模型型别推导</h2><blockquote>
+<p>理解 auto 和 decltype</p>
+</blockquote>
+<p>伪代码:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">f</span><span class="params">(ParamType param)</span></span>;</span><br><span class="line"><span class="built_in">f</span>(expr); <span class="comment">//以表达式调用f</span></span><br></pre></td></tr></table></figure>
+<p>编译期间, 编译器通过expr推导两个型别: T 和 ParamType<br>T的型别推导结果, 不仅仅依赖表达式<code>expr</code>的型别, 还依赖ParamType的形式, 分下面三种情况:</p>
+<ul>
+<li>ParamType具有指针或引用型别, 但不是万能引用(条款24)</li>
+<li>ParmaType 是万能引用</li>
+<li>ParamType 非指针也非引用</li>
+</ul>
+<h3 id="1-1-1-ParamType具有指针或引用型别"><a href="#1-1-1-ParamType具有指针或引用型别" class="headerlink" title="1.1.1. ParamType具有指针或引用型别"></a>1.1.1. ParamType具有指针或引用型别</h3><ol>
+<li>expr 具有引用类型, 先将引用忽略</li>
+<li>执行模式匹配, 决定T的型别</li>
+</ol>
+<p>ParamType 引用类型<br>ex:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">void</span>(T&amp; param);</span><br><span class="line"><span class="type">int</span> x=<span class="number">27</span>;</span><br><span class="line"><span class="type">const</span> <span class="type">int</span> cx = x;    <span class="comment">//T-&gt;const int</span></span><br><span class="line"><span class="type">const</span> <span class="type">int</span>&amp; rx = x;   <span class="comment">//T-&gt;const int&amp;</span></span><br><span class="line"><span class="built_in">f</span>(x);     <span class="comment">//T-&gt;int        ParamType-&gt;int&amp;</span></span><br><span class="line"><span class="built_in">f</span>(cx);    <span class="comment">//T-&gt;const int  ParamType-&gt;const int&amp;</span></span><br><span class="line"><span class="built_in">f</span>(rx);    <span class="comment">//T-&gt;const int  ParamType-&gt;const int&amp;</span></span><br></pre></td></tr></table></figure>
+<p>ParamType指针类型<br>ex:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">f</span><span class="params">(T* param)</span></span>;</span><br><span class="line"><span class="type">int</span> x = <span class="number">27</span>;</span><br><span class="line"><span class="type">const</span> <span class="type">int</span> *px = &amp;x;     px-&gt;<span class="function"><span class="type">const</span> <span class="type">int</span></span></span><br><span class="line"><span class="function"><span class="title">f</span><span class="params">(&amp;x)</span></span>;            <span class="comment">// int, int*</span></span><br><span class="line"><span class="built_in">f</span>(px);            <span class="comment">//   const int, const int *</span></span><br></pre></td></tr></table></figure>
+<h3 id="1-1-2-ParamType-是万能引用"><a href="#1-1-2-ParamType-是万能引用" class="headerlink" title="1.1.2. ParamType 是万能引用"></a>1.1.2. ParamType 是万能引用</h3><blockquote>
+<p>万能引用 T&amp;&amp;</p>
+</blockquote>
+<ul>
+<li>如<code>expr</code>是左值, T和ParamType都为左值引用</li>
+<li><code>expr</code>是右值, 符合情况1中的规则<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">f</span><span class="params">(T&amp;&amp; param)</span></span>;</span><br><span class="line"><span class="type">const</span> <span class="type">int</span> cx = x;    <span class="comment">//T-&gt;const int</span></span><br><span class="line"><span class="type">const</span> <span class="type">int</span>&amp; rx = x;   <span class="comment">//T-&gt;const int&amp;</span></span><br><span class="line"><span class="built_in">f</span>(x);     <span class="comment">//int&amp;, int&amp;</span></span><br><span class="line"><span class="built_in">f</span>(cx);    <span class="comment">//const int&amp;, const int&amp;</span></span><br><span class="line"><span class="built_in">f</span>(rx);    <span class="comment">//const int&amp;, const int&amp;</span></span><br><span class="line"><span class="built_in">f</span>(<span class="number">27</span>);       <span class="comment">// 27是右值, T变为int, ParamType为int&amp;&amp;</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<h3 id="1-1-3-ParamType非指针也非引用"><a href="#1-1-3-ParamType非指针也非引用" class="headerlink" title="1.1.3. ParamType非指针也非引用"></a>1.1.3. ParamType非指针也非引用</h3><blockquote>
+<p>按值传递, 形参是原对象的一份拷贝</p>
+</blockquote>
+<ul>
+<li><code>expr</code>如具有引用, 则忽略</li>
+<li>忽略后, 若还是const, 也忽略.若是volatile, 也忽略<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">f</span><span class="params">(T param)</span></span>;</span><br><span class="line"><span class="built_in">f</span>(x);</span><br><span class="line"><span class="built_in">f</span>(cx);      都是<span class="function"><span class="type">int</span></span></span><br><span class="line"><span class="function"><span class="title">f</span><span class="params">(rx)</span></span>;</span><br><span class="line"><span class="type">const</span> <span class="type">char</span>* <span class="type">const</span> p = <span class="string">&quot;abc&quot;</span>;    <span class="comment">//p-&gt;const char* const</span></span><br><span class="line"><span class="built_in">f</span>(p);                             <span class="comment">//推导为const char*    指针指向的内容不能更改, 但指针可以指向其他的地方</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<h3 id="1-1-4-数组实参"><a href="#1-1-4-数组实参" class="headerlink" title="1.1.4. 数组实参"></a>1.1.4. 数组实参</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">const</span> <span class="type">char</span> name[] = <span class="string">&quot;who&quot;</span>;    <span class="comment">//const char [4]</span></span><br><span class="line"><span class="type">const</span> <span class="type">char</span>* pname = name      <span class="comment">// pname-&gt; const char* 退化为指针</span></span><br><span class="line"><span class="type">void</span> <span class="built_in">f</span>(T param);</span><br><span class="line"><span class="built_in">f</span>(name);                 <span class="comment">// const char*  退化为指针</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">f2</span><span class="params">(T&amp; param)</span></span>;       <span class="comment">//没有退化, ParamType const char (&amp;)[4]</span></span><br></pre></td></tr></table></figure>
+<p>可以通过编译器常量形式返回数组尺寸</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T, std::<span class="type">size_t</span> N&gt;</span></span><br><span class="line"><span class="function"><span class="keyword">constexpr</span> std::<span class="type">size_t</span> <span class="title">arraySize</span><span class="params">(T (&amp;)[N])</span> <span class="keyword">noexcept</span></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> N;</span><br><span class="line">&#125;</span><br><span class="line"><span class="type">char</span> nameCopy[<span class="built_in">arraySize</span>(name)];</span><br></pre></td></tr></table></figure>
+<h3 id="1-1-5-函数实参"><a href="#1-1-5-函数实参" class="headerlink" title="1.1.5. 函数实参"></a>1.1.5. 函数实参</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">f</span><span class="params">(T param)</span></span>;           <span class="comment">// 按值</span></span><br><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">f2</span><span class="params">(T&amp; param)</span></span>;          <span class="comment">// 按引用</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">someFunc</span><span class="params">(<span class="type">int</span>, <span class="type">char</span>*)</span></span>;       <span class="built_in">void</span>(<span class="type">int</span>, <span class="type">char</span>*)</span><br><span class="line"><span class="built_in">f</span>(someFunc);                     <span class="comment">// void (*)(int, char*)  退化成指针</span></span><br><span class="line"><span class="built_in">f2</span>(someFunc);                    <span class="comment">// void (&amp;)(int, char*)</span></span><br></pre></td></tr></table></figure>
+<h3 id="1-1-6-要点速记"><a href="#1-1-6-要点速记" class="headerlink" title="1.1.6. 要点速记"></a>1.1.6. 要点速记</h3><ul>
+<li>在模板性别推导过程中, 具有引用型别的实参会被当成非引用型别来处理, 引用性被忽略</li>
+<li>对万能引用形参, 左值实参会进行特殊处理</li>
+<li>按值传递的形参, 是拷贝复制, const 和 volatile被丢弃</li>
+<li>数组或函数型的实参会退化成对应的指针, 除非被用来初始化引用</li>
+</ul>
+<h2 id="1-2-条款2-理解auto型别推导"><a href="#1-2-条款2-理解auto型别推导" class="headerlink" title="1.2. 条款2 理解auto型别推导"></a>1.2. 条款2 理解auto型别推导</h2><blockquote>
+<p>和模板型别推导类似, 修饰的左值的类型极为模板型别推导中的ParamType<br>ex:</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">auto</span> x= <span class="number">27</span>;</span><br><span class="line"><span class="type">const</span> <span class="keyword">auto</span> cx = x;</span><br><span class="line"><span class="type">const</span> <span class="keyword">auto</span>&amp; rx = cx;      <span class="comment">// rx的类型为ParamType   const int&amp;</span></span><br><span class="line"><span class="keyword">auto</span>&amp;&amp; uref1 = x; <span class="comment">//万能引用,形参为左值 int&amp;</span></span><br><span class="line"><span class="keyword">auto</span>&amp;&amp; uref2 = rx;   <span class="comment">// const int &amp;</span></span><br><span class="line"><span class="keyword">auto</span>&amp;&amp; uref3 = <span class="number">27</span>;    <span class="comment">// 形参为右值, int&amp;&amp;</span></span><br><span class="line"><span class="type">const</span> <span class="type">char</span> name[] = <span class="string">&quot;abc&quot;</span>;</span><br><span class="line"><span class="keyword">auto</span> s=name;     <span class="comment">//退化为指针, 不同于按值传递   const char*</span></span><br><span class="line"><span class="keyword">auto</span>&amp; s1=name; <span class="comment">//const char (&amp;)[4]</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">someFunc</span><span class="params">(<span class="type">int</span>, <span class="type">char</span>*)</span></span>;</span><br><span class="line"><span class="keyword">auto</span> f1 = someFunc;  <span class="comment">// 退化为指针, void (*)(int, char*)</span></span><br><span class="line"><span class="keyword">auto</span>&amp; f1 = someFunc; <span class="comment">//void (&amp;)(int, char*)</span></span><br></pre></td></tr></table></figure>
+<h3 id="1-2-1-跟模板不同的例外情况"><a href="#1-2-1-跟模板不同的例外情况" class="headerlink" title="1.2.1. 跟模板不同的例外情况:"></a>1.2.1. 跟模板不同的例外情况:</h3><p>当采用auto声明的变量使用{}初始化表达式来进行初始化时, 得到的型别是<code>std::initializer_list</code>, 而模板推导不出来, 编译错误</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">auto</span> x &#123;<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>&#125;;</span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">f</span><span class="params">(T param)</span></span>;</span><br><span class="line"><span class="built_in">f</span>(&#123;<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>&#125;);   <span class="comment">//error</span></span><br><span class="line">std::vector&lt;<span class="type">int</span>&gt; v;</span><br><span class="line"><span class="comment">//函数表达式</span></span><br><span class="line"><span class="keyword">auto</span> retV = [&amp;v](<span class="type">const</span> <span class="keyword">auto</span>&amp; newVal) &#123;v = newVal;&#125;;</span><br><span class="line"><span class="built_in">retV</span>(&#123;<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>&#125;);  <span class="comment">//error</span></span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>使用auto {}统一初始化时注意std::initializer_list的情况<br>lambda表达式的形参中使用auto, 是使用模板型别推导而非auto型别推导, 传递{}表达式实参会有编译报错的情况</p>
+</blockquote>
+<h3 id="1-2-2-要点速记"><a href="#1-2-2-要点速记" class="headerlink" title="1.2.2. 要点速记"></a>1.2.2. 要点速记</h3><ul>
+<li>一般情况下, auto型别推导 &#x3D; 模板型别推导, 但使用{}初始化表达式会产生<code>std::initializer_list</code>, 而模板会报错</li>
+<li>在函数返回值中或lambda表达式的形参中使用auto, 不能传递{}表达式实参.</li>
+</ul>
+<h2 id="1-3-条款3-理解decltype"><a href="#1-3-条款3-理解decltype" class="headerlink" title="1.3. 条款3 理解decltype"></a>1.3. 条款3 理解decltype</h2><p>decltype返回给定的名字或表达式的确切类型</p>
+<blockquote>
+<p>主要用于声明那些返回值型别依赖于形参型别的函数模板</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// C++ 11</span></span><br><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> Container, <span class="keyword">typename</span> Index&gt;</span></span><br><span class="line"><span class="function"><span class="keyword">auto</span> <span class="title">authAndAccess</span><span class="params">(Container&amp; c, Index i)</span> -&gt; <span class="title">decltype</span><span class="params">(c[i])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">return</span> c[i];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>大多数含有型别T对象的容器的operator []会返回T&amp;, 但在模型型别推导中, 初始化表达式的引用会被丢弃</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">std::deque&lt;<span class="type">int</span>&gt; d;</span><br><span class="line"><span class="built_in">authAndAccess</span>(d, <span class="number">5</span>) = <span class="number">10</span>;   <span class="comment">//编译error, 引用性被丢弃</span></span><br></pre></td></tr></table></figure>
+<p>最终版本, 使用万能引用, 这样上面直接作为左值就可以编译通过了. 可以进行赋值.</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> Container, <span class="keyword">typename</span> Index&gt;</span></span><br><span class="line"><span class="function"><span class="keyword">auto</span> <span class="title">authAndAccess</span><span class="params">(Container&amp;&amp; c, Index i)</span> -&gt; <span class="title">decltype</span><span class="params">(std::forward&lt;Container&gt;(c)[i])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">return</span> std::forward&lt;Container&gt;(c)[i];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="1-3-1-要点速记"><a href="#1-3-1-要点速记" class="headerlink" title="1.3.1. 要点速记"></a>1.3.1. 要点速记</h3><ul>
+<li>绝大多数情况下, decltype会得出变量或表达式的型别而不做任何修改</li>
+<li>对于T的左值表达式, 除非该表达式仅有一个名字, deletype总是得出型别T&amp;</li>
+<li>C++14支持decltype(auto), 会从初始化表达式推导型别, 使用decltype的规则</li>
+</ul>
+<h2 id="1-4-条款4-查看型别推导的结果的方法"><a href="#1-4-条款4-查看型别推导的结果的方法" class="headerlink" title="1.4. 条款4 查看型别推导的结果的方法"></a>1.4. 条款4 查看型别推导的结果的方法</h2><ul>
+<li>IDE查看, 作用有限</li>
+<li>编译器诊断信息, 导致编译错误<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">TD</span>;</span><br><span class="line"><span class="type">const</span> <span class="type">int</span> s = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">auto</span> x = s;</span><br><span class="line"><span class="comment">// 输出错误</span></span><br><span class="line">x = <span class="string">&quot;error&quot;</span>;</span><br></pre></td></tr></table></figure></li>
+<li>运行时输出<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//编译器会做一些特殊处理, 同时结果因为使用了按值传递, 会丢弃一些信息</span></span><br><span class="line"><span class="built_in">typeid</span>(param).<span class="built_in">name</span>();</span><br></pre></td></tr></table></figure>
+使用Boost.TypeIndex来产生精确的型别识别信息<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;boost/type_index.hpp&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> boost:typeindex:type_id_with_cvr;</span><br><span class="line"><span class="built_in">type_id_with_cvr</span>&lt;T&gt;().<span class="built_in">pretty_name</span>();</span><br><span class="line"><span class="built_in">type_id_with_cvr</span>&lt;<span class="keyword">decltype</span>(param)&gt;().<span class="built_in">pretty_name</span>();</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h3 id="1-4-1-要点速记"><a href="#1-4-1-要点速记" class="headerlink" title="1.4.1. 要点速记"></a>1.4.1. 要点速记</h3><ul>
+<li>利用IDE编辑器\编译器错误消息和Boost.TypeIndex库能查到推导的类型</li>
+<li>有些工具产生的结果无用或不准确, 理解是必要的</li>
+</ul>
+<h1 id="2-auto"><a href="#2-auto" class="headerlink" title="2. auto"></a>2. auto</h1><h2 id="2-1-条款5-优选使用auto-而非显示型别声明"><a href="#2-1-条款5-优选使用auto-而非显示型别声明" class="headerlink" title="2.1. 条款5 优选使用auto, 而非显示型别声明"></a>2.1. 条款5 优选使用auto, 而非显示型别声明</h2><blockquote>
+<p>使用auto必须初始化, 避免了变量未初始化引起的错误;<br>auto可以直接表示函数指针, 比std::function使用的内存更少<br>避免隐式类型转换, 避免无谓的内存开销</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">std::unordered_map&lt;std::string, <span class="type">int</span>&gt;m;</span><br><span class="line"><span class="keyword">for</span>(<span class="type">const</span> std::pair&lt;std::string,<span class="type">int</span>&gt;&amp;p:m)&#123;</span><br><span class="line">...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>std::unordered_map的键值部分是const, 遍历时应该是<code>std::pair&lt;const std::string,int&gt;</code>而不是<code>std::pair&lt;std::string,int&gt;</code><br>每循环一次, 都会发生一次隐式转换,  p也指向的临时对象, 每次迭代结束, 临时对象需要析构.</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span>(<span class="type">const</span> <span class="keyword">auto</span> &amp;p:m)&#123;</span><br><span class="line">...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="2-1-1-要点速记"><a href="#2-1-1-要点速记" class="headerlink" title="2.1.1. 要点速记"></a>2.1.1. 要点速记</h3><ul>
+<li>auto变量必须初始化, 基本上对会导致兼容性和效率问题的型别不匹配现象免疫, 还可以简化重构流程</li>
+<li>auto型别的变量有条款2和条款6的毛病</li>
+</ul>
+<h2 id="2-2-条款-6-当auto推导型别不符合要求时-使用-强制类型转换-显示型别的初始化习惯用法"><a href="#2-2-条款-6-当auto推导型别不符合要求时-使用-强制类型转换-显示型别的初始化习惯用法" class="headerlink" title="2.2. 条款 6 当auto推导型别不符合要求时, 使用(强制类型转换)显示型别的初始化习惯用法"></a>2.2. 条款 6 当auto推导型别不符合要求时, 使用(强制类型转换)显示型别的初始化习惯用法</h2><blockquote>
+<p><code>std::vector&lt;bool&gt;</code>类型[]返回值不能用auto, 返回的不是bool类型. 而是<code>std::vector&lt;bool&gt;::reference</code>, 它是std::vector<bool>的代理类<br>由上面的规则推导出普遍规律: 隐形代理类和auto无法和平共处. 防止写出<code>auto var = &quot;隐形&quot;代理型别表达式</code><br>对于上面的隐形代理类, 使用强制类型转换来使用auto</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">std::vector&lt;<span class="type">bool</span>&gt; features &#123;<span class="number">0</span>,<span class="number">1</span>,<span class="number">0</span>&#125;;</span><br><span class="line"><span class="keyword">auto</span> feture1 = <span class="keyword">static_cast</span>&lt;<span class="type">bool</span>&gt;features[<span class="number">2</span>];</span><br><span class="line"><span class="comment">// feature2 auto 指向返回隐士代理, 离开作用域后, 变成野指针</span></span><br><span class="line"><span class="keyword">auto</span> feature2 = features[<span class="number">2</span>];</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>使用static_cast强制类型转换, 可以表明我是故意这样转换的, 比如降低精度, double-&gt;float double-&gt;int等.</p>
+</blockquote>
+<h3 id="2-2-1-要点速记"><a href="#2-2-1-要点速记" class="headerlink" title="2.2.1. 要点速记"></a>2.2.1. 要点速记</h3><ul>
+<li>隐形的代理型别可以导致auto根据初始化表达式推导出错误的型别</li>
+<li>带显示型别的初始化习惯用法强制auto推倒想要的类型(强制类型转换)</li>
+</ul>
+<h1 id="3-转向现代C"><a href="#3-转向现代C" class="headerlink" title="3. 转向现代C++"></a>3. 转向现代C++</h1><h2 id="3-1-条款7-创建对象时区分-和"><a href="#3-1-条款7-创建对象时区分-和" class="headerlink" title="3.1. 条款7 创建对象时区分() 和 {}"></a>3.1. 条款7 创建对象时区分() 和 {}</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">D</span>;</span><br><span class="line">D d1;    <span class="comment">//调用默认构造函数</span></span><br><span class="line">D d2 = d1;  <span class="comment">// 并非赋值, 调用复制构造函数</span></span><br><span class="line">d1 = d2;    <span class="comment">// 并非复制, 调用复制赋值运算符  =</span></span><br></pre></td></tr></table></figure>
+<p>C++ 11引入了统一初始化</p>
+<blockquote>
+<p>{}初始化禁止内建类型之间进行隐式窄化类型转换<br><code>缺陷</code>:<br>伴随意外行为<br>std::initializer_list, 见条款2<br>如果类中的构造函数重载了以<code>std::initializer_list</code>作为参数的构造函数, 使用{}初始化会优先使用该构造函数进行初始化</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">D</span> &#123;</span><br><span class="line">    <span class="built_in">D</span>(<span class="type">int</span> i, <span class="type">bool</span> b);</span><br><span class="line">    <span class="built_in">D</span>(std::initializer_list&lt;<span class="type">long</span>, <span class="type">double</span>&gt; l);</span><br><span class="line">&#125;;</span><br><span class="line"><span class="comment">// 使用initializer_list的构造函数, 10, true被强制转换</span></span><br><span class="line">D d1&#123;<span class="number">10</span>, <span class="literal">true</span>&#125;;</span><br></pre></td></tr></table></figure>
+<p>只有找不到实参可以转换为initializer_list中的形参类型的情况下, 才会去找别的构造函数</p>
+<blockquote>
+<p><code>std::vector</code>中就使用了这样的构造方法, 所以一定要注意vector构造时使用()还是{}进行初始化.<br>{}初始化会进行auto的型别推导</p>
+</blockquote>
+<h3 id="3-1-1-要点速记"><a href="#3-1-1-要点速记" class="headerlink" title="3.1.1. 要点速记"></a>3.1.1. 要点速记</h3><ul>
+<li>{}初始化可以应用的语境最为广泛, 可以阻止隐式窄化转换, 对函数表达不带形参的()初始化免疫</li>
+<li>在构造函数重载决议期间, 只要有任何可能, {}初始化就会与带有<code>std::initializer_list</code>型别的形参相匹配,即使其他重载版本有更加匹配的形参表</li>
+<li>使用()还是{}, 最后的结果可能不一样, 如vector对象的初始化<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">std::vector&lt;<span class="type">int</span>&gt; <span class="title">vx</span><span class="params">(<span class="number">10</span>,<span class="number">20</span>)</span></span>;</span><br><span class="line">std::vector&lt;<span class="type">int</span>&gt; vd&#123;<span class="number">10</span>,<span class="number">20</span>&#125;;</span><br><span class="line"><span class="keyword">for</span>(<span class="type">const</span> <span class="keyword">auto</span>&amp; p : vx) &#123;</span><br><span class="line">	cout&lt;&lt; p &lt;&lt; endl;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">for</span>(<span class="type">const</span> <span class="keyword">auto</span>&amp; p : vd) &#123;</span><br><span class="line">	cout&lt;&lt; p &lt;&lt; endl;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>在模板内容进行对象创建时, 到底使用()还是{}会成为一个棘手的问题</li>
+</ul>
+<h2 id="3-2-条款8-优先使用nullptr-而非NULL或0"><a href="#3-2-条款8-优先使用nullptr-而非NULL或0" class="headerlink" title="3.2. 条款8 优先使用nullptr, 而非NULL或0"></a>3.2. 条款8 优先使用nullptr, 而非NULL或0</h2><p>在只能使用指针的语境中使用0, 会被勉强解释为空指针.</p>
+<blockquote>
+<p>0和NULL都不具体有指针型别, nullptr不具备整形型别.<br>f(NULL)的不确定性, 在函数重载时, 调用出错.</p>
+</blockquote>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">void f(void *);</span><br><span class="line">void f(int);</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>nullptr可以隐式转换为所有的裸指针型别.<br>使用auto声明变量时, 如果还是用0或NULL, 如返回值返回0或NULL, auto声明变量的类型会推导出错.<br>错误的用法:</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">char</span>* <span class="title">findRecord</span><span class="params">(<span class="type">char</span>* name)</span> </span>&#123;</span><br><span class="line">...</span><br><span class="line"><span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">auto</span> ret = <span class="built_in">findRecord</span>(key);</span><br><span class="line"><span class="keyword">if</span>(ret == <span class="literal">NULL</span>)</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>nullptr在有函数模板的前提下表现最亮眼</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> <span class="title">f1</span><span class="params">(std::shared_ptr&lt;D&gt; ptr)</span></span>;</span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">f2</span><span class="params">(std::unique_ptr&lt;D&gt; ptr)</span></span>;</span><br><span class="line"><span class="function"><span class="type">bool</span> <span class="title">f3</span><span class="params">(D* ptr)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span>, Functype, <span class="keyword">typename</span> MuxType, <span class="keyword">typename</span> PtrType&gt;</span></span><br><span class="line"><span class="function"><span class="keyword">auto</span> <span class="title">lockAndCall</span><span class="params">(Functype func, MutxtType&amp; mutex, PtrType ptr)</span></span></span><br><span class="line"><span class="function">-&gt;<span class="title">decltype</span><span class="params">(func(ptr))</span> </span>&#123;</span><br><span class="line">    <span class="function">MuxGuard <span class="title">g</span><span class="params">(mutex)</span></span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">func</span>(ptr);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">auto</span> ret = <span class="built_in">lockAndCall</span>(f3, f3m, <span class="literal">nullptr</span>);</span><br></pre></td></tr></table></figure>
+<p>上述的函数模板可以编译通过, 如果使用NULL或0就不可以.</p>
+<h3 id="3-2-1-要点速记"><a href="#3-2-1-要点速记" class="headerlink" title="3.2.1. 要点速记"></a>3.2.1. 要点速记</h3><ul>
+<li>想对于0或NULL, 优先使用nullptr</li>
+<li>避免在整形和指针型别之间重载</li>
+</ul>
+<h2 id="3-3-条款9-优先使用别名声明-而非typedef"><a href="#3-3-条款9-优先使用别名声明-而非typedef" class="headerlink" title="3.3. 条款9 优先使用别名声明, 而非typedef"></a>3.3. 条款9 优先使用别名声明, 而非typedef</h2><blockquote>
+<p>别名声明可以模板化, typedef就不行</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="keyword">using</span> MyAllocList = std::list&lt;T, MyAlloc&lt;T&gt;&gt;; <span class="comment">//使用别名后, 就能使用 MyAlloc&lt;T&gt;了</span></span><br><span class="line">MyAllocList&lt;D&gt; ld;  <span class="comment">//客户代码,使用api</span></span><br><span class="line">...</span><br><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">C</span>&#123;</span><br><span class="line">    <span class="keyword">private</span>:</span><br><span class="line">        MyAlloc&lt;T&gt; list;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// typedef 的写法需要加上 typename 和 ::type</span></span><br><span class="line"><span class="keyword">using</span> <span class="type">remove_const_t</span> = <span class="keyword">typename</span> remove_const&lt;T&gt;::type;</span><br></pre></td></tr></table></figure>
+<h3 id="3-3-1-要点速记"><a href="#3-3-1-要点速记" class="headerlink" title="3.3.1. 要点速记"></a>3.3.1. 要点速记</h3><ul>
+<li>typedef 不支持模版化，但别名声明支持</li>
+<li>别名模板可以免写::type后缀,并且在模板内, 对于内嵌typedef的引用经常要求加上typename前缀</li>
+</ul>
+<h2 id="3-4-条款10-优先使用限定作用域的枚举类型"><a href="#3-4-条款10-优先使用限定作用域的枚举类型" class="headerlink" title="3.4. 条款10 优先使用限定作用域的枚举类型"></a>3.4. 条款10 优先使用限定作用域的枚举类型</h2><blockquote>
+<p>通用规则, 如果在{}内声明一个名字,则改名字的可见性就被限定在{}内<br>上面的规则不适用于枚举量, 此作用域内不能有其他实体去相同名字. 即存在<code>名字污染</code>问题<br>不限范围的枚举类型可以隐式转换为整数型别, 限定的就不可以, 如果确实需要转换为int, 可以使用<code>static_cast</code>强转.</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">enum class</span> <span class="title class_">Color</span>&#123;black, white, red&#125;;</span><br></pre></td></tr></table></figure>
+<h3 id="3-4-1-要点速记"><a href="#3-4-1-要点速记" class="headerlink" title="3.4.1. 要点速记"></a>3.4.1. 要点速记</h3><ul>
+<li>c++ 98风格的枚举类型, 称为不限范围的枚举类型</li>
+<li>限定作用域的枚举类型仅在枚举型别内可见, 只能通过强制类型转换转到其他型别</li>
+<li>限定作用域的枚举型别和不限制范围的都支持底层型别指定. 限定的默认是int, 不限定的没有默认</li>
+<li>限定作用域的枚举型别可以前置声明, 而不限的在指定了默认底层型别的前提下才可以.</li>
+</ul>
+<h2 id="3-5-条款11-优先使用删除函数-而非private未定义函数"><a href="#3-5-条款11-优先使用删除函数-而非private未定义函数" class="headerlink" title="3.5. 条款11 优先使用删除函数, 而非private未定义函数"></a>3.5. 条款11 优先使用删除函数, 而非private未定义函数</h2><blockquote>
+<p>压制某函数,  不让别人用</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">C</span>&#123;</span><br><span class="line">    <span class="built_in">C</span>(<span class="type">const</span> C&amp;) = <span class="keyword">delete</span>;     <span class="comment">//复制构造函数</span></span><br><span class="line">    C&amp; oprator=(<span class="type">const</span> C&amp;) = <span class="keyword">delete</span>;    <span class="comment">//复制赋值运算符</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>如果客户代码访问了delete的函数, 会在编译阶段就报错.<br>成员函数和友元函数也会无法访问<br>任何函数都可以成为删除函数<br>可以删除某些有些转换后能够变成重载的形参的函数的特定版本</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">bool</span> <span class="title">isLucky</span><span class="params">(<span class="type">int</span> number)</span></span>;</span><br><span class="line"><span class="function"><span class="type">bool</span> <span class="title">isLucky</span><span class="params">(<span class="type">double</span> number)</span> </span>= <span class="keyword">delete</span>;</span><br><span class="line"><span class="built_in">isLucky</span>(<span class="number">3.5f</span>); <span class="comment">// 编译出错</span></span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>阻止不应该进行的模板具现</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">processPointer</span><span class="params">(T* ptr)</span></span>;</span><br><span class="line"><span class="type">void</span> <span class="built_in">processPointer</span>&lt;<span class="type">void</span>&gt;(<span class="type">void</span>*) = <span class="keyword">delete</span>;</span><br><span class="line"><span class="type">void</span> <span class="built_in">processPointer</span>&lt;<span class="type">char</span>&gt;(<span class="type">char</span>*) = <span class="keyword">delete</span>;</span><br></pre></td></tr></table></figure>
+<h3 id="3-5-1-要点速记"><a href="#3-5-1-要点速记" class="headerlink" title="3.5.1. 要点速记"></a>3.5.1. 要点速记</h3><ul>
+<li>优先使用删除函数, 而非private未定义函数</li>
+<li>任何函数都可以删除, 包括非成员函数和模板具现</li>
+</ul>
+<h2 id="3-6-条款12-为改写的函数添加override声明"><a href="#3-6-条款12-为改写的函数添加override声明" class="headerlink" title="3.6. 条款12 为改写的函数添加override声明"></a>3.6. 条款12 为改写的函数添加override声明</h2><p>改写(override), 重载(overload)<br>好处:</p>
+<ul>
+<li>编译器在你想要改写的函数实际上并未改写是提示</li>
+<li>如果派生类都写了override生命,则改函数签名时可以知道有多少派生类被影响到了<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Base</span>&#123;</span><br><span class="line"><span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">f</span><span class="params">()</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">virtual</span> <span class="title">doWork</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Dp</span>:<span class="keyword">public</span> Base&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">f</span><span class="params">()</span> overide</span>;</span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">doWork</span><span class="params">()</span> &amp; <span class="keyword">override</span></span>; <span class="comment">//仅在*this是左值时调用</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">doWork</span><span class="params">()</span> &amp;&amp; <span class="keyword">override</span></span>; <span class="comment">//仅在*this是右值时调用</span></span><br><span class="line">&#125;</span><br><span class="line">Dp dp;</span><br><span class="line">dp.<span class="built_in">doWork</span>();        <span class="comment">//以左值调用doWork</span></span><br><span class="line"><span class="built_in">makeDp</span>().<span class="built_in">doWork</span>();   <span class="comment">// 以右值调用doWork</span></span><br></pre></td></tr></table></figure>
+区分返回左值版本还是右值版本</li>
+</ul>
+<h3 id="3-6-1-要点速记"><a href="#3-6-1-要点速记" class="headerlink" title="3.6.1. 要点速记"></a>3.6.1. 要点速记</h3><ul>
+<li>为在意改写的函数添加override声明</li>
+<li>成员函数引用饰词使得对于左值和右值对象(*this)的处理能够区分</li>
+</ul>
+<h2 id="3-7-条款13-优先使用const-iterator-而不是iterator"><a href="#3-7-条款13-优先使用const-iterator-而不是iterator" class="headerlink" title="3.7. 条款13 优先使用const_iterator, 而不是iterator"></a>3.7. 条款13 优先使用const_iterator, 而不是iterator</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">std::vector&lt;<span class="type">int</span>&gt; values;</span><br><span class="line"><span class="keyword">auto</span> it=std::<span class="built_in">find</span>(values,<span class="built_in">cbegin</span>(), values,<span class="built_in">cend</span>(), <span class="number">1983</span>);</span><br><span class="line">values.<span class="built_in">insert</span>(it, <span class="number">1998</span>);</span><br></pre></td></tr></table></figure>
+<p>容器的cbegin, cend返回const_iterator.<br>STL成员函数若要取用指示位置的迭代器, 也要求使用const_iterator型别<br>如果容器的成员函数未提供cbegin, cend.<br>非成员函数版本cbegin的一个实现:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">class</span> C&gt;</span></span><br><span class="line"><span class="function"><span class="keyword">auto</span> <span class="title">cbegin</span><span class="params">(<span class="type">const</span> C&amp; container)</span> -&gt; <span class="title">decltype</span><span class="params">(std::begin(container)</span></span></span><br><span class="line"><span class="params"><span class="function">&#123;</span></span></span><br><span class="line"><span class="params"><span class="function">     <span class="keyword">return</span> std::begin(container);</span></span></span><br><span class="line"><span class="params"><span class="function">&#125;</span></span></span><br></pre></td></tr></table></figure>
+<h3 id="3-7-1-要点速记"><a href="#3-7-1-要点速记" class="headerlink" title="3.7.1. 要点速记"></a>3.7.1. 要点速记</h3><ul>
+<li>优先使用const_iterator, 而不是iterator</li>
+<li>在最通用的代码中, 优先使用非成员函数版本的begin, end, rbegin等</li>
+</ul>
+<h2 id="3-8-条款14-只要函数不发生异常-加上noexcept声明"><a href="#3-8-条款14-只要函数不发生异常-加上noexcept声明" class="headerlink" title="3.8. 条款14 只要函数不发生异常, 加上noexcept声明"></a>3.8. 条款14 只要函数不发生异常, 加上noexcept声明</h2><h3 id="3-8-1-要点速记"><a href="#3-8-1-要点速记" class="headerlink" title="3.8.1. 要点速记"></a>3.8.1. 要点速记</h3><ul>
+<li>noexcept声明是函数接口的组成部分, 调用方可能对它有依赖</li>
+<li>想对于不带noexcept声明的函数, 带有的有可能得到优化</li>
+<li>noexcept性质对于移动操作&#x2F;swap&#x2F;内存释放函数&#x2F;和析构函数最有价值</li>
+<li>大多数函数都是异常中立的, 不具备noexcept性质</li>
+</ul>
+<h2 id="3-9-条款15-优先使用constexpr"><a href="#3-9-条款15-优先使用constexpr" class="headerlink" title="3.9. 条款15 优先使用constexpr"></a>3.9. 条款15 优先使用constexpr</h2><ul>
+<li>所有的constexpr对象都是const对象</li>
+<li>并非所有的const对象都是constexpr</li>
+<li>constexpr可以保证编译期可知</li>
+<li>constexpr函数可以用在编译期常量的语境中.<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">constexpr</span> <span class="type">int</span> <span class="title">pow</span><span class="params">(<span class="type">int</span> base, <span class="type">int</span> exp)</span> <span class="keyword">noexcept</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> (exp == <span class="number">0</span>)? <span class="number">1</span>: base * <span class="built_in">pow</span>(base, exp - <span class="number">1</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">constexpr</span> <span class="keyword">auto</span> exp = <span class="number">5</span>;</span><br><span class="line">std::array&lt;<span class="type">int</span>, pow(3, exp)&gt; results;</span><br></pre></td></tr></table></figure>
+即base和exp都是编译期常量, pow的返回结果就可以当成编译期常量使用<br>如果base和exp有一个不是编译期常量, 则pow的返回结果就是执行期量.<blockquote>
+<p>constexpr的函数实现因为需要保证在编译期能返回编译期结果, 因此需要对函数实现添加限制</p>
+</blockquote>
+</li>
+<li>只能有一条return语句.<br>可以通过条件表达式或者递归的方式实现.<br>用户自定义型别同样可能是字面型别, 因它的构造函数和其他成员函数可能也是constexpr函数</li>
+<li>constexpr函数除了void, 其他的内建型别都支持, 另外不允许有io语句</li>
+</ul>
+<h3 id="3-9-1-要点速记"><a href="#3-9-1-要点速记" class="headerlink" title="3.9.1. 要点速记"></a>3.9.1. 要点速记</h3><ul>
+<li>constexpr对象都具备const属性, 并由编译期已知的值完成初始化</li>
+<li>constexpr函数在调用时若传入的实参是编译期已知的, 则会产生编译期结果</li>
+<li>比起非constexpr对象或constexpr函数而言, constexpr对象或函数都可以用在作用域更广的语境中</li>
+</ul>
+<h2 id="3-10-条款16-保证const成员函数的线程安全性"><a href="#3-10-条款16-保证const成员函数的线程安全性" class="headerlink" title="3.10. 条款16 保证const成员函数的线程安全性"></a>3.10. 条款16 保证const成员函数的线程安全性</h2><h3 id="3-10-1-要点速记"><a href="#3-10-1-要点速记" class="headerlink" title="3.10.1. 要点速记"></a>3.10.1. 要点速记</h3><ul>
+<li>保证const成员函数的线程安全性, 除非可以确认它们不会用在并发语境下</li>
+<li>运用std::atomic型别的变量会比运用互斥量提供更好的性能 , 但前者仅仅适用于单个变量或内存区域的操作</li>
+</ul>
+<h2 id="3-11-条款17-理解特种成员函数的生成机制"><a href="#3-11-条款17-理解特种成员函数的生成机制" class="headerlink" title="3.11. 条款17 理解特种成员函数的生成机制"></a>3.11. 条款17 理解特种成员函数的生成机制</h2><blockquote>
+<p>特种成员函数是指从c++自动生成的成员函数<br>默认构造函数. 析构函数 复制构造函数. 复制赋值运算符函数<br>C++11中, 加入了两个新成员:<br>移动构造函数和移动赋值运算符</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">D</span>&#123;</span><br><span class="line">    <span class="built_in">D</span>(D&amp;&amp; rhs)；<span class="comment">//移动构造函数</span></span><br><span class="line">    D&amp; <span class="keyword">operator</span>=(D&amp;&amp; rhs); <span class="comment">//移动赋值运算符</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>两种移动操作不是独立的, 声明了其中一个, 会阻止生成另一个.</p>
+<ul>
+<li>按成员移动由两部分构成:</li>
+</ul>
+<ol>
+<li>支持移动操作的成员上执行的移动操作</li>
+<li>不支持…<br>复制操作和移动操作一般来说也不是独立的, 一旦声明了移动操作, 就废弃了复制操作.<br>大三律:<br>声明了复制构造函数&#x2F;复制赋值运算符或析构函数的任一个, 就需要同时声明这三个</li>
+</ol>
+<p>大三律的推论:<br>如果声明了析构函数, 复制操作就不应该自动生成, 因为自动生成的行为一定不正确.<br>如声明了析构函数, 就不会生成移动操作</p>
+<p>移动操作的生成条件(自动生成, 按需生成), 仅当以下三者同时成立的条件下:</p>
+<ul>
+<li>该类未声明任何复制操作</li>
+<li>该类未声明任何析构函数</li>
+<li>该类未声明任何移动操作</li>
+</ul>
+<p>如果不想让上述规则生效, 需要添加 <code>=default</code>来显示的表达我就想用某操作</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">D</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">public</span>:</span><br><span class="line">        ~<span class="built_in">D</span>();</span><br><span class="line">        D&amp; oprator=(constD&amp; ) = <span class="keyword">default</span>; <span class="comment">//默认复制赋值运算符的行为是正确的</span></span><br><span class="line">        <span class="built_in">D</span>(D&amp;&amp; rhs) = <span class="keyword">default</span>;   <span class="comment">// 提供移动操作的支持</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<table>
+<thead>
+<tr>
+<th>特种函数名称</th>
+<th>机制</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>默认构造函数</td>
+<td>仅仅当类中不包含用户声明的构造函数时才生成</td>
+</tr>
+<tr>
+<td>析构函数</td>
+<td>默认为noexecpt, 仅当基类的是虚的, 派生类的才是虚的</td>
+</tr>
+<tr>
+<td>复制构造函数</td>
+<td>仅当类中不包含用户声明的复制构造函数时才生成, 如果声明了移动操作, 则复制构造会被删除.在已经存在复制赋值运算符或析构函数的条件下,不会生成复制构造函数</td>
+</tr>
+<tr>
+<td>复制赋值运算符</td>
+<td>如果声明了移动操作, 复制赋值运算符将被移除,在已经存在了复制构造或析构函数的条件下,废弃</td>
+</tr>
+<tr>
+<td>移动构造函数和移动赋值运算符</td>
+<td>类中不包含用户声明的复制操作&#x2F;移动操作&#x2F;析构函数时才生成</td>
+</tr>
+<tr>
+<td>特例:</td>
+<td></td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>成员函数模板的存在不会阻止编译器生成任何特种成员函数</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">D</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</span></span><br><span class="line"><span class="function">    <span class="title">D</span><span class="params">(<span class="type">const</span> T&amp; rhs)</span></span>;</span><br><span class="line">    D&amp; oprator=(<span class="type">const</span> T&amp; rhs);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>编译器会始终自动生成D的复制和移动操作, 即使这些模板具现了复制或复制赋值运算符的函数签名(T为D也会生成)</p>
+<h3 id="3-11-1-要点速记"><a href="#3-11-1-要点速记" class="headerlink" title="3.11.1. 要点速记"></a>3.11.1. 要点速记</h3><ul>
+<li>特种成员函数是指那些C++自行生成的成员函数, 默认构造 析构函数 复制操作 移动操作</li>
+<li>移动操作仅当类中未包含用户显示声明的复制 移动 析构时才生成</li>
+<li>复制构造仅当类中不包含显示声明的复制构造时才生成.如声明了移动操作, 则复制构造会被废弃; 复制赋值仅当类中不包含显示声明的复制赋值时才生成, 如果声明了移动操作,会废弃;已经存在显示析构的条件下, 生成复制操作会被废弃</li>
+<li>成员函数模板在任何情况下都不会抑制特种成员函数的生成</li>
+</ul>
+<h1 id="4-智能指针"><a href="#4-智能指针" class="headerlink" title="4. 智能指针"></a>4. 智能指针</h1><blockquote>
+<p>关于裸指针</p>
+</blockquote>
+<ol>
+<li>裸指针在声明中没有指出指到的是单个对象还是一个数组</li>
+<li>裸指针在生命中也没有提示在使用完指的对象后, 是否需要被析构.从声明中看不出指针是否指到了对象</li>
+<li>即使知道需要析构指针所指的对象, 也不要知道如果适当析构, 是使用delelte, 还是专门的析构函数</li>
+<li>即使知道了使用delete, 会是不知道是指单个对象还是数组, 是使用delelte还是delelte []</li>
+<li>即使知道delelte的形式, 也不能保证析构在所有代码路径上都仅执行一次(包括异常导致的代码路径).只要少在一路上执行, 就会导致资源泄漏,执行多了会出现未定义行为</li>
+<li>没有任何正规的方式能检测出指针是否空悬<br>在上面裸指针的种种问题下, 请优先使用智能指针, 保证在合适的时机下析构</li>
+</ol>
+<ul>
+<li><code>std::auto_ptr</code><br>C++ 98残留,后来变成了unique_ptr,不再建议使用</li>
+<li><code>std::unique_ptr</code><br>在C++11中用来代替auto_ptr的</li>
+<li><code>std::shared_ptr</code></li>
+<li><code>std::weak_ptr</code></li>
+</ul>
+<h2 id="4-1-条款18-使用std-unique-ptr管理专属所有权的资源"><a href="#4-1-条款18-使用std-unique-ptr管理专属所有权的资源" class="headerlink" title="4.1. 条款18 使用std::unique_ptr管理专属所有权的资源"></a>4.1. 条款18 使用<code>std::unique_ptr</code>管理专属所有权的资源</h2><p>考虑使用智能指针时, 优先使用unique_ptr, 和裸指针的代价差不多, 实现专属所有权语义.<br><code>std::unique_ptr</code>是只移动型别,资源的析构是通过对其内部的裸指针实施delete完成<br>常见用法是在对象继承谱系中作为工厂函数的返回类型, 调用者需要对工厂函数返回的资源负责, 属于专属所有权</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Investment</span>&#123;...&#125;;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Stock</span>:</span><br><span class="line">    <span class="keyword">public</span> Investment &#123;...&#125;;</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Bond</span>:</span><br><span class="line">    <span class="keyword">public</span> Investment &#123;...&#125;;</span><br><span class="line"><span class="comment">//调用者通过工厂函数创建对象, 工厂函数声明</span></span><br><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span>... Ts&gt;</span></span><br><span class="line"><span class="function">std::unique_ptr&lt;Investment&gt; <span class="title">makeInvestmnet</span><span class="params">(Ts&amp;&amp;... params)</span></span>;</span><br><span class="line"><span class="comment">//客户代码</span></span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">auto</span> pInvestment = <span class="built_in">makeInvestment</span>(arguments);</span><br><span class="line">&#125;  <span class="comment">//*pInvestment在此析构</span></span><br></pre></td></tr></table></figure>
+<p>如果所有权链由于异常或其他非典型控制流(如函数提早返回)而中断时, 有托管资源所有权的std::unique_ptr最终将调用该资源的析构函数. 其托管资源最终被析构<br>在析构过程中, 可以设定自定义析构器.</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">auto</span> delInvmt = [](Investment* pInvestment)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">makeLogEntry</span>(pInvestment);</span><br><span class="line">    <span class="keyword">delete</span> pInvestment;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span>... Ts&gt;</span></span><br><span class="line"><span class="function">std::unique_ptr&lt;Investment, <span class="title">decltype</span><span class="params">(delInvmt)</span>&gt;</span></span><br><span class="line"><span class="function"><span class="title">makeInvestment</span><span class="params">(Ts&amp;&amp;... params)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="function">std::unique_ptr&lt;Investment, <span class="title">decltype</span><span class="params">(delInvmt)</span>&gt; <span class="title">pInv</span><span class="params">(<span class="literal">nullptr</span>, delInvmt)</span></span>;</span><br><span class="line">    <span class="keyword">if</span>(<span class="comment">/*创建stock型别对象*/</span>) &#123;</span><br><span class="line">        pInv.<span class="built_in">reset</span>(<span class="keyword">new</span> <span class="built_in">Stock</span>(std::<span class="built_in">foward</span>&lt;Ts&gt;(params)...)));</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span>() &#123;</span><br><span class="line">        pInv.<span class="built_in">rest</span>(<span class="keyword">new</span> <span class="built_in">Bond</span>(std::forward&lt;Ts&gt;(params)...));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> pInv;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>自定义析构器接受一个型别为Investment* 的形参, 终究会在lambda表达式中作为一个Investment* 对象被删除,意味着我们会通过基类指针删除一个派生类对象.<br>基类必须具备一个虚析构函数</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Investment</span> </span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">public</span>:</span><br><span class="line">        <span class="comment">//必须有&#123;&#125;, 否则会链接出错</span></span><br><span class="line">        <span class="keyword">virtual</span> ~<span class="built_in">Investment</span>()&#123;&#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>还可以这样定义工厂函数的返回值, 使用函数作为自定义析构器</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">delInvmt2</span><span class="params">(Investmt* pInv)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">makeLogEntry</span>(pInv);</span><br><span class="line">    <span class="keyword">delete</span> pInv;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span>... Ts&gt;</span></span><br><span class="line"><span class="function">std::unique_ptr&lt;Investment, <span class="title">void</span><span class="params">(*)</span><span class="params">(Investment*)</span>&gt; <span class="title">makeInvestment</span><span class="params">(Ts&amp;&amp;... params)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>lambda表达式的方案更好.<br>std::unique_ptr以两种方式提供, 一种是单个对象, (std::unique_ptr<T>), 另一个是数组(std::unique_ptr&lt;T[]&gt;). 数组方式不推荐使用, 建议使用容器类.</p>
+<ul>
+<li>std::unique_ptr可以更加高效的转换为std::shared_ptr;</li>
+</ul>
+<h3 id="4-1-1-要点速记"><a href="#4-1-1-要点速记" class="headerlink" title="4.1.1. 要点速记"></a>4.1.1. 要点速记</h3><ul>
+<li>std::unique_ptr是小巧&#x2F;高速的&#x2F;具备只移型别的智能指针, 对托管资源实施专属所有权语义.</li>
+<li>默认采用delete运算实现, 但可以指定自定义删除器.有状态的删除器和采用函数指针实现的删除器会增加该型别的大小.</li>
+<li>std::unique_ptr可以很容易的转换为<code>std::shared_ptr</code></li>
+</ul>
+<h2 id="4-2-条款19-使用std-shared-ptr管理具备共享所有权的资源"><a href="#4-2-条款19-使用std-shared-ptr管理具备共享所有权的资源" class="headerlink" title="4.2. 条款19 使用std::shared_ptr管理具备共享所有权的资源"></a>4.2. 条款19 使用std::shared_ptr管理具备共享所有权的资源</h2><blockquote>
+<p>采用共享所有权来管理生存期,当最后一个指到该对象的指针不再指它时, 该std::shared_ptr会析构所指的对象<br>std::shared_ptr的复制赋值动作会执行两种操作:<br><code>sp1 = sp2</code></p>
+</blockquote>
+<ul>
+<li>最初sp1所指的对象的引用技数递减, 如减到0, 资源析构</li>
+<li>sp2所指对象的引用计数递增<br>引用计数的存在会带来一些性能影响:</li>
+<li>尺寸是裸指针的两倍, 一个指到裸指针, 一个指到引用计数</li>
+<li>引用计数的内存必须动态分配</li>
+<li>引用计数的递增和递减必须是原子操作<br>移动构造函数, 会将源std::shared_ptr悬空, 原来的指针不再指到资源<br>自定义析构器的型别不是std::shared_ptr指针的一部分, 而unique_ptr是<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">std::unique_ptr&lt;Investment, <span class="title">decltype</span><span class="params">(delInvmet)</span>&gt; <span class="title">upw</span><span class="params">(<span class="keyword">new</span> Investment, delInvmet)</span></span>;</span><br><span class="line"><span class="function">std::shared_ptr&lt;Investment&gt; <span class="title">spw</span><span class="params">(<span class="keyword">new</span> Investment, delInvmet)</span></span>;</span><br><span class="line"><span class="keyword">auto</span> cd1 = [](Investment* p) &#123;...&#125;;</span><br><span class="line"><span class="keyword">auto</span> cd2 = [](Investment* p) &#123;...&#125;;</span><br><span class="line"><span class="comment">//std::shared_ptr的设计更有弹性</span></span><br><span class="line"><span class="function">std::shared_ptr&lt;Investment&gt; <span class="title">spw1</span><span class="params">(<span class="keyword">new</span> Investment, cd1)</span></span>;</span><br><span class="line"><span class="function">std::shared_ptr&lt;Investment&gt; <span class="title">spw1</span><span class="params">(<span class="keyword">new</span> Investment, cd1)</span></span>;</span><br><span class="line">std::vector&lt;std::shared_ptr&lt;Investment&gt;&gt; vpw&#123;spw1, spw1&#125;;</span><br></pre></td></tr></table></figure>
+相对unique_ptr, shared_ptr的设计更有弹性<br>shared_ptr的尺寸永远是裸指针的两倍, 不随析构器的尺寸发生变化<br>尽可能避免将裸指针传递给一个std::shared_ptr的构造函数,常用的替换手法是使用<code>std::make_shared</code><br>如果必须将裸指针传递给std::shared_ptr的构造函数, 请在构造函数中直接new<br>反面教材:<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">auto</span> pw = <span class="keyword">new</span> D;</span><br><span class="line"><span class="function">std::shared_ptr&lt;D&gt; <span class="title">spw1</span><span class="params">(pw, cd1)</span></span>;        <span class="comment">//not ok</span></span><br><span class="line"><span class="function">std::shared_ptr&lt;D&gt; <span class="title">spw3</span><span class="params">(<span class="keyword">new</span> D, cd1)</span></span>;  <span class="comment">//ok</span></span><br><span class="line"><span class="function">std::shared_ptr&lt;D&gt; <span class="title">spw2</span><span class="params">(pw, cd2)</span></span>;        <span class="comment">// not ok</span></span><br><span class="line"><span class="function">std::shared_ptr&lt;D&gt; <span class="title">spw4</span><span class="params">(spw3)</span>  <span class="comment">//ok</span></span></span><br></pre></td></tr></table></figure>
+std::make_shared总是创建一个控制块</li>
+</ul>
+<h3 id="4-2-1-要点速记"><a href="#4-2-1-要点速记" class="headerlink" title="4.2.1. 要点速记"></a>4.2.1. 要点速记</h3><ul>
+<li>std::shared_ptr提供方便的手段, 实现了任意资源在共享所有权语义下进行生命周期管理的垃圾回收机制</li>
+<li>与unique_ptr相比, 其尺寸通常是裸指针的两倍, 还带来了控制块的开销, 并要求原子引用计数</li>
+<li>默认的资源析构是delete, 同时支持定制自定义析构器, 自定义析构器不影响shared_ptr的型别</li>
+<li>避免使用裸指针型别的变量创建shared_ptr指针, 直接通过传入形参构造的方式.</li>
+</ul>
+<h2 id="4-3-条款20-对于类似std-shared-ptr但有可能悬空的指针使用std-weak-ptr"><a href="#4-3-条款20-对于类似std-shared-ptr但有可能悬空的指针使用std-weak-ptr" class="headerlink" title="4.3. 条款20 对于类似std::shared_ptr但有可能悬空的指针使用std::weak_ptr"></a>4.3. 条款20 对于类似std::shared_ptr但有可能悬空的指针使用std::weak_ptr</h2><p>这种指针像std::shared_ptr那样运作,但又不影响其所指对象的引用计数,真正的智能指针, 能够跟踪何时指针空悬.<br>std::weak_ptr是std::shared_ptr的一种扩充<br>一般是通过shared_ptr来创建的,</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">auto</span> spw = <span class="built_in">make_shared</span>&lt;D&gt;();</span><br><span class="line"><span class="function">std::weak_ptr&lt;D&gt; <span class="title">wpw</span><span class="params">(spw)</span></span>;     <span class="comment">//wpw和spw指向同一个D</span></span><br><span class="line">spw = <span class="literal">nullptr</span>;     <span class="comment">//引用计数变为0, D对象被析构, wpw空悬,也被成为失效</span></span><br><span class="line"><span class="keyword">if</span>(wpw.<span class="built_in">expired</span>())   <span class="comment">//wpw失效</span></span><br><span class="line"><span class="keyword">auto</span>  spw2 = wpw.<span class="built_in">lock</span>() <span class="comment">//若wpw失效, spw2指针为空</span></span><br></pre></td></tr></table></figure>
+<p>在非严格继承谱系的数据结构中, 以及缓存和观察者的列表实现等情况下, std::weak_ptr非常适用</p>
+<h3 id="4-3-1-要点速记"><a href="#4-3-1-要点速记" class="headerlink" title="4.3.1. 要点速记"></a>4.3.1. 要点速记</h3><ul>
+<li>使用std::weak_ptr来代替可能空悬的shared_ptr</li>
+<li>weak_ptr可能的用武之地包括缓存&#x2F;观察者列表以及避免std::shared_ptr指针回路</li>
+</ul>
+<h2 id="4-4-条款21-优先选用make-shared和std-make-unique-而非直接使用new"><a href="#4-4-条款21-优先选用make-shared和std-make-unique-而非直接使用new" class="headerlink" title="4.4. 条款21 优先选用make_shared和std::make_unique, 而非直接使用new"></a>4.4. 条款21 优先选用make_shared和std::make_unique, 而非直接使用new</h2><p>make_unique是C++ 14中的.<br>make系列函数会把一个任意实参集合完美转发给动态分配的内存对象的构造函数,并返回一个指到该对象的智能指针.</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T, <span class="keyword">typename</span>... Ts&gt;</span></span><br><span class="line"><span class="function">std::unique_ptr&lt;T&gt; <span class="title">make_unique</span><span class="params">(Ts&amp;&amp;... params)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> std::<span class="built_in">unique_ptr</span>&lt;T&gt;(<span class="keyword">new</span> <span class="built_in">T</span>(std::forward&lt;Ts&gt;(params)...));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>优先使用make系列与异常安全有关,性能有关<br>但使用make系列无法自定义析构器</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">auto</span> <span class="title">spw1</span><span class="params">(std::make_shared&lt;D&gt;())</span></span>;</span><br><span class="line"><span class="function">std::shared_ptr&lt;D&gt; <span class="title">d1</span><span class="params">(<span class="keyword">new</span> D)</span></span>;</span><br><span class="line"><span class="built_in">processD</span>(std::<span class="built_in">shared_ptr</span>&lt;D&gt;(<span class="keyword">new</span> D), computePriority); <span class="comment">//潜在的资源泄漏</span></span><br><span class="line"><span class="built_in">processD</span>(std::<span class="built_in">make_shared</span>&lt;D&gt;(), computePriority);     <span class="comment">//没有发生潜在资源泄漏的情况</span></span><br><span class="line"><span class="built_in">processD</span>(d1, computePriority);  <span class="comment">//也不会发生资源泄漏</span></span><br></pre></td></tr></table></figure>
+<h3 id="4-4-1-要点速记"><a href="#4-4-1-要点速记" class="headerlink" title="4.4.1. 要点速记"></a>4.4.1. 要点速记</h3><ul>
+<li>相比直接使用new表达式, make系列消除了重复代码, 引进了异常安全性, 并且对于std::make_shared和std::allocate_shared而言, 生成的目标代码会尺寸更小&#x2F;速度更快</li>
+<li>不适用make系列函数的场景包括自定义析构器,以及期望直接传递{}初始物</li>
+<li>对于std::shared_ptr, 不建议使用make的额外场景包括:1.  自定义内存管理的类, 2. 内存紧张的系统&#x2F;非常大的对象,以及存在比指到相同shared_ptr对象生存期更久的weak_ptr</li>
+</ul>
+<h2 id="4-5-条款22-使用Pimpl习惯用法时-将特殊成员函数的定义放到实现文件中"><a href="#4-5-条款22-使用Pimpl习惯用法时-将特殊成员函数的定义放到实现文件中" class="headerlink" title="4.5. 条款22 使用Pimpl习惯用法时, 将特殊成员函数的定义放到实现文件中"></a>4.5. 条款22 使用Pimpl习惯用法时, 将特殊成员函数的定义放到实现文件中</h2><h3 id="4-5-1-要点速记"><a href="#4-5-1-要点速记" class="headerlink" title="4.5.1. 要点速记"></a>4.5.1. 要点速记</h3><ul>
+<li>Pimpl惯用法通过降低类的客户和类实现者之间的依赖性, 减少了构建遍数</li>
+<li>对于采用unique_ptr来实现的pImpl指针, 须在类的头文件中声明特种成员函数, 但需要在实现文件中实现他们</li>
+<li>上述建议使用与unique_ptr, 不适用与shared_ptr</li>
+</ul>
+<h1 id="5-右值引用-移动语义和完美转发"><a href="#5-右值引用-移动语义和完美转发" class="headerlink" title="5. 右值引用 移动语义和完美转发"></a>5. 右值引用 移动语义和完美转发</h1><blockquote>
+<p>移动语义: 以代价比较小的移动操作代替昂贵的复制操作,移动构造函数和移动复制赋值运算符函数也给了移动语义的能力<br>完美转发:使得可以任意撰写接受任意实参的函数模板, 并将其转发给其他函数, 目标函数会接受到与转发函数完全相同的实参.<br>注意点: 形参总是左值, 即使其型别是右值引用</p>
+</blockquote>
+<h2 id="5-1-理解std-move和std-forward"><a href="#5-1-理解std-move和std-forward" class="headerlink" title="5.1. 理解std::move和std::forward"></a>5.1. 理解std::move和std::forward</h2><p>std::move无条件的将实参转换为右值, std::forward则仅在某个条件下才执行强制转换<br>std::move做的是强制类型转换, 不做的是移动, 转换为右值后, 表明其具备了可移动的条件<br>经验:</p>
+<ul>
+<li>如果想取得对某个对象执行移动操作的能力, 不要将其声明为常量, 以为针对常量对象执行的移动操作将一声不吭的变换为复制操作</li>
+<li>std::move不仅不实际移动, 甚至不保证转换后的对象具有可移动的能力, 唯一可以确定的是转换后, 会变为右值</li>
+<li>std::move 执行了移动构造函数， 移动的原目标的值会被清空。其内容移动给了新的目标。<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">process</span><span class="params">(<span class="type">const</span> D&amp; d1)</span>  <span class="comment">//处理左值</span></span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">process</span><span class="params">(D&amp;&amp; d1)</span>  <span class="comment">//处理右值</span></span></span><br><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">logAndProcess</span><span class="params">(T&amp;&amp; param)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">auto</span> now = std::chrono::system_clock::<span class="built_in">now</span>();</span><br><span class="line">    <span class="built_in">makeLogEntry</span>(<span class="string">&quot;calling process&quot;</span>, now);</span><br><span class="line">    <span class="comment">//进行转发</span></span><br><span class="line">    <span class="built_in">process</span>(std::forward&lt;T&gt;(param));</span><br><span class="line">&#125;</span><br><span class="line">D d;   <span class="comment">//左值</span></span><br><span class="line"><span class="built_in">logAndProcess</span>(d);</span><br><span class="line"><span class="built_in">logAndProcess</span>(std::<span class="built_in">move</span>(d));     <span class="comment">//调用时转换为右值</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<h3 id="5-1-1-要点速记"><a href="#5-1-1-要点速记" class="headerlink" title="5.1.1. 要点速记"></a>5.1.1. 要点速记</h3><ul>
+<li>std::move实施的是无条件的转换为右值, 对其本身而言, 不会执行移动</li>
+<li>仅当传入的实参被绑定为右值时, std::forward才会针对该实参实施转换为右值, 实现的是转发语义</li>
+<li>在运行期间, std::move和std::forward不执行任何操作</li>
+</ul>
+<h2 id="5-2-条款24-区分万能引用和右值引用"><a href="#5-2-条款24-区分万能引用和右值引用" class="headerlink" title="5.2. 条款24 区分万能引用和右值引用"></a>5.2. 条款24 区分万能引用和右值引用</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">f</span><span class="params">(D&amp;&amp; param)</span></span>;       右值引用</span><br><span class="line">D&amp;&amp; d = <span class="built_in">D</span>();             右值引用</span><br><span class="line"><span class="keyword">auto</span>&amp;&amp; d2 = d；          非右值引用</span><br><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="type">void</span> <span class="built_in">f</span>(std::vector&lt;T&gt;&amp;&amp; param)   右值引用</span><br><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="type">void</span> <span class="built_in">f</span>(T&amp;&amp; param)                非右值引用</span><br><span class="line"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="type">void</span> <span class="built_in">f</span>(<span class="type">const</span> T&amp;&amp; param)          右值引用</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>T&amp;&amp; 为右值引用, 主要的理由是能识别出可移对象<br>不涉及型别推导, 就是右值引用<br>必须指定为T&amp;&amp;的模式. 加上修饰符也不行</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">f</span><span class="params">(std::vector&lt;T&gt;&amp;&amp; param)</span>   <span class="comment">//右值引用</span></span></span><br><span class="line"><span class="function">std::vector&lt;<span class="type">int</span>&gt; v</span>;</span><br><span class="line"><span class="built_in">f</span>(v)   <span class="comment">//编译出错, 无法绑定到右值, 传入的是左值</span></span><br></pre></td></tr></table></figure>
+<h2 id="5-3-条款25-针对右值引用实施std-move-针对万能引用实施std-forward"><a href="#5-3-条款25-针对右值引用实施std-move-针对万能引用实施std-forward" class="headerlink" title="5.3. 条款25 针对右值引用实施std::move, 针对万能引用实施std::forward"></a>5.3. 条款25 针对右值引用实施std::move, 针对万能引用实施std::forward</h2><p>这里只给出一个错误示范:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">D</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">public</span>:</span><br><span class="line">        <span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</span></span><br><span class="line"><span class="function">        <span class="type">void</span> <span class="title">setName</span><span class="params">(T&amp;&amp; newName)</span> </span>&#123;</span><br><span class="line">            name = std::<span class="built_in">move</span>(newName);</span><br><span class="line">        &#125;</span><br><span class="line">    <span class="keyword">private</span>:</span><br><span class="line">        std::string name;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="function">std::string <span class="title">getDname</span><span class="params">()</span></span>;</span><br><span class="line">D d;</span><br><span class="line"><span class="keyword">auto</span> n = <span class="built_in">getDname</span>();</span><br><span class="line">d.<span class="built_in">setName</span>(n);   <span class="comment">//将n移入了d中</span></span><br><span class="line"><span class="comment">//n将变成未知的.</span></span><br></pre></td></tr></table></figure>
+<p>std::move将引用形参无条件的强制转换为右值, n的值就被移入d.name中.<br>返回值优化:</p>
+<ul>
+<li>局部对象型别和函数返回值型别形同</li>
+<li>返回的就是局部对象本身</li>
+</ul>
+<h3 id="5-3-1-要点速记"><a href="#5-3-1-要点速记" class="headerlink" title="5.3.1. 要点速记"></a>5.3.1. 要点速记</h3><ul>
+<li>针对右值引用的最后一次实施std::move, 针对万能引用的最后一次实施std::forward</li>
+<li>若局部对象可能适用于返回值优化, 则请勿针对其实施std::move或std::forward</li>
+</ul>
+<h3 id="5-3-2-要点速记"><a href="#5-3-2-要点速记" class="headerlink" title="5.3.2. 要点速记"></a>5.3.2. 要点速记</h3><p>避免使用万能引用进行函数重载</p>
+<ul>
+<li>把万能引用作为重载候选型别, 几乎总会让该重载版本在始料未及的情况下被调用到</li>
+<li>完美转发构造函数的问题尤其严重, 因为对于非常量的左值型别, 他们一般都会形成想对于复制构造函数的更佳匹配.并且还会劫持派生类中对基类的复制和移动构造函数的调用</li>
+</ul>
+<h2 id="5-4-条款27-熟悉万能引用作为函数重载方案的替代方案"><a href="#5-4-条款27-熟悉万能引用作为函数重载方案的替代方案" class="headerlink" title="5.4. 条款27 熟悉万能引用作为函数重载方案的替代方案"></a>5.4. 条款27 熟悉万能引用作为函数重载方案的替代方案</h2><ul>
+<li>传递const T&amp; 型别的形参</li>
+<li>传值<br>将传递的形参从引用型替换为值型别<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Person</span>&#123;</span><br><span class="line">    <span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">explicit</span> <span class="title">Person</span><span class="params">(std::string n)</span>:name(std::move(n))&#123;</span>&#125;;</span><br><span class="line">    <span class="function"><span class="keyword">explicit</span> <span class="title">Person</span><span class="params">(<span class="type">int</span> idx)</span>:name(nameFromIdx(idx))&#123;</span>&#125;;</span><br><span class="line">    <span class="keyword">private</span>:</span><br><span class="line">    std::string name;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>标签分类<br>传递左值常量还是传值, 都不支持完美转发, 标签分类支持完美转发, 标签值决定了调用了哪个重载版本<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">logAndAdd</span><span class="params">(T&amp;&amp; name)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">logAndAddImpl</span>(std::forward&lt;T&gt;(name),</span><br><span class="line">    std::is_illegal&lt;<span class="keyword">typename</span> std::remove_reference&lt;T&gt;::type&gt;());</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">logAndAddImpl</span><span class="params">(T&amp;&amp; name, std::false_type)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">auto</span> now = ...</span><br><span class="line">    log...</span><br><span class="line">    names.<span class="built_in">emplace</span>(std::forward&lt;T&gt;(name));</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span> T&gt;</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">logAndAddImpl</span><span class="params">(<span class="type">int</span> idx, std::true_type)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">logAndAdd</span>(<span class="built_in">nameFromIdx</span>(idx));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li>对接受万能引用的模板施加限制<br>完美转发构造函数使用标签分类的方式并不能保证自动生成的特种函数一定会经过标签分派设计.<br>完美转发的效率更高, 但写起来非常麻烦, 而且当客户代码传递了非法形参时, 编译信息的可理解性非常差</li>
+</ul>
+<h3 id="5-4-1-要点速记"><a href="#5-4-1-要点速记" class="headerlink" title="5.4.1. 要点速记"></a>5.4.1. 要点速记</h3><ul>
+<li>如果不能使用万能引用和重载的组合, 则替代方案包括使用彼此不同的函数名字&#x2F;传值&#x2F;传递const T&amp;型别的形参,和标签分类</li>
+<li>万能引用形参通常在性能方面有优势, 但在易用性方面非常劣势</li>
+</ul>
+<h2 id="5-5-条款28-理解引用折叠"><a href="#5-5-条款28-理解引用折叠" class="headerlink" title="5.5. 条款28 理解引用折叠"></a>5.5. 条款28 理解引用折叠</h2><p>引用的引用是非法的, 编译器会报错.<br>但是在模板推导过程中和auto型别推导过程中,如果遇到引用的引用,即&amp;&amp;, 会进行引用折叠<br>引用合成</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">T&amp; &amp; =&gt; T&amp;</span><br><span class="line">T&amp;&amp; &amp; =&gt; T&amp;</span><br><span class="line">T&amp; &amp;&amp; =&gt; T&amp;</span><br><span class="line">T&amp;&amp; &amp;&amp; =&gt; T&amp;&amp;</span><br></pre></td></tr></table></figure>
+<h3 id="5-5-1-要点速记"><a href="#5-5-1-要点速记" class="headerlink" title="5.5.1. 要点速记"></a>5.5.1. 要点速记</h3><ul>
+<li>引用折叠会在四种语境中发生, 模板实例化 auto型别生成 创建和运用typedef和别名声明以及decltype</li>
+</ul>
+<h2 id="5-6-条款29-假设移动操作不存在-成本高-未使用"><a href="#5-6-条款29-假设移动操作不存在-成本高-未使用" class="headerlink" title="5.6. 条款29 假设移动操作不存在,成本高,未使用"></a>5.6. 条款29 假设移动操作不存在,成本高,未使用</h2><p>整个C++98标准库都已经被C++11彻底翻修过, 但还是有很多库未进行过修改.如果不支持移动操作, 就没有任何区别<br>即使支持移动操作, 也不一定代价小<br>在这样几种场景下, C++11的移动语义不会带来什么好处:</p>
+<ol>
+<li><strong>没有移动操作</strong>: 待移动的对象未能提供移动操作</li>
+<li><strong>移动未能更快</strong>:虽然有移动, 但并不比复制更快</li>
+<li><strong>移动不可用</strong>:移动可以发生的语境下, 要求移动不可发生异常,但该操作未加上noexcept声明<br>对于那些型别或对于移动语义的支持情况已知的代码,则无需上述假定</li>
+</ol>
+<h2 id="5-7-条款30-熟悉完美转发的失败情形"><a href="#5-7-条款30-熟悉完美转发的失败情形" class="headerlink" title="5.7. 条款30 熟悉完美转发的失败情形"></a>5.7. 条款30 熟悉完美转发的失败情形</h2><p>转发函数天然就是泛型的, 接受<strong>可变长形参</strong>模板, 从而能够接受任意数量的实参</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="keyword">typename</span>... Ts&gt;</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">fwd</span><span class="params">(Ts&amp;&amp;... params)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">f</span>(std::forward&lt;Ts&gt;(params)...);  <span class="comment">//转发所有实参到f</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">f</span>(expr)      <span class="comment">//执行某种操作</span></span><br><span class="line"><span class="built_in">fwd</span>(expr)    <span class="comment">//如果执行了另外一种操作,则转发失败, fwd完美转发expr到f失败</span></span><br></pre></td></tr></table></figure>
+<p><strong>会导致完美转发失败的实参种类</strong>有分为下面几种情况:</p>
+<ol>
+<li>{}初始化expr<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">f</span><span class="params">(<span class="type">const</span> std::vector&lt;<span class="type">int</span>&gt;&amp; v)</span></span>;</span><br><span class="line"><span class="built_in">f</span>(&#123;<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>&#125;);</span><br><span class="line"><span class="built_in">fwd</span>(&#123;<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>&#125;);<span class="comment">//error</span></span><br></pre></td></tr></table></figure></li>
+</ol>
+<ul>
+<li>编译器无法为一个或多个fwd的形参推导出型别结果</li>
+<li>编译器为一个或多个fwd的形参推导出了错误的型别</li>
+</ul>
+<ol start="2">
+<li>0和NULL用作空指针<br>不能推倒出指针, 用nullptr代替</li>
+<li>仅有声明的整形static const成员变量<br><code>static const std::size_t MinVals = 28;</code> 仅给出了声明, 并没有定义.</li>
+<li>重载的函数名字和模板名字</li>
+<li>位域<br>非const引用不能绑定到位域<br>只能进行复制,再转发<br>万能引用的作用机制是引用, 在硬件级别, 引用就是指针的提领</li>
+</ol>
+<h3 id="5-7-1-要点速记"><a href="#5-7-1-要点速记" class="headerlink" title="5.7.1. 要点速记"></a>5.7.1. 要点速记</h3><ul>
+<li>完美转发的失败情形, 源于模板型别推导失败, 或推导结果是错误的型别</li>
+<li>会导致完美转发失败的实参种类有…, 见上面</li>
+</ul>
+<h1 id="6-lambda表达式"><a href="#6-lambda表达式" class="headerlink" title="6. lambda表达式"></a>6. lambda表达式</h1><p>用法:</p>
+<ul>
+<li>自定义析构器, shared_ptr unique_ptr </li>
+<li>标准库 std::find_of remove_if count_if等</li>
+<li>制作回调函数,接口适配函数或语境相关的特化版本等<br>闭包可以复制</li>
+</ul>
+<h2 id="6-1-条款31-避免默认捕获模式"><a href="#6-1-条款31-避免默认捕获模式" class="headerlink" title="6.1. 条款31 避免默认捕获模式"></a>6.1. 条款31 避免默认捕获模式</h2><p>默认捕获模式:</p>
+<ul>
+<li>按引用捕获<br>会导致闭包包含指到局部变量的引用, 一旦超出作用域, 闭包内引用可能空悬<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">addDivisorFilter</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">auto</span> divisor = <span class="built_in">computeDivisor</span>(cal1, cal2);</span><br><span class="line">    filters.<span class="built_in">emplace_back</span>(</span><br><span class="line">        [&amp;](<span class="type">int</span> value) &#123;<span class="keyword">return</span> value % divisor == <span class="number">0</span>;&#125;</span><br><span class="line">    );</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+上面例子中filters可能为全局变量, 但其加入的lamda表达式中的divisor在离开了addDivisorFilter函数作用域后,就不存在了<br>解决这个问题的一个办法是对<code>divisor</code>采用按值的默认捕获模式<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">filters.<span class="built_in">emplace_back</span>([=](<span class="type">int</span> value) &#123;<span class="keyword">return</span> value%divisor==<span class="number">0</span>;&#125;);</span><br></pre></td></tr></table></figure>
+捕获只能对创建lamda式内的作用域内<code>可见的非静态局部变量进行捕获, 如果是成员变量等, 不能进行捕获</code><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">D</span>&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">addFilter</span><span class="params">()</span></span>&#123;</span><br><span class="line">        filters.<span class="built_in">emplace_back</span>(</span><br><span class="line">            [=](<span class="type">int</span> value) &#123;<span class="keyword">return</span> value%divisor == <span class="number">0</span>;&#125;</span><br><span class="line">        );</span><br><span class="line">    &#125;;</span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span> divisor;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+上面这个成员函数中lamda等同于下面这个<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">D</span>&#123;</span><br><span class="line"><span class="keyword">auto</span> p = <span class="keyword">this</span>;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">addFilter</span><span class="params">()</span></span>&#123;</span><br><span class="line">        filters.<span class="built_in">emplace_back</span>(</span><br><span class="line">            [p](<span class="type">int</span> value) &#123;<span class="keyword">return</span> value%p-&gt;divisor == <span class="number">0</span>;&#125;</span><br><span class="line">        );</span><br><span class="line">    &#125;;</span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span> divisor;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+被捕获的实际是D的this指针而不是divisor, 因此在离开D对象作用域后, 生命周期结束后, 会导致指针空悬<br>可以通过复制解决,<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">D</span>&#123;</span><br><span class="line"><span class="keyword">auto</span> p = <span class="keyword">this</span>;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="type">void</span> <span class="title">addFilter</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">auto</span> devisor1 = devisor;</span><br><span class="line">        filters.<span class="built_in">emplace_back</span>(</span><br><span class="line">            [devisor1](<span class="type">int</span> value) &#123;<span class="keyword">return</span> value%divisor1 == <span class="number">0</span>;&#125;</span><br><span class="line">        );</span><br><span class="line">    &#125;;</span><br><span class="line">    <span class="keyword">private</span> <span class="type">int</span> divisor;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+使用默认捕获模式的另一个缺点是与闭包外的变化绝缘<br>不能捕获静态变量, 依赖于静态变量存储期, 会引起代码误读<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> divisor = <span class="number">1</span>;</span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">addF</span><span class="params">()</span></span>&#123;</span><br><span class="line">    divisor++;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">addDivisorFilter</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    filters.<span class="built_in">emplace_back</span>(</span><br><span class="line">        [=](<span class="type">int</span> value) &#123;<span class="keyword">return</span> value % divisor == <span class="number">0</span>;&#125;   <span class="comment">//未捕获任何东西, 但会指到静态变量上, 静态变量可能变化, 导致该表达式的含义变化</span></span><br><span class="line">    );</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h3 id="6-1-1-要点速记"><a href="#6-1-1-要点速记" class="headerlink" title="6.1.1. 要点速记"></a>6.1.1. 要点速记</h3><ul>
+<li>按引用的默认捕获会导致空悬指针问题</li>
+<li>按值的默认捕获易受空悬指针影响, 并且容易引起代码误读</li>
+</ul>
+<h2 id="6-2-条款32-使用初始化捕获将对象移入闭包"><a href="#6-2-条款32-使用初始化捕获将对象移入闭包" class="headerlink" title="6.2. 条款32 使用初始化捕获将对象移入闭包"></a>6.2. 条款32 使用初始化捕获将对象移入闭包</h2><p>C++11 不支持初始化捕获, c++14 支持</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">auto</span> func = [pw=std::<span class="built_in">move</span>(pw)] &#123;<span class="keyword">return</span> pw-&gt;<span class="built_in">isValidated</span>();&#125;;</span><br></pre></td></tr></table></figure>
+<p>上面的[]内的即为初始化表达式, &#x3D;两侧的作用域不同.<br>也称为广义lamda捕获模式<br>C++ 11中需要使用std::bind, 按移动捕获</p>
+<ul>
+<li>把需要捕获的对象移动到std::bind产生的函数对象中</li>
+<li>给到lambda一个指到捕获对象的引用<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">std::vector&lt;<span class="type">double</span>&gt; data;</span><br><span class="line"><span class="keyword">auto</span> func=std::<span class="built_in">bind</span>([](<span class="type">const</span> std::vector&lt;<span class="type">double</span>&gt;&amp; data)&#123;<span class="comment">/*对data进行操作*/</span>&#125;, std::<span class="built_in">move</span>(data));</span><br></pre></td></tr></table></figure>
+std::bind返回的函数对象为绑定对象, 第一个实参是可调用对象, 接下来的所有实参是传给该对象的值<br>绑定对象被调用时,采用了右值的实参传给了std::bind绑定的lambda式<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">auto</span> func=std::<span class="built_in">bind</span>([<span class="type">const</span> std::unique_ptr&lt;D&gt;&amp; d]&#123;<span class="keyword">return</span> d-&gt;<span class="built_in">isValidate</span>();&#125;, std::<span class="built_in">make_unique</span>&lt;D&gt;());</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h3 id="6-2-1-要点速记"><a href="#6-2-1-要点速记" class="headerlink" title="6.2.1. 要点速记"></a>6.2.1. 要点速记</h3><ul>
+<li>使用C++14的初始化捕获将对象移入闭包</li>
+<li>在C++11中, 经由手工实现的类或std::bind去模拟初始化捕获</li>
+</ul>
+<h2 id="6-3-条款33-对auto-型别的形参使用decltype-以std-foward之"><a href="#6-3-条款33-对auto-型别的形参使用decltype-以std-foward之" class="headerlink" title="6.3. 条款33 对auto&amp;&amp; 型别的形参使用decltype, 以std::foward之"></a>6.3. 条款33 对auto&amp;&amp; 型别的形参使用decltype, 以std::foward之</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">auto</span> f=[](<span class="keyword">auto</span>&amp;&amp; param) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">func</span>(<span class="built_in">normalize</span>(std::forward&lt;<span class="keyword">decltype</span>(param)&gt;(param)));</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h2 id="6-4-条款34-优先使用lambda表达式-而非std-bind"><a href="#6-4-条款34-优先使用lambda表达式-而非std-bind" class="headerlink" title="6.4. 条款34 优先使用lambda表达式, 而非std::bind"></a>6.4. 条款34 优先使用lambda表达式, 而非std::bind</h2><h3 id="6-4-1-要点速记"><a href="#6-4-1-要点速记" class="headerlink" title="6.4.1. 要点速记"></a>6.4.1. 要点速记</h3><ul>
+<li>lambda表达式比起使用std::bind而言, 可读性更好,表达力更强, 运行效率更高</li>
+<li>仅在C++11中, std::bind在实现移动捕获或是绑定到具备模版化的函数调用运算符的对象的场合中,可有余热. 见条款32</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C-11/" rel="tag"># C++11</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2016/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/Android%20parcel%20%E6%9C%BA%E5%88%B6/" rel="prev" title="Android parcel 机制">
+      <i class="fa fa-chevron-left"></i> Android parcel 机制
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2017/07/18/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/%E7%A3%81%E7%9B%98%E9%85%8D%E9%A2%9D%E8%B0%83%E7%A0%94%E6%8A%A5%E5%91%8A/" rel="next" title="磁盘配额调研报告">
+      磁盘配额调研报告 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E5%9E%8B%E5%88%AB%E6%8E%A8%E5%AF%BC"><span class="nav-number">1.</span> <span class="nav-text">1. 型别推导</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-%E6%9D%A1%E6%AC%BE1-%E7%90%86%E8%A7%A3%E6%A8%A1%E5%9E%8B%E5%9E%8B%E5%88%AB%E6%8E%A8%E5%AF%BC"><span class="nav-number">1.1.</span> <span class="nav-text">1.1. 条款1 理解模型型别推导</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-1-ParamType%E5%85%B7%E6%9C%89%E6%8C%87%E9%92%88%E6%88%96%E5%BC%95%E7%94%A8%E5%9E%8B%E5%88%AB"><span class="nav-number">1.1.1.</span> <span class="nav-text">1.1.1. ParamType具有指针或引用型别</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-2-ParamType-%E6%98%AF%E4%B8%87%E8%83%BD%E5%BC%95%E7%94%A8"><span class="nav-number">1.1.2.</span> <span class="nav-text">1.1.2. ParamType 是万能引用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-3-ParamType%E9%9D%9E%E6%8C%87%E9%92%88%E4%B9%9F%E9%9D%9E%E5%BC%95%E7%94%A8"><span class="nav-number">1.1.3.</span> <span class="nav-text">1.1.3. ParamType非指针也非引用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-4-%E6%95%B0%E7%BB%84%E5%AE%9E%E5%8F%82"><span class="nav-number">1.1.4.</span> <span class="nav-text">1.1.4. 数组实参</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-5-%E5%87%BD%E6%95%B0%E5%AE%9E%E5%8F%82"><span class="nav-number">1.1.5.</span> <span class="nav-text">1.1.5. 函数实参</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-6-%E8%A6%81%E7%82%B9%E9%80%9F%E8%AE%B0"><span class="nav-number">1.1.6.</span> <span class="nav-text">1.1.6. 要点速记</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-%E6%9D%A1%E6%AC%BE2-%E7%90%86%E8%A7%A3auto%E5%9E%8B%E5%88%AB%E6%8E%A8%E5%AF%BC"><span class="nav-number">1.2.</span> <span class="nav-text">1.2. 条款2 理解auto型别推导</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-1-%E8%B7%9F%E6%A8%A1%E6%9D%BF%E4%B8%8D%E5%90%8C%E7%9A%84%E4%BE%8B%E5%A4%96%E6%83%85%E5%86%B5"><span class="nav-number">1.2.1.</span> <span class="nav-text">1.2.1. 跟模板不同的例外情况:</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-2-%E8%A6%81%E7%82%B9%E9%80%9F%E8%AE%B0"><span class="nav-number">1.2.2.</span> <span class="nav-text">1.2.2. 要点速记</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-%E6%9D%A1%E6%AC%BE3-%E7%90%86%E8%A7%A3decltype"><span class="nav-number">1.3.</span> <span class="nav-text">1.3. 条款3 理解decltype</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-1-%E8%A6%81%E7%82%B9%E9%80%9F%E8%AE%B0"><span class="nav-number">1.3.1.</span> <span class="nav-text">1.3.1. 要点速记</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-4-%E6%9D%A1%E6%AC%BE4-%E6%9F%A5%E7%9C%8B%E5%9E%8B%E5%88%AB%E6%8E%A8%E5%AF%BC%E7%9A%84%E7%BB%93%E6%9E%9C%E7%9A%84%E6%96%B9%E6%B3%95"><span class="nav-number">1.4.</span> <span class="nav-text">1.4. 条款4 查看型别推导的结果的方法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-4-1-%E8%A6%81%E7%82%B9%E9%80%9F%E8%AE%B0"><span class="nav-number">1.4.1.</span> <span class="nav-text">1.4.1. 要点速记</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-auto"><span class="nav-number">2.</span> <span class="nav-text">2. auto</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-%E6%9D%A1%E6%AC%BE5-%E4%BC%98%E9%80%89%E4%BD%BF%E7%94%A8auto-%E8%80%8C%E9%9D%9E%E6%98%BE%E7%A4%BA%E5%9E%8B%E5%88%AB%E5%A3%B0%E6%98%8E"><span class="nav-number">2.1.</span> <span class="nav-text">2.1. 条款5 优选使用auto, 而非显示型别声明</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-1-%E8%A6%81%E7%82%B9%E9%80%9F%E8%AE%B0"><span class="nav-number">2.1.1.</span> <span class="nav-text">2.1.1. 要点速记</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-%E6%9D%A1%E6%AC%BE-6-%E5%BD%93auto%E6%8E%A8%E5%AF%BC%E5%9E%8B%E5%88%AB%E4%B8%8D%E7%AC%A6%E5%90%88%E8%A6%81%E6%B1%82%E6%97%B6-%E4%BD%BF%E7%94%A8-%E5%BC%BA%E5%88%B6%E7%B1%BB%E5%9E%8B%E8%BD%AC%E6%8D%A2-%E6%98%BE%E7%A4%BA%E5%9E%8B%E5%88%AB%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96%E4%B9%A0%E6%83%AF%E7%94%A8%E6%B3%95"><span class="nav-number">2.2.</span> <span class="nav-text">2.2. 条款 6 当auto推导型别不符合要求时, 使用(强制类型转换)显示型别的初始化习惯用法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-1-%E8%A6%81%E7%82%B9%E9%80%9F%E8%AE%B0"><span class="nav-number">2.2.1.</span> <span class="nav-text">2.2.1. 要点速记</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E8%BD%AC%E5%90%91%E7%8E%B0%E4%BB%A3C"><span class="nav-number">3.</span> <span class="nav-text">3. 转向现代C++</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-%E6%9D%A1%E6%AC%BE7-%E5%88%9B%E5%BB%BA%E5%AF%B9%E8%B1%A1%E6%97%B6%E5%8C%BA%E5%88%86-%E5%92%8C"><span class="nav-number">3.1.</span> <span class="nav-text">3.1. 条款7 创建对象时区分() 和 {}</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-1-%E8%A6%81%E7%82%B9%E9%80%9F%E8%AE%B0"><span class="nav-number">3.1.1.</span> <span class="nav-text">3.1.1. 要点速记</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-%E6%9D%A1%E6%AC%BE8-%E4%BC%98%E5%85%88%E4%BD%BF%E7%94%A8nullptr-%E8%80%8C%E9%9D%9ENULL%E6%88%960"><span class="nav-number">3.2.</span> <span class="nav-text">3.2. 条款8 优先使用nullptr, 而非NULL或0</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-1-%E8%A6%81%E7%82%B9%E9%80%9F%E8%AE%B0"><span class="nav-number">3.2.1.</span> <span class="nav-text">3.2.1. 要点速记</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-%E6%9D%A1%E6%AC%BE9-%E4%BC%98%E5%85%88%E4%BD%BF%E7%94%A8%E5%88%AB%E5%90%8D%E5%A3%B0%E6%98%8E-%E8%80%8C%E9%9D%9Etypedef"><span class="nav-number">3.3.</span> <span class="nav-text">3.3. 条款9 优先使用别名声明, 而非typedef</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-1-%E8%A6%81%E7%82%B9%E9%80%9F%E8%AE%B0"><span class="nav-number">3.3.1.</span> <span class="nav-text">3.3.1. 要点速记</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-4-%E6%9D%A1%E6%AC%BE10-%E4%BC%98%E5%85%88%E4%BD%BF%E7%94%A8%E9%99%90%E5%AE%9A%E4%BD%9C%E7%94%A8%E5%9F%9F%E7%9A%84%E6%9E%9A%E4%B8%BE%E7%B1%BB%E5%9E%8B"><span class="nav-number">3.4.</span> <span class="nav-text">3.4. 条款10 优先使用限定作用域的枚举类型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4-1-%E8%A6%81%E7%82%B9%E9%80%9F%E8%AE%B0"><span class="nav-number">3.4.1.</span> <span class="nav-text">3.4.1. 要点速记</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-5-%E6%9D%A1%E6%AC%BE11-%E4%BC%98%E5%85%88%E4%BD%BF%E7%94%A8%E5%88%A0%E9%99%A4%E5%87%BD%E6%95%B0-%E8%80%8C%E9%9D%9Eprivate%E6%9C%AA%E5%AE%9A%E4%B9%89%E5%87%BD%E6%95%B0"><span class="nav-number">3.5.</span> <span class="nav-text">3.5. 条款11 优先使用删除函数, 而非private未定义函数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-5-1-%E8%A6%81%E7%82%B9%E9%80%9F%E8%AE%B0"><span class="nav-number">3.5.1.</span> <span class="nav-text">3.5.1. 要点速记</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-6-%E6%9D%A1%E6%AC%BE12-%E4%B8%BA%E6%94%B9%E5%86%99%E7%9A%84%E5%87%BD%E6%95%B0%E6%B7%BB%E5%8A%A0override%E5%A3%B0%E6%98%8E"><span class="nav-number">3.6.</span> <span class="nav-text">3.6. 条款12 为改写的函数添加override声明</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-6-1-%E8%A6%81%E7%82%B9%E9%80%9F%E8%AE%B0"><span class="nav-number">3.6.1.</span> <span class="nav-text">3.6.1. 要点速记</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-7-%E6%9D%A1%E6%AC%BE13-%E4%BC%98%E5%85%88%E4%BD%BF%E7%94%A8const-iterator-%E8%80%8C%E4%B8%8D%E6%98%AFiterator"><span class="nav-number">3.7.</span> <span class="nav-text">3.7. 条款13 优先使用const_iterator, 而不是iterator</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-7-1-%E8%A6%81%E7%82%B9%E9%80%9F%E8%AE%B0"><span class="nav-number">3.7.1.</span> <span class="nav-text">3.7.1. 要点速记</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-8-%E6%9D%A1%E6%AC%BE14-%E5%8F%AA%E8%A6%81%E5%87%BD%E6%95%B0%E4%B8%8D%E5%8F%91%E7%94%9F%E5%BC%82%E5%B8%B8-%E5%8A%A0%E4%B8%8Anoexcept%E5%A3%B0%E6%98%8E"><span class="nav-number">3.8.</span> <span class="nav-text">3.8. 条款14 只要函数不发生异常, 加上noexcept声明</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-8-1-%E8%A6%81%E7%82%B9%E9%80%9F%E8%AE%B0"><span class="nav-number">3.8.1.</span> <span class="nav-text">3.8.1. 要点速记</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-9-%E6%9D%A1%E6%AC%BE15-%E4%BC%98%E5%85%88%E4%BD%BF%E7%94%A8constexpr"><span class="nav-number">3.9.</span> <span class="nav-text">3.9. 条款15 优先使用constexpr</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-9-1-%E8%A6%81%E7%82%B9%E9%80%9F%E8%AE%B0"><span class="nav-number">3.9.1.</span> <span class="nav-text">3.9.1. 要点速记</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-10-%E6%9D%A1%E6%AC%BE16-%E4%BF%9D%E8%AF%81const%E6%88%90%E5%91%98%E5%87%BD%E6%95%B0%E7%9A%84%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E6%80%A7"><span class="nav-number">3.10.</span> <span class="nav-text">3.10. 条款16 保证const成员函数的线程安全性</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-10-1-%E8%A6%81%E7%82%B9%E9%80%9F%E8%AE%B0"><span class="nav-number">3.10.1.</span> <span class="nav-text">3.10.1. 要点速记</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-11-%E6%9D%A1%E6%AC%BE17-%E7%90%86%E8%A7%A3%E7%89%B9%E7%A7%8D%E6%88%90%E5%91%98%E5%87%BD%E6%95%B0%E7%9A%84%E7%94%9F%E6%88%90%E6%9C%BA%E5%88%B6"><span class="nav-number">3.11.</span> <span class="nav-text">3.11. 条款17 理解特种成员函数的生成机制</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-11-1-%E8%A6%81%E7%82%B9%E9%80%9F%E8%AE%B0"><span class="nav-number">3.11.1.</span> <span class="nav-text">3.11.1. 要点速记</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88"><span class="nav-number">4.</span> <span class="nav-text">4. 智能指针</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-%E6%9D%A1%E6%AC%BE18-%E4%BD%BF%E7%94%A8std-unique-ptr%E7%AE%A1%E7%90%86%E4%B8%93%E5%B1%9E%E6%89%80%E6%9C%89%E6%9D%83%E7%9A%84%E8%B5%84%E6%BA%90"><span class="nav-number">4.1.</span> <span class="nav-text">4.1. 条款18 使用std::unique_ptr管理专属所有权的资源</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-1-%E8%A6%81%E7%82%B9%E9%80%9F%E8%AE%B0"><span class="nav-number">4.1.1.</span> <span class="nav-text">4.1.1. 要点速记</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-%E6%9D%A1%E6%AC%BE19-%E4%BD%BF%E7%94%A8std-shared-ptr%E7%AE%A1%E7%90%86%E5%85%B7%E5%A4%87%E5%85%B1%E4%BA%AB%E6%89%80%E6%9C%89%E6%9D%83%E7%9A%84%E8%B5%84%E6%BA%90"><span class="nav-number">4.2.</span> <span class="nav-text">4.2. 条款19 使用std::shared_ptr管理具备共享所有权的资源</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-1-%E8%A6%81%E7%82%B9%E9%80%9F%E8%AE%B0"><span class="nav-number">4.2.1.</span> <span class="nav-text">4.2.1. 要点速记</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-3-%E6%9D%A1%E6%AC%BE20-%E5%AF%B9%E4%BA%8E%E7%B1%BB%E4%BC%BCstd-shared-ptr%E4%BD%86%E6%9C%89%E5%8F%AF%E8%83%BD%E6%82%AC%E7%A9%BA%E7%9A%84%E6%8C%87%E9%92%88%E4%BD%BF%E7%94%A8std-weak-ptr"><span class="nav-number">4.3.</span> <span class="nav-text">4.3. 条款20 对于类似std::shared_ptr但有可能悬空的指针使用std::weak_ptr</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-3-1-%E8%A6%81%E7%82%B9%E9%80%9F%E8%AE%B0"><span class="nav-number">4.3.1.</span> <span class="nav-text">4.3.1. 要点速记</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-4-%E6%9D%A1%E6%AC%BE21-%E4%BC%98%E5%85%88%E9%80%89%E7%94%A8make-shared%E5%92%8Cstd-make-unique-%E8%80%8C%E9%9D%9E%E7%9B%B4%E6%8E%A5%E4%BD%BF%E7%94%A8new"><span class="nav-number">4.4.</span> <span class="nav-text">4.4. 条款21 优先选用make_shared和std::make_unique, 而非直接使用new</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-4-1-%E8%A6%81%E7%82%B9%E9%80%9F%E8%AE%B0"><span class="nav-number">4.4.1.</span> <span class="nav-text">4.4.1. 要点速记</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-5-%E6%9D%A1%E6%AC%BE22-%E4%BD%BF%E7%94%A8Pimpl%E4%B9%A0%E6%83%AF%E7%94%A8%E6%B3%95%E6%97%B6-%E5%B0%86%E7%89%B9%E6%AE%8A%E6%88%90%E5%91%98%E5%87%BD%E6%95%B0%E7%9A%84%E5%AE%9A%E4%B9%89%E6%94%BE%E5%88%B0%E5%AE%9E%E7%8E%B0%E6%96%87%E4%BB%B6%E4%B8%AD"><span class="nav-number">4.5.</span> <span class="nav-text">4.5. 条款22 使用Pimpl习惯用法时, 将特殊成员函数的定义放到实现文件中</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-5-1-%E8%A6%81%E7%82%B9%E9%80%9F%E8%AE%B0"><span class="nav-number">4.5.1.</span> <span class="nav-text">4.5.1. 要点速记</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8-%E7%A7%BB%E5%8A%A8%E8%AF%AD%E4%B9%89%E5%92%8C%E5%AE%8C%E7%BE%8E%E8%BD%AC%E5%8F%91"><span class="nav-number">5.</span> <span class="nav-text">5. 右值引用 移动语义和完美转发</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#5-1-%E7%90%86%E8%A7%A3std-move%E5%92%8Cstd-forward"><span class="nav-number">5.1.</span> <span class="nav-text">5.1. 理解std::move和std::forward</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-1-%E8%A6%81%E7%82%B9%E9%80%9F%E8%AE%B0"><span class="nav-number">5.1.1.</span> <span class="nav-text">5.1.1. 要点速记</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-2-%E6%9D%A1%E6%AC%BE24-%E5%8C%BA%E5%88%86%E4%B8%87%E8%83%BD%E5%BC%95%E7%94%A8%E5%92%8C%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8"><span class="nav-number">5.2.</span> <span class="nav-text">5.2. 条款24 区分万能引用和右值引用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-3-%E6%9D%A1%E6%AC%BE25-%E9%92%88%E5%AF%B9%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8%E5%AE%9E%E6%96%BDstd-move-%E9%92%88%E5%AF%B9%E4%B8%87%E8%83%BD%E5%BC%95%E7%94%A8%E5%AE%9E%E6%96%BDstd-forward"><span class="nav-number">5.3.</span> <span class="nav-text">5.3. 条款25 针对右值引用实施std::move, 针对万能引用实施std::forward</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-3-1-%E8%A6%81%E7%82%B9%E9%80%9F%E8%AE%B0"><span class="nav-number">5.3.1.</span> <span class="nav-text">5.3.1. 要点速记</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-3-2-%E8%A6%81%E7%82%B9%E9%80%9F%E8%AE%B0"><span class="nav-number">5.3.2.</span> <span class="nav-text">5.3.2. 要点速记</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-4-%E6%9D%A1%E6%AC%BE27-%E7%86%9F%E6%82%89%E4%B8%87%E8%83%BD%E5%BC%95%E7%94%A8%E4%BD%9C%E4%B8%BA%E5%87%BD%E6%95%B0%E9%87%8D%E8%BD%BD%E6%96%B9%E6%A1%88%E7%9A%84%E6%9B%BF%E4%BB%A3%E6%96%B9%E6%A1%88"><span class="nav-number">5.4.</span> <span class="nav-text">5.4. 条款27 熟悉万能引用作为函数重载方案的替代方案</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-4-1-%E8%A6%81%E7%82%B9%E9%80%9F%E8%AE%B0"><span class="nav-number">5.4.1.</span> <span class="nav-text">5.4.1. 要点速记</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-5-%E6%9D%A1%E6%AC%BE28-%E7%90%86%E8%A7%A3%E5%BC%95%E7%94%A8%E6%8A%98%E5%8F%A0"><span class="nav-number">5.5.</span> <span class="nav-text">5.5. 条款28 理解引用折叠</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-5-1-%E8%A6%81%E7%82%B9%E9%80%9F%E8%AE%B0"><span class="nav-number">5.5.1.</span> <span class="nav-text">5.5.1. 要点速记</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-6-%E6%9D%A1%E6%AC%BE29-%E5%81%87%E8%AE%BE%E7%A7%BB%E5%8A%A8%E6%93%8D%E4%BD%9C%E4%B8%8D%E5%AD%98%E5%9C%A8-%E6%88%90%E6%9C%AC%E9%AB%98-%E6%9C%AA%E4%BD%BF%E7%94%A8"><span class="nav-number">5.6.</span> <span class="nav-text">5.6. 条款29 假设移动操作不存在,成本高,未使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-7-%E6%9D%A1%E6%AC%BE30-%E7%86%9F%E6%82%89%E5%AE%8C%E7%BE%8E%E8%BD%AC%E5%8F%91%E7%9A%84%E5%A4%B1%E8%B4%A5%E6%83%85%E5%BD%A2"><span class="nav-number">5.7.</span> <span class="nav-text">5.7. 条款30 熟悉完美转发的失败情形</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-7-1-%E8%A6%81%E7%82%B9%E9%80%9F%E8%AE%B0"><span class="nav-number">5.7.1.</span> <span class="nav-text">5.7.1. 要点速记</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#6-lambda%E8%A1%A8%E8%BE%BE%E5%BC%8F"><span class="nav-number">6.</span> <span class="nav-text">6. lambda表达式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#6-1-%E6%9D%A1%E6%AC%BE31-%E9%81%BF%E5%85%8D%E9%BB%98%E8%AE%A4%E6%8D%95%E8%8E%B7%E6%A8%A1%E5%BC%8F"><span class="nav-number">6.1.</span> <span class="nav-text">6.1. 条款31 避免默认捕获模式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#6-1-1-%E8%A6%81%E7%82%B9%E9%80%9F%E8%AE%B0"><span class="nav-number">6.1.1.</span> <span class="nav-text">6.1.1. 要点速记</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-2-%E6%9D%A1%E6%AC%BE32-%E4%BD%BF%E7%94%A8%E5%88%9D%E5%A7%8B%E5%8C%96%E6%8D%95%E8%8E%B7%E5%B0%86%E5%AF%B9%E8%B1%A1%E7%A7%BB%E5%85%A5%E9%97%AD%E5%8C%85"><span class="nav-number">6.2.</span> <span class="nav-text">6.2. 条款32 使用初始化捕获将对象移入闭包</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#6-2-1-%E8%A6%81%E7%82%B9%E9%80%9F%E8%AE%B0"><span class="nav-number">6.2.1.</span> <span class="nav-text">6.2.1. 要点速记</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-3-%E6%9D%A1%E6%AC%BE33-%E5%AF%B9auto-%E5%9E%8B%E5%88%AB%E7%9A%84%E5%BD%A2%E5%8F%82%E4%BD%BF%E7%94%A8decltype-%E4%BB%A5std-foward%E4%B9%8B"><span class="nav-number">6.3.</span> <span class="nav-text">6.3. 条款33 对auto&amp;&amp; 型别的形参使用decltype, 以std::foward之</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-4-%E6%9D%A1%E6%AC%BE34-%E4%BC%98%E5%85%88%E4%BD%BF%E7%94%A8lambda%E8%A1%A8%E8%BE%BE%E5%BC%8F-%E8%80%8C%E9%9D%9Estd-bind"><span class="nav-number">6.4.</span> <span class="nav-text">6.4. 条款34 优先使用lambda表达式, 而非std::bind</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#6-4-1-%E8%A6%81%E7%82%B9%E9%80%9F%E8%AE%B0"><span class="nav-number">6.4.1.</span> <span class="nav-text">6.4.1. 要点速记</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">146</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">86</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">102</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

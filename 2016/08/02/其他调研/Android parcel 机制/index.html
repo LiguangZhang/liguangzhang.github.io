@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
+  </script>
+
+  <meta name="description" content="Android parcel 机制 1. Serialize 说起Java中的Serialize机制, 串行化机制,效率较慢:  使用的反射机制 会生成很多临时文件,造成了垃圾回收  将数据对象存入字节流中,在需要时重新生成对象.应用外部存储器保存对象状态,以及通过网络传输对象等.    串行化: 将对象转化成字节流,保存在存储设备\内存或二进制方式通过网络传输. 之后通过反串行化从连续的字节数据">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android parcel 机制">
+<meta property="og:url" content="https://liguangzhang.github.io/2016/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/Android%20parcel%20%E6%9C%BA%E5%88%B6/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="Android parcel 机制 1. Serialize 说起Java中的Serialize机制, 串行化机制,效率较慢:  使用的反射机制 会生成很多临时文件,造成了垃圾回收  将数据对象存入字节流中,在需要时重新生成对象.应用外部存储器保存对象状态,以及通过网络传输对象等.    串行化: 将对象转化成字节流,保存在存储设备\内存或二进制方式通过网络传输. 之后通过反串行化从连续的字节数据">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2016-08-02T05:47:23.000Z">
+<meta property="article:modified_time" content="2024-04-16T10:05:05.694Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="Android">
+<meta property="article:tag" content="parcel">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2016/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/Android%20parcel%20%E6%9C%BA%E5%88%B6/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Android parcel 机制 | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2016/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/Android%20parcel%20%E6%9C%BA%E5%88%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Android parcel 机制
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2016-08-02 13:47:23" itemprop="dateCreated datePublished" datetime="2016-08-02T13:47:23+08:00">2016-08-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 18:05:05" itemprop="dateModified" datetime="2024-04-16T18:05:05+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Android parcel 机制</p>
+<h1 id="1-Serialize-说起"><a href="#1-Serialize-说起" class="headerlink" title="1. Serialize 说起"></a>1. Serialize 说起</h1><p>Java中的Serialize机制, 串行化机制,效率较慢:</p>
+<ul>
+<li>使用的反射机制</li>
+<li>会生成很多临时文件,造成了垃圾回收</li>
+</ul>
+<p>将数据对象存入字节流中,在需要时重新生成对象.应用外部存储器保存对象状态,以及通过网络传输对象等.</p>
+<blockquote>
+<p>  串行化: 将对象转化成字节流,保存在存储设备\内存或二进制方式通过网络传输. 之后通过反串行化从连续的字节数据重新构建一个原始对象状态相同的对象.</p>
+</blockquote>
+<h1 id="2-Parcel-简介"><a href="#2-Parcel-简介" class="headerlink" title="2. Parcel 简介"></a>2. Parcel 简介</h1><p>Android工程师新设计了Parcel机制, 定位于轻量级的高效串行化和反串行化. 字节流主要保存在内存中, 用于IPC通信.</p>
+<h1 id="3-Parcel-机制详解"><a href="#3-Parcel-机制详解" class="headerlink" title="3. Parcel 机制详解"></a>3. Parcel 机制详解</h1><h2 id="3-1-源码位置"><a href="#3-1-源码位置" class="headerlink" title="3.1. 源码位置"></a>3.1. 源码位置</h2><p>Frameworks&#x2F;base&#x2F;core&#x2F;java&#x2F;android&#x2F;os&#x2F;Parcel.java<br>Frameworks&#x2F;base&#x2F;core&#x2F;jni&#x2F;android_util_Binder.cpp<br>frameworks&#x2F;native&#x2F;libs&#x2F;binder&#x2F;Parcel.cpp</p>
+<h3 id="3-1-1-Parcel-java"><a href="#3-1-1-Parcel-java" class="headerlink" title="3.1.1. Parcel.java"></a>3.1.1. Parcel.java</h3><ul>
+<li>obtain() 获得一个新的parcel对象，相当于java中new一个对象</li>
+</ul>
+<p>从parcel池中拿出一个parcel. pool size 为6.取出不为空的parcel后, 将 pool池中的该对象设置为空. 如果池中都为空, 则新建一个parcel对象.</p>
+<p>obtain的参数为内存的指针. </p>
+<ul>
+<li>recyle() 清空并回收parcel对象所占内存</li>
+</ul>
+<p>清空当前Parcel对象, 回收Parcel占用内存. 同时将该parcel对象重新放入parcel 池中. 调用完该方法后, 不能再使用该对象.</p>
+<ul>
+<li>dataSize() 得到当前parcel对象的实际存储空间 </li>
+<li>dataCapacity() 得到当前parcel对象的已分配的存储空间,该值大于或等于dataSize()返回值 。</li>
+<li>dataPostion() 获得当前parcel对象的偏移量(类似于文件流指针的偏移量) </li>
+<li>setDataPosition() 设置偏移量（类似于移动指针到特定位置）</li>
+<li>writeXXX（）方法表示写于一个XXX类型的数</li>
+<li>readXXX（）方法表示读取一个XXX类型的数</li>
+</ul>
+<p>比如：writeInt(int) 写入一个整数；readInt（）读取一个整数。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Android/" rel="tag"># Android</a>
+              <a href="/tags/parcel/" rel="tag"># parcel</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2016/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E6%96%87%E4%BB%B6IO%E6%B5%8B%E8%AF%95/" rel="prev" title="文件IO测试调研">
+      <i class="fa fa-chevron-left"></i> 文件IO测试调研
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2016/09/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/c++11%E8%AF%AD%E6%B3%95/" rel="next" title="Effective Modern C++ 11 笔记">
+      Effective Modern C++ 11 笔记 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-Serialize-%E8%AF%B4%E8%B5%B7"><span class="nav-number">1.</span> <span class="nav-text">1. Serialize 说起</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-Parcel-%E7%AE%80%E4%BB%8B"><span class="nav-number">2.</span> <span class="nav-text">2. Parcel 简介</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-Parcel-%E6%9C%BA%E5%88%B6%E8%AF%A6%E8%A7%A3"><span class="nav-number">3.</span> <span class="nav-text">3. Parcel 机制详解</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-%E6%BA%90%E7%A0%81%E4%BD%8D%E7%BD%AE"><span class="nav-number">3.1.</span> <span class="nav-text">3.1. 源码位置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-1-Parcel-java"><span class="nav-number">3.1.1.</span> <span class="nav-text">3.1.1. Parcel.java</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">146</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">86</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">102</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

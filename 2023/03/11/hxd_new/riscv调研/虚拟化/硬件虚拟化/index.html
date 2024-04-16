@@ -17,15 +17,15 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
   </script>
 
-  <meta name="description" content="riscv qemu-kvm 框架 arm vs riscv 硬件虚拟化 riscv-aiariscv 体系下, 中断直通需要 支持 aia 架构的 riscv-imsic  https:&#x2F;&#x2F;github.com&#x2F;riscv&#x2F;riscv-aia&#x2F; riscv-imsic stable riscv-imsic release riscv-iommu设备直通需要 iommu 组件, riscv 体系下">
+  <meta name="description" content="riscv qemu-kvm 框架 arm vs riscv 硬件虚拟化 riscv-aiariscv 体系下, 中断直通需要 支持 aia 架构的 riscv-imsic  https:&#x2F;&#x2F;github.com&#x2F;riscv&#x2F;riscv-aia&#x2F; riscv-imsic stable riscv-imsic release riscv-iommu">
 <meta property="og:type" content="article">
 <meta property="og:title" content="riscv 硬件虚拟化概况">
 <meta property="og:url" content="https://liguangzhang.github.io/2023/03/11/hxd_new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/%E7%A1%AC%E4%BB%B6%E8%99%9A%E6%8B%9F%E5%8C%96/index.html">
 <meta property="og:site_name" content="blog">
-<meta property="og:description" content="riscv qemu-kvm 框架 arm vs riscv 硬件虚拟化 riscv-aiariscv 体系下, 中断直通需要 支持 aia 架构的 riscv-imsic  https:&#x2F;&#x2F;github.com&#x2F;riscv&#x2F;riscv-aia&#x2F; riscv-imsic stable riscv-imsic release riscv-iommu设备直通需要 iommu 组件, riscv 体系下">
+<meta property="og:description" content="riscv qemu-kvm 框架 arm vs riscv 硬件虚拟化 riscv-aiariscv 体系下, 中断直通需要 支持 aia 架构的 riscv-imsic  https:&#x2F;&#x2F;github.com&#x2F;riscv&#x2F;riscv-aia&#x2F; riscv-imsic stable riscv-imsic release riscv-iommu">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-03-11T10:15:54.000Z">
 <meta property="article:modified_time" content="2024-04-16T06:03:20.540Z">
@@ -356,20 +356,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-count">146</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-count">86</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-count">102</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>

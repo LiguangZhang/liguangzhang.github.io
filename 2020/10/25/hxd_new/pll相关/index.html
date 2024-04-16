@@ -17,15 +17,15 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
   </script>
 
-  <meta name="description" content="性能指标相位噪声、杂散以及瞬态响应 相位噪声在频域中，这通常被认为是噪声功率相对于载波功率的密度 频谱分析仪测试相位噪声的一个示例。  杂散杂散可以被认为是集中在与载波的特定偏移处的噪声。 杂散有很多种，它们可能有多种原因，但其中大多数发生在非常可预测的偏移处。 杂散倾向于出现在鉴频鉴相器频率、输入参考频率、通道间隔和几分之一通道间隔的倍数处。  瞬态响应和锁定时间锁定时间通常被认为是在 N 分频">
+  <meta name="description" content="性能指标相位噪声、杂散以及瞬态响应 相位噪声在频域中，这通常被认为是噪声功率相对于载波功率的密度 频谱分析仪测试相位噪声的一个示例。  杂散杂散可以被认为是集中在与载波的特定偏移处的噪声。 杂散有很多种，它们可能有多种原因，但其中大多数发生在非常可预测的偏移处。 杂散倾向于出现在鉴频鉴相器频率、输入参考频率、通道间隔和几分之一通道间隔的倍数处。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="pll 相关">
 <meta property="og:url" content="https://liguangzhang.github.io/2020/10/25/hxd_new/pll%E7%9B%B8%E5%85%B3/index.html">
 <meta property="og:site_name" content="blog">
-<meta property="og:description" content="性能指标相位噪声、杂散以及瞬态响应 相位噪声在频域中，这通常被认为是噪声功率相对于载波功率的密度 频谱分析仪测试相位噪声的一个示例。  杂散杂散可以被认为是集中在与载波的特定偏移处的噪声。 杂散有很多种，它们可能有多种原因，但其中大多数发生在非常可预测的偏移处。 杂散倾向于出现在鉴频鉴相器频率、输入参考频率、通道间隔和几分之一通道间隔的倍数处。  瞬态响应和锁定时间锁定时间通常被认为是在 N 分频">
+<meta property="og:description" content="性能指标相位噪声、杂散以及瞬态响应 相位噪声在频域中，这通常被认为是噪声功率相对于载波功率的密度 频谱分析仪测试相位噪声的一个示例。  杂散杂散可以被认为是集中在与载波的特定偏移处的噪声。 杂散有很多种，它们可能有多种原因，但其中大多数发生在非常可预测的偏移处。 杂散倾向于出现在鉴频鉴相器频率、输入参考频率、通道间隔和几分之一通道间隔的倍数处。">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://pic1.zhimg.com/v2-96dbe248455431a21b34b8b8ed7e66dc_b.jpg">
 <meta property="og:image" content="https://pic4.zhimg.com/v2-669fbe125d44307b36b64d85fafc5087_b.jpg">
@@ -506,20 +506,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-count">146</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-count">86</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-count">102</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>

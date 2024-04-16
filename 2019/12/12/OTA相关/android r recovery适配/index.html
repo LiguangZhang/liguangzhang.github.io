@@ -17,7 +17,7 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
   </script>
 
   <meta name="description" content="遇到的问题 抓kernel log fastboot oem uart-enable，重启后，会吐出kernel log， 否则只有kernel之前的log  提前设置好启动模式，misc不要清除   关掉avb校验 fastboot flash vbmeta --disable-verification  export ANDROID_PRODUCT_OUT&#x3D;&#x2F;home&#x2F;mi&#x2F;work_spac">
@@ -268,7 +268,7 @@
 <li><p>hidl 出错</p>
 <p>等待进一步调试，manifest是正常的，需要加log调试</p>
 <blockquote>
-<p>HidlServiceManagement: Waited one second for <a href="mailto:&#97;&#110;&#x64;&#x72;&#x6f;&#x69;&#x64;&#x2e;&#104;&#x61;&#x72;&#100;&#x77;&#97;&#x72;&#101;&#46;&#x6b;&#x65;&#121;&#x6d;&#97;&#x73;&#x74;&#x65;&#114;&#64;&#52;&#46;&#48;">&#97;&#110;&#x64;&#x72;&#x6f;&#x69;&#x64;&#x2e;&#104;&#x61;&#x72;&#100;&#x77;&#97;&#x72;&#101;&#46;&#x6b;&#x65;&#121;&#x6d;&#97;&#x73;&#x74;&#x65;&#114;&#64;&#52;&#46;&#48;</a>::IKeymasterDevice&#x2F;default</p>
+<p>HidlServiceManagement: Waited one second for <a href="mailto:&#x61;&#110;&#100;&#114;&#x6f;&#105;&#x64;&#46;&#104;&#97;&#x72;&#x64;&#119;&#97;&#x72;&#x65;&#x2e;&#107;&#x65;&#121;&#109;&#x61;&#115;&#116;&#x65;&#x72;&#x40;&#52;&#46;&#x30;">&#x61;&#110;&#100;&#114;&#x6f;&#105;&#x64;&#46;&#104;&#97;&#x72;&#x64;&#119;&#97;&#x72;&#x65;&#x2e;&#107;&#x65;&#121;&#109;&#x61;&#115;&#116;&#x65;&#x72;&#x40;&#52;&#46;&#x30;</a>::IKeymasterDevice&#x2F;default</p>
 </blockquote>
 <p>stop hwservicemanager后， 自动重启到recovery</p>
 <p>这个是vdc命令触发的，先关掉<code>reboot_into_recovery</code></p>
@@ -383,20 +383,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-count">146</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-count">86</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-count">102</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
