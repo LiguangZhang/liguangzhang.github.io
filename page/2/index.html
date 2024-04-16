@@ -17,7 +17,7 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
   <meta property="og:type" content="website">
@@ -144,18 +144,21 @@
   <span class="search-icon">
     <i class="fa fa-search"></i>
   </span>
-  <div class="search-input-container"></div>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
   <span class="popup-btn-close">
     <i class="fa fa-times-circle"></i>
   </span>
 </div>
-<div class="algolia-results">
-  <div id="algolia-stats"></div>
-  <div id="algolia-hits"></div>
-  <div id="algolia-pagination" class="algolia-pagination"></div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
 </div>
 
-      
     </div>
   </div>
 
@@ -556,65 +559,6 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2024/04/15/OTA%E7%9B%B8%E5%85%B3/sgdisk_test/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2024/04/15/OTA%E7%9B%B8%E5%85%B3/sgdisk_test/" class="post-title-link" itemprop="url">未命名</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2024-04-15 18:00:00" itemprop="dateCreated datePublished" datetime="2024-04-15T18:00:00+08:00">2024-04-15</time>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">adb root;adb shell sgdisk --delete=34 /dev/block/sda; adb shell sgdisk --new=34:2883584:7208959 /dev/block/sda; adb shell sgdisk --change-name=34:ramdump /dev/block/sda; adb shell sgdisk --new=35 /dev/block/sda; adb shell sgdisk --change-name=35:userdata /dev/block/sda; adb shell sgdisk --print /dev/block/sda;</span><br></pre></td></tr></table></figure>
-
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2024/04/15/OTA%E7%9B%B8%E5%85%B3/trigger%20recovery%20log/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -655,6 +599,65 @@
       
           <h1 id="1-trigger-recovery-log"><a href="#1-trigger-recovery-log" class="headerlink" title="1. trigger recovery log"></a>1. trigger recovery log</h1><p>changes:</p>
 <p><a target="_blank" rel="noopener" href="http://gerritlvs.pt.miui.com/#/c/765451/">http://gerritlvs.pt.miui.com/#/c/765451/</a><br><a target="_blank" rel="noopener" href="http://gerritlvs.pt.miui.com/#/c/765465/">http://gerritlvs.pt.miui.com/#/c/765465/</a><br><a target="_blank" rel="noopener" href="http://gerritlvs.pt.miui.com/#/c/765466/">http://gerritlvs.pt.miui.com/#/c/765466/</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2024/04/15/OTA%E7%9B%B8%E5%85%B3/sgdisk_test/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2024/04/15/OTA%E7%9B%B8%E5%85%B3/sgdisk_test/" class="post-title-link" itemprop="url">未命名</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-04-15 18:00:00" itemprop="dateCreated datePublished" datetime="2024-04-15T18:00:00+08:00">2024-04-15</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">adb root;adb shell sgdisk --delete=34 /dev/block/sda; adb shell sgdisk --new=34:2883584:7208959 /dev/block/sda; adb shell sgdisk --change-name=34:ramdump /dev/block/sda; adb shell sgdisk --new=35 /dev/block/sda; adb shell sgdisk --change-name=35:userdata /dev/block/sda; adb shell sgdisk --print /dev/block/sda;</span><br></pre></td></tr></table></figure>
+
 
       
     </div>
@@ -872,12 +875,69 @@
       
           <h1 id="1-原生机器"><a href="#1-原生机器" class="headerlink" title="1. 原生机器"></a>1. 原生机器</h1><p>12-24 14:38:21.952  1167  1211 D UsbDeviceManager: push notification:已开启 USB MIDI 模式<br>12-24 14:38:33.232  1167  1211 I UsbDeviceManager: Setting USB config to<br>12-24 14:38:33.232  1167  1211 D UsbDeviceManager: setUsbConfig(1) request:17<br>12-24 14:38:33.344  1167  2115 E UsbDeviceManager: notifyCurrentFunction request:17 status:0</p>
 <p>12-24 14:38:33.681  1167  1211 D UsbDeviceManager: Clear notification<br>12-24 14:38:33.684  1167  1211 D UsbDeviceManager: push notification:正在通过 USB 为此设备充电</p>
-<p>12-24 14:38:21.602   767   946 I <a href="mailto:&#x61;&#110;&#x64;&#114;&#111;&#105;&#x64;&#x2e;&#104;&#x61;&#x72;&#100;&#x77;&#97;&#114;&#x65;&#x2e;&#x75;&#x73;&#98;&#46;&#x67;&#x61;&#100;&#103;&#x65;&#116;&#x40;&#49;&#46;&#x30;&#x2d;&#115;&#101;&#x72;&#x76;&#x69;&#99;&#x65;&#x2e;&#x77;&#x61;&#104;&#111;&#111;">&#x61;&#110;&#x64;&#114;&#111;&#105;&#x64;&#x2e;&#104;&#x61;&#x72;&#100;&#x77;&#97;&#114;&#x65;&#x2e;&#x75;&#x73;&#98;&#46;&#x67;&#x61;&#100;&#103;&#x65;&#116;&#x40;&#49;&#46;&#x30;&#x2d;&#115;&#101;&#x72;&#x76;&#x69;&#99;&#x65;&#x2e;&#x77;&#x61;&#104;&#111;&#111;</a>: setCurrentUsbFunctions MIDI<br>12-24 14:38:21.603   767   946 I <a href="mailto:&#97;&#x6e;&#100;&#114;&#111;&#105;&#100;&#x2e;&#x68;&#97;&#114;&#100;&#119;&#97;&#x72;&#101;&#46;&#x75;&#x73;&#x62;&#46;&#x67;&#97;&#x64;&#x67;&#x65;&#x74;&#x40;&#49;&#46;&#48;&#45;&#x73;&#x65;&#x72;&#x76;&#x69;&#x63;&#101;&#x2e;&#119;&#97;&#x68;&#111;&#x6f;">&#97;&#x6e;&#100;&#114;&#111;&#105;&#100;&#x2e;&#x68;&#97;&#114;&#100;&#119;&#97;&#x72;&#101;&#46;&#x75;&#x73;&#x62;&#46;&#x67;&#97;&#x64;&#x67;&#x65;&#x74;&#x40;&#49;&#46;&#48;&#45;&#x73;&#x65;&#x72;&#x76;&#x69;&#x63;&#101;&#x2e;&#119;&#97;&#x68;&#111;&#x6f;</a>: setCurrentUsbFunctions Adb<br>12-24 14:38:33.236   767   946 I <a href="mailto:&#97;&#x6e;&#100;&#114;&#x6f;&#105;&#100;&#x2e;&#x68;&#97;&#x72;&#100;&#119;&#x61;&#x72;&#101;&#46;&#117;&#x73;&#98;&#46;&#103;&#97;&#100;&#103;&#101;&#x74;&#64;&#49;&#46;&#48;&#x2d;&#x73;&#x65;&#114;&#x76;&#105;&#99;&#x65;&#x2e;&#119;&#97;&#x68;&#111;&#x6f;">&#97;&#x6e;&#100;&#114;&#x6f;&#105;&#100;&#x2e;&#x68;&#97;&#x72;&#100;&#119;&#x61;&#x72;&#101;&#46;&#117;&#x73;&#98;&#46;&#103;&#97;&#100;&#103;&#101;&#x74;&#64;&#49;&#46;&#48;&#x2d;&#x73;&#x65;&#114;&#x76;&#105;&#99;&#x65;&#x2e;&#119;&#97;&#x68;&#111;&#x6f;</a>: setCurrentUsbFunctions None</p>
-<p>12-24 14:38:33.338   767   946 I <a href="mailto:&#97;&#110;&#100;&#x72;&#111;&#105;&#100;&#46;&#104;&#97;&#x72;&#x64;&#119;&#97;&#114;&#x65;&#46;&#117;&#x73;&#x62;&#46;&#103;&#97;&#x64;&#103;&#101;&#x74;&#x40;&#49;&#x2e;&#48;&#x2d;&#x73;&#101;&#x72;&#118;&#x69;&#x63;&#x65;&#46;&#x77;&#x61;&#x68;&#x6f;&#x6f;">&#97;&#110;&#100;&#x72;&#111;&#105;&#100;&#46;&#104;&#97;&#x72;&#x64;&#119;&#97;&#114;&#x65;&#46;&#117;&#x73;&#x62;&#46;&#103;&#97;&#x64;&#103;&#101;&#x74;&#x40;&#49;&#x2e;&#48;&#x2d;&#x73;&#101;&#x72;&#118;&#x69;&#x63;&#x65;&#46;&#x77;&#x61;&#x68;&#x6f;&#x6f;</a>: setCurrentUsbFunctions Adb</p>
+<p>12-24 14:38:21.602   767   946 I <a href="mailto:&#x61;&#x6e;&#x64;&#x72;&#111;&#105;&#100;&#x2e;&#x68;&#x61;&#114;&#x64;&#119;&#x61;&#x72;&#101;&#x2e;&#117;&#x73;&#x62;&#x2e;&#x67;&#97;&#x64;&#103;&#101;&#116;&#x40;&#x31;&#x2e;&#x30;&#45;&#x73;&#x65;&#114;&#118;&#105;&#x63;&#x65;&#x2e;&#x77;&#x61;&#x68;&#x6f;&#x6f;">&#x61;&#x6e;&#x64;&#x72;&#111;&#105;&#100;&#x2e;&#x68;&#x61;&#114;&#x64;&#119;&#x61;&#x72;&#101;&#x2e;&#117;&#x73;&#x62;&#x2e;&#x67;&#97;&#x64;&#103;&#101;&#116;&#x40;&#x31;&#x2e;&#x30;&#45;&#x73;&#x65;&#114;&#118;&#105;&#x63;&#x65;&#x2e;&#x77;&#x61;&#x68;&#x6f;&#x6f;</a>: setCurrentUsbFunctions MIDI<br>12-24 14:38:21.603   767   946 I <a href="mailto:&#x61;&#110;&#100;&#x72;&#111;&#x69;&#x64;&#x2e;&#104;&#97;&#x72;&#100;&#119;&#x61;&#114;&#101;&#x2e;&#117;&#115;&#98;&#x2e;&#x67;&#97;&#100;&#103;&#101;&#116;&#64;&#x31;&#x2e;&#x30;&#45;&#x73;&#x65;&#x72;&#x76;&#105;&#x63;&#x65;&#46;&#119;&#x61;&#x68;&#x6f;&#111;">&#x61;&#110;&#100;&#x72;&#111;&#x69;&#x64;&#x2e;&#104;&#97;&#x72;&#100;&#119;&#x61;&#114;&#101;&#x2e;&#117;&#115;&#98;&#x2e;&#x67;&#97;&#100;&#103;&#101;&#116;&#64;&#x31;&#x2e;&#x30;&#45;&#x73;&#x65;&#x72;&#x76;&#105;&#x63;&#x65;&#46;&#119;&#x61;&#x68;&#x6f;&#111;</a>: setCurrentUsbFunctions Adb<br>12-24 14:38:33.236   767   946 I <a href="mailto:&#97;&#x6e;&#100;&#114;&#x6f;&#x69;&#x64;&#46;&#104;&#x61;&#x72;&#100;&#119;&#x61;&#x72;&#101;&#46;&#x75;&#x73;&#98;&#x2e;&#103;&#97;&#x64;&#103;&#101;&#116;&#64;&#x31;&#x2e;&#x30;&#45;&#x73;&#x65;&#x72;&#118;&#105;&#99;&#101;&#46;&#119;&#97;&#104;&#111;&#x6f;">&#97;&#x6e;&#100;&#114;&#x6f;&#x69;&#x64;&#46;&#104;&#x61;&#x72;&#100;&#119;&#x61;&#x72;&#101;&#46;&#x75;&#x73;&#98;&#x2e;&#103;&#97;&#x64;&#103;&#101;&#116;&#64;&#x31;&#x2e;&#x30;&#45;&#x73;&#x65;&#x72;&#118;&#105;&#99;&#101;&#46;&#119;&#97;&#104;&#111;&#x6f;</a>: setCurrentUsbFunctions None</p>
+<p>12-24 14:38:33.338   767   946 I <a href="mailto:&#97;&#110;&#100;&#114;&#x6f;&#x69;&#x64;&#46;&#104;&#97;&#114;&#x64;&#119;&#x61;&#114;&#x65;&#46;&#117;&#115;&#98;&#x2e;&#x67;&#97;&#100;&#x67;&#x65;&#x74;&#64;&#49;&#x2e;&#x30;&#x2d;&#115;&#x65;&#114;&#x76;&#x69;&#x63;&#101;&#x2e;&#x77;&#97;&#104;&#111;&#x6f;">&#97;&#110;&#100;&#114;&#x6f;&#x69;&#x64;&#46;&#104;&#97;&#114;&#x64;&#119;&#x61;&#114;&#x65;&#46;&#117;&#115;&#98;&#x2e;&#x67;&#97;&#100;&#x67;&#x65;&#x74;&#64;&#49;&#x2e;&#x30;&#x2d;&#115;&#x65;&#114;&#x76;&#x69;&#x63;&#101;&#x2e;&#x77;&#97;&#104;&#111;&#x6f;</a>: setCurrentUsbFunctions Adb</p>
 <p>12-24 14:20:15.537  1167  1211 D UsbMidiDeviceJNI: subdevices_count: 1<br>12-24 14:20:38.370  1167 21264 D UsbMidiDevice: output thread exit<br>12-24 14:20:38.423  1167 21263 D UsbMidiDevice: input thread exit<br>12-24 14:38:22.083  1167  1211 D UsbMidiDeviceJNI: subdevices_count: 1</p>
 <p>12-24 14:38:33.687  1167 21624 D UsbMidiDevice: output thread exit<br>12-24 14:38:33.736  1167 21623 D UsbMidiDevice: input thread exit</p>
 <h1 id="2-平台机器加log"><a href="#2-平台机器加log" class="headerlink" title="2. 平台机器加log"></a>2. 平台机器加log</h1><p>.&#x2F;00-1217_153029&#x2F;android&#x2F;0000.log:37775:M008F2D 12-17 15:33:27.761   660   798 D UsbMidiDevice: call closeLocked<br>.&#x2F;00-1217_153029&#x2F;android&#x2F;0000.log:37777:M008F2F 12-17 15:33:27.762   660  2483 D UsbMidiDevice: reader input thread loop<br>.&#x2F;00-1217_153029&#x2F;android&#x2F;0000.log:37778:M008F30 12-17 15:33:27.762   660  2484 D UsbMidiDevice: output thread exit<br>.&#x2F;00-1217_153029&#x2F;android&#x2F;0000.log:37847:M008F75 12-17 15:33:27.815   660  2483 D UsbMidiDevice: input thread exit</p>
 
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2024/04/15/log%E5%88%86%E6%9E%90/bug1002089/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2024/04/15/log%E5%88%86%E6%9E%90/bug1002089/" class="post-title-link" itemprop="url">未命名</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-04-15 18:00:00" itemprop="dateCreated datePublished" datetime="2024-04-15T18:00:00+08:00">2024-04-15</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="1-首次开机log"><a href="#1-首次开机log" class="headerlink" title="1. 首次开机log"></a>1. 首次开机log</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">./2015-01-01-05-29-34/android/0-system-05-29-35.log:1077:01-01 05:30:19.419   640   655 D UsbDeviceManager: systemReady</span><br><span class="line">#provision apk启动</span><br><span class="line">./2015-01-01-05-29-34/android/0-system-05-29-35.log:1337:01-01 05:30:21.759   640   651 I ActivityManager: START u0 &#123;act=android.intent.action.MAIN cat=[android.intent.category.HOME] flg=0x10000000 cmp=com.android.provision/.DefaultActivity&#125; from pid 0</span><br><span class="line">#发送广播</span><br><span class="line">./2015-01-01-05-29-34/android/0-system-05-29-35.log:1360:01-01 05:30:22.299   640   822 D UsbDeviceManager: DEVICE_PROVISIONED state = true</span><br><span class="line">./2015-01-01-05-29-34/android/0-system-05-29-35.log:1361:01-01 05:30:22.309   640   659 D UsbDeviceManager: broadcasting Intent &#123; act=android.hardware.usb.action.USB_STATE flg=0x20000000 (has extras) &#125; extras: Bundle[&#123;connected=true, adb=true, mtp=true, configured=true&#125;]</span><br><span class="line"></span><br><span class="line">#启动launcher</span><br><span class="line">./0-system-05-29-35.log:1385:01-01 05:30:22.409   640   822 I ActivityManager: START u0 &#123;act=android.intent.action.MAIN cat=[android.intent.category.HOME] flg=0x10000000 cmp=com.sprd.simple.launcher/com.sprd.classichome.Home&#125; from pid 0</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">./2015-01-01-05-29-34/android/0-system-05-29-35.log:3382:01-01 13:30:34.109   640   640 D UsbDeviceManager: boot completed</span><br><span class="line"></span><br><span class="line">#启动</span><br><span class="line">./2015-01-01-05-29-34/android/0-system-05-29-35.log:3257:01-01 13:30:29.799   640   651 I ActivityManager: START u0 &#123;act=com.sprd.settings.APPLICATION_SPRD_USB_SETTINGS flg=0x10200000 cmp=com.android.settings/com.sprd.settings.SprdUsbSettings&#125; from pid 1064</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">./2015-01-01-05-29-34/android/0-main-05-29-35.log:11527:01-01 13:30:30.259  1064  1064 D SprdUsbSettings: on Create</span><br><span class="line">./2015-01-01-05-29-34/android/0-main-05-29-35.log:11538:01-01 13:30:30.329  1064  1064 D SprdUsbSettings: on onStart</span><br><span class="line">./2015-01-01-05-29-34/android/0-main-05-29-35.log:11543:01-01 13:30:30.339  1064  1064 D SprdUsbSettings: on Resume</span><br><span class="line">./2015-01-01-05-29-34/android/0-main-05-29-35.log:11558:01-01 13:30:30.439  1064  1064 D SprdUsbSettings: plugType = 2</span><br><span class="line">./2015-01-01-05-29-34/android/0-main-05-29-35.log:11559:01-01 13:30:30.439  1064  1064 I SprdUsbSettings: action is: android.hardware.usb.action.USB_STATE</span><br></pre></td></tr></table></figure>
       
     </div>
 
@@ -952,63 +1012,6 @@
 
 
 
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2024/04/15/log%E5%88%86%E6%9E%90/bug1002089/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2024/04/15/log%E5%88%86%E6%9E%90/bug1002089/" class="post-title-link" itemprop="url">未命名</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2024-04-15 18:00:00" itemprop="dateCreated datePublished" datetime="2024-04-15T18:00:00+08:00">2024-04-15</time>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="1-首次开机log"><a href="#1-首次开机log" class="headerlink" title="1. 首次开机log"></a>1. 首次开机log</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">./2015-01-01-05-29-34/android/0-system-05-29-35.log:1077:01-01 05:30:19.419   640   655 D UsbDeviceManager: systemReady</span><br><span class="line">#provision apk启动</span><br><span class="line">./2015-01-01-05-29-34/android/0-system-05-29-35.log:1337:01-01 05:30:21.759   640   651 I ActivityManager: START u0 &#123;act=android.intent.action.MAIN cat=[android.intent.category.HOME] flg=0x10000000 cmp=com.android.provision/.DefaultActivity&#125; from pid 0</span><br><span class="line">#发送广播</span><br><span class="line">./2015-01-01-05-29-34/android/0-system-05-29-35.log:1360:01-01 05:30:22.299   640   822 D UsbDeviceManager: DEVICE_PROVISIONED state = true</span><br><span class="line">./2015-01-01-05-29-34/android/0-system-05-29-35.log:1361:01-01 05:30:22.309   640   659 D UsbDeviceManager: broadcasting Intent &#123; act=android.hardware.usb.action.USB_STATE flg=0x20000000 (has extras) &#125; extras: Bundle[&#123;connected=true, adb=true, mtp=true, configured=true&#125;]</span><br><span class="line"></span><br><span class="line">#启动launcher</span><br><span class="line">./0-system-05-29-35.log:1385:01-01 05:30:22.409   640   822 I ActivityManager: START u0 &#123;act=android.intent.action.MAIN cat=[android.intent.category.HOME] flg=0x10000000 cmp=com.sprd.simple.launcher/com.sprd.classichome.Home&#125; from pid 0</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">./2015-01-01-05-29-34/android/0-system-05-29-35.log:3382:01-01 13:30:34.109   640   640 D UsbDeviceManager: boot completed</span><br><span class="line"></span><br><span class="line">#启动</span><br><span class="line">./2015-01-01-05-29-34/android/0-system-05-29-35.log:3257:01-01 13:30:29.799   640   651 I ActivityManager: START u0 &#123;act=com.sprd.settings.APPLICATION_SPRD_USB_SETTINGS flg=0x10200000 cmp=com.android.settings/com.sprd.settings.SprdUsbSettings&#125; from pid 1064</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">./2015-01-01-05-29-34/android/0-main-05-29-35.log:11527:01-01 13:30:30.259  1064  1064 D SprdUsbSettings: on Create</span><br><span class="line">./2015-01-01-05-29-34/android/0-main-05-29-35.log:11538:01-01 13:30:30.329  1064  1064 D SprdUsbSettings: on onStart</span><br><span class="line">./2015-01-01-05-29-34/android/0-main-05-29-35.log:11543:01-01 13:30:30.339  1064  1064 D SprdUsbSettings: on Resume</span><br><span class="line">./2015-01-01-05-29-34/android/0-main-05-29-35.log:11558:01-01 13:30:30.439  1064  1064 D SprdUsbSettings: plugType = 2</span><br><span class="line">./2015-01-01-05-29-34/android/0-main-05-29-35.log:11559:01-01 13:30:30.439  1064  1064 I SprdUsbSettings: action is: android.hardware.usb.action.USB_STATE</span><br></pre></td></tr></table></figure>
       
     </div>
 
@@ -1184,10 +1187,7 @@
 
 
   
-<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
-<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
-<script src="/js/algolia-search.js"></script>
-
+<script src="/js/local-search.js"></script>
 
 
 

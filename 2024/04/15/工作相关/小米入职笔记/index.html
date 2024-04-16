@@ -17,7 +17,7 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
   <meta name="description" content="1. push代码push相关的命令git push 12345git remote -v 查看project名称git log --decorate 查看推送分支eg:git push ssh:&#x2F;&#x2F;zhangliguang@gerrit.pt.miui.com:29418&#x2F;miui&#x2F;bootable&#x2F;recoverymiui&#x2F;v10-p-secureboot-dev  2. 手机版本信息E7-红">
@@ -148,18 +148,21 @@
   <span class="search-icon">
     <i class="fa fa-search"></i>
   </span>
-  <div class="search-input-container"></div>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
   <span class="popup-btn-close">
     <i class="fa fa-times-circle"></i>
   </span>
 </div>
-<div class="algolia-results">
-  <div id="algolia-stats"></div>
-  <div id="algolia-hits"></div>
-  <div id="algolia-pagination" class="algolia-pagination"></div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
 </div>
 
-      
     </div>
   </div>
 
@@ -322,7 +325,7 @@
 <ol>
 <li>vold</li>
 </ol>
-<p><a href="mailto:&#97;&#110;&#x64;&#x72;&#x6f;&#x69;&#100;&#x2e;&#104;&#97;&#114;&#100;&#x77;&#97;&#114;&#x65;&#46;&#107;&#101;&#x79;&#109;&#97;&#x73;&#116;&#x65;&#114;&#64;&#51;&#x2e;&#48;&#x2e;&#x73;&#111;">&#97;&#110;&#x64;&#x72;&#x6f;&#x69;&#100;&#x2e;&#104;&#97;&#114;&#100;&#x77;&#97;&#114;&#x65;&#46;&#107;&#101;&#x79;&#109;&#97;&#x73;&#116;&#x65;&#114;&#64;&#51;&#x2e;&#48;&#x2e;&#x73;&#111;</a><br><a href="mailto:&#x61;&#110;&#x64;&#114;&#111;&#105;&#x64;&#x2e;&#x68;&#97;&#114;&#100;&#x77;&#x61;&#x72;&#x65;&#x2e;&#x6b;&#x65;&#121;&#x6d;&#97;&#x73;&#x74;&#x65;&#x72;&#x40;&#52;&#x2e;&#48;&#46;&#x73;&#111;">&#x61;&#110;&#x64;&#114;&#111;&#105;&#x64;&#x2e;&#x68;&#97;&#114;&#100;&#x77;&#x61;&#x72;&#x65;&#x2e;&#x6b;&#x65;&#121;&#x6d;&#97;&#x73;&#x74;&#x65;&#x72;&#x40;&#52;&#x2e;&#48;&#46;&#x73;&#111;</a><br>libbinder.so</p>
+<p><a href="mailto:&#x61;&#x6e;&#100;&#x72;&#111;&#x69;&#x64;&#46;&#x68;&#x61;&#114;&#100;&#119;&#97;&#x72;&#101;&#46;&#107;&#101;&#x79;&#109;&#97;&#x73;&#116;&#101;&#x72;&#64;&#x33;&#x2e;&#x30;&#46;&#x73;&#x6f;">&#x61;&#x6e;&#100;&#x72;&#111;&#x69;&#x64;&#46;&#x68;&#x61;&#114;&#100;&#119;&#97;&#x72;&#101;&#46;&#107;&#101;&#x79;&#109;&#97;&#x73;&#116;&#101;&#x72;&#64;&#x33;&#x2e;&#x30;&#46;&#x73;&#x6f;</a><br><a href="mailto:&#97;&#110;&#100;&#114;&#x6f;&#105;&#100;&#46;&#104;&#x61;&#x72;&#100;&#x77;&#97;&#114;&#101;&#x2e;&#x6b;&#x65;&#x79;&#109;&#97;&#115;&#116;&#101;&#x72;&#64;&#x34;&#46;&#48;&#46;&#x73;&#x6f;">&#97;&#110;&#100;&#114;&#x6f;&#105;&#100;&#46;&#104;&#x61;&#x72;&#100;&#x77;&#97;&#114;&#101;&#x2e;&#x6b;&#x65;&#x79;&#109;&#97;&#115;&#116;&#101;&#x72;&#64;&#x34;&#46;&#48;&#46;&#x73;&#x6f;</a><br>libbinder.so</p>
 <h2 id="2-5-F2问题追踪"><a href="#2-5-F2问题追踪" class="headerlink" title="2.5. F2问题追踪"></a>2.5. F2问题追踪</h2><p>&#x2F;cache调试</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dd if=/data/recovery.img of=/dev/block/bootdevice/by-name/recovery</span><br></pre></td></tr></table></figure>
 
@@ -526,10 +529,7 @@
 
 
   
-<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
-<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
-<script src="/js/algolia-search.js"></script>
-
+<script src="/js/local-search.js"></script>
 
 
 

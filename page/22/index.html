@@ -17,7 +17,7 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
   <meta property="og:type" content="website">
@@ -144,18 +144,21 @@
   <span class="search-icon">
     <i class="fa fa-search"></i>
   </span>
-  <div class="search-input-container"></div>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
   <span class="popup-btn-close">
     <i class="fa fa-times-circle"></i>
   </span>
 </div>
-<div class="algolia-results">
-  <div id="algolia-stats"></div>
-  <div id="algolia-hits"></div>
-  <div id="algolia-pagination" class="algolia-pagination"></div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
 </div>
 
-      
     </div>
   </div>
 
@@ -2545,7 +2548,7 @@
 <li><p>hidl 出错</p>
 <p>等待进一步调试，manifest是正常的，需要加log调试</p>
 <blockquote>
-<p>HidlServiceManagement: Waited one second for <a href="mailto:&#x61;&#x6e;&#100;&#114;&#x6f;&#x69;&#100;&#x2e;&#104;&#97;&#114;&#x64;&#119;&#97;&#114;&#101;&#x2e;&#x6b;&#101;&#x79;&#x6d;&#x61;&#115;&#x74;&#101;&#114;&#x40;&#x34;&#x2e;&#x30;">&#x61;&#x6e;&#100;&#114;&#x6f;&#x69;&#100;&#x2e;&#104;&#97;&#114;&#x64;&#119;&#97;&#114;&#101;&#x2e;&#x6b;&#101;&#x79;&#x6d;&#x61;&#115;&#x74;&#101;&#114;&#x40;&#x34;&#x2e;&#x30;</a>::IKeymasterDevice&#x2F;default</p>
+<p>HidlServiceManagement: Waited one second for <a href="mailto:&#97;&#110;&#x64;&#x72;&#x6f;&#x69;&#x64;&#x2e;&#104;&#x61;&#x72;&#100;&#x77;&#97;&#x72;&#101;&#46;&#x6b;&#x65;&#121;&#x6d;&#97;&#x73;&#x74;&#x65;&#114;&#64;&#52;&#46;&#48;">&#97;&#110;&#x64;&#x72;&#x6f;&#x69;&#x64;&#x2e;&#104;&#x61;&#x72;&#100;&#x77;&#97;&#x72;&#101;&#46;&#x6b;&#x65;&#121;&#x6d;&#97;&#x73;&#x74;&#x65;&#114;&#64;&#52;&#46;&#48;</a>::IKeymasterDevice&#x2F;default</p>
 </blockquote>
 <p>stop hwservicemanager后， 自动重启到recovery</p>
 <p>这个是vdc命令触发的，先关掉<code>reboot_into_recovery</code></p>
@@ -2830,10 +2833,7 @@
 
 
   
-<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
-<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
-<script src="/js/algolia-search.js"></script>
-
+<script src="/js/local-search.js"></script>
 
 
 

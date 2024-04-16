@@ -17,7 +17,7 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
   <meta name="description" content="1. 原生机器12-24 14:38:21.952  1167  1211 D UsbDeviceManager: push notification:已开启 USB MIDI 模式12-24 14:38:33.232  1167  1211 I UsbDeviceManager: Setting USB config to12-24 14:38:33.232  1167  1211 D UsbD">
@@ -148,18 +148,21 @@
   <span class="search-icon">
     <i class="fa fa-search"></i>
   </span>
-  <div class="search-input-container"></div>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
   <span class="popup-btn-close">
     <i class="fa fa-times-circle"></i>
   </span>
 </div>
-<div class="algolia-results">
-  <div id="algolia-stats"></div>
-  <div id="algolia-hits"></div>
-  <div id="algolia-pagination" class="algolia-pagination"></div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
 </div>
 
-      
     </div>
   </div>
 
@@ -225,8 +228,8 @@
       
         <h1 id="1-原生机器"><a href="#1-原生机器" class="headerlink" title="1. 原生机器"></a>1. 原生机器</h1><p>12-24 14:38:21.952  1167  1211 D UsbDeviceManager: push notification:已开启 USB MIDI 模式<br>12-24 14:38:33.232  1167  1211 I UsbDeviceManager: Setting USB config to<br>12-24 14:38:33.232  1167  1211 D UsbDeviceManager: setUsbConfig(1) request:17<br>12-24 14:38:33.344  1167  2115 E UsbDeviceManager: notifyCurrentFunction request:17 status:0</p>
 <p>12-24 14:38:33.681  1167  1211 D UsbDeviceManager: Clear notification<br>12-24 14:38:33.684  1167  1211 D UsbDeviceManager: push notification:正在通过 USB 为此设备充电</p>
-<p>12-24 14:38:21.602   767   946 I <a href="mailto:&#x61;&#110;&#x64;&#114;&#111;&#105;&#x64;&#x2e;&#104;&#x61;&#x72;&#100;&#x77;&#97;&#114;&#x65;&#x2e;&#x75;&#x73;&#98;&#46;&#x67;&#x61;&#100;&#103;&#x65;&#116;&#x40;&#49;&#46;&#x30;&#x2d;&#115;&#101;&#x72;&#x76;&#x69;&#99;&#x65;&#x2e;&#x77;&#x61;&#104;&#111;&#111;">&#x61;&#110;&#x64;&#114;&#111;&#105;&#x64;&#x2e;&#104;&#x61;&#x72;&#100;&#x77;&#97;&#114;&#x65;&#x2e;&#x75;&#x73;&#98;&#46;&#x67;&#x61;&#100;&#103;&#x65;&#116;&#x40;&#49;&#46;&#x30;&#x2d;&#115;&#101;&#x72;&#x76;&#x69;&#99;&#x65;&#x2e;&#x77;&#x61;&#104;&#111;&#111;</a>: setCurrentUsbFunctions MIDI<br>12-24 14:38:21.603   767   946 I <a href="mailto:&#97;&#x6e;&#100;&#114;&#111;&#105;&#100;&#x2e;&#x68;&#97;&#114;&#100;&#119;&#97;&#x72;&#101;&#46;&#x75;&#x73;&#x62;&#46;&#x67;&#97;&#x64;&#x67;&#x65;&#x74;&#x40;&#49;&#46;&#48;&#45;&#x73;&#x65;&#x72;&#x76;&#x69;&#x63;&#101;&#x2e;&#119;&#97;&#x68;&#111;&#x6f;">&#97;&#x6e;&#100;&#114;&#111;&#105;&#100;&#x2e;&#x68;&#97;&#114;&#100;&#119;&#97;&#x72;&#101;&#46;&#x75;&#x73;&#x62;&#46;&#x67;&#97;&#x64;&#x67;&#x65;&#x74;&#x40;&#49;&#46;&#48;&#45;&#x73;&#x65;&#x72;&#x76;&#x69;&#x63;&#101;&#x2e;&#119;&#97;&#x68;&#111;&#x6f;</a>: setCurrentUsbFunctions Adb<br>12-24 14:38:33.236   767   946 I <a href="mailto:&#97;&#x6e;&#100;&#114;&#x6f;&#105;&#100;&#x2e;&#x68;&#97;&#x72;&#100;&#119;&#x61;&#x72;&#101;&#46;&#117;&#x73;&#98;&#46;&#103;&#97;&#100;&#103;&#101;&#x74;&#64;&#49;&#46;&#48;&#x2d;&#x73;&#x65;&#114;&#x76;&#105;&#99;&#x65;&#x2e;&#119;&#97;&#x68;&#111;&#x6f;">&#97;&#x6e;&#100;&#114;&#x6f;&#105;&#100;&#x2e;&#x68;&#97;&#x72;&#100;&#119;&#x61;&#x72;&#101;&#46;&#117;&#x73;&#98;&#46;&#103;&#97;&#100;&#103;&#101;&#x74;&#64;&#49;&#46;&#48;&#x2d;&#x73;&#x65;&#114;&#x76;&#105;&#99;&#x65;&#x2e;&#119;&#97;&#x68;&#111;&#x6f;</a>: setCurrentUsbFunctions None</p>
-<p>12-24 14:38:33.338   767   946 I <a href="mailto:&#97;&#110;&#100;&#x72;&#111;&#105;&#100;&#46;&#104;&#97;&#x72;&#x64;&#119;&#97;&#114;&#x65;&#46;&#117;&#x73;&#x62;&#46;&#103;&#97;&#x64;&#103;&#101;&#x74;&#x40;&#49;&#x2e;&#48;&#x2d;&#x73;&#101;&#x72;&#118;&#x69;&#x63;&#x65;&#46;&#x77;&#x61;&#x68;&#x6f;&#x6f;">&#97;&#110;&#100;&#x72;&#111;&#105;&#100;&#46;&#104;&#97;&#x72;&#x64;&#119;&#97;&#114;&#x65;&#46;&#117;&#x73;&#x62;&#46;&#103;&#97;&#x64;&#103;&#101;&#x74;&#x40;&#49;&#x2e;&#48;&#x2d;&#x73;&#101;&#x72;&#118;&#x69;&#x63;&#x65;&#46;&#x77;&#x61;&#x68;&#x6f;&#x6f;</a>: setCurrentUsbFunctions Adb</p>
+<p>12-24 14:38:21.602   767   946 I <a href="mailto:&#x61;&#x6e;&#x64;&#x72;&#111;&#105;&#100;&#x2e;&#x68;&#x61;&#114;&#x64;&#119;&#x61;&#x72;&#101;&#x2e;&#117;&#x73;&#x62;&#x2e;&#x67;&#97;&#x64;&#103;&#101;&#116;&#x40;&#x31;&#x2e;&#x30;&#45;&#x73;&#x65;&#114;&#118;&#105;&#x63;&#x65;&#x2e;&#x77;&#x61;&#x68;&#x6f;&#x6f;">&#x61;&#x6e;&#x64;&#x72;&#111;&#105;&#100;&#x2e;&#x68;&#x61;&#114;&#x64;&#119;&#x61;&#x72;&#101;&#x2e;&#117;&#x73;&#x62;&#x2e;&#x67;&#97;&#x64;&#103;&#101;&#116;&#x40;&#x31;&#x2e;&#x30;&#45;&#x73;&#x65;&#114;&#118;&#105;&#x63;&#x65;&#x2e;&#x77;&#x61;&#x68;&#x6f;&#x6f;</a>: setCurrentUsbFunctions MIDI<br>12-24 14:38:21.603   767   946 I <a href="mailto:&#x61;&#110;&#100;&#x72;&#111;&#x69;&#x64;&#x2e;&#104;&#97;&#x72;&#100;&#119;&#x61;&#114;&#101;&#x2e;&#117;&#115;&#98;&#x2e;&#x67;&#97;&#100;&#103;&#101;&#116;&#64;&#x31;&#x2e;&#x30;&#45;&#x73;&#x65;&#x72;&#x76;&#105;&#x63;&#x65;&#46;&#119;&#x61;&#x68;&#x6f;&#111;">&#x61;&#110;&#100;&#x72;&#111;&#x69;&#x64;&#x2e;&#104;&#97;&#x72;&#100;&#119;&#x61;&#114;&#101;&#x2e;&#117;&#115;&#98;&#x2e;&#x67;&#97;&#100;&#103;&#101;&#116;&#64;&#x31;&#x2e;&#x30;&#45;&#x73;&#x65;&#x72;&#x76;&#105;&#x63;&#x65;&#46;&#119;&#x61;&#x68;&#x6f;&#111;</a>: setCurrentUsbFunctions Adb<br>12-24 14:38:33.236   767   946 I <a href="mailto:&#97;&#x6e;&#100;&#114;&#x6f;&#x69;&#x64;&#46;&#104;&#x61;&#x72;&#100;&#119;&#x61;&#x72;&#101;&#46;&#x75;&#x73;&#98;&#x2e;&#103;&#97;&#x64;&#103;&#101;&#116;&#64;&#x31;&#x2e;&#x30;&#45;&#x73;&#x65;&#x72;&#118;&#105;&#99;&#101;&#46;&#119;&#97;&#104;&#111;&#x6f;">&#97;&#x6e;&#100;&#114;&#x6f;&#x69;&#x64;&#46;&#104;&#x61;&#x72;&#100;&#119;&#x61;&#x72;&#101;&#46;&#x75;&#x73;&#98;&#x2e;&#103;&#97;&#x64;&#103;&#101;&#116;&#64;&#x31;&#x2e;&#x30;&#45;&#x73;&#x65;&#x72;&#118;&#105;&#99;&#101;&#46;&#119;&#97;&#104;&#111;&#x6f;</a>: setCurrentUsbFunctions None</p>
+<p>12-24 14:38:33.338   767   946 I <a href="mailto:&#97;&#110;&#100;&#114;&#x6f;&#x69;&#x64;&#46;&#104;&#97;&#114;&#x64;&#119;&#x61;&#114;&#x65;&#46;&#117;&#115;&#98;&#x2e;&#x67;&#97;&#100;&#x67;&#x65;&#x74;&#64;&#49;&#x2e;&#x30;&#x2d;&#115;&#x65;&#114;&#x76;&#x69;&#x63;&#101;&#x2e;&#x77;&#97;&#104;&#111;&#x6f;">&#97;&#110;&#100;&#114;&#x6f;&#x69;&#x64;&#46;&#104;&#97;&#114;&#x64;&#119;&#x61;&#114;&#x65;&#46;&#117;&#115;&#98;&#x2e;&#x67;&#97;&#100;&#x67;&#x65;&#x74;&#64;&#49;&#x2e;&#x30;&#x2d;&#115;&#x65;&#114;&#x76;&#x69;&#x63;&#101;&#x2e;&#x77;&#97;&#104;&#111;&#x6f;</a>: setCurrentUsbFunctions Adb</p>
 <p>12-24 14:20:15.537  1167  1211 D UsbMidiDeviceJNI: subdevices_count: 1<br>12-24 14:20:38.370  1167 21264 D UsbMidiDevice: output thread exit<br>12-24 14:20:38.423  1167 21263 D UsbMidiDevice: input thread exit<br>12-24 14:38:22.083  1167  1211 D UsbMidiDeviceJNI: subdevices_count: 1</p>
 <p>12-24 14:38:33.687  1167 21624 D UsbMidiDevice: output thread exit<br>12-24 14:38:33.736  1167 21623 D UsbMidiDevice: input thread exit</p>
 <h1 id="2-平台机器加log"><a href="#2-平台机器加log" class="headerlink" title="2. 平台机器加log"></a>2. 平台机器加log</h1><p>.&#x2F;00-1217_153029&#x2F;android&#x2F;0000.log:37775:M008F2D 12-17 15:33:27.761   660   798 D UsbMidiDevice: call closeLocked<br>.&#x2F;00-1217_153029&#x2F;android&#x2F;0000.log:37777:M008F2F 12-17 15:33:27.762   660  2483 D UsbMidiDevice: reader input thread loop<br>.&#x2F;00-1217_153029&#x2F;android&#x2F;0000.log:37778:M008F30 12-17 15:33:27.762   660  2484 D UsbMidiDevice: output thread exit<br>.&#x2F;00-1217_153029&#x2F;android&#x2F;0000.log:37847:M008F75 12-17 15:33:27.815   660  2483 D UsbMidiDevice: input thread exit</p>
@@ -245,7 +248,7 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2024/04/15/log%E5%88%86%E6%9E%90/998199/" rel="prev" title="">
+    <a href="/2024/04/15/log%E5%88%86%E6%9E%90/bug1002089/" rel="prev" title="">
       <i class="fa fa-chevron-left"></i> 
     </a></div>
       <div class="post-nav-item">
@@ -416,10 +419,7 @@
 
 
   
-<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
-<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
-<script src="/js/algolia-search.js"></script>
-
+<script src="/js/local-search.js"></script>
 
 
 

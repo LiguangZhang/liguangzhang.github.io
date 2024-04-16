@@ -17,7 +17,7 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
   <meta property="og:type" content="website">
@@ -144,18 +144,21 @@
   <span class="search-icon">
     <i class="fa fa-search"></i>
   </span>
-  <div class="search-input-container"></div>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
   <span class="popup-btn-close">
     <i class="fa fa-times-circle"></i>
   </span>
 </div>
-<div class="algolia-results">
-  <div id="algolia-stats"></div>
-  <div id="algolia-hits"></div>
-  <div id="algolia-pagination" class="algolia-pagination"></div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
 </div>
 
-      
     </div>
   </div>
 
@@ -500,127 +503,6 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2024/04/15/hxd_new/hxd1901_evb/%E5%B0%8F%E6%A0%B8%E6%89%8B%E5%86%8C/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2024/04/15/hxd_new/hxd1901_evb/%E5%B0%8F%E6%A0%B8%E6%89%8B%E5%86%8C/" class="post-title-link" itemprop="url">未命名</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2024-04-15 17:59:59" itemprop="dateCreated datePublished" datetime="2024-04-15T17:59:59+08:00">2024-04-15</time>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="ram-ipsram-dpsram"><a href="#ram-ipsram-dpsram" class="headerlink" title="ram ipsram dpsram"></a>ram ipsram dpsram</h1><p>Scratchpad RAM (SPRAM) Support <a href="bookxnotepro://opennote/?nb={905527fd-6fa2-41c9-bb57-b101f588498d}&book=c5d248ecbdd08643c6737494ecd0f7ab&page=20&x=181&y=543&id=428">021</a><br>Can optionally replace 1 way of the I- and&#x2F;or D-cache with a fast scratchpad RAM <a href="bookxnotepro://opennote/?nb={905527fd-6fa2-41c9-bb57-b101f588498d}&book=c5d248ecbdd08643c6737494ecd0f7ab&page=20&x=291&y=567&id=430">021</a></p>
-<h2 id="IL-cache-line-size"><a href="#IL-cache-line-size" class="headerlink" title="IL cache line size"></a>IL cache line size</h2><p>This field contains the instruction cache line size. If an instruction cache is present, it must contain a fixed line size of 16 bytes. <a href="bookxnotepro://opennote/?nb={905527fd-6fa2-41c9-bb57-b101f588498d}&book=c5d248ecbdd08643c6737494ecd0f7ab&page=178&x=291&y=392&id=429">179</a></p>
-<h1 id="CP0-register"><a href="#CP0-register" class="headerlink" title="CP0 register"></a>CP0 register</h1><h2 id="CP0-config-寄存器"><a href="#CP0-config-寄存器" class="headerlink" title="CP0 config 寄存器"></a>CP0 config 寄存器</h2><p>Config Register (CP0 Register 16, Select 0) <a href="bookxnotepro://opennote/?nb={905527fd-6fa2-41c9-bb57-b101f588498d}&book=c5d248ecbdd08643c6737494ecd0f7ab&page=175&x=233&y=449&id=431">176</a></p>
-<h1 id="中断"><a href="#中断" class="headerlink" title="中断"></a>中断</h1><h2 id="Exception-Vectors"><a href="#Exception-Vectors" class="headerlink" title="Exception Vectors"></a>Exception Vectors</h2><p>Table 5.7 Exception Vectors <a href="bookxnotepro://opennote/?nb={905527fd-6fa2-41c9-bb57-b101f588498d}&book=c5d248ecbdd08643c6737494ecd0f7ab&page=110&x=306&y=510&id=432">111</a></p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2024/04/15/hxd_new/hxd1901_evb/%E9%87%8D%E6%9E%84%E9%A1%B9%E7%9B%AECRU/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2024/04/15/hxd_new/hxd1901_evb/%E9%87%8D%E6%9E%84%E9%A1%B9%E7%9B%AECRU/" class="post-title-link" itemprop="url">未命名</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2024-04-15 17:59:59" itemprop="dateCreated datePublished" datetime="2024-04-15T17:59:59+08:00">2024-04-15</time>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>请各模块同事check 下 重构项目 (<a target="_blank" rel="noopener" href="http://web.hexintek.com/gerrit/q/project:bsp%252Fdrivers%252Fhxd1901">bsp&#x2F;drivers&#x2F;hxd1901</a> | <a target="_blank" rel="noopener" href="http://web.hexintek.com/gerrit/q/project:bsp%252Fdrivers%252Fhxd1901+branch:master+status:open">master</a>)  evb 使用的时钟频率是否使用正确.</p>
-<p>请参照 <a target="_blank" rel="noopener" href="http://web.hexintek.com/gerrit/c/bsp/drivers/hxd1901/+/8269/3/drivers/arch/mips/soc/hxd1901/inc/cru.h">cru.h</a>)  里的各外设的时钟宏配置好对应外设的时钟频率(并不是所有外设都需要设定时钟, 可参照ua-validation和ia-validation里的配置进行修改).   请尽量兼顾evb 和  fpga 工程, evb 的工程配置会打开EVB宏,  未打开EVB宏则对应fpga的工程.</p>
-<p>有问题的地方或者遗漏的地方请指出.<br>后期时钟频点有可能修改, 请使用cru.h 里定义的时钟宏, 以便后期可以统一调整.</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2024/04/15/hxd_new/hxd1901_evb/mips%20%E5%A4%A7%E6%A0%B8%E6%89%8B%E5%86%8C/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -888,6 +770,127 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2024/04/15/hxd_new/hxd1901_evb/%E5%B0%8F%E6%A0%B8%E6%89%8B%E5%86%8C/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2024/04/15/hxd_new/hxd1901_evb/%E5%B0%8F%E6%A0%B8%E6%89%8B%E5%86%8C/" class="post-title-link" itemprop="url">未命名</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-04-15 17:59:59" itemprop="dateCreated datePublished" datetime="2024-04-15T17:59:59+08:00">2024-04-15</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="ram-ipsram-dpsram"><a href="#ram-ipsram-dpsram" class="headerlink" title="ram ipsram dpsram"></a>ram ipsram dpsram</h1><p>Scratchpad RAM (SPRAM) Support <a href="bookxnotepro://opennote/?nb={905527fd-6fa2-41c9-bb57-b101f588498d}&book=c5d248ecbdd08643c6737494ecd0f7ab&page=20&x=181&y=543&id=428">021</a><br>Can optionally replace 1 way of the I- and&#x2F;or D-cache with a fast scratchpad RAM <a href="bookxnotepro://opennote/?nb={905527fd-6fa2-41c9-bb57-b101f588498d}&book=c5d248ecbdd08643c6737494ecd0f7ab&page=20&x=291&y=567&id=430">021</a></p>
+<h2 id="IL-cache-line-size"><a href="#IL-cache-line-size" class="headerlink" title="IL cache line size"></a>IL cache line size</h2><p>This field contains the instruction cache line size. If an instruction cache is present, it must contain a fixed line size of 16 bytes. <a href="bookxnotepro://opennote/?nb={905527fd-6fa2-41c9-bb57-b101f588498d}&book=c5d248ecbdd08643c6737494ecd0f7ab&page=178&x=291&y=392&id=429">179</a></p>
+<h1 id="CP0-register"><a href="#CP0-register" class="headerlink" title="CP0 register"></a>CP0 register</h1><h2 id="CP0-config-寄存器"><a href="#CP0-config-寄存器" class="headerlink" title="CP0 config 寄存器"></a>CP0 config 寄存器</h2><p>Config Register (CP0 Register 16, Select 0) <a href="bookxnotepro://opennote/?nb={905527fd-6fa2-41c9-bb57-b101f588498d}&book=c5d248ecbdd08643c6737494ecd0f7ab&page=175&x=233&y=449&id=431">176</a></p>
+<h1 id="中断"><a href="#中断" class="headerlink" title="中断"></a>中断</h1><h2 id="Exception-Vectors"><a href="#Exception-Vectors" class="headerlink" title="Exception Vectors"></a>Exception Vectors</h2><p>Table 5.7 Exception Vectors <a href="bookxnotepro://opennote/?nb={905527fd-6fa2-41c9-bb57-b101f588498d}&book=c5d248ecbdd08643c6737494ecd0f7ab&page=110&x=306&y=510&id=432">111</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2024/04/15/hxd_new/hxd1901_evb/%E9%87%8D%E6%9E%84%E9%A1%B9%E7%9B%AECRU/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2024/04/15/hxd_new/hxd1901_evb/%E9%87%8D%E6%9E%84%E9%A1%B9%E7%9B%AECRU/" class="post-title-link" itemprop="url">未命名</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-04-15 17:59:59" itemprop="dateCreated datePublished" datetime="2024-04-15T17:59:59+08:00">2024-04-15</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>请各模块同事check 下 重构项目 (<a target="_blank" rel="noopener" href="http://web.hexintek.com/gerrit/q/project:bsp%252Fdrivers%252Fhxd1901">bsp&#x2F;drivers&#x2F;hxd1901</a> | <a target="_blank" rel="noopener" href="http://web.hexintek.com/gerrit/q/project:bsp%252Fdrivers%252Fhxd1901+branch:master+status:open">master</a>)  evb 使用的时钟频率是否使用正确.</p>
+<p>请参照 <a target="_blank" rel="noopener" href="http://web.hexintek.com/gerrit/c/bsp/drivers/hxd1901/+/8269/3/drivers/arch/mips/soc/hxd1901/inc/cru.h">cru.h</a>)  里的各外设的时钟宏配置好对应外设的时钟频率(并不是所有外设都需要设定时钟, 可参照ua-validation和ia-validation里的配置进行修改).   请尽量兼顾evb 和  fpga 工程, evb 的工程配置会打开EVB宏,  未打开EVB宏则对应fpga的工程.</p>
+<p>有问题的地方或者遗漏的地方请指出.<br>后期时钟频点有可能修改, 请使用cru.h 里定义的时钟宏, 以便后期可以统一调整.</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2024/04/15/hxd_new/hexdump%20%E6%A0%BC%E5%BC%8F%E5%8C%96%E8%BE%93%E5%87%BA/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1081,6 +1084,94 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2024/04/15/hxd_new/%E6%96%B0%E4%BA%BA%E6%96%87%E6%A1%A3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2024/04/15/hxd_new/%E6%96%B0%E4%BA%BA%E6%96%87%E6%A1%A3/" class="post-title-link" itemprop="url">未命名</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-04-15 17:59:59" itemprop="dateCreated datePublished" datetime="2024-04-15T17:59:59+08:00">2024-04-15</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <ol>
+<li><p>ssh -X <a href="mailto:&#121;&#x61;&#110;&#103;&#x2e;&#x7a;&#104;&#x61;&#x6e;&#x67;&#x40;&#49;&#x30;&#46;&#56;&#x2e;&#x30;&#46;&#49;">&#121;&#x61;&#110;&#103;&#x2e;&#x7a;&#104;&#x61;&#x6e;&#x67;&#x40;&#49;&#x30;&#46;&#56;&#x2e;&#x30;&#46;&#49;</a> -p 16667</p>
+</li>
+<li><p>openvpn admin 1234qwerASDF</p>
+</li>
+<li><p>先登录fpga，添加自己的账户密码sudo</p>
+<p>pc1: win10 ip: 172.16.10.25 ubuntu ip 172.16.10.2（可用于调试算法等）</p>
+<p>pc2: win10 ip: 172.16.10.21 ubuntu ip 172.16.10.23（可用于调试usb等硬件）</p>
+<p>ssh <a href="mailto:&#102;&#112;&#103;&#x61;&#64;&#x31;&#x37;&#x32;&#46;&#49;&#54;&#x2e;&#49;&#48;&#x2e;&#x32;">&#102;&#112;&#103;&#x61;&#64;&#x31;&#x37;&#x32;&#46;&#49;&#54;&#x2e;&#49;&#48;&#x2e;&#x32;</a>，密码123456</p>
+<p>添加自己账号</p>
+<p>sudo useradd -m -s &#x2F;bin&#x2F;bash yourname</p>
+<p>密码</p>
+<p>sudo passwd yourname</p>
+<p>添加sudo</p>
+<p>sudo vim &#x2F;etc&#x2F;sudoers</p>
+</li>
+<li><p>可以登录了</p>
+<p>ssh <a href="mailto:&#x79;&#x61;&#x6e;&#103;&#64;&#x31;&#55;&#x32;&#46;&#x31;&#54;&#46;&#x31;&#x30;&#46;&#x32;">&#x79;&#x61;&#x6e;&#103;&#64;&#x31;&#55;&#x32;&#46;&#x31;&#54;&#46;&#x31;&#x30;&#46;&#x32;</a></p>
+</li>
+<li><p>代码下载：可以再服务器上下载代码，编译调试，ssh-keygen生成key,cat .ssh&#x2F;id_rsa.pub添加到gerrit上ssh keys即可。该步骤看自己需要</p>
+</li>
+<li><p>调试：参考luther文档，例如只调试microAptiv核</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">打开openocd</span><br><span class="line"><span class="variable">$</span> openocd.microAptiv</span><br><span class="line">再开一个终端登录，打开gdb</span><br><span class="line"><span class="variable">$</span> mgdb.microAptiv uAptiv_bootrom_1229.elf</span><br><span class="line">需要串口的话，再开一个。。。</span><br><span class="line">当前波特率是<span class="number">76800</span>，gcom可以直接调试程序</span><br><span class="line"><span class="variable">$</span> gcom <span class="literal">-s</span> <span class="number">76800</span> <span class="operator">-F</span> test.log /dev/USB0 <span class="comment"># 将log存储到文件中</span></span><br><span class="line"><span class="variable">$</span> gcom <span class="literal">-s</span> <span class="number">76800</span> /dev/ttyUSB0</span><br><span class="line">如果用minicom的话，需要在代码把波特率改成<span class="number">38400</span>，当前minicom不支持<span class="number">76800</span></span><br><span class="line"><span class="built_in">diff</span> <span class="literal">--git</span> a/validation/main.c b/validation/main.c</span><br><span class="line">index fd2c368..<span class="number">2</span>b2dbde <span class="number">100644</span></span><br><span class="line"><span class="literal">---</span> a/validation/main.c</span><br><span class="line">+++ b/validation/main.c</span><br><span class="line"><span class="selector-tag">@</span><span class="selector-tag">@</span> <span class="literal">-39</span>,<span class="number">7</span> +<span class="number">39</span>,<span class="number">7</span> <span class="selector-tag">@</span><span class="selector-tag">@</span> void init_fpga(void)</span><br><span class="line">      */</span><br><span class="line">     //uart2_init(UART2,UART_PARITY_NONE,UART_STOPBITS_1,UART_DATABITS_8,UART_BD_128000);</span><br><span class="line">     uart_int_prepare();</span><br><span class="line">-    dw_uart_init(debug_uart_dev,AO_UART0_CLK,UART_BD_76800);</span><br><span class="line">+    dw_uart_init(debug_uart_dev,AO_UART0_CLK,<span class="number">38400</span>);</span><br><span class="line"> &#125;</span><br><span class="line"></span><br><span class="line">minicom <span class="literal">-b</span> <span class="number">38400</span> <span class="literal">-C</span> test_download.log <span class="literal">-D</span> /dev/ttyUSB0</span><br></pre></td></tr></table></figure>
+
+
+</li>
+<li><p>拷贝本地内容到248</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">scp -P 16667   /mnt/c/Users/yang.zhang/code/cip-bootrom/objs_sram/0303_uAptiv_bootrom.elf yang.zhang@10.8.0.1:/data/home/yang.zhang/</span><br><span class="line">248和fpga服务器交互</span><br><span class="line">scp 0303_uAptiv_bootrom.elf yang@172.16.10.2:~/</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h1 id="服务器查看谁在使用fpga"><a href="#服务器查看谁在使用fpga" class="headerlink" title="服务器查看谁在使用fpga"></a>服务器查看谁在使用fpga</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">w</span><br><span class="line">ps -auxww | awk &#x27;/\/usr\/bin\/mgdb|\/usr\/bin\/openocd|gcom -s/&#x27; | head -n 3</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2024/04/15/hxd_new/%E6%80%A7%E8%83%BD%E6%95%B0%E6%8D%AE/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1162,94 +1253,6 @@
 <p>muladd 1325292</p>
 <p>run function begin cp0_count read 7119<br>run function end cp0_count read 160600</p>
 <p>S^-1 count read 331070<br>run function begin cp0_count read 460459<br>run function end cp0_count read 621886<br>mp_mulmod ew read 794668<br>run function begin cp0_count read 929382<br>run function end cp0_count read 1090824<br>mp_mulmod rw read 1266575<br>run function begin cp0_count read 65711<br>run function end cp0_count read 223248<br>run function begin cp0_count read 401849<br>run function end cp0_count read 563276<br>run function begin cp0_count read 741175<br>run function end cp0_count read 902617<br>run function begin cp0_count read 1109157<br>run function end cp0_count read 2388391<br>ecc_ptmul u1, mG count read 2561312<br>run function begin cp0_count read 2742416<br>run function end cp0_count read 4055846<br>ecc_ptmul u2, mQ count read 4225896<br>run function begin cp0_count read 4409522<br>run function end cp0_count read 4575006<br>ecc_ptadd count read 4754411</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2024/04/15/hxd_new/%E6%96%B0%E4%BA%BA%E6%96%87%E6%A1%A3/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2024/04/15/hxd_new/%E6%96%B0%E4%BA%BA%E6%96%87%E6%A1%A3/" class="post-title-link" itemprop="url">未命名</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2024-04-15 17:59:59" itemprop="dateCreated datePublished" datetime="2024-04-15T17:59:59+08:00">2024-04-15</time>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <ol>
-<li><p>ssh -X <a href="mailto:&#121;&#97;&#x6e;&#103;&#x2e;&#x7a;&#x68;&#x61;&#110;&#x67;&#x40;&#x31;&#48;&#x2e;&#x38;&#46;&#48;&#46;&#x31;">&#121;&#97;&#x6e;&#103;&#x2e;&#x7a;&#x68;&#x61;&#110;&#x67;&#x40;&#x31;&#48;&#x2e;&#x38;&#46;&#48;&#46;&#x31;</a> -p 16667</p>
-</li>
-<li><p>openvpn admin 1234qwerASDF</p>
-</li>
-<li><p>先登录fpga，添加自己的账户密码sudo</p>
-<p>pc1: win10 ip: 172.16.10.25 ubuntu ip 172.16.10.2（可用于调试算法等）</p>
-<p>pc2: win10 ip: 172.16.10.21 ubuntu ip 172.16.10.23（可用于调试usb等硬件）</p>
-<p>ssh <a href="mailto:&#x66;&#x70;&#103;&#x61;&#64;&#x31;&#x37;&#x32;&#x2e;&#x31;&#54;&#x2e;&#49;&#x30;&#x2e;&#x32;">&#x66;&#x70;&#103;&#x61;&#64;&#x31;&#x37;&#x32;&#x2e;&#x31;&#54;&#x2e;&#49;&#x30;&#x2e;&#x32;</a>，密码123456</p>
-<p>添加自己账号</p>
-<p>sudo useradd -m -s &#x2F;bin&#x2F;bash yourname</p>
-<p>密码</p>
-<p>sudo passwd yourname</p>
-<p>添加sudo</p>
-<p>sudo vim &#x2F;etc&#x2F;sudoers</p>
-</li>
-<li><p>可以登录了</p>
-<p>ssh <a href="mailto:&#121;&#97;&#110;&#103;&#64;&#x31;&#55;&#x32;&#46;&#49;&#x36;&#x2e;&#x31;&#x30;&#x2e;&#50;">&#121;&#97;&#110;&#103;&#64;&#x31;&#55;&#x32;&#46;&#49;&#x36;&#x2e;&#x31;&#x30;&#x2e;&#50;</a></p>
-</li>
-<li><p>代码下载：可以再服务器上下载代码，编译调试，ssh-keygen生成key,cat .ssh&#x2F;id_rsa.pub添加到gerrit上ssh keys即可。该步骤看自己需要</p>
-</li>
-<li><p>调试：参考luther文档，例如只调试microAptiv核</p>
-<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">打开openocd</span><br><span class="line"><span class="variable">$</span> openocd.microAptiv</span><br><span class="line">再开一个终端登录，打开gdb</span><br><span class="line"><span class="variable">$</span> mgdb.microAptiv uAptiv_bootrom_1229.elf</span><br><span class="line">需要串口的话，再开一个。。。</span><br><span class="line">当前波特率是<span class="number">76800</span>，gcom可以直接调试程序</span><br><span class="line"><span class="variable">$</span> gcom <span class="literal">-s</span> <span class="number">76800</span> <span class="operator">-F</span> test.log /dev/USB0 <span class="comment"># 将log存储到文件中</span></span><br><span class="line"><span class="variable">$</span> gcom <span class="literal">-s</span> <span class="number">76800</span> /dev/ttyUSB0</span><br><span class="line">如果用minicom的话，需要在代码把波特率改成<span class="number">38400</span>，当前minicom不支持<span class="number">76800</span></span><br><span class="line"><span class="built_in">diff</span> <span class="literal">--git</span> a/validation/main.c b/validation/main.c</span><br><span class="line">index fd2c368..<span class="number">2</span>b2dbde <span class="number">100644</span></span><br><span class="line"><span class="literal">---</span> a/validation/main.c</span><br><span class="line">+++ b/validation/main.c</span><br><span class="line"><span class="selector-tag">@</span><span class="selector-tag">@</span> <span class="literal">-39</span>,<span class="number">7</span> +<span class="number">39</span>,<span class="number">7</span> <span class="selector-tag">@</span><span class="selector-tag">@</span> void init_fpga(void)</span><br><span class="line">      */</span><br><span class="line">     //uart2_init(UART2,UART_PARITY_NONE,UART_STOPBITS_1,UART_DATABITS_8,UART_BD_128000);</span><br><span class="line">     uart_int_prepare();</span><br><span class="line">-    dw_uart_init(debug_uart_dev,AO_UART0_CLK,UART_BD_76800);</span><br><span class="line">+    dw_uart_init(debug_uart_dev,AO_UART0_CLK,<span class="number">38400</span>);</span><br><span class="line"> &#125;</span><br><span class="line"></span><br><span class="line">minicom <span class="literal">-b</span> <span class="number">38400</span> <span class="literal">-C</span> test_download.log <span class="literal">-D</span> /dev/ttyUSB0</span><br></pre></td></tr></table></figure>
-
-
-</li>
-<li><p>拷贝本地内容到248</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">scp -P 16667   /mnt/c/Users/yang.zhang/code/cip-bootrom/objs_sram/0303_uAptiv_bootrom.elf yang.zhang@10.8.0.1:/data/home/yang.zhang/</span><br><span class="line">248和fpga服务器交互</span><br><span class="line">scp 0303_uAptiv_bootrom.elf yang@172.16.10.2:~/</span><br></pre></td></tr></table></figure></li>
-</ol>
-<h1 id="服务器查看谁在使用fpga"><a href="#服务器查看谁在使用fpga" class="headerlink" title="服务器查看谁在使用fpga"></a>服务器查看谁在使用fpga</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">w</span><br><span class="line">ps -auxww | awk &#x27;/\/usr\/bin\/mgdb|\/usr\/bin\/openocd|gcom -s/&#x27; | head -n 3</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
 
       
     </div>
@@ -1426,10 +1429,7 @@
 
 
   
-<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
-<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
-<script src="/js/algolia-search.js"></script>
-
+<script src="/js/local-search.js"></script>
 
 
 
