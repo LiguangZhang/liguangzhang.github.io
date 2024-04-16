@@ -869,6 +869,102 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/%E6%90%AD%E5%BB%BAgdb%20python%20%E8%84%9A%E6%9C%AC%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/%E6%90%AD%E5%BB%BAgdb%20python%20%E8%84%9A%E6%9C%AC%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/" class="post-title-link" itemprop="url">搭建gdb python 脚本开发环境</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-07-18 18:15:54" itemprop="dateCreated datePublished" datetime="2020-07-18T18:15:54+08:00">2020-07-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 18:02:21" itemprop="dateModified" datetime="2024-04-16T18:02:21+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%A8%B3%E5%AE%9A%E6%80%A7/" itemprop="url" rel="index"><span itemprop="name">稳定性</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>厂商或者系统继承的交叉工具链中的 gdb 一般不支持 python.<br>或者即使支持python, 由于路径问题, 很难与当前系统中使用的python 配合. 如</p>
+<ul>
+<li>出现python 第三方库不兼容问题等</li>
+<li>缺少第三方库, 使用系统下载的第三方库不能嵌入到 gdb 中使用等问题.</li>
+</ul>
+<p>因此, 我们在需要定制gdb脚本时往往需要自己动手编译交叉工具链的gdb.  </p>
+<h1 id="下载编译gdb源码"><a href="#下载编译gdb源码" class="headerlink" title="下载编译gdb源码"></a>下载编译gdb源码</h1><p><a target="_blank" rel="noopener" href="https://ftp.gnu.org/gnu/gdb/gdb-9.2.tar.xz">https://ftp.gnu.org/gnu/gdb/gdb-9.2.tar.xz</a></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">tar gdb-9.2.tar.xz</span><br><span class="line"><span class="built_in">cd</span> gdb-9.2</span><br><span class="line"><span class="built_in">mkdir</span> build</span><br><span class="line">../configure --target=mips-mti-elf --prefix=/home/mi/program/mips-gdb \</span><br><span class="line">--enable-unicode=ucs4 \</span><br><span class="line">--with-python=/usr \</span><br><span class="line">--with-auto-load-dir=<span class="variable">$debugdir</span>:<span class="variable">$datadir</span>/auto-load \</span><br><span class="line">--with-auto-load-safe-path=<span class="variable">$debugdir</span>:<span class="variable">$datadir</span>/auto-load \</span><br><span class="line">--with-expat --without-libunwind-ia64 --without-lzma --without-babeltrace --without-intel-pt --disable-libmcheck --without-mpfr --without-guile</span><br><span class="line">make</span><br><span class="line">make install</span><br></pre></td></tr></table></figure>
+
+<p>这里注意的地方, <code>target</code> <code>prefix</code> 参数需要自己填</p>
+<ol>
+<li>target 这个该怎么填, 可以用这个简单方法, 用系统继承或厂商提供的gdb, 执行下, 在gdb环境下执行<code>show configuration</code>, 看<code>target</code>是什么, 这里就填什么</li>
+<li>prefix, 填编译gdb完成后安装到的位置, 添加到环境变量中</li>
+<li><code>with-python</code> 选项是查找 <code>python</code> 的库的位置, 简单来说就是你想定制的 gdb 用的 python 环境是哪个 python 环境, 这里就填哪个目录, ubuntu 等这类 linux 一般会在&#x2F;usr 下默认配置好 python2, 你如果想使用自己定制的 python, 如使用 <code>pyenv</code> 或 <code>conda``virtualenv</code> 等定制的 python, 则需要填响应的 python 所在的目录. 后面在 gdb 环境下使用 python 报缺少三方库, 则需要用对应环境的 <code>pip</code> 安装对应的库&#x2F;组件.</li>
+</ol>
+<h1 id="使用-gdb-定制-python-脚本"><a href="#使用-gdb-定制-python-脚本" class="headerlink" title="使用 gdb 定制 python 脚本"></a>使用 gdb 定制 python 脚本</h1><p>使用上述步骤编译安装的gdb即可, 再进行gdb 环境下定制脚本的开发</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/%E6%90%AD%E5%BB%BAgdb%20python%20%E8%84%9A%E6%9C%AC%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/signal%20%E7%9B%B8%E5%85%B3/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -943,102 +1039,6 @@
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/signal%20%E7%9B%B8%E5%85%B3/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/%E6%90%AD%E5%BB%BAgdb%20python%20%E8%84%9A%E6%9C%AC%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/%E6%90%AD%E5%BB%BAgdb%20python%20%E8%84%9A%E6%9C%AC%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/" class="post-title-link" itemprop="url">搭建gdb python 脚本开发环境</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-07-18 18:15:54" itemprop="dateCreated datePublished" datetime="2020-07-18T18:15:54+08:00">2020-07-18</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-16 18:02:21" itemprop="dateModified" datetime="2024-04-16T18:02:21+08:00">2024-04-16</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E7%A8%B3%E5%AE%9A%E6%80%A7/" itemprop="url" rel="index"><span itemprop="name">稳定性</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>厂商或者系统继承的交叉工具链中的 gdb 一般不支持 python.<br>或者即使支持python, 由于路径问题, 很难与当前系统中使用的python 配合. 如</p>
-<ul>
-<li>出现python 第三方库不兼容问题等</li>
-<li>缺少第三方库, 使用系统下载的第三方库不能嵌入到 gdb 中使用等问题.</li>
-</ul>
-<p>因此, 我们在需要定制gdb脚本时往往需要自己动手编译交叉工具链的gdb.  </p>
-<h1 id="下载编译gdb源码"><a href="#下载编译gdb源码" class="headerlink" title="下载编译gdb源码"></a>下载编译gdb源码</h1><p><a target="_blank" rel="noopener" href="https://ftp.gnu.org/gnu/gdb/gdb-9.2.tar.xz">https://ftp.gnu.org/gnu/gdb/gdb-9.2.tar.xz</a></p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">tar gdb-9.2.tar.xz</span><br><span class="line"><span class="built_in">cd</span> gdb-9.2</span><br><span class="line"><span class="built_in">mkdir</span> build</span><br><span class="line">../configure --target=mips-mti-elf --prefix=/home/mi/program/mips-gdb \</span><br><span class="line">--enable-unicode=ucs4 \</span><br><span class="line">--with-python=/usr \</span><br><span class="line">--with-auto-load-dir=<span class="variable">$debugdir</span>:<span class="variable">$datadir</span>/auto-load \</span><br><span class="line">--with-auto-load-safe-path=<span class="variable">$debugdir</span>:<span class="variable">$datadir</span>/auto-load \</span><br><span class="line">--with-expat --without-libunwind-ia64 --without-lzma --without-babeltrace --without-intel-pt --disable-libmcheck --without-mpfr --without-guile</span><br><span class="line">make</span><br><span class="line">make install</span><br></pre></td></tr></table></figure>
-
-<p>这里注意的地方, <code>target</code> <code>prefix</code> 参数需要自己填</p>
-<ol>
-<li>target 这个该怎么填, 可以用这个简单方法, 用系统继承或厂商提供的gdb, 执行下, 在gdb环境下执行<code>show configuration</code>, 看<code>target</code>是什么, 这里就填什么</li>
-<li>prefix, 填编译gdb完成后安装到的位置, 添加到环境变量中</li>
-<li><code>with-python</code> 选项是查找 <code>python</code> 的库的位置, 简单来说就是你想定制的 gdb 用的 python 环境是哪个 python 环境, 这里就填哪个目录, ubuntu 等这类 linux 一般会在&#x2F;usr 下默认配置好 python2, 你如果想使用自己定制的 python, 如使用 <code>pyenv</code> 或 <code>conda``virtualenv</code> 等定制的 python, 则需要填响应的 python 所在的目录. 后面在 gdb 环境下使用 python 报缺少三方库, 则需要用对应环境的 <code>pip</code> 安装对应的库&#x2F;组件.</li>
-</ol>
-<h1 id="使用-gdb-定制-python-脚本"><a href="#使用-gdb-定制-python-脚本" class="headerlink" title="使用 gdb 定制 python 脚本"></a>使用 gdb 定制 python 脚本</h1><p>使用上述步骤编译安装的gdb即可, 再进行gdb 环境下定制脚本的开发</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/%E6%90%AD%E5%BB%BAgdb%20python%20%E8%84%9A%E6%9C%AC%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
