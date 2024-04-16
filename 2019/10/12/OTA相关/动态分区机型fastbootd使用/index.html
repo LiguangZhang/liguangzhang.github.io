@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="vnote_backup_file_826537664 &#x2F;home&#x2F;mi&#x2F;Documents&#x2F;backup&#x2F;VnoteBook&#x2F;OTA相关&#x2F;动态分区机型fastbootd使用.md 动态分区机型fastbootd使用fastbootd简介在动态分区机型上bootloader的fastboot不能烧写动态分区的镜像, 需要使用re">
+<meta property="og:type" content="article">
+<meta property="og:title" content="vab机型fastbootd使用">
+<meta property="og:url" content="https://liguangzhang.github.io/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E6%9C%BA%E5%9E%8Bfastbootd%E4%BD%BF%E7%94%A8/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="vnote_backup_file_826537664 &#x2F;home&#x2F;mi&#x2F;Documents&#x2F;backup&#x2F;VnoteBook&#x2F;OTA相关&#x2F;动态分区机型fastbootd使用.md 动态分区机型fastbootd使用fastbootd简介在动态分区机型上bootloader的fastboot不能烧写动态分区的镜像, 需要使用re">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://2net.co.uk/images/boot-sparse-image.png">
+<meta property="article:published_time" content="2019-10-12T10:15:54.000Z">
+<meta property="article:modified_time" content="2024-04-16T07:08:39.760Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="vab">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://2net.co.uk/images/boot-sparse-image.png">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E6%9C%BA%E5%9E%8Bfastbootd%E4%BD%BF%E7%94%A8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>vab机型fastbootd使用 | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E6%9C%BA%E5%9E%8Bfastbootd%E4%BD%BF%E7%94%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          vab机型fastbootd使用
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-10-12 18:15:54" itemprop="dateCreated datePublished" datetime="2019-10-12T18:15:54+08:00">2019-10-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 15:08:39" itemprop="dateModified" datetime="2024-04-16T15:08:39+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>vnote_backup_file_826537664 &#x2F;home&#x2F;mi&#x2F;Documents&#x2F;backup&#x2F;VnoteBook&#x2F;OTA相关&#x2F;动态分区机型fastbootd使用.md</p>
+<h1 id="动态分区机型fastbootd使用"><a href="#动态分区机型fastbootd使用" class="headerlink" title="动态分区机型fastbootd使用"></a>动态分区机型fastbootd使用</h1><h2 id="fastbootd简介"><a href="#fastbootd简介" class="headerlink" title="fastbootd简介"></a>fastbootd简介</h2><p>在动态分区机型上bootloader的fastboot不能烧写动态分区的镜像, 需要使用<strong>recovery子系统</strong>下的fastbootd来进行用户空间的烧写镜像的工作</p>
+<p>fastbootd是recovery子系统下的一个native进程, 由init fork出来. 具体实现方式类似于adbd.<br>包括进程创建, 驱动通道, 与init的协作都与adbd一致, 是属于借助usb的config配置实现的功能.<br>因此不能同时启用adb和fastboot模式, 因为这两个独占同一个通道.</p>
+<h2 id="fastbootd命令"><a href="#fastbootd命令" class="headerlink" title="fastbootd命令"></a>fastbootd命令</h2><table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+<th>Available when device is OEM locked</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>getvar is-userspace</td>
+<td>Return yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>getvar<br/>is-logical:<partition></td>
+<td>Return yes if the given partition is a<br/>logical partition, no otherwise</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>getvar super-partition-name</td>
+<td>MUST return super for a device<br/>launching with logical partitions</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>create-logical-partition<br/><partition> <size></td>
+<td>Create a logical partition with the<br/>given name and size</td>
+<td>No</td>
+</tr>
+<tr>
+<td>delete-logical-partition<br/><partition></td>
+<td>Delete the given logical partition</td>
+<td>No</td>
+</tr>
+<tr>
+<td>resize-logical-partition<br/><partition> <size></td>
+<td>Resize the logical partition to the new<br/>size without changing its contents</td>
+<td>No</td>
+</tr>
+<tr>
+<td>update-super <partition></td>
+<td>Similar to flash super, except rather<br/>than flashing raw data to the super<br/>partition, this will ensure that all<br/>partitions within the downloaded<br/>image are created</td>
+<td>No</td>
+</tr>
+<tr>
+<td>getvar max-download-size</td>
+<td>Return the maximum size of an image<br/>that can be downloaded in bytes in<br/>hex</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>getvar partition-type<br/><partition-name></td>
+<td>Return file system type: ext4, f2fs,<br/>raw</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>flash <em>partition_name</em> filename</td>
+<td>Flash the partition through a series of<br/>download and flash fastboot<br/>protocol commands</td>
+<td>No</td>
+</tr>
+<tr>
+<td>reboot bootloader</td>
+<td>Reboot into bootloader mode</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>reboot fastboot</td>
+<td>Reboot back into fastbootd mode</td>
+<td>Yes</td>
+</tr>
+</tbody></table>
+<h2 id="安装最新的fastboot工具"><a href="#安装最新的fastboot工具" class="headerlink" title="安装最新的fastboot工具"></a>安装最新的fastboot工具</h2><p>在<a target="_blank" rel="noopener" href="https://developer.android.com/studio/releases/platform-tools">platform-tools</a>获取最新的fastboot和adb的工具</p>
+<ul>
+<li>linux下替换<br>解压后得到platform-tools 目录</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">export $PATH=&lt;platform-tools目录&gt;:$PATH</span><br></pre></td></tr></table></figure>
+<ul>
+<li>windows下替换<br>打开资源管理器explorer, 右键<em>此电脑</em>  -&gt; 属性 -&gt; 高级系统设置 -&gt; 环境变量 -&gt; 用户变量 -&gt;Path下添加解压platform-tools的目录<br>注销, 重新登录生效.</li>
+</ul>
+<p>fastboot devices查看是否有设备号输出, 如果没有, 需要配置端口或更新驱动</p>
+<p>win下, 通过设备管理器 -&gt; 其他设备 (未识别的!设备)-&gt; 右键更新驱动 -&gt; 自动搜索驱动</p>
+<p>linux下, lsusb 设备号, 将识别出的设备号按照adb 配置设备的方式进行配置, 这里不再赘述</p>
+<h2 id="从super-img分离出包含的动态分区"><a href="#从super-img分离出包含的动态分区" class="headerlink" title="从super img分离出包含的动态分区"></a>从super img分离出包含的动态分区</h2><h3 id="转换super-img为原始镜像"><a href="#转换super-img为原始镜像" class="headerlink" title="转换super img为原始镜像"></a>转换super img为原始镜像</h3><p>动态分区线刷包中是super.img，格式是sparse image，要查看super.img首先需要使用simg2img进行转化。若转化后为super_ext4.</p>
+<h4 id="Android-Sparse-Image"><a href="#Android-Sparse-Image" class="headerlink" title="Android Sparse Image"></a><code>Android Sparse Image</code></h4><p>为了缩小镜像大小，Android会以稀疏格式生成system.img，vendor.img userdata.img和cache.img。镜像被拆分为4K字节倍数的块。<br>任何不包含有用数据的块都将标记为<code>Don&#39;t Care</code></p>
+<p><img src="http://2net.co.uk/images/boot-sparse-image.png" alt="sparse"><br><a target="_blank" rel="noopener" href="http://opengrok.pt.xiaomi.com/opengrok/xref/v10-p-tucana-dev/system/core/libsparse/sparse_format.h">header</a></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">system/core/libsparse/simg_dump.py   -v  cache.img</span><br><span class="line">cache.img: Total of 98304 4096-byte output blocks in 10 input chunks.</span><br><span class="line">            input_bytes      output_blocks</span><br><span class="line">chunk    offset     number  offset  number</span><br><span class="line">   1         40     114688       0      28 Raw data           </span><br><span class="line">   2     114740          0      28    2047 Don&#x27;t care         </span><br><span class="line">   3     114752      24576    2075       6 Raw data           </span><br><span class="line">   4     139340          0    2081   30687 Don&#x27;t care         </span><br><span class="line">   5     139352       8192   32768       2 Raw data           </span><br><span class="line">   6     147556          0   32770   32766 Don&#x27;t care         </span><br><span class="line">   7     147568       4096   65536       1 Raw data           </span><br><span class="line">   8     151676          0   65537    2049 Don&#x27;t care         </span><br><span class="line">   9     151688       4096   67586       1 Raw data           </span><br><span class="line">  10     155796          0   67587   30717 Don&#x27;t care         </span><br><span class="line">         155796              98304         End</span><br><span class="line"><span class="meta prompt_">[$</span><span class="language-bash">] -&gt; ll cache.img  cache.img_ext4</span> </span><br><span class="line">-rw-rw-r-- 1 mi mi    155796 11月 14 08:12 cache.img</span><br><span class="line">-rw-rw-r-- 1 mi mi 402653184 11月 19 14:15 cache.img_ext4</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">simg2img ~/Downloads/umi_images_1.2.2_20191021.0000.00_10.0_cn/images/super.img    ~/Downloads/umi_images_1.2.2_20191021.0000.00_10.0_cn/images/super.img_ext4</span><br></pre></td></tr></table></figure>
+
+
+
+
+<h3 id="dump-super-img"><a href="#dump-super-img" class="headerlink" title="dump super img"></a>dump super img</h3><p>如果需要查看super.img里包含哪些img, 其格式是怎样的, 可以使用lpdump工具</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">[$</span><span class="language-bash">] -&gt; ./lpdump ~/Downloads/umi_images_1.2.2_20191021.0000.00_10.0_cn/images/super.img_ext4</span></span><br><span class="line">Metadata version: 10.0</span><br><span class="line">Metadata size: 592 bytes</span><br><span class="line">Metadata max size: 65536 bytes</span><br><span class="line">Metadata slot count: 2</span><br><span class="line">Partition table:</span><br><span class="line">------------------------</span><br><span class="line">  Name: system</span><br><span class="line">  Group: qti_dynamic_partitions</span><br><span class="line">  Attributes: readonly</span><br><span class="line">  Extents:</span><br><span class="line">    0 .. 5716647 linear super 2048</span><br><span class="line">------------------------</span><br><span class="line">  Name: product</span><br><span class="line">  Group: qti_dynamic_partitions</span><br><span class="line">  Attributes: readonly</span><br><span class="line">  Extents:</span><br><span class="line">    0 .. 916055 linear super 5720064</span><br><span class="line">------------------------</span><br><span class="line">  Name: vendor</span><br><span class="line">  Group: qti_dynamic_partitions</span><br><span class="line">  Attributes: readonly</span><br><span class="line">  Extents:</span><br><span class="line">    0 .. 2410687 linear super 6637568</span><br><span class="line">...</span><br><span class="line">------------------------</span><br><span class="line">Block device table:</span><br><span class="line">------------------------</span><br><span class="line">  Partition name: super</span><br><span class="line">  First sector: 2048</span><br><span class="line">  Size: 9126805504 bytes</span><br><span class="line">  Flags: none</span><br><span class="line">------------------------</span><br><span class="line">Group table:</span><br><span class="line">------------------------</span><br><span class="line">  Name: default</span><br><span class="line">  Maximum size: 0 bytes</span><br><span class="line">  Flags: none</span><br><span class="line">------------------------</span><br><span class="line">  Name: qti_dynamic_partitions</span><br><span class="line">  Maximum size: 9126805504 bytes</span><br><span class="line">  Flags: none</span><br></pre></td></tr></table></figure>
+
+<p>如果需要从super.img中解出其包含的分区镜像, 可以使用lpunpack工具</p>
+<ul>
+<li>lpunpack [-p partition_name] SUPER_IMAGE [OUTPPUT_DIR]， -p后面跟要取出的分区名，若不指定，都会取出*</li>
+</ul>
+<h3 id="解出system-img"><a href="#解出system-img" class="headerlink" title="解出system.img"></a>解出system.img</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">./lpunpack -p system ~/Downloads/umi_images_1.2.2_20191021.0000.00_10.0_cn/images/super.img_ext4   unpack</span><br><span class="line">[~/work_space/v10-q-umi/out/host/linux-x86/bin/unpack] - [五 11月 15, 12:51]</span><br><span class="line"><span class="meta prompt_">[$</span><span class="language-bash">] -&gt; ll</span></span><br><span class="line">总用量 2845812</span><br><span class="line">drwxrwxr-x 2 mi mi       4096 11月 15 12:50 .</span><br><span class="line">drwxrwxr-x 3 mi mi       4096 11月 15 12:50 ..</span><br><span class="line">-rw-r--r-- 1 mi mi 2926923776 11月 15 12:51 system.img</span><br></pre></td></tr></table></figure>
+<p>解出的system.img即为原始的带文件系统的镜像, 可以直接挂载</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看system.img镜像的文件系统类型</span></span><br><span class="line">file system.img</span><br><span class="line">mkdir system</span><br><span class="line">sudo mount -t &lt;文件系统类型&gt; system.img system</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h3 id="如上提到的工具"><a href="#如上提到的工具" class="headerlink" title="如上提到的工具"></a>如上提到的工具</h3><p>可以直接在打开动态分区的机型上编译对应的工具</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">make simg2img lpdump lpunpack</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">或者使用ninja编译</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">生成目录</span></span><br><span class="line">out/host/linux-x86/bin</span><br></pre></td></tr></table></figure>
+
+<p>也可以直接下载我这里编译好的(64位的)</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/vab/" rel="tag"># vab</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E8%AE%BE%E5%A4%87%E4%B8%8A%E9%94%81%E7%8A%B6%E6%80%81%E4%B8%8B1217%E6%97%A0%E6%B3%95%E5%B7%A5%E4%BD%9C%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90/" rel="prev" title="设备bootloader上锁状态下1217无法工作问题分析">
+      <i class="fa fa-chevron-left"></i> 设备bootloader上锁状态下1217无法工作问题分析
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/keymaster%E8%A7%A3%E5%AF%86%E9%97%AE%E9%A2%98/" rel="next" title="设备bootloader上锁状态下1217无法工作问题分析1">
+      设备bootloader上锁状态下1217无法工作问题分析1 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E6%9C%BA%E5%9E%8Bfastbootd%E4%BD%BF%E7%94%A8"><span class="nav-number">1.</span> <span class="nav-text">动态分区机型fastbootd使用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#fastbootd%E7%AE%80%E4%BB%8B"><span class="nav-number">1.1.</span> <span class="nav-text">fastbootd简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#fastbootd%E5%91%BD%E4%BB%A4"><span class="nav-number">1.2.</span> <span class="nav-text">fastbootd命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E6%9C%80%E6%96%B0%E7%9A%84fastboot%E5%B7%A5%E5%85%B7"><span class="nav-number">1.3.</span> <span class="nav-text">安装最新的fastboot工具</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%8Esuper-img%E5%88%86%E7%A6%BB%E5%87%BA%E5%8C%85%E5%90%AB%E7%9A%84%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA"><span class="nav-number">1.4.</span> <span class="nav-text">从super img分离出包含的动态分区</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BD%AC%E6%8D%A2super-img%E4%B8%BA%E5%8E%9F%E5%A7%8B%E9%95%9C%E5%83%8F"><span class="nav-number">1.4.1.</span> <span class="nav-text">转换super img为原始镜像</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Android-Sparse-Image"><span class="nav-number">1.4.1.1.</span> <span class="nav-text">Android Sparse Image</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#dump-super-img"><span class="nav-number">1.4.2.</span> <span class="nav-text">dump super img</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%A3%E5%87%BAsystem-img"><span class="nav-number">1.4.3.</span> <span class="nav-text">解出system.img</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A6%82%E4%B8%8A%E6%8F%90%E5%88%B0%E7%9A%84%E5%B7%A5%E5%85%B7"><span class="nav-number">1.4.4.</span> <span class="nav-text">如上提到的工具</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

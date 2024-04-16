@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="参考文档Documentation&#x2F;devicetree&#x2F;bindings&#x2F;interrupt-controller&#x2F;riscv,imsics.yaml dts 信息ex:提供了两个interrupt file M-mode 和 S-mode的. 12345678910111213141516171819202122232425262728imsic_mle">
+<meta property="og:type" content="article">
+<meta property="og:title" content="riscv imsic 相关">
+<meta property="og:url" content="https://liguangzhang.github.io/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv%20imsic%20%E7%9B%B8%E5%85%B3/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="参考文档Documentation&#x2F;devicetree&#x2F;bindings&#x2F;interrupt-controller&#x2F;riscv,imsics.yaml dts 信息ex:提供了两个interrupt file M-mode 和 S-mode的. 12345678910111213141516171819202122232425262728imsic_mle">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/zhangliguang1/tuchuang/raw/master/img/20221208201710.png">
+<meta property="article:published_time" content="2022-10-11T10:15:54.000Z">
+<meta property="article:modified_time" content="2024-04-16T06:07:40.674Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="riscv">
+<meta property="article:tag" content="imsic">
+<meta property="article:tag" content="aia">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/zhangliguang1/tuchuang/raw/master/img/20221208201710.png">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv%20imsic%20%E7%9B%B8%E5%85%B3/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>riscv imsic 相关 | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv%20imsic%20%E7%9B%B8%E5%85%B3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          riscv imsic 相关
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-10-11 18:15:54" itemprop="dateCreated datePublished" datetime="2022-10-11T18:15:54+08:00">2022-10-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 14:07:40" itemprop="dateModified" datetime="2024-04-16T14:07:40+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%99%9A%E6%8B%9F%E5%8C%96/" itemprop="url" rel="index"><span itemprop="name">虚拟化</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%99%9A%E6%8B%9F%E5%8C%96/RISCV/" itemprop="url" rel="index"><span itemprop="name">RISCV</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%99%9A%E6%8B%9F%E5%8C%96/RISCV/%E4%B8%AD%E6%96%AD/" itemprop="url" rel="index"><span itemprop="name">中断</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>参考文档<br>Documentation&#x2F;devicetree&#x2F;bindings&#x2F;interrupt-controller&#x2F;riscv,imsics.yaml</p>
+<h1 id="dts-信息"><a href="#dts-信息" class="headerlink" title="dts 信息"></a>dts 信息</h1><p>ex:<br>提供了两个interrupt file M-mode 和 S-mode的.</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">imsic_mlevel: interrupt-controller@<span class="number">24000000</span> &#123;</span><br><span class="line">  compatible = <span class="string">&quot;riscv,qemu-imsics&quot;</span>, <span class="string">&quot;riscv,imsics&quot;</span>;</span><br><span class="line">  interrupts-extended = &lt;&amp;cpu1_intc <span class="number">11</span>&gt;,</span><br><span class="line">                        &lt;&amp;cpu2_intc <span class="number">11</span>&gt;,</span><br><span class="line">                        &lt;&amp;cpu3_intc <span class="number">11</span>&gt;,</span><br><span class="line">                        &lt;&amp;cpu4_intc <span class="number">11</span>&gt;;</span><br><span class="line">  reg = &lt;<span class="number">0x28000000</span> <span class="number">0x4000</span>&gt;;</span><br><span class="line">  interrupt-controller;</span><br><span class="line">  <span class="meta">#interrupt-cells = <span class="string">&lt;0&gt;</span>;</span></span><br><span class="line">  msi-controller;</span><br><span class="line">  riscv,num-ids = &lt;<span class="number">127</span>&gt;;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">imsic_slevel: interrupt-controller@<span class="number">28000000</span> &#123;</span><br><span class="line">  compatible = <span class="string">&quot;riscv,qemu-imsics&quot;</span>, <span class="string">&quot;riscv,imsics&quot;</span>;</span><br><span class="line">  interrupts-extended = &lt;&amp;cpu1_intc <span class="number">9</span>&gt;,</span><br><span class="line">                        &lt;&amp;cpu2_intc <span class="number">9</span>&gt;,</span><br><span class="line">                        &lt;&amp;cpu3_intc <span class="number">9</span>&gt;,</span><br><span class="line">                        &lt;&amp;cpu4_intc <span class="number">9</span>&gt;;</span><br><span class="line">  reg = &lt;<span class="number">0x28000000</span> <span class="number">0x2000</span>&gt;, <span class="comment">/* Group0 IMSICs */</span></span><br><span class="line">        &lt;<span class="number">0x29000000</span> <span class="number">0x2000</span>&gt;; <span class="comment">/* Group1 IMSICs */</span></span><br><span class="line">  interrupt-controller;</span><br><span class="line">  <span class="meta">#interrupt-cells = <span class="string">&lt;0&gt;</span>;</span></span><br><span class="line">  msi-controller;</span><br><span class="line">  riscv,num-ids = &lt;<span class="number">127</span>&gt;;</span><br><span class="line">  riscv,group-index-bits = &lt;<span class="number">1</span>&gt;;</span><br><span class="line">  riscv,group-index-shift = &lt;<span class="number">24</span>&gt;;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>下面对上述dts的相关属性做一个大概的介绍</p>
+<ol>
+<li>interrupts-extended<br>对应cpu1-4, 每个cpu都有这两个interrupt file M-mode和S-mode的<br>M的对应中断位为11,  代表 Machine external interrupt<br>S的对应中断位为9, 代表 Supervisor external interrupt</li>
+<li>riscv,num-ids<br>Number of interrupt identities supported by IMSIC interrupt file.<br>外部中断数量, 反映到eip和eie中, 最小63 最大 2047</li>
+<li>riscv,group-index-bits<br>Number of group index bits in the MSI target address. When not specified it is assumed to be 0.<br>总的group index bits</li>
+<li>riscv,group-index-shift<br>The least significant bit position of the group index bits in the MSI target address. When not specified it is assumed to be 24.</li>
+<li>reg<br>Base address of each IMSIC group.<br>关于MSI target address:<br>从第24 bit 开始, 上述group-index-bits 表示在Group Index中总共有几个bit 被使用<br>riscv,group-index-shift 表示Group Index中当前interrupt file 占位开始的那个bit位, 如其占了两个bit位 26-27, shift表示最开始的bit位 26.</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">XLEN<span class="number">-1</span>           &gt;=<span class="number">24</span>                                 <span class="number">12</span>    <span class="number">0</span></span><br><span class="line">|                  |                                  |     |</span><br><span class="line">-------------------------------------------------------------</span><br><span class="line">|xxxxxx|Group Index|xxxxxxxxxxx|HART Index|Guest Index|  <span class="number">0</span>  |</span><br><span class="line">-------------------------------------------------------------</span><br></pre></td></tr></table></figure>
+
+<h2 id="guest-os相关"><a href="#guest-os相关" class="headerlink" title="guest os相关"></a>guest os相关</h2><p>guest external interrupt 相关的dts信息</p>
+<ol>
+<li>riscv,num-guest-ids<br>Number of interrupt identities are supported by IMSIC guest interrupt<br>file. When not specified it is assumed to be same as specified by the<br>riscv,num-ids property.<br>guest external 硬件中断号 最小63 最大2047</li>
+<li>riscv,hart-index-bits<br>Number of HART index bits in the MSI target address. When not<br>specified it is estimated based on the interrupts-extended property.<br>MSI target address 中 Hart Index 总共使用了几个bit位.<br>最小0 最大 15</li>
+<li>riscv,guest-index-bits<br>Number of HART index bits in the MSI target address. When not<br>specified it is estimated based on the interrupts-extended property.<br>MSI target address 中 Guest Index 总共使用了几个bit位.<br>最小0 最大 7</li>
+</ol>
+<p>下面开始大概分析 imsic 的代码</p>
+<h1 id="代码部分"><a href="#代码部分" class="headerlink" title="代码部分"></a>代码部分</h1><h2 id="imsic-init"><a href="#imsic-init" class="headerlink" title="imsic_init"></a>imsic_init</h2><p>dts 相关封装的接口</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">imsic_fwnode_ops</span> <span class="title">ops</span> =</span> &#123;</span><br><span class="line">	.nr_parent_irq = imsic_dt_nr_parent_irq,</span><br><span class="line">	.parent_hartid = imsic_dt_parent_hartid,</span><br><span class="line">	.nr_mmio = imsic_dt_nr_mmio,</span><br><span class="line">	.mmio_to_resource = imsic_mmio_to_resource,</span><br><span class="line">	.mmio_map = imsic_dt_mmio_map,</span><br><span class="line">	.read_u32 = imsic_dt_read_u32,</span><br><span class="line">	.read_bool = imsic_dt_read_bool,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br></pre></td><td class="code"><pre><span class="line">-+ imsic_init<span class="params">(struct imsic_fwnode_ops *fwops, struct fwnode_handle *fwnode, void *fwopaque)</span></span><br><span class="line"> \ -  check riscv_isa_extension_available<span class="params">(NULL, SxAIA)</span> &quot;RISCV_ISA_EXT_SxAIA -&gt; RISCV_ISA_EXT_SSAIA ?&quot;</span><br><span class="line"> | -  priv = kzalloc<span class="params">(sizeof(*priv), GFP_KERNEL)</span>;</span><br><span class="line"> | -  global = &amp;priv-&gt;global;</span><br><span class="line"> | -+ nr_parent_irqs = fwops-&gt;nr_parent_irq<span class="params">(fwnode, fwopaque)</span>; </span><br><span class="line">    \ -+ imsic_dt_nr_parent_irq<span class="params">(fwnode, fwopaque)</span></span><br><span class="line">       \ -  of_irq_count<span class="params">(to_of_node(fwnode))</span>;  &quot;一般会读到 dts的 interrupt-extended 属性中, 代表cpu的中断域</span><br><span class="line">                                                如前面dts中一共有S-mode 和 M-mode的, 每个有1-4 cpu的中断域, 这里的值 nr_parent_irqs 即为8&quot; </span><br><span class="line"> | -  rc = fwops-&gt;read_u32<span class="params">(fwnode, fwopaque, <span class="string">&quot;riscv,guest-index-bits&quot;</span>, &amp;global-&gt;guest_index_bits)</span>;</span><br><span class="line">         &quot;调用 imsic_dt_read_u32 读 riscv,guest-index-bits 读出 Msi target address 中 Guest Index 总共使用了几个bit位, </span><br><span class="line">         结果放入 priv-&gt;global-&gt;guest_index_bits&quot;    </span><br><span class="line"> | -  rc = fwops-&gt;read_u32<span class="params">(fwnode, fwopaque, <span class="string">&quot;riscv,hart-index-bits&quot;</span>,  &amp;global-&gt;hart_index_bits)</span>;                                    </span><br><span class="line">         &quot;读取 dts riscv,hart-index-bits , 读出 Msi target address 中 Hart Index 总共使用了几个bit位, 结果放入priv-&gt;global-&gt;hart_index_bits&quot;</span><br><span class="line"> | -  rc = fwops-&gt;read_u32<span class="params">(fwnode, fwopaque, <span class="string">&quot;riscv,group-index-bits&quot;</span>, &amp;global-&gt;group_index_bits)</span>;                       </span><br><span class="line"> | -  rc = fwops-&gt;read_u32<span class="params">(fwnode, fwopaque, <span class="string">&quot;riscv,group-index-shift&quot;</span>, &amp;global-&gt;group_index_shift)</span>;</span><br><span class="line"> | -  rc = fwops-&gt;read_u32<span class="params">(fwnode, fwopaque, <span class="string">&quot;riscv,num-ids&quot;</span>, &amp;global-&gt;nr_ids)</span>; &quot;多少个hwirq&quot;</span><br><span class="line"> | -  fwops-&gt;read_u32<span class="params">(fwnode, fwopaque, <span class="string">&quot;riscv,num-guest-ids&quot;</span>, &amp;global-&gt;nr_guest_ids)</span> &quot;多少个guest 可以使用的hwirq&quot;</span><br><span class="line"> | -+ fwops-&gt;mmio_to_resource<span class="params">(fwnode, fwopaque, <span class="number">0</span>, &amp;res)</span>;</span><br><span class="line">    \ -+ imsic_mmio_to_resource<span class="params">(fwnode, fwopaque, <span class="number">0</span>, &amp;res)</span>; &quot;Compute base address&quot;</span><br><span class="line">       \ -  of_address_to_resource<span class="params">(to_of_node(fwnode), index, res)</span>; &quot;在设备树中找到第一个&quot;reg&quot;，并将解析到的信息填充在&quot;res&quot;结构体里&quot;</span><br><span class="line"> | -  global-&gt;base_addr = res.start;</span><br><span class="line"> | -  global-&gt;base_addr &amp;= ~(BIT(global-&gt;guest_index_bits + global-&gt;hart_index_bits + IMSIC_MMIO_PAGE_SHIFT) - <span class="number">1</span>);    </span><br><span class="line">                             <span class="string">&quot;Msi target address 中 屏蔽低 &quot;</span>guest bit + hart bit +<span class="number">12</span><span class="string">&quot; 位&quot;</span></span><br><span class="line"> | -  global-&gt;base_addr &amp;= ~((BIT(global-&gt;group_index_bits) - <span class="number">1</span>) &lt;&lt; global-&gt;group_index_shift);</span><br><span class="line">                             <span class="string">&quot;Msi target address 中 屏蔽 其他group 的bit 位, 剩下的才是本group 使用的bit位&quot;</span></span><br><span class="line">                             <span class="string">&quot;这个地方结合前面的dts信息, 这个做完之后应该就是0x28000000&quot;</span></span><br><span class="line"> | -+ priv-&gt;num_mmios = fwops-&gt;nr_mmio(fwnode, fwopaque);</span><br><span class="line">    \ -+ imsic_dt_nr_mmio(fwnode, fwopaque) <span class="string">&quot;Find number of MMIO register sets&quot;</span></span><br><span class="line">       \ -+ while (!of_address_to_resource(to_of_node(fwnode), ret, &amp;res))  <span class="string">&quot;依次查剩下的reg , 结果放到 res中&quot;</span></span><br><span class="line">          \ -  ret++</span><br><span class="line">       | return ret   <span class="string">&quot;即dts中 总共几个 reg 信息&quot;</span></span><br><span class="line"> | -  priv-&gt;mmios = kcalloc(priv-&gt;num_mmios, sizeof(*mmio), GFP_KERNEL); <span class="string">&quot;分配mmios 数组&quot;</span></span><br><span class="line"> | -+ for i in priv-&gt;num_mmios <span class="string">&quot;i从0 开始&quot;</span></span><br><span class="line">    \ -  mmio = &amp;priv-&gt;mmios[i];</span><br><span class="line">    | -  rc = fwops-&gt;mmio_to_resource(fwnode, fwopaque, i, &amp;res); <span class="string">&quot;从0 开始, 因此第一个仍是 M-mode的cpu的中断域&quot;</span></span><br><span class="line">    | -  mmio-&gt;pa = res.start;</span><br><span class="line">    | -  mmio-&gt;size = res.<span class="keyword">end</span> - res.start + <span class="number">1</span>;   <span class="string">&quot;这个是dts中 reg 的第二个字段 决定了size&quot;</span></span><br><span class="line">    | -  mmio-&gt;va = fwops-&gt;mmio_map(fwnode, fwopaque, i);  <span class="string">&quot;为pa 建立页表映射, 返回va&quot;</span></span><br><span class="line"> | -+ imsic_ids_init(priv) <span class="string">&quot;为hwirq 初始化 bitmap 位图&quot;</span></span><br><span class="line">    \ -  priv-&gt;ids_used_bimap = kcalloc(BITS_TO_LONGS(global-&gt;nr_ids + <span class="number">1</span>), sizeof(unsigned long), GFP_KERNEL); </span><br><span class="line">    | -  priv-&gt;ids_target_cpu = kcalloc(global-&gt;nr_ids + <span class="number">1</span>, sizeof(unsigned int), GFP_KERNEL);</span><br><span class="line">    | -+ for (i = <span class="number">0</span>; i &lt;= global-&gt;nr_ids; i++)</span><br><span class="line">       \ -  priv-&gt;ids_target_cpu[i] = UINT_MAX;  \</span><br><span class="line">                   <span class="string">&quot;这个ids_target_cpu数组维护了每个hwirq 同 cpuid 的映射关系, 即该hwirq 会发送到哪个hart上, 设置hwirq的亲和性时会用到&quot;</span> </span><br><span class="line">    | -  bitmap_set(priv-&gt;ids_used_bimap, <span class="number">0</span>, <span class="number">1</span>); <span class="string">&quot;清空hwirq的 used bitmap&quot;</span>             </span><br><span class="line"> | -+ for (i = <span class="number">0</span>; i &lt; nr_parent_irqs; i++)</span><br><span class="line">    \ -  rc = fwops-&gt;parent_hartid(fwnode, fwopaque, i, &amp;hartid); <span class="string">&quot;找到 对应的hartid, 这里举例的一个8个, 每个hart 有M/S 两个&quot;</span></span><br><span class="line">    | -  cpu = riscv_hartid_to_cpuid(hartid); <span class="string">&quot;hartid -&gt; cpuid&quot;</span></span><br><span class="line">    | -  reloff = i * BIT(global-&gt;guest_index_bits) * IMSIC_MMIO_PAGE_SZ;    <span class="string">&quot;相对于 mmio base_addr 的偏移&quot;</span></span><br><span class="line">                                        <span class="string">&quot;这里将guest_index_bits 计入了, 代表每个hart的mmio 需要包含 guest interrupt file的地址空间&quot;</span></span><br><span class="line">    | -  handler = per_cpu_ptr(&amp;imsic_handlers, cpu); <span class="string">&quot;每个cpu 一个 handler 结构&quot;</span></span><br><span class="line">    | -  handler-&gt;local.msi_pa = mmio-&gt;pa + reloff;  <span class="string">&quot;msi_pa 加上该hart mmio的 相对于 mmio_base_addr 的偏移量&quot;</span></span><br><span class="line">    | -  handler-&gt;local.msi_va = mmio-&gt;va + reloff;  <span class="string">&quot;msi_va 同上&quot;</span></span><br><span class="line"> | -  domain = irq_find_matching_fwnode(riscv_get_intc_hwnode(),  DOMAIN_BUS_ANY); <span class="string">&quot;cpu-intc&quot;</span></span><br><span class="line"> | -  imsic_parent_irq = irq_create_mapping(domain, RV_IRQ_EXT); <span class="string">&quot;IRQ_S_EXT 9 为S-mode 外部中断, 建立hwirq 同 linux irq的映射关系&quot;</span></span><br><span class="line"> | -  irq_set_chained_handler(imsic_parent_irq, imsic_handle_irq); </span><br><span class="line">              <span class="string">&quot;cpu 来了 9号中断 S external interrupt 后, 由 imsic_handle_irq 处理函数进行处理该中断&quot;</span></span><br><span class="line"> | -  imsic_ipi_domain_init(priv); <span class="string">&quot;ipi_domain&quot;</span></span><br><span class="line"> | -  imsic_irq_domains_init(priv, fwnode);     <span class="string">&quot;/* Initialize IRQ and MSI domains */&quot;</span>      </span><br><span class="line"> | -+ cpuhp_setup_state(CPUHP_AP_ONLINE_DYN, <span class="string">&quot;irqchip/riscv/imsic:starting&quot;</span>, imsic_starting_cpu, NULL); </span><br><span class="line">         <span class="string">&quot;注册 cpu startup 为  imsic_starting_cpu(), cpu online 时回调 startup &quot;</span>     </span><br><span class="line">    \ -+ imsic_starting_cpu(cpu)</span><br><span class="line">       \ -  enable_percpu_irq(imsic_parent_irq, irq_get_trigger_type(imsic_parent_irq)); </span><br><span class="line">               <span class="string">&quot;软件层 所有cpu 打开 映射了 hwirq为 IRQ_S_EXT的 linux irq 的中断&quot;</span></span><br><span class="line">    | -+ imsic_ipi_enable(priv); <span class="string">&quot;&quot;</span></span><br><span class="line">       \ -+ __imsic_id_enable(priv-&gt;ipi_id);  <span class="string">&quot;imsci 寄存器打开 ipi 中断&quot;</span></span><br><span class="line">          \ -+ __imsic_eix_update((priv-&gt;ipi_id), <span class="number">1</span>, <span class="literal">false</span>, <span class="literal">true</span>) </span><br><span class="line">                       <span class="string">&quot;让iselect 选择对应的 eip/eie 寄存器, 然后选择置1或置0 来开关中断/开关pending&quot;</span></span><br><span class="line">             \ -+ imsic_csr_set(isel, ireg); </span><br><span class="line">                \ -  csr_write(CSR_ISELECT, isel)  <span class="string">&quot;更新 siselct csr&quot;</span> </span><br><span class="line">                | -  csr_set(CSR_IREG, ireg)       <span class="string">&quot;更新 sireg csr&quot;</span>     </span><br></pre></td></tr></table></figure>
+
+<p>比较重要的数据:<br>global-&gt;base_addr<br>handler-&gt;local.msi_pa &#x2F; handler-&gt;local.msi_va</p>
+<h2 id="imsic-handle-irq"><a href="#imsic-handle-irq" class="headerlink" title="imsic_handle_irq"></a>imsic_handle_irq</h2><p>S external interrupt 中断来了之后, 会由 imsic_handle_irq 函数进行处理, 简单看一下外部中断处理的流程</p>
+<figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">-+ imsic_handle_irq<span class="params">(struct irq_desc *desc)</span></span><br><span class="line"> \ -  imsic_handler *handler = this_cpu_ptr<span class="params">(&amp;imsic_handlers)</span>; &quot;找到前面为每个hart 创建的handler &quot;</span><br><span class="line"> | -  irq_chip *chip = irq_desc_get_chip<span class="params">(desc)</span>; &quot;这个芯片注册的irq的相关 ops&quot;</span><br><span class="line"> | -  chained_irq_enter<span class="params">(chip, desc)</span>; &quot;在级联的中断处理函数中，调用`chained_irq_enter`进入中断级联处理&quot;</span><br><span class="line"> | -+ while <span class="params">((hwirq = csr_swap(CSR_TOPEI, <span class="number">0</span>))</span> &quot;读 stopei csr, 该csr 为 imsic 专属, 其 27:16 代表hwirq&quot;</span><br><span class="line">        &quot;这个地方为什么用while, 猜测可能一次有多个外部中断, 每次对stopei 清0后, 中断控制器会为其设置次一个优先级的中断标识, stopei csr 是eipx &amp; eiex 联合选择的结果, 从高优先级-&gt;低优先级 依次选择供给stopei 相应的中断标识&quot;</span><br><span class="line">    \ -  hwirq = hwirq &gt;&gt; TOPEI_ID_SHIFT;</span><br><span class="line">    | -  generic_handle_domain_irq<span class="params">(priv-&gt;base_domain, hwirq)</span>; </span><br><span class="line">        &quot;找到 外设驱动 request_irq 为该hwirq 注册的irq_handler 进行中断处理&quot; </span><br></pre></td></tr></table></figure>
+
+<p>还是大体上是这个结构, 这个上面也有loop, 代表需要多次处理stopei, 从高优先级-&gt;低优先级依次处理完本次来的所有的S-mode的外部中断.<br><img src="https://gitee.com/zhangliguang1/tuchuang/raw/master/img/20221208201710.png"></p>
+<h2 id="chip-imsic-相关hook"><a href="#chip-imsic-相关hook" class="headerlink" title="chip imsic 相关hook"></a>chip imsic 相关hook</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">irq_chip</span> <span class="title">imsic_irq_base_chip</span> =</span> &#123;</span><br><span class="line">	.name			= <span class="string">&quot;RISC-V IMSIC-BASE&quot;</span>,</span><br><span class="line">	.irq_mask		= imsic_irq_mask,</span><br><span class="line">	.irq_unmask		= imsic_irq_unmask,</span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_SMP</span></span><br><span class="line">	.irq_set_affinity	= imsic_irq_set_affinity,</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line">	.irq_compose_msi_msg	= imsic_irq_compose_msi_msg,</span><br><span class="line">	.flags			= IRQCHIP_SKIP_SET_WAKE |</span><br><span class="line">				  IRQCHIP_MASK_ON_SUSPEND,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h3 id="imsic-irq-set-affinity"><a href="#imsic-irq-set-affinity" class="headerlink" title="imsic_irq_set_affinity"></a>imsic_irq_set_affinity</h3><p>在外设驱动注册hwirq 中断时, 会走到 irq_set_affinity, 进而调用chip的 irq_set_affinity 钩子.<br>对于imsic来说, 调用 imsic_irq_set_affinity 函数设置cpu亲和性, 即该外部中断由哪个cpu进行处理<br>简单分析下这个函数</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">-+ imsic_irq_set_affinity(struct irq_data *d, const struct cpumask *mask_val, bool force)</span><br><span class="line">       &quot;与cpuid 相关的在 mask_val 参数中&quot;</span><br><span class="line"> \ -+ imsic_get_cpu(priv, mask_val, force, &amp;target_cpu);</span><br><span class="line">    \ -  cpumask_and(&amp;amask, &amp;priv-&gt;lmask, mask_val);</span><br><span class="line">    | -|+ if force</span><br><span class="line">        \ -  cpu = cpumask_first(&amp;amask); &quot;直接从 cpu_mask mask_val中选出对应的cpu&quot;</span><br><span class="line">    | -|+ if !force  </span><br><span class="line">        \ -  cpu = cpumask_any_and(&amp;amask, cpu_online_mask); &quot;优先从上线的cpu中再结合 cpu_mask 选出对应的cpu&quot;</span><br><span class="line">      </span><br><span class="line">    | -  *out_target_cpu = cpu;</span><br><span class="line"> | -+ imsic_id_set_target(priv, d-&gt;hwirq, target_cpu); &quot;? 并没有硬件寄存器相关的操作&quot;</span><br><span class="line">    \ -  priv-&gt;ids_target_cpu[id] = target_cpu; &quot;? &quot;</span><br></pre></td></tr></table></figure>
+
+<p>说明与hwirq 开启需要设置的csr 操作并未在这个函数中</p>
+<ol>
+<li>of_irq_get -&gt; irq_create_of_mapping -&gt; irq_domain_alloc_irqs -&gt; irq_domain_alloc_irqs_hierarchy -&gt; domain-&gt;ops-&gt;alloc(domain, irq_base, nr_irqs, arg)</li>
+<li>request_irq -&gt; request_threaded_irq -&gt; irq_startup -&gt;  <code>__irq_startup</code> -&gt; irq_enable -&gt; unmask_irq(desc) -&gt; chip-&gt;irq_unmask(&amp;desc-&gt;irq_data);</li>
+</ol>
+<p>.alloc &#x3D; imsic_irq_domain_alloc</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">irq_domain_ops</span> <span class="title">imsic_base_domain_ops</span> =</span> &#123;</span><br><span class="line">	.alloc		= imsic_irq_domain_alloc,</span><br><span class="line">	.<span class="built_in">free</span>		= imsic_irq_domain_free,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>相关堆栈</p>
+<figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">#<span class="number">1</span>  <span class="number">0</span>xffffffff8006a134 in irq_domain_alloc_irqs_hierarchy (arg=<span class="number">0</span>xff2000000060b728, nr_irqs=<span class="number">1</span>, irq_base=<span class="number">2</span>, domain=<span class="number">0</span>xff6000007fe0c800) at ../kernel/irq/irqdomain.c:<span class="number">1426</span></span><br><span class="line">#<span class="number">2</span>  __irq_domain_alloc_irqs (domain=domain@entry=<span class="number">0</span>xff6000007fe0c800, irq_base=irq_base@entry=-<span class="number">1</span>, nr_irqs=nr_irqs@entry=<span class="number">1</span>, node=node@entry=-<span class="number">1</span>, arg=arg@entry=<span class="number">0</span>xff2000000060b728, realloc=realloc@entry=<span class="literal">false</span>, affinity=affinity@entry=<span class="number">0</span>x0) at ../kernel/irq/irqdomain.c:<span class="number">1482</span></span><br><span class="line">#<span class="number">3</span>  <span class="number">0</span>xffffffff8006a5d0 in irq_domain_alloc_irqs (arg=<span class="number">0</span>xff2000000060b728, node=-<span class="number">1</span>, nr_irqs=<span class="number">1</span>, domain=<span class="number">0</span>xff6000007fe0c800) at ../include/linux/irqdomain.h:<span class="number">516</span></span><br><span class="line">#<span class="number">4</span>  irq_create_fwspec_mapping (fwspec=fwspec@entry=<span class="number">0</span>xff2000000060b728) at ../kernel/irq/irqdomain.c:<span class="number">825</span></span><br><span class="line">#<span class="number">5</span>  <span class="number">0</span>xffffffff8006a6ee in irq_create_of_mapping (irq_data=irq_data@entry=<span class="number">0</span>xff2000000060b7a8) at ../kernel/irq/irqdomain.c:<span class="number">858</span></span><br><span class="line">#<span class="number">6</span>  <span class="number">0</span>xffffffff80515156 in of_irq_get (dev=dev@entry=<span class="number">0</span>xff600000bfdf5200, index=index@entry=<span class="number">0</span>) at ../drivers/<span class="keyword">of</span>/irq.c:<span class="number">444</span></span><br></pre></td></tr></table></figure>
+
+<p>unmask_irq 相关堆栈</p>
+<figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">#<span class="number">0</span>  plic_irq_unmask (d=<span class="number">0</span>xff6000007fefec20) at ../drivers/irqchip/irq-sifive-plic.c:<span class="number">122</span></span><br><span class="line">#<span class="number">1</span>  <span class="number">0</span>xffffffff80067d16 in unmask_irq (desc=&lt;optimized out&gt;) at ../kernel/irq/chip.c:<span class="number">435</span></span><br><span class="line">#<span class="number">2</span>  irq_enable (desc=desc@entry=<span class="number">0</span>xff6000007fefec00) at ../kernel/irq/chip.c:<span class="number">342</span></span><br><span class="line">#<span class="number">3</span>  <span class="number">0</span>xffffffff80067d72 in __irq_startup (desc=desc@entry=<span class="number">0</span>xff6000007fefec00) at ../kernel/irq/chip.c:<span class="number">246</span></span><br><span class="line">#<span class="number">4</span>  <span class="number">0</span>xffffffff80067e4e in irq_startup (desc=desc@entry=<span class="number">0</span>xff6000007fefec00, resend=resend@entry=<span class="literal">true</span>, force=force@entry=<span class="literal">false</span>) at ../kernel/irq/chip.c:<span class="number">267</span></span><br><span class="line">#<span class="number">5</span>  <span class="number">0</span>xffffffff80065a8a in __setup_irq (irq=irq@entry=<span class="number">1</span>, desc=desc@entry=<span class="number">0</span>xff6000007fefec00, new=new@entry=<span class="number">0</span>xff6000007ff24f80) at ../kernel/irq/manage.c:<span class="number">1777</span></span><br><span class="line">#<span class="number">6</span>  <span class="number">0</span>xffffffff80065d7c in request_threaded_irq (irq=&lt;optimized out&gt;, handler=handler@entry=<span class="number">0</span>xffffffff80386ca6 &lt;vp_interrupt&gt;, thread_fn=thread_fn@entry=<span class="number">0</span>x0, irqflags=irqflags@entry=<span class="number">128</span>, devname=<span class="number">0</span>xff60000080172858 <span class="string">&quot;virtio2&quot;</span>, dev_id=dev_id@entry=<span class="number">0</span>xff6000008015b800) at ../kernel/irq/manage.c:<span class="number">2206</span></span><br><span class="line">#<span class="number">7</span>  <span class="number">0</span>xffffffff80387540 in request_irq (dev=<span class="number">0</span>xff6000008015b800, name=&lt;optimized out&gt;, flags=<span class="number">128</span>, handler=&lt;optimized out&gt;, irq=&lt;optimized out&gt;) at ../include/linux/interrupt.h:<span class="number">168</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="imsic-irq-domain-alloc"><a href="#imsic-irq-domain-alloc" class="headerlink" title="imsic_irq_domain_alloc"></a>imsic_irq_domain_alloc</h3><figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">-+ imsic_irq_domain_alloc<span class="params">(struct irq_domain *domain,</span></span><br><span class="line"><span class="params">				  unsigned int virq,</span></span><br><span class="line"><span class="params">				  unsigned int nr_irqs,</span></span><br><span class="line"><span class="params">				  void *args)</span></span><br><span class="line"> \ -  imsic_priv *priv = domain-&gt;host_data;				  </span><br><span class="line"> | -  imsic_get_cpu<span class="params">(priv, &amp;priv-&gt;lmask, false, &amp;cpu)</span>; &quot;获取&quot;</span><br><span class="line"> | -  imsic_cpu_page_phys<span class="params">(cpu, <span class="number">0</span>, &amp;msi_addr)</span>;</span><br><span class="line"> | -  hwirq = imsic_ids_alloc<span class="params">(priv, priv-&gt;global.nr_ids, get_count_order(nr_irqs))</span>;</span><br><span class="line"> | -  imsic_id_set_target<span class="params">(priv, hwirq + i, cpu)</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="unmask-irq-imsic-irq-unmask"><a href="#unmask-irq-imsic-irq-unmask" class="headerlink" title="unmask_irq -&gt; imsic_irq_unmask"></a>unmask_irq -&gt; imsic_irq_unmask</h3><figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">-+ imsic_irq_unmask<span class="params">(struct irq_data *d)</span></span><br><span class="line"> \ -+ imsic_id_enable<span class="params">(irq_data_get_irq_chip_data(d), d-&gt;hwirq)</span>;</span><br><span class="line">    \ -  bitmap_set<span class="params">(priv-&gt;ids_enabled_bimap, id, <span class="number">1</span>)</span>; &quot;used bitmap 位图中 hwirq 的bit置1&quot;</span><br><span class="line">    \ -+ __imsic_id_enable<span class="params">(priv-&gt;ipi_id)</span>;  &quot;imsci 寄存器打开 ipi 中断&quot;</span><br><span class="line">       \ -+ __imsic_eix_update<span class="params">((priv-&gt;ipi_id)</span>, 1, false, true) </span><br><span class="line">			   &quot;让iselect 选择对应的 eip/eie 寄存器, 然后选择置1或置0 来开关中断/开关pending&quot;</span><br><span class="line">	      \ -+ imsic_csr_set<span class="params">(isel, ireg)</span>; </span><br><span class="line">		     \ -  csr_write<span class="params">(CSR_ISELECT, isel)</span>  &quot;更新 siselct csr&quot; </span><br><span class="line">		     | -  csr_set<span class="params">(CSR_IREG, ireg)</span>       &quot;更新 sireg csr&quot;     </span><br><span class="line">   </span><br></pre></td></tr></table></figure>
+
+<p>最终由unmask_irq -&gt; imsic_irq_unmask 打开中断, 最后设置了该hart的 siselct 和 sireg csr, 将对应的eipx&#x2F;eiex 置位.</p>
+<h2 id="小结与思考"><a href="#小结与思考" class="headerlink" title="小结与思考"></a>小结与思考</h2><p>从上面中断注册和中断处理过程中, 可以看到每个 hart 对应的MSI的mmio<br>对于S-mode来说, 外部中断设置的最终是<br><code>__imsic_id_enable(id)</code><br>该函数最终设置的是 eipx&#x2F;eiex, 通过siselct 与 sireg 这两个csr 选择对应的 eipx&#x2F;eiex, 再设置对应的值, 即可开关对应的pending&#x2F;中断使能, csr 是hart 专属的, 每一个hart 都由一组csr.</p>
+<p><code>imsic_irq_mask</code> <code>imsic_irq_unmask</code> 最终关联 <code>__imsic_id_enable</code> <code>__imsic_id_disable</code> 这一组函数</p>
+<p>irq_mask 中断屏蔽<br>irq_unmask 中断打开</p>
+<p>但这其中并未发现直接的mmio 地址关联<br>上述中断开关最终都是操作的siselect&#x2F;sireg 寄存器, 猜测最终都是设置的该hart的 S-mode interrupt file的mmio region.</p>
+<p>与guest interrupt file 相关的设置在哪里呢, 怀疑的地方是msi相关的函数 <code>imsic_irq_compose_msi_msg</code><br>该提交中看起来并没有涉及到 guest 相关的设置.<br>除了初始化函数中与guest_index 相关的内容外, 并没有其他的.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/riscv/" rel="tag"># riscv</a>
+              <a href="/tags/imsic/" rel="tag"># imsic</a>
+              <a href="/tags/aia/" rel="tag"># aia</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/riscv%20spl%20linux%20%E5%8A%A0%E8%BD%BD%E6%B5%81%E7%A8%8B/" rel="prev" title="riscv spl linux 加载流程">
+      <i class="fa fa-chevron-left"></i> riscv spl linux 加载流程
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv%20%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B8%AD%E6%96%AD%E7%9B%B8%E5%85%B3/" rel="next" title="riscv 虚拟化中断相关">
+      riscv 虚拟化中断相关 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#dts-%E4%BF%A1%E6%81%AF"><span class="nav-number">1.</span> <span class="nav-text">dts 信息</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#guest-os%E7%9B%B8%E5%85%B3"><span class="nav-number">1.1.</span> <span class="nav-text">guest os相关</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E9%83%A8%E5%88%86"><span class="nav-number">2.</span> <span class="nav-text">代码部分</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#imsic-init"><span class="nav-number">2.1.</span> <span class="nav-text">imsic_init</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#imsic-handle-irq"><span class="nav-number">2.2.</span> <span class="nav-text">imsic_handle_irq</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#chip-imsic-%E7%9B%B8%E5%85%B3hook"><span class="nav-number">2.3.</span> <span class="nav-text">chip imsic 相关hook</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#imsic-irq-set-affinity"><span class="nav-number">2.3.1.</span> <span class="nav-text">imsic_irq_set_affinity</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#imsic-irq-domain-alloc"><span class="nav-number">2.3.2.</span> <span class="nav-text">imsic_irq_domain_alloc</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#unmask-irq-imsic-irq-unmask"><span class="nav-number">2.3.3.</span> <span class="nav-text">unmask_irq -&gt; imsic_irq_unmask</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93%E4%B8%8E%E6%80%9D%E8%80%83"><span class="nav-number">2.4.</span> <span class="nav-text">小结与思考</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

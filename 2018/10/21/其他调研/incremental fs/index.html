@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="Incremental File SystemOverviewIncremental FS is special-purpose Linux virtual file system that allowsexecution of a program while its binary and resource files are still beinglazily downloaded over t">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Incrementalfs 调研">
+<meta property="og:url" content="https://liguangzhang.github.io/2018/10/21/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/incremental%20fs/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="Incremental File SystemOverviewIncremental FS is special-purpose Linux virtual file system that allowsexecution of a program while its binary and resource files are still beinglazily downloaded over t">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://liguangzhang.github.io/images/20200604140901.svg">
+<meta property="og:image" content="https://liguangzhang.github.io/images/20200601211053.png">
+<meta property="article:published_time" content="2018-10-20T16:00:00.000Z">
+<meta property="article:modified_time" content="2024-04-15T11:07:15.069Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="incrementalfs">
+<meta property="article:tag" content="增量文件系统">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://liguangzhang.github.io/images/20200604140901.svg">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2018/10/21/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/incremental%20fs/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Incrementalfs 调研 | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2018/10/21/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/incremental%20fs/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Incrementalfs 调研
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-10-21 00:00:00" itemprop="dateCreated datePublished" datetime="2018-10-21T00:00:00+08:00">2018-10-21</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-15 19:07:15" itemprop="dateModified" datetime="2024-04-15T19:07:15+08:00">2024-04-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/android/" itemprop="url" rel="index"><span itemprop="name">android</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/android/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">文件系统</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Incremental-File-System"><a href="#Incremental-File-System" class="headerlink" title="Incremental File System"></a>Incremental File System</h1><h1 id="Overview"><a href="#Overview" class="headerlink" title="Overview"></a>Overview</h1><p>Incremental FS is special-purpose Linux virtual file system that allows<br>execution of a program while its binary and resource files are still being<br>lazily downloaded over the network, USB etc. It is focused on incremental<br>delivery for a small number (under 100) of big files (more than 10 megabytes).<br>Incremental FS doesn?t allow direct writes into files and, once loaded, file<br>content never changes. Incremental FS doesn?t use a block device, instead it<br>saves data into a backing file located on a regular file-system.</p>
+<h2 id="But-why"><a href="#But-why" class="headerlink" title="But why?"></a>But why?</h2><p>To allow running <strong>big</strong> Android apps before their binaries and resources are<br>fully downloaded to an Android device. If an app reads something not loaded yet,<br>it needs to wait for the data block to be fetched, but in most cases hot blocks<br>can be loaded in advance.</p>
+<h2 id="Workflow"><a href="#Workflow" class="headerlink" title="Workflow"></a>Workflow</h2><p>A userspace process, called a data loader, mounts an instance of incremental-fs<br>giving it a file descriptor on an underlying file system (like ext4 or f2fs).<br>Incremental-fs reads content (if any) of this backing file and interprets it as<br>a file system image with files, directories and data blocks. At this point<br>the data loader can declare new files to be shown by incremental-fs.</p>
+<p>A process is started from a binary located on incremental-fs.<br>All reads are served directly from the backing file<br>without roundtrips into userspace. If the process accesses a data block that was<br>not originally present in the backing file, the read operation waits.</p>
+<p>Meanwhile the data loader can feed new data blocks to incremental-fs by calling<br>write() on a special .cmd pseudo-file. The data loader can request information<br>about pending reads by calling poll() and read() on the .cmd pseudo-file.<br>This mechanism allows the data loader to serve most urgently needed data first.<br>Once a data block is given to incremental-fs, it saves it to the backing file<br>and unblocks all the reads waiting for this block.</p>
+<p>Eventually all data for all files is uploaded by the data loader, and saved by<br>incremental-fs into the backing file. At that moment the data loader is not<br>needed any longer. The backing file will play the role of a complete<br>filesystem image for all future runs of the program.</p>
+<h2 id="Non-goals"><a href="#Non-goals" class="headerlink" title="Non-goals"></a>Non-goals</h2><ul>
+<li>Allowing direct writes by the executing processes into files on incremental-fs</li>
+<li>Allowing the data loader change file size or content after it was loaded.</li>
+<li>Having more than a couple hundred files and directories.</li>
+</ul>
+<h1 id="Features"><a href="#Features" class="headerlink" title="Features"></a>Features</h1><h2 id="Read-only-but-not-unchanging"><a href="#Read-only-but-not-unchanging" class="headerlink" title="Read-only, but not unchanging"></a>Read-only, but not unchanging</h2><p>On the surface a mount directory of incremental-fs would look similar to<br>a read-only instance of network file system: files and directories can be<br>listed and read, but can?t be directly created or modified via creat() or<br>write(). At the same time the data loader can make changes to a directory<br>structure via external ioctl-s. i.e. link and unlink files and directories<br>(if they empty). Data can’t be changed this way, once a file block is loaded<br>there is no way to change it.</p>
+<h2 id="Filesystem-image-in-a-backing-file"><a href="#Filesystem-image-in-a-backing-file" class="headerlink" title="Filesystem image in a backing file"></a>Filesystem image in a backing file</h2><p>Instead of using a block device, all data and metadata is stored in a<br>backing file provided as a mount parameter. The backing file is located on<br>an underlying file system (like ext4 or f2fs). Such approach is very similar<br>to what might be achieved by using loopback device with a traditional file<br>system, but it avoids extra set-up steps and indirections. It also allows<br>incremental-fs image to dynamically grow as new files and data come without<br>having to do any extra steps for resizing.</p>
+<p>If the backing file contains data at the moment when incremental-fs is mounted,<br>content of the backing file is being interpreted as filesystem image.<br>New files and data can still be added through the external interface,<br>and they will be saved to the backing file.</p>
+<h2 id="Data-compression"><a href="#Data-compression" class="headerlink" title="Data compression"></a>Data compression</h2><p>Incremental-fs can store compressed data. In this case each 4KB data block is<br>compressed separately. Data blocks can be provided to incremental-fs by<br>the data loader in a compressed form. Incremental-fs uncompresses blocks<br>each time a executing process reads it (modulo page cache). Compression also<br>takes care of blocks composed of all zero bytes removing necessity to handle<br>this case separately.</p>
+<h2 id="Partially-present-files"><a href="#Partially-present-files" class="headerlink" title="Partially present files"></a>Partially present files</h2><p>Data in the files consists of 4KB blocks, each block can be present or absent.<br>Unlike in sparse files, reading an absent block doesn?t return all zeros.<br>It waits for the data block to be loaded via the ioctl interface<br>(respecting a timeout). Once a data block is loaded it never disappears<br>and can?t be changed or erased from a file. This ability to frictionlessly<br>wait for temporary missing data is the main feature of incremental-fs.</p>
+<h2 id="Hard-links-Multiple-names-for-the-same-file"><a href="#Hard-links-Multiple-names-for-the-same-file" class="headerlink" title="Hard links. Multiple names for the same file"></a>Hard links. Multiple names for the same file</h2><p>Like all traditional UNIX file systems, incremental-fs supports hard links,<br>i.e. different file names in different directories can refer to the same file.<br>As mentioned above new hard links can be created and removed via<br>the ioctl interface, but actual data files are immutable, modulo partial<br>data loading. Each directory can only have at most one name referencing it.</p>
+<h2 id="Inspection-of-incremental-fs-internal-state"><a href="#Inspection-of-incremental-fs-internal-state" class="headerlink" title="Inspection of incremental-fs internal state"></a>Inspection of incremental-fs internal state</h2><p>poll() and read() on the .cmd pseudo-file allow data loaders to get a list of<br>read operations stalled due to lack of a data block (pending reads).</p>
+<h1 id="Application-Programming-Interface"><a href="#Application-Programming-Interface" class="headerlink" title="Application Programming Interface"></a>Application Programming Interface</h1><h2 id="Regular-file-system-interface"><a href="#Regular-file-system-interface" class="headerlink" title="Regular file system interface"></a>Regular file system interface</h2><p>Executing process access files and directories via regular Linux file interface:<br>open, read, close etc. All the intricacies of data loading a file representation<br>are hidden from them.</p>
+<h2 id="External-cmd-file-interface"><a href="#External-cmd-file-interface" class="headerlink" title="External .cmd file interface"></a>External .cmd file interface</h2><p>When incremental-fs is mounted, a mount directory contains a pseudo-file<br>called ‘.cmd’. The data loader will open this file and call read(), write(),<br>poll() and ioctl() on it inspect and change state of incremental-fs.</p>
+<p>poll() and read() are used by the data loader to wait for pending reads to<br>appear and obtain an array of <code>struct incfs_pending_read_info</code>.</p>
+<p>write() is used by the data loader to feed new data blocks to incremental-fs.<br>A data buffer given to write() is interpreted as an array of<br><code>struct incfs_new_data_block</code>. Structs in the array describe locations and<br>properties of data blocks loaded with this write() call.</p>
+<p><code>ioctl(INCFS_IOC_PROCESS_INSTRUCTION)</code> is used to change structure of<br>incremental-fs. It receives an pointer to <code>struct incfs_instruction</code><br>where type field can have be one of the following values.</p>
+<p><strong>INCFS_INSTRUCTION_NEW_FILE</strong><br>Creates an inode (a file or a directory) without a name.<br>It assumes <code>incfs_new_file_instruction.file</code> is populated with details.</p>
+<p><strong>INCFS_INSTRUCTION_ADD_DIR_ENTRY</strong><br>Creates a name (aka hardlink) for an inode in a directory.<br>A directory can’t have more than one hardlink pointing to it, but files can be<br>linked from different directories.<br>It assumes <code>incfs_new_file_instruction.dir_entry</code> is populated with details.</p>
+<p><strong>INCFS_INSTRUCTION_REMOVE_DIR_ENTRY</strong><br>Remove a name (aka hardlink) for a file from a directory.<br>Only empty directories can be unlinked.<br>It assumes <code>incfs_new_file_instruction.dir_entry</code> is populated with details.</p>
+<p>For more details see in uapi&#x2F;linux&#x2F;incrementalfs.h and samples below.</p>
+<h2 id="Supported-mount-options"><a href="#Supported-mount-options" class="headerlink" title="Supported mount options"></a>Supported mount options</h2><p>See <code>fs/incfs/options.c</code> for more details.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">* ``backing_fd=&lt;unsigned int&gt;``</span><br><span class="line">    Required. A file descriptor of a backing file opened by the process</span><br><span class="line">    calling mount(2). This descriptor can be closed after mount returns.</span><br><span class="line"></span><br><span class="line">* ``read_timeout_msc=&lt;unsigned int&gt;``</span><br><span class="line">    Default: 1000. Timeout in milliseconds before a read operation fails</span><br><span class="line">    if no data found in the backing file or provided by the data loader.</span><br></pre></td></tr></table></figure>
+
+<h2 id="Sysfs-files"><a href="#Sysfs-files" class="headerlink" title="Sysfs files"></a>Sysfs files</h2><p><code>/sys/fs/incremental-fs/version</code> - a current version of the filesystem.<br>One ASCII encoded positive integer number with a new line at the end.</p>
+<h2 id="Examples"><a href="#Examples" class="headerlink" title="Examples"></a>Examples</h2><p>See <code>sample_data_loader.c</code> for a complete implementation of a data loader.</p>
+<p>Mount incremental-fs</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">::</span><br><span class="line"></span><br><span class="line">    int mount_fs(char *mount_dir, char *backing_file, int timeout_msc)</span><br><span class="line">    &#123;</span><br><span class="line">        static const char fs_name[] = INCFS_NAME;</span><br><span class="line">        char mount_options[512];</span><br><span class="line">        int backing_fd;</span><br><span class="line">        int result;</span><br><span class="line"></span><br><span class="line">        backing_fd = open(backing_file, O_RDWR);</span><br><span class="line">        if (backing_fd == -1) &#123;</span><br><span class="line">            perror(&quot;Error in opening backing file&quot;);</span><br><span class="line">            return 1;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        snprintf(mount_options, ARRAY_SIZE(mount_options),</span><br><span class="line">            &quot;backing_fd=%u,read_timeout_msc=%u&quot;, backing_fd, timeout_msc);</span><br><span class="line"></span><br><span class="line">        result = mount(fs_name, mount_dir, fs_name, 0, mount_options);</span><br><span class="line">        if (result != 0)</span><br><span class="line">            perror(&quot;Error mounting fs.&quot;);</span><br><span class="line">        return result;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">Open .cmd file</span><br></pre></td></tr></table></figure>
+
+<p>::</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">open_commands_file</span><span class="params">(<span class="type">char</span> *mount_dir)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">char</span> cmd_file[<span class="number">255</span>];</span><br><span class="line">    <span class="type">int</span> cmd_fd;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">snprintf</span>(cmd_file, ARRAY_SIZE(cmd_file), <span class="string">&quot;%s/.cmd&quot;</span>, mount_dir);</span><br><span class="line">    cmd_fd = open(cmd_file, O_RDWR);</span><br><span class="line">    <span class="keyword">if</span> (cmd_fd &lt; <span class="number">0</span>)</span><br><span class="line">        perror(<span class="string">&quot;Can&#x27;t open commands file&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> cmd_fd;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Add a file to the file system</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">::</span><br><span class="line"></span><br><span class="line">    int create_file(int cmd_fd, char *filename, int *ino_out, size_t size)</span><br><span class="line">    &#123;</span><br><span class="line">        int ret = 0;</span><br><span class="line">        __u16 ino = 0;</span><br><span class="line">        struct incfs_instruction inst = &#123;</span><br><span class="line">                .version = INCFS_HEADER_VER,</span><br><span class="line">                .type = INCFS_INSTRUCTION_NEW_FILE,</span><br><span class="line">                .file = &#123;</span><br><span class="line">                    .size = size,</span><br><span class="line">                    .mode = S_IFREG | 0555,</span><br><span class="line">                &#125;</span><br><span class="line">        &#125;;</span><br><span class="line"></span><br><span class="line">        ret = ioctl(cmd_fd, INCFS_IOC_PROCESS_INSTRUCTION, &amp;inst);</span><br><span class="line">        if (ret)</span><br><span class="line">            return -errno;</span><br><span class="line"></span><br><span class="line">        ino = inst.file.ino_out;</span><br><span class="line">        inst = (struct incfs_instruction)&#123;</span><br><span class="line">                .version = INCFS_HEADER_VER,</span><br><span class="line">                .type = INCFS_INSTRUCTION_ADD_DIR_ENTRY,</span><br><span class="line">                .dir_entry = &#123;</span><br><span class="line">                    .dir_ino = INCFS_ROOT_INODE,</span><br><span class="line">                    .child_ino = ino,</span><br><span class="line">                    .name = ptr_to_u64(filename),</span><br><span class="line">                    .name_len = strlen(filename)</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;;</span><br><span class="line">        ret = ioctl(cmd_fd, INCFS_IOC_PROCESS_INSTRUCTION, &amp;inst);</span><br><span class="line">        if (ret)</span><br><span class="line">            return -errno;</span><br><span class="line">        *ino_out = ino;</span><br><span class="line">        return 0;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">Load data into a file</span><br></pre></td></tr></table></figure>
+
+<p>::</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> cmd_fd = open_commands_file(path_to_mount_dir);</span><br><span class="line"><span class="type">char</span> *data = get_some_data();</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">incfs_new_data_block</span> <span class="title">block</span>;</span></span><br><span class="line"><span class="type">int</span> err;</span><br><span class="line"></span><br><span class="line">block.file_ino = file_ino;</span><br><span class="line">block.block_index = <span class="number">0</span>;</span><br><span class="line">block.compression = COMPRESSION_NONE;</span><br><span class="line">block.data = (__u64)data;</span><br><span class="line">block.data_len = INCFS_DATA_FILE_BLOCK_SIZE;</span><br><span class="line"></span><br><span class="line">err = write(cmd_fd, &amp;block, <span class="keyword">sizeof</span>(block));</span><br></pre></td></tr></table></figure>
+
+<p>Get an array of pending reads</p>
+<p>::</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> poll_res = <span class="number">0</span>;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">incfs_pending_read_info</span> <span class="title">reads</span>[10];</span></span><br><span class="line"><span class="type">int</span> cmd_fd = open_commands_file(path_to_mount_dir);</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">pollfd</span> <span class="title">pollfd</span> =</span> &#123;</span><br><span class="line">    .fd = cmd_fd,</span><br><span class="line">    .events = POLLIN</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">poll_res = poll(&amp;pollfd, <span class="number">1</span>, timeout);</span><br><span class="line"><span class="keyword">if</span> (poll_res &gt; <span class="number">0</span> &amp;&amp; (pollfd.revents | POLLIN)) &#123;</span><br><span class="line">    <span class="type">ssize_t</span> read_res = read(cmd_fd, reads, <span class="keyword">sizeof</span>(reads));</span><br><span class="line">    <span class="keyword">if</span> (read_res &gt; <span class="number">0</span>)</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;Waiting reads %ld\n&quot;</span>, read_res / <span class="keyword">sizeof</span>(reads[<span class="number">0</span>]));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/images/20200604140901.svg"></p>
+<h1 id="Ondisk-format"><a href="#Ondisk-format" class="headerlink" title="Ondisk format"></a>Ondisk format</h1><h2 id="General-principles"><a href="#General-principles" class="headerlink" title="General principles"></a>General principles</h2><ul>
+<li><p>The backbone of the incremental-fs ondisk format is an append only linked<br>list of metadata blocks. Each metadata block contains an offset of the next<br>one. These blocks describe files and directories on the<br>file system. They also represent actions of adding and removing file names<br>(hard links).<br>Every time incremental-fs instance is mounted, it reads through this list<br>to recreate filesystem’s state in memory. An offset of the first record in the<br>metadata list is stored in the superblock at the beginning of the backing<br>file.</p>
+</li>
+<li><p>Most of the backing file is taken by data areas and blockmaps.<br>Since data blocks can be compressed and have different sizes,<br>single per-file data area can’t be pre-allocated. That’s why blockmaps are<br>needed in order to find a location and size of each data block in<br>the backing file. Each time a file is created, a corresponding block map is<br>allocated to store future offsets of data blocks.</p>
+<p>Whenever a data block is given by data loader to incremental-fs:</p>
+<ul>
+<li>A data area with the given block is appended to the end of<br>the backing file.</li>
+<li>A record in the blockmap for the given block index is updated to reflect<br>its location, size, and compression algorithm.</li>
+</ul>
+</li>
+</ul>
+<h2 id="Important-format-details"><a href="#Important-format-details" class="headerlink" title="Important format details"></a>Important format details</h2><p>Ondisk structures are defined in the <code>format.h</code> file. They are all packed<br>and use little-endian order.<br>A backing file must start with <code>incfs_super_block</code> with <code>s_magic</code> field<br>equal to 0x5346434e49 “INCFS”.</p>
+<p>Metadata records:</p>
+<ul>
+<li><code>incfs_inode</code> - metadat^a record to declare^ a file or a directory.<br>              <code>incfs_inode.i_mode</code> determents if it is a file<br>              or a directory.</li>
+<li><code>incfs_blockmap_entry</code> - metadata record that specifies size and location<br>                      of a blockmap area for a given file. This area<br>                      contains an array of <code>incfs_blockmap_entry</code>-s.</li>
+<li><code>incfs_dir_action</code> - metadata record that specifies changes made to a<br>              to a directory structure, e.g. add or remove a hardlink.</li>
+<li><code>incfs_md_header</code> - header of a metadata record. It’s always a part<br>              of other structures and served purpose of metadata<br>              bookkeeping.</li>
+</ul>
+<p>Other ondisk structures:</p>
+<ul>
+<li><code>incfs_super_block</code> - backing file header</li>
+<li><code>incfs_blockmap_entry</code> - a record in a blockmap area that describes size<br>                  and location of a data block.</li>
+<li>Data blocks dont have any particular structure, they are written to the backing<br>file in a raw form as they come from a data loader.</li>
+</ul>
+<h2 id="Backing-file-layout"><a href="#Backing-file-layout" class="headerlink" title="Backing file layout"></a>Backing file layout</h2><p>::</p>
+<p><img src="/images/20200601211053.png"></p>
+<h2 id="Unreferenced-files-and-absence-of-garbage-collection"><a href="#Unreferenced-files-and-absence-of-garbage-collection" class="headerlink" title="Unreferenced files and absence of garbage collection"></a>Unreferenced files and absence of garbage collection</h2><p>Described file format can produce files that don’t have any names for them in<br>any directories. Incremental-fs takes no steps to prevent such situations or<br>reclaim space occupied by such files in the backing file. If garbage collection<br>is needed it has to be implemented as a separate userspace tool.</p>
+<h1 id="Design-alternatives"><a href="#Design-alternatives" class="headerlink" title="Design alternatives"></a>Design alternatives</h1><h2 id="Why-isn’t-incremental-fs-implemented-via-FUSE"><a href="#Why-isn’t-incremental-fs-implemented-via-FUSE" class="headerlink" title="Why isn’t incremental-fs implemented via FUSE?"></a>Why isn’t incremental-fs implemented via FUSE?</h2><p>TLDR: FUSE-based filesystems add 20-80% of performance overhead for target<br>scenarios, and increase power use on mobile beyond acceptable limit<br>for widespread deployment. A custom kernel filesystem is the way to overcome<br>these limitations.</p>
+<p>From the theoretical side of things, FUSE filesystem adds some overhead to<br>each filesystem operation that?s not handled by OS page cache:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">* When an IO request arrives to FUSE driver (D), it puts it into a queue</span><br><span class="line">  that runs on a separate kernel thread</span><br><span class="line">* Then another separate user-mode handler process (H) has to run,</span><br><span class="line">  potentially after a context switch, to read the request from the queue.</span><br><span class="line">  Reading the request adds a kernel-user mode transition to the handling.</span><br><span class="line">* (H) sends the IO request to kernel to handle it on some underlying storage</span><br><span class="line">  filesystem. This adds a user-kernel and kernel-user mode transition</span><br><span class="line">  pair to the handling.</span><br><span class="line">* (H) then responds to the FUSE request via a write(2) call.</span><br><span class="line">  Writing the response is another user-kernel mode transition.</span><br><span class="line">* (D) needs to read the response from (H) when its kernel thread runs</span><br><span class="line">  and forward it to the user</span><br></pre></td></tr></table></figure>
+
+<p>Together, the scenario adds 2 extra user-kernel-user mode transition pairs,<br>and potentially has up to 3 additional context switches for the FUSE kernel<br>thread and the user-mode handler to start running for each IO request on the<br>filesystem.<br>This overhead can vary from unnoticeable to unmanageable, depending on the<br>target scenario. But it will always burn extra power via CPU staying longer<br>in non-idle state, handling context switches and mode transitions.<br>One important goal for the new filesystem is to be able to handle each page<br>read separately on demand, because we don’t want to wait and download more data<br>than absolutely necessary. Thus readahead would need to be disabled completely.<br>This increases the number of separate IO requests and the FUSE related overhead<br>by almost 32x (128KB readahead limit vs 4KB individual block operations)</p>
+<p>For more info see a 2017 USENIX research paper:<br>To FUSE or Not to FUSE: Performance of User-Space File Systems<br>Bharath Kumar Reddy Vangoor, Stony Brook University;<br>Vasily Tarasov, IBM Research-Almaden;<br>Erez Zadok, Stony Brook University<br><a target="_blank" rel="noopener" href="https://www.usenix.org/system/files/conference/fast17/fast17-vangoor.pdf">https://www.usenix.org/system/files/conference/fast17/fast17-vangoor.pdf</a></p>
+<h1 id="references"><a href="#references" class="headerlink" title="references"></a>references</h1><p><a target="_blank" rel="noopener" href="https://lore.kernel.org/linux-fsdevel/20190502040331.81196-1-ezemtsov@google.com/">https://lore.kernel.org/linux-fsdevel/20190502040331.81196-1-ezemtsov@google.com/</a></p>
+<p><a target="_blank" rel="noopener" href="https://lore.kernel.org/linux-fsdevel/20190502040331.81196-2-ezemtsov@google.com/">https://lore.kernel.org/linux-fsdevel/20190502040331.81196-2-ezemtsov@google.com/</a></p>
+<p><a target="_blank" rel="noopener" href="https://lore.kernel.org/linux-fsdevel/20190502040331.81196-3-ezemtsov@google.com/">https://lore.kernel.org/linux-fsdevel/20190502040331.81196-3-ezemtsov@google.com/</a></p>
+<p><a target="_blank" rel="noopener" href="https://lore.kernel.org/linux-fsdevel/20190502040331.81196-4-ezemtsov@google.com/">https://lore.kernel.org/linux-fsdevel/20190502040331.81196-4-ezemtsov@google.com/</a></p>
+<p><a target="_blank" rel="noopener" href="https://lore.kernel.org/linux-fsdevel/20190502040331.81196-5-ezemtsov@google.com/">https://lore.kernel.org/linux-fsdevel/20190502040331.81196-5-ezemtsov@google.com/</a></p>
+<p><a target="_blank" rel="noopener" href="https://lore.kernel.org/linux-fsdevel/20190502040331.81196-7-ezemtsov@google.com/">https://lore.kernel.org/linux-fsdevel/20190502040331.81196-7-ezemtsov@google.com/</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/incrementalfs/" rel="tag"># incrementalfs</a>
+              <a href="/tags/%E5%A2%9E%E9%87%8F%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/" rel="tag"># 增量文件系统</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/10/21/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E8%AE%BE%E7%BD%AE%E4%B8%AD%E7%BB%9F%E4%B8%80%E6%90%9C%E7%B4%A2%E6%8E%A5%E5%8F%A3%E5%AE%9E%E7%8E%B0/" rel="prev" title="Settings 搜索框架调研">
+      <i class="fa fa-chevron-left"></i> Settings 搜索框架调研
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/10/21/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E8%BD%AF%E4%BB%B6%E8%AE%BE%E8%AE%A1/" rel="next" title="软件小设计读书笔记">
+      软件小设计读书笔记 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Incremental-File-System"><span class="nav-number">1.</span> <span class="nav-text">Incremental File System</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Overview"><span class="nav-number">2.</span> <span class="nav-text">Overview</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#But-why"><span class="nav-number">2.1.</span> <span class="nav-text">But why?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Workflow"><span class="nav-number">2.2.</span> <span class="nav-text">Workflow</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Non-goals"><span class="nav-number">2.3.</span> <span class="nav-text">Non-goals</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Features"><span class="nav-number">3.</span> <span class="nav-text">Features</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Read-only-but-not-unchanging"><span class="nav-number">3.1.</span> <span class="nav-text">Read-only, but not unchanging</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Filesystem-image-in-a-backing-file"><span class="nav-number">3.2.</span> <span class="nav-text">Filesystem image in a backing file</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Data-compression"><span class="nav-number">3.3.</span> <span class="nav-text">Data compression</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Partially-present-files"><span class="nav-number">3.4.</span> <span class="nav-text">Partially present files</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Hard-links-Multiple-names-for-the-same-file"><span class="nav-number">3.5.</span> <span class="nav-text">Hard links. Multiple names for the same file</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Inspection-of-incremental-fs-internal-state"><span class="nav-number">3.6.</span> <span class="nav-text">Inspection of incremental-fs internal state</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Application-Programming-Interface"><span class="nav-number">4.</span> <span class="nav-text">Application Programming Interface</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Regular-file-system-interface"><span class="nav-number">4.1.</span> <span class="nav-text">Regular file system interface</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#External-cmd-file-interface"><span class="nav-number">4.2.</span> <span class="nav-text">External .cmd file interface</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Supported-mount-options"><span class="nav-number">4.3.</span> <span class="nav-text">Supported mount options</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Sysfs-files"><span class="nav-number">4.4.</span> <span class="nav-text">Sysfs files</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Examples"><span class="nav-number">4.5.</span> <span class="nav-text">Examples</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Ondisk-format"><span class="nav-number">5.</span> <span class="nav-text">Ondisk format</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#General-principles"><span class="nav-number">5.1.</span> <span class="nav-text">General principles</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Important-format-details"><span class="nav-number">5.2.</span> <span class="nav-text">Important format details</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Backing-file-layout"><span class="nav-number">5.3.</span> <span class="nav-text">Backing file layout</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Unreferenced-files-and-absence-of-garbage-collection"><span class="nav-number">5.4.</span> <span class="nav-text">Unreferenced files and absence of garbage collection</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Design-alternatives"><span class="nav-number">6.</span> <span class="nav-text">Design alternatives</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Why-isn%E2%80%99t-incremental-fs-implemented-via-FUSE"><span class="nav-number">6.1.</span> <span class="nav-text">Why isn’t incremental-fs implemented via FUSE?</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#references"><span class="nav-number">7.</span> <span class="nav-text">references</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

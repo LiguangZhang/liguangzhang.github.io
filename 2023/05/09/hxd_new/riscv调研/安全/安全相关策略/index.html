@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="Crypto Acceleration: Not only for speed, but code protection True Random-Number Generators Memory Encryption: No leak from external bus! Secure Boot Trusted Execution Environment: RISC-V PMP IOPMP &amp;#">
+<meta property="og:type" content="article">
+<meta property="og:title" content="安全相关策略">
+<meta property="og:url" content="https://liguangzhang.github.io/2023/05/09/hxd_new/riscv%E8%B0%83%E7%A0%94/%E5%AE%89%E5%85%A8/%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3%E7%AD%96%E7%95%A5/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="Crypto Acceleration: Not only for speed, but code protection True Random-Number Generators Memory Encryption: No leak from external bus! Secure Boot Trusted Execution Environment: RISC-V PMP IOPMP &amp;#">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://liguangzhang.github.io/attachments/Pasted%20image%2020230210104557.png">
+<meta property="article:published_time" content="2023-05-09T10:15:54.000Z">
+<meta property="article:modified_time" content="2024-04-16T05:57:22.753Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="secure boot">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://liguangzhang.github.io/attachments/Pasted%20image%2020230210104557.png">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2023/05/09/hxd_new/riscv%E8%B0%83%E7%A0%94/%E5%AE%89%E5%85%A8/%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3%E7%AD%96%E7%95%A5/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>安全相关策略 | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2023/05/09/hxd_new/riscv%E8%B0%83%E7%A0%94/%E5%AE%89%E5%85%A8/%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3%E7%AD%96%E7%95%A5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          安全相关策略
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-05-09 18:15:54" itemprop="dateCreated datePublished" datetime="2023-05-09T18:15:54+08:00">2023-05-09</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 13:57:22" itemprop="dateModified" datetime="2024-04-16T13:57:22+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AE%89%E5%85%A8/" itemprop="url" rel="index"><span itemprop="name">安全</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <ol>
+<li>Crypto Acceleration: Not only for speed, but code protection</li>
+<li>True Random-Number Generators</li>
+<li>Memory Encryption: No leak from external bus!</li>
+<li>Secure Boot</li>
+<li>Trusted Execution Environment: RISC-V PMP IOPMP &#x2F; Virtual Zone</li>
+<li>Tamper Pins Detection: Detect unauthorized opening or tampering</li>
+<li>Bus Monitors: Advanced hardware security</li>
+<li>hsm Hardware Secure Modules</li>
+</ol>
+<h1 id="secure-boot"><a href="#secure-boot" class="headerlink" title="secure boot"></a>secure boot</h1><p>Chain of Trust:</p>
+<ul>
+<li>bootrom (ZSBL)</li>
+<li>spl (FSBL)</li>
+<li>opensbi</li>
+<li>u-boot</li>
+<li>kernel</li>
+<li>rootfs</li>
+<li>system<br>bootrom spl opensbi u-boot kernel rootfs 之间形成链式校验<blockquote>
+<p>spl opensbi u-boot kernel rootfs 需要进行加密并加签, 在启动过程中需要解密并验签</p>
+</blockquote>
+</li>
+</ul>
+<p>system 采用dm-verity 校验.<br>之间可以引入hsm 进行算法加密和校验请求</p>
+<p><img src="/attachments/Pasted%20image%2020230210104557.png"></p>
+<p>The main services and features of the secure boot code are:<br>• Provides a Root of Trust for the SoC<br>• Initiates a Chain of Trust for the SoC<br>• Performs the First-Stage Boot Loader (FSBL) digital signature validation<br>• Supports Device Identifier Composition Engine (DICE)<br>• Guarantees Post-Quantum Cryptography (PQC) crypto-agility<br>• Proposes a secure exchange protocol for code&#x2F;data programming, tests, and key provi-sioning services<br>• Proposes a secure boot code secure patch mechanism<br>• Considers domestic cryptographic requirements<br>• Complies with good practices and security standards<br>• Provides high flexibility in the proposed options above (enable&#x2F;disable)</p>
+<p>Hardware Mechanisms and Requirements<br>Requirements:<br>• The secure boot code MUST be stored in the SoC internal ROM<br>• The secure boot code MUST boot the FSBL in less than boot-time ms<br>• The size for the ROM containing the secure boot code MUST be at least 64KB<br>• The secure boot code MUST be ready for PQC crypto-agility<br>• The public keys MUST be stored in the OTP<br>• The OTP size MUST be at least 2KB (for ECDSA, more if RSA) for the secure boot code<br>• The OTP size MUST be at least 4KB for crypto-agility<br>• The OTP controller MUST be able to grant&#x2F;revoke read-and-write access privileges<br>◦ For all or parts of the OTP<br>◦ The DICE UDS read access MUST be deactivable by the secure boot code<br>◦ The DICE UDS write access MUST be disabled<br>• The OTP read&#x2F;write access privileges MUST be based on time condition<br>◦ For all or parts of the OTP<br>• The OTP read&#x2F;write access privileges MAY be based on authentication conditions<br>◦ For all or parts of the OTP<br>• The secure boot code MUST support the ECDSA p384&#x2F;SHA384 digital signature algo-<br>rithm<br>• The secure boot code MUST support the SM2&#x2F;SM3 digital signature algorithm<br>• The secure boot code MUST support the FALCON digital signature algorithm<br>• The secure boot code MAY support the ECDSA p256&#x2F;SHA256 digital signature algorithm<br>• The secure hash SHA-384 implementation MUST be a hardware block (for performance<br>requirements)<br>◦ This hardware block MUST be accessible from the core executing the secure boot<br>code<br>• The secure hash SM3 implementation MUST be a hardware block (for performance<br>requirements)<br>◦ This hardware block MUST be accessible from the core executing the secure boot<br>code<br>• The ECDSA and SM2 algorithms MUST have hardware support for performance (e.g.,<br>modular multiplication)<br>◦ This hardware block MUST be accessible from the core executing the secure boot<br>code<br>• A communication interface MUST be available to the secure boot code, usually a UART<br>◦ This interface is used for initial and recovery programming<br>• A GPIO MUST be available for triggering the secure communication session<br>• The internal RAM size MUST be at least 64KB<br>◦ It depends on the size of the applets (a feature used in the communication protocol to<br>extend commands; it’s very helpful to simplify the secure boot code)<br>• The NVM where the FSBL is located MUST be available to the secure boot code in read<br>(for execution) and write (for programming) modes<br>• The debug availability policy MUST be specified<br>◦ If available, the secure boot code MAY be in charge of enabling it<br>• The secure boot code MUST contain anti-fault mechanisms during sensitive computations<br>◦ Note: The other subsequent parts of the secure boot process, too<br>• The secure boot code software validation MUST assess the robustness against faults<br>(and not be only a functional validation)<br>• The [rng] (for secure provisioning service) MUST be accessible by the secure boot code<br>• A [hash-function] hardware block and a managing FSM MUST be available for secure<br>boot code verification before start<br>• The secure boot code MUST be in charge of the DICE CDI computation for the FSBL<br>using the UDS from the OTP<br>◦ The UDS read access MUST be disabled after CDI computation<br>◦ The debug interface MUST NOT be available before UDS read access disabling<br>• The secure boot code MUST be written using good practices for secure coding, including<br>those presented in: <a target="_blank" rel="noopener" href="https://www.ssi.gouv.fr/uploads/2020/05/anssi-guide-regles_de_pro-">https://www.ssi.gouv.fr/uploads/2020/05/anssi-guide-regles_de_pro-</a><br>grammation_pour_le_developpement_securise_de_logiciels_en_langage_c-v1.1.pdf<br>• The secure boot code MUST clean any sensitive information contained in the volatile<br>memory after its use<br>• The secure boot code MUST support GPT parsing for FSBL image booting<br>• The secure boot code MUST implement an anti-rollback protection mechanism<br>◦ The anti-rollback mechanism MUST support at least 32 versions<br>▪ It requires 128 bytes for version storage<br>◦ The anti-rollback mechanism MUST use the internal OTP</p>
+<p>DCIE<br>DICE是一个用于设备身份、证明和数据加密的行业标准。它要求使用一些加密原语（哈希、HMAC）和每个SoC唯一的256位秘密，命名为UDS。这个UDS必须得到严格的保护，以防止嵌入式软件的任何读取访问。其原理是将一个独特的、可重复的秘钥与设备上运行的每个软件阶段层联系起来。最初的秘钥，也就是与FSBL绑定的秘钥，又称第0层，是由安全启动码使用FSBL的哈希值计算出来的。FSBL可以通过计算下一个CDI，对应于下一个软件阶段（如U-boot）来重现相同的方案，以此类推，直到达到最后一个应用阶段。然后，任何一层都有自己的秘钥（公钥对也可以从CDI中得到）。</p>
+<h1 id="Key-Management"><a href="#Key-Management" class="headerlink" title="Key Management"></a>Key Management</h1><p>Public Keys:</p>
+<ul>
+<li>SiFive Update Key (SUK)<ul>
+<li>This key is owned by SiFive, hardcoded in ROM, and used for the CUK initial pro-gramming using the digital-signature algorithm</li>
+</ul>
+</li>
+<li>SiFive Signature Key (SSK)<ul>
+<li>This key is owned by SiFive, and used for digital signatures during SXP sessions and the FSBL signature in phase #1, as long as no CUK&#x2F;CSK has been programmed</li>
+<li>The SSK value is hardcoded in ROM, and is used by default if no other key is pro-grammed in the OTP</li>
+</ul>
+</li>
+<li>Customer Update Key (CUK)<ul>
+<li>This key is owned by the customer, stored in OTP, and used for the CSK initial pro-gramming, revocation, and update using the digital-signature algorithm</li>
+</ul>
+</li>
+<li>Customer Signing Key (CSK)<ul>
+<li>This key is owned by the customer, stored in OTP, and, with its signature by the CUK, is used for the SXP sessions signatures, the FSBL signature using the digital-signature algorithm, and some secure debug data signatures</li>
+</ul>
+</li>
+<li>Debug Protection Key (DPK)<ul>
+<li>This key is owned by the customer, stored in OTP, and used for the secure debug authentication protocol, using the digital-signature algorithm</li>
+</ul>
+</li>
+<li>PQC Customer Signing Key (pqc-CSK)<ul>
+<li>This key is owned by the customer, stored in NVM, signed with the pqc-CUK, and, with its hash stored in OTP, is used for the SXP sessions signatures and the FSBL signature using the pqc-digital-signature algorithm, addressing crypto-agility</li>
+</ul>
+</li>
+<li>PQC Customer Update Key (pqc-CUK)<ul>
+<li>This key is owned by the customer, stored in NVM, and, with its hash stored in OTP, is used for the pqc-CSK initial programming, revocation, and update using the pqc-digital-signature algorithm, addressing crypto-agility</li>
+</ul>
+</li>
+<li>PQC Debug Protection Key (pqc-DPK)<ul>
+<li>This key is owned by the customer, stored in NVM, signed with the pqc-CUK, and, with its hash stored in OTP, is used for the secure debug authentication protocol using the pqc-digital-signature algorithm, addressing crypto-agility</li>
+</ul>
+</li>
+</ul>
+<p>Private Key Pairs:</p>
+<ul>
+<li>ECC Key Pair (ECCK)<ul>
+<li>This [asymmetric-encryption] public key pair is owned by the customer, stored in OTP, unique per SoC, and in the read-controlled area for FSBL image decryption key encapsulation</li>
+</ul>
+</li>
+</ul>
+<p>Symmetric Keys:</p>
+<ul>
+<li>Firmware Encryption Key (FEK)<ul>
+<li>This [encryption-algorithm] secret key is owned by the customer, unique per SoC, stored in OTP, and in the read-controlled area for SXP sessions and FSBL image decryption</li>
+</ul>
+</li>
+<li>Unique Device Secret (UDS)<ul>
+<li>The UDS is a DICE initial secret value, owned by the customer, unique per SoC, stored in OTP, and in the read-controlled area, for DICE FSBL (layer0) CDI computation</li>
+</ul>
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/secure-boot/" rel="tag"># secure boot</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/04/09/hxd_new/%E8%99%9A%E6%8B%9F%E5%8C%96/qemu%20scsi%20%E7%A3%81%E7%9B%98%E7%9B%B4%E9%80%9A/" rel="prev" title="qemu scsi 磁盘直通">
+      <i class="fa fa-chevron-left"></i> qemu scsi 磁盘直通
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/05/11/hxd_new/riscv%E8%B0%83%E7%A0%94/ras%20%E8%B0%83%E7%A0%94/ras%20%E8%BD%AF%E4%BB%B6%E6%96%B9%E6%A1%88%E8%B0%83%E7%A0%94/" rel="next" title="ras 软件方案调研">
+      ras 软件方案调研 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#secure-boot"><span class="nav-number">1.</span> <span class="nav-text">secure boot</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Key-Management"><span class="nav-number">2.</span> <span class="nav-text">Key Management</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

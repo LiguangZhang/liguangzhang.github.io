@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="The SiFive WorldGuard WhitePaperSiFive® Shield是一个开放的安全平台架构，包括一个安全启动、加密引擎和一个名为SiFive WorldGuard的硬件隔离多域解决方案。它为硬件提供了保证在同一单核或多核平台上运行并访问共享资源（如内存和外设）的不同软件应用程序之间进行隔离的手段。 该解决方案适用于任何SiFive Core IP产品和任何软件架构。它与R">
+<meta property="og:type" content="article">
+<meta property="og:title" content="riscv sifive world guard">
+<meta property="og:url" content="https://liguangzhang.github.io/2022/04/25/TEE/sifive%20shield/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="The SiFive WorldGuard WhitePaperSiFive® Shield是一个开放的安全平台架构，包括一个安全启动、加密引擎和一个名为SiFive WorldGuard的硬件隔离多域解决方案。它为硬件提供了保证在同一单核或多核平台上运行并访问共享资源（如内存和外设）的不同软件应用程序之间进行隔离的手段。 该解决方案适用于任何SiFive Core IP产品和任何软件架构。它与R">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://liguangzhang.github.io/2022/04/25/TEE/sifive%20shield/images/image-20211202104658906.png">
+<meta property="og:image" content="https://liguangzhang.github.io/2022/04/25/TEE/sifive%20shield/images/image-20211124204149789.png">
+<meta property="og:image" content="https://liguangzhang.github.io/2022/04/25/TEE/sifive%20shield/images/image-20211207173012006.png">
+<meta property="og:image" content="https://liguangzhang.github.io/2022/04/25/TEE/sifive%20shield/images/image-20211207173044010.png">
+<meta property="og:image" content="https://liguangzhang.github.io/2022/04/25/TEE/sifive%20shield/images/image-20211207173157838.png">
+<meta property="og:image" content="https://liguangzhang.github.io/2022/04/25/TEE/sifive%20shield/images/image-20211207173506859.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/image-20211202111612665.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/image-20211202115141605.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/image-20211202115916799.png">
+<meta property="og:image" content="https://liguangzhang.github.io/2022/04/25/TEE/sifive%20shield/images/image-20211203111852283.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/image-20211202155908826.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/image-20211202162337213.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/image-20211202162524636.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/image-20211202162610803.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/image-20211202162711482.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/image-20211202162730130.png">
+<meta property="article:published_time" content="2022-04-25T10:15:54.000Z">
+<meta property="article:modified_time" content="2024-04-16T07:47:55.257Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="riscv">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://liguangzhang.github.io/2022/04/25/TEE/sifive%20shield/images/image-20211202104658906.png">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2022/04/25/TEE/sifive%20shield/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>riscv sifive world guard | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2022/04/25/TEE/sifive%20shield/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          riscv sifive world guard
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-04-25 18:15:54" itemprop="dateCreated datePublished" datetime="2022-04-25T18:15:54+08:00">2022-04-25</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 15:47:55" itemprop="dateModified" datetime="2024-04-16T15:47:55+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AE%89%E5%85%A8/" itemprop="url" rel="index"><span itemprop="name">安全</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="The-SiFive-WorldGuard-WhitePaper"><a href="#The-SiFive-WorldGuard-WhitePaper" class="headerlink" title="The SiFive WorldGuard WhitePaper"></a>The SiFive WorldGuard WhitePaper</h1><p>SiFive® Shield是一个开放的安全平台架构，包括一个安全启动、加密引擎和一个名为<code>SiFive WorldGuard</code>的硬件隔离多域解决方案。它为硬件提供了保证在同一单核或多核平台上运行并访问共享资源（如内存和外设）的不同软件应用程序之间进行隔离的手段。 该解决方案适用于任何SiFive Core IP产品和任何软件架构。它与RISC-V ISA完全兼容，不需要对其进行任何修改。</p>
+<p>SiFive WorldGuard提供了核心驱动和进程驱动的模式以实现多域安全性，从而为内核、缓存、互连、外围设备和内存提供数据保护</p>
+<p>在SoC内部，WID标记从内核扩展到了高速缓存、互连、外围设备、总线主控器、DMA区域和存储器, 在高性能多核系统中，应用程序或OS环境都可以被隔离和保护。对于更为普遍的单核嵌入式系统，例如，使用PID驱动的运算WID来保护和隔离用户模式和机器模式之间的执行。</p>
+<p>SiFive Shield解决方案创建 “world”，聚集运行在内核和其他主控资源（如DMA通道）以及从属资源（如存储器和外设）上的应用程序。”world”的数量是硬件可配置的，取决于内核和主控器的数量、内存配置和软件架构。</p>
+<p>这个解决方案并没有取代RISC-V内核的PMP机制（适用于单一内核的内存），而是将其扩展到多内核、多软件系统与其他主控器。</p>
+<p>具体SiFive Shield 架构的介绍可参考 <a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1D7411A7rr/">SiFive Shield开放安全平台架构</a>, 下面主要介绍的是sifive world guard 方案.</p>
+<h2 id="pmp-方案"><a href="#pmp-方案" class="headerlink" title="pmp 方案"></a>pmp 方案</h2><p>由于有了特权模式管理和PMP，在RISC-V内核上可以很容易地开发出安全软件隔离的产品。基于这些硬件机制和SiFive提供的附加机制，可以为各种平台开发解决方案。</p>
+<img src="images/image-20211202104658906.png" alt="image-20211202104658906" style="zoom:150%;" />
+
+<p>这种方法基于一个管理程序，也被称为 “安全监控器”，工作在M层. 能够管理不同的独立软件容器。其想法是只有安全监控器管理特权模式，因为它是唯一能够访问这一功能的软件。容器的资源（内存、外围设备）和容器之间的通信也是由管理程序动态控制和分配的.</p>
+<p>一个非常常见的软件架构是让安全监控器以机器模式（M-mode）运行，控制容器。每个容器可以由两部分组成：以监督者模式（S-模式）运行的操作系统和以用户模式（U-模式）运行的应用任务。</p>
+<img src="images/image-20211124204149789.png" alt="image-20211124204149789" style="zoom: 150%;" />
+
+<p>地址寄存器名为 <code>pmpaddr0</code> 到 <code>pmpaddrN</code>, PMP配置寄存器为 <code>pmpcfgn</code>, 包含<code>PMP0</code>-<code>PMPN</code>.</p>
+<p>每一组PMP寄存器可以用于表示某一块连续的物理内存的起始地址和大小，以及当前CPU对这块连续物理内存的访问权限(读&#x2F;写&#x2F;执行)。当CPU(运行在非Machine mode权限时)对内存发起访问时，硬件会按顺序查看各组PMP寄存器，当发现某组PMP寄存器所表示的物理内存区间包含了CPU将要访问的内存的物理地址时，中止对PMP寄存器的遍历，并根据这组PMP寄存器所表示的访问权限来决定当前内存访问操作是否合法，然后进行正常访存或抛出异常信息</p>
+<h2 id="sPmp-方案"><a href="#sPmp-方案" class="headerlink" title="sPmp 方案"></a>sPmp 方案</h2><img src="images/image-20211207173012006.png" alt="image-20211207173012006" style="zoom:150%;" />
+
+<img src="images/image-20211207173044010.png" alt="image-20211207173044010" style="zoom:150%;" />
+
+<img src="images/image-20211207173157838.png" alt="image-20211207173157838" style="zoom:150%;" />
+
+<p>芯来方案上扩展了pmp方案, 增加了一组与pmp相关寄存器类似的spmpcfg 寄存器与其对应的地址寄存器, 支持更一步细粒度的物理内存隔离机制.</p>
+<p>S &#x3D; 0 时, 只支持U 模式访问, S &#x3D; 1 时, 同时支持S&#x2F;U 模式访问, 该方案用来进一步的隔离U模式的应用之间的物理内存隔离.</p>
+<img src="images/image-20211207173506859.png" alt="image-20211207173506859" style="zoom: 200%;" />
+
+<h2 id="world-guard-方案"><a href="#world-guard-方案" class="headerlink" title="world guard 方案"></a>world guard 方案</h2><p>对于更复杂的平台来说，PMP和特权模式有很大限制。由于特权模式和PMP的范围被限制在其内核和软件上，它们只能控制单个内核的内存映射区域。pmp相关的寄存器属于那个单一的内核，所以它们的值和由此产生的控制不与其他内核共享，也不和其他核约定。此外，其他主控器，如DMA，是独立于内核及其应用的；它们能够间接地、不安全地访问那些被限制在一个内核内的资源，因为这些访问限制并不适用于其他主控器。</p>
+<p>WorldGuard将系统分成两部分：master和slave。master发出的任何请求都被标记为一个值，一个world ID. 这个被标记的请求被发送到slave，发送到slave后, world id 被检查。只有当请求的目标资源与master的world id相同时，访问才会被批准。当然，给定或修改master或slave的world id的权限被严格控制。这种方法为运行在不同内核和主控器上的软件所使用的资源（内存、外围设备）提供了强有力的隔离。这种软件控制是基于硬件机制的。这种解决方案适用于任何RISC-V内核。</p>
+<p><img src="/images/image-20211202111612665.png" alt="image-20211202111612665"></p>
+<h3 id="核心驱动策略"><a href="#核心驱动策略" class="headerlink" title="核心驱动策略"></a>核心驱动策略</h3><p>每个core被分配一个world id. 核心驱动策略的原则是将master、内存区域和外围设备聚集在”world”的资源集合中。在这个策略中，软件没有特定的属性，自动”属于”它所运行的master所属的”world”。这些”world”是相互分离的，这意味着在属于”world 1” core1 的核心上运行的软件不能访问属于”world 2” core 2的资源（内存部分、外设）. 当然，对于”world”间的通信，一些内存部分可以属于一个以上的”world”，表现为共享内存。</p>
+<p>因此，一个唯一的world ID值被分配给一个world，而在这个world中，每个master都被分配了相同的 world ID值。这种分配通常是针对每个master的，就像一个core，但对于强化的IP块，可以有更精细的划分。例如，它可以为多通道DMA的每个通道分配，用world ID标记每个离开主控的请求。</p>
+<p>在slave侧，每个存储器或外设都有一个访问控制列表（ACL），包含每个world ID的访问权限。通过通信总线，每个来自master的标记请求被发送到slave，并根据其访问控制列表进行分析。这些ACL检查IP块的功能与PMP的功能非常相似，world ID字段作为一个额外的字段被检查。发送过来的请求的world id不匹配或者没有world id 会导致请求被立即拒绝。所支持的world id 数量没有理论上的限制.</p>
+<p>核心驱动的方案对于大型系统是有吸引力的，这个方案对两个或更多的核心有意义。一个双核系统由一个双world架构组成，有一个安全世界和一个非安全世界。核心驱动模式不需要对运行在应用核心上的应用软件进行修改。事实上，这个软件不知道它甚至在WorldGuard系统的一个世界中运行。</p>
+<p>核心驱动的方案是最简单的，需要的修改也最少。任何在特定内核上运行的代码都与一个world联系在一起，无论它运行到何种特权模式，该内核都属于这个world。因此，任何在M-、S-或U-模式下运行的代码都属于同一个world。由于这个原因，core内的L1缓存不需要任何修改，因为每个l1 cache line是core间隔离的。一个附属于core的WID寄存器指定了world ID，用于标记从物理core出来的任何请求。这个world ID是由运行在可信内核上的可信软件使用可信配置world ID。</p>
+<h3 id="进程驱动策略"><a href="#进程驱动策略" class="headerlink" title="进程驱动策略"></a>进程驱动策略</h3><p>现在，world的区别也可以取决于特权模式；也就是说，同一核上的特权模式（M-模式、S-模式、U-模式），拥有不同的world ID。这种进程驱动策略的一个明显场景是应用管理程序&#x2F;安全监控器，如上文所述，在多核、multi-master的SoC上。最简单的例子是让一个内核 “托管 “两个world：world 1用于访问最敏感的资产（如key）和一些特定的外围设备（如指纹外设），world 2用于运行通用的应用软件。</p>
+<p>适用于当不同的软件容器需要在同一个核心上共存时，这些容器有不同的安全级别，当软件容器要能够独立运行时，它们之间需要隔离. 一个双容器的单核系统由双世界架构组成，包括一个安全世界和一个非安全世界。对于这个方案，内核支持M-、S-和U-模式（有或没有satp寄存器）的能力是最佳选择。在进程驱动的方案中，S-PMP的使用被选择性地考虑为更好的隔离。</p>
+<p>除受信任的软件外，其他代码也可以改变核心WID寄存器中的WID。每个task可以属于不同的world.</p>
+<p>首先有一个secure monitor，以M模式运行，属于一个特殊的world 1。然后，这个安全监视器管理一个实时操作系统，以S模式运行，属于world2。最后，这个操作系统管理的任务，都是以U模式运行的，每个任务都可能有一个不同的WID。安全监控器，甚至是操作系统，都有能力根据操作系统的要求来改变任务的WID。这种软件架构与通用的软件隔离架构相匹配。</p>
+<p><img src="/images/image-20211202115141605.png" alt="image-20211202115141605"></p>
+<h3 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h3><p>WorldGuard的配置，包括master的分配和ACL 访问控制列表的定义，必须以可信的方式进行，因此需要成为平台信任链的一部分，从平台的信任根开始，安全启动。此外，配置应在平台启动时设置，在应用程序启动前进行。这是一个通常在安全启动操作之后进行的操作，WorldGuard配置固件是第一个被安全启动检查和运行的应用程序。只有在这个配置完成后，应用软件才能启动。</p>
+<p>在启动时，安全启动通过数字签名来检查配置固件的完整性和来源。只有当这个检查成功时，它才能在一个特定的内核上执行，这个内核被命名为受信任的内核。下面是启动时的备选方案:</p>
+<ul>
+<li><p>整个平台是完全可访问的，没有进行控制（WorldGuard right senforcement尚未启用），因此允许配置固件轻松配置和访问平台。</p>
+</li>
+<li><p>整个平台是不可访问的，受信任的内核被分配了一个高特权的world ID，它只允许这个core访问配置。这是首选方案.</p>
+</li>
+</ul>
+<p>这些world ID和ACL的整体配置被保留给受信核心，因为它被分配了受信WID。如果平台上有其他核心，在WorldGuard配置完成之前为idle状态。从安全的角度来看，它们不能配置任何东西，因为它们没有被分配到可信配置的world ID。</p>
+<p>可以是将配置存储在嵌入式nvm存储器中，通过数字签名防止修改，也可以通过加密防止未经授权的访问。这个配置文件由配置固件读取，并确定平台上的世界拓扑结构：有多少个world，哪些master属于哪些world，以及存储器如何分割&#x2F;共享。</p>
+<p>配置寄存器有两种主要类型。在master端，这些寄存器被用来包含world ID（WID），在slave端，这些寄存器用于定义ACL 访问控制列表。</p>
+<p>受信任的核心根据配置定义，在每个master的”<code>WID寄存器</code>“中设置WID。这个寄存器被用来标记从master到slave的请求。可信核心还设置了ACL寄存器(访问控制列表)，该寄存器对应于资源的定义和它们从属于哪些world。</p>
+<p>配置完成后, 可以有下面两种方案:</p>
+<ul>
+<li>所有与配置有关的寄存器都被锁定，将来没有办法修改配置，即使是使用可信配置world ID的可信内核也是如此。这种配置非常安全，但没有提供任何灵活性。它被限制在资源被分配一次，并且内存资源大小正确的用例中。对于没有动态内存分配（malloc）的用例更有意义</li>
+<li>与配置有关的寄存器没有被锁定，可以在应用执行期间被配置。只有拥有可信配置world ID的可信内核可以修改设置，但可以根据应用程序的要求进行修改（例如，内存动态分配或外设分配变化）。它适应于外设被交替分配到不同world的使用情况。在这种情况下，受信核心分配给受信配置WID，它用来处理来自其他世界的改变配置的请求。由于受信任的核心被用于高级别的安全配置，一个常见的情况是，这个受信任的核心被用于以安全为中心的应用，如加密计算、密钥处理或随机数生成。</li>
+</ul>
+<p>在配置设置之后，应用软件可以在其他内核上启动，从睡眠或等待中断状态中唤醒。</p>
+<h3 id="框图"><a href="#框图" class="headerlink" title="框图"></a>框图</h3><p><img src="/images/image-20211202115916799.png" alt="image-20211202115916799"></p>
+<p>​                                  该图提供了SiFive WorldGuard解决方案在具有DMA、存储器和外设的多核芯片上的概况</p>
+<img src="images/image-20211203111852283.png" alt="image-20211203111852283" style="zoom:150%;" />
+
+<h3 id="通用设计方案"><a href="#通用设计方案" class="headerlink" title="通用设计方案"></a>通用设计方案</h3><p>在复位时，除了受信任的核心，slave的配置寄存器没有被设置。来自这些master的请求永远不会被授权。同样地，slave的配置寄存器也没有被设置，这意味着没有任何访问请求可以被批准。</p>
+<p>受信任的核心被分配了受信任的配置WID，使运行在该核心上的软件能够配置master和slave的寄存器。这个阶段使受信任的核心能够在系统上设置WorldGuard配置。</p>
+<p>在核心驱动的方案中，WID值存储在master的寄存器中，只能由受信任的核心来设置和改变，这意味着配置是非常稳定的。进程驱动的方案非常相似；注册的WID值取决于特权模式，对于S-和U-模式，取决于可能的WID值列表，由受信任的核心定义。</p>
+<p>The <code>trusted configuration WID</code> value is the only WID to access the WID-filters, the WG-PMPs, the WG-markers, and for the cores in process-driven mode, the WG-Mmode, WG-Smode, and WID-listed registers</p>
+<p>属于某个world的每个master会被分配一个相同的、唯一的world id.</p>
+<p>WID从master到slave，与master出的请求一起，通过总线传输。</p>
+<p>每个master有一个WID-marker寄存器, 存储wid。这个寄存器被用来标记每个从master发出的请求。该寄存器可以被锁定, 该寄存器可以被锁定，锁定后不再支持修改, 直到下一次复位。</p>
+<p>WID的值在wid-range 范围内, 但某些值是固定的:</p>
+<ul>
+<li>没有权限的值 no-access</li>
+<li>受信核心的wid值</li>
+<li>可以分配给master任意的wid值, 除了受信WID之外.</li>
+</ul>
+<p>复位阶段, 受信核心的wid被自动分配给受信核心, 这个world 是安全世界</p>
+<h4 id="对于master而言-除了core之外"><a href="#对于master而言-除了core之外" class="headerlink" title="对于master而言(除了core之外):"></a>对于master而言(除了core之外):</h4><ul>
+<li>WID-marker寄存器只能由受信核心secure monitor 初始化和修改, 基于nvm 中的配置. wid的值在非锁定的情况下可以被修改.</li>
+</ul>
+<h4 id="对于core"><a href="#对于core" class="headerlink" title="对于core:"></a>对于core:</h4><ul>
+<li>WID-marker寄存器只能由受信核心secure monitor 初始化和修改, wid的值在非锁定的情况下可以被修改.</li>
+<li>在进程驱动策略中, WID-Marker 寄存器从WID-[mode] 寄存器中load 而来, [mode]指的是M&#x2F;H&#x2F;S&#x2F;U 模式<ul>
+<li>WID-[mode] 寄存器由受信核心secure monitor 设置, 在WID-[mode]-list 寄存器定义的范围内.</li>
+</ul>
+</li>
+<li>每个master有一个WID-Marker寄存器, 对于多主控的器件, 如DMA的多个通道, 每个通道视作一个主控.每个通道都有一个WID-Marker 寄存器</li>
+</ul>
+<h4 id="对于slave-侧"><a href="#对于slave-侧" class="headerlink" title="对于slave 侧:"></a>对于slave 侧:</h4><ul>
+<li>每个slave有一个”filtering” 过滤配置的接口, 对应于前面介绍的 ACL(访问控制列表). <ul>
+<li>对于外设而言, 称作WG-filters寄存器</li>
+<li>对于内存, WG-PMP, 类比RISVC核心的PMP, 和PMP使用相同的策略.</li>
+<li>决定哪些wid可以访问该slave<ul>
+<li>WG-PMP 配置和PMP相似,有一个WID的字段和其对应的访问属性的字段(RWX)</li>
+</ul>
+</li>
+<li>filtering 接口由受信核心的软件(secure monitor或S模式下的操作系统, 它们拥有受信的wid)配置.</li>
+</ul>
+</li>
+<li>在slave侧收到请求时, 总线上的请求一并携带了wid<ul>
+<li>通过filtering接口判定wid是否在允许的wid范围内, 如不在允许wid范围内, slave发送异常.</li>
+</ul>
+</li>
+</ul>
+<h4 id="对于cache-片内缓存"><a href="#对于cache-片内缓存" class="headerlink" title="对于cache(片内缓存):"></a>对于cache(片内缓存):</h4><ul>
+<li>缓存是一种特殊的器件,即是master, 又是slave.</li>
+<li>每个cache line 被扩展了一个wid字段, cache line中缓存多的内存地址附加了wid 段.</li>
+<li>离开cpu core的请求附带了wid, 来自于core的WID-Marker寄存器</li>
+<li>如果cache line的wid字段与请求的wid 一致, 则cache 命中, 如不一致, 即使cache line的tag一样, 也会cache miss.</li>
+<li>对于只使用了核心驱动策略,L1-cache 不用进行额外的修改, 不用附加wid字段, 因为L1-cache本来就是core间隔离的, 只需要配置L2-cache和L3 的即可.</li>
+</ul>
+<h4 id="对于bus-总线"><a href="#对于bus-总线" class="headerlink" title="对于bus 总线:"></a>对于bus 总线:</h4><ul>
+<li>需要传递master的wid, 所以需要额外定义一个字段携带wid</li>
+</ul>
+<h3 id="核心驱动策略的实现"><a href="#核心驱动策略的实现" class="headerlink" title="核心驱动策略的实现"></a>核心驱动策略的实现</h3><p>这种策略是比较简单的, 不需要关注cpu运行的特权模式, 只对core进行配置</p>
+<ol>
+<li>在没有被受信核心上受信代码配置wid前, 该core上的WID-Marker寄存器的初始值是no-acess 值.</li>
+<li>WID-Marker寄存器通过内存地址映射, 该地址只能由受信wid的代码修改. 这个filter 限制的wid范围是被硬编码,其他wid无权访问.</li>
+<li>WID-Marker寄存器可以被受信的wid 读写, 可选的, 可以被其他wid读.</li>
+<li>不论其运行的模式是什么, core的wid都是同一个.</li>
+<li>每次只能分配一个wid, 即同一时刻每个core只可能有一个wid值, 不同的core可以有相同的wid值, 离开该core的请求携带的wid值来自于WID-Marker寄存器, 这个是硬件自己实现的.</li>
+<li>L2 cache 和 L3 cache cache line上附带了wid 字段, 访问地址的请求携带了wid, cache line的wid和tag同时匹配, 才会cache命中. L1 cache 不用关注.</li>
+</ol>
+<h3 id="进程驱动策略的实现"><a href="#进程驱动策略的实现" class="headerlink" title="进程驱动策略的实现"></a>进程驱动策略的实现</h3><p>到目前为止，这种方案是最灵活的，并为内核内的world管理提供了细颗粒度。在这个方案中，核心上的WorldGuard实现取决于特权模式，这意味着在不同特权模式下运行的代码可以有不同的WID。</p>
+<p>在进程驱动的方案中，内核的WID-Marker寄存器可以由M模式或S模式的固件(secure monitor或S模式上的操作系统)配置，但要在S和U模式的定义范围内。</p>
+<p>简单地说，S模式或U模式的当前WID值（WID_Smode或WID_Umode）是本地控制的，由上层权限级别的固件定义，但在受信核心定义的范围内(（WID_S-list寄存器定义的范围或WID_U-list 寄存器定义的范围）。</p>
+<p>此外，M模式的固件、S模式和U模式的软件可以运行在不同的world里，由不同的WID来识别。例如，U模式的任务切换通常由在S模式下运行的操作系统管理，而与任务切换相对应的WID切换则由M模式的安全监控器代表S模式的操作系统管理。</p>
+<p>同样，S模式下的软件（即容器）切换通常由运行在M模式下的M模式固件（即管理程序）管理，因为WID切换与容器切换相对应。这意味着M模式的固件作为受信任的软件，有改变WID-标记寄存器的权限。</p>
+<h4 id="相关的寄存器"><a href="#相关的寄存器" class="headerlink" title="相关的寄存器"></a>相关的寄存器</h4><h4 id="WID-marker寄存器"><a href="#WID-marker寄存器" class="headerlink" title="WID-marker寄存器"></a>WID-marker寄存器</h4><p>在进程驱动模式下, 从WID-[mode]寄存器(WID-Mmode&#x2F;WID-Smode&#x2F;WID-Umode)load 而来</p>
+<h4 id="M-mode-registers"><a href="#M-mode-registers" class="headerlink" title="M-mode registers"></a>M-mode registers</h4><ul>
+<li>WID-Mmode register:<ul>
+<li>定义了每个core的M模式下的软件所属的wid</li>
+<li>该寄存器可以被M模式的固件修改, 但是要在WID_M-list registers 中规定的范围内.</li>
+</ul>
+</li>
+<li>WID_M-list register:<ul>
+<li>定义了M模式的wid 的允许的范围</li>
+<li>只能由受信固件(受信wid的M层固件)根据受信配置修改.</li>
+<li>这个寄存器通常应该只包含一个值，即每个core M模式的 “functional” 值。特殊的, 如果是受信core, 该值为受信WID.</li>
+<li>这个寄存器可以被锁定, 锁定后不能再被修改, 直到复位.</li>
+<li>这个寄存器限制了wid的范围, 因为每个core的M层可以修改WID-Mmode寄存器以修改其core上M层的wid值, 但是该wid值必须在这个WID_M-list register定义的范围内. 保证了非受信核心不能把自己改成受信wid值.</li>
+</ul>
+</li>
+</ul>
+<h4 id="S-mode-registers"><a href="#S-mode-registers" class="headerlink" title="S-mode registers"></a>S-mode registers</h4><ul>
+<li><p>WID_Smode register</p>
+<p>定义了每个core上S模式下的软件所属的wid</p>
+<ul>
+<li>可以被在trusted configuration WID里的wid的软件修改.</li>
+<li>该寄存器可以被M模式的固件修改, 但是要在WID_S-list registers定义的范围内</li>
+</ul>
+</li>
+<li><p>WID_S-list register</p>
+<p>该寄存器用于存储S模式下的允许的WIDs列表。该寄存器定义了S模式任务在进程驱动模式下的core的授权WID值范围。</p>
+<ul>
+<li>这个寄存器不包含M模式的wid范围</li>
+<li>只能由受信固件(受信核心M层固件)根据受信配置修改.</li>
+<li>这个寄存器通常包含一个单一的WID值，对应于操作系统。然而，它可能包含两个值。一个用于 “常规 “操作系统，一个用于TEEOS。</li>
+<li>这个寄存器可以被锁定, 锁定后不能再被修改, 直到复位.</li>
+<li>这个寄存器可以防止在内核上运行的任何固件设置非法的WID值，如对应于其他世界、其他内核的WID。</li>
+</ul>
+</li>
+</ul>
+<h4 id="U-mode-registers"><a href="#U-mode-registers" class="headerlink" title="U-mode registers"></a>U-mode registers</h4><p>​	U 模式运行时的wid值</p>
+<ul>
+<li><p>WID_Umode register</p>
+<ul>
+<li>可以被在trusted configuration WID里的wid的软件修改.</li>
+<li>也可以被M层固件修改, 但是要在WID_U-list范围内</li>
+</ul>
+</li>
+<li><p>WID_U-list register</p>
+<p>该寄存器用于存储U模式下的允许的WIDs列表。该寄存器定义了U模式任务在进程驱动模式下的core的授权WID值范围。</p>
+<ul>
+<li>有多少个WID_U-list register，就有多少个S模式的WID值。例如，”单核可信世界 “用例有两个值(可信世界和normal世界)，因此有两个WID_U-list寄存器.</li>
+<li>这些寄存器定义的WID范围不应该包含M 模式下和S模式下的WID范围</li>
+<li>只有受信核心M层固件可以修改该寄存器</li>
+<li>这个寄存器可以被锁定, 锁定后不能再被修改, 直到复位.</li>
+<li>这些寄存器可以防止在核心上运行的任何固件（无论是S模式还是M模式）设置非法的WID值，例如，与其他世界、其他核心相对应的WID</li>
+</ul>
+</li>
+</ul>
+<h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4><p>WID-[mode] 寄存器可以被M层固件修改, 但是要在Wid_[mode]-list register 规定的范围内, 超出了范围会发生异常. 同一时刻, 每个core只能有一个wid值. 每个core 或每个task可以有相同的wid值. 作用到WID-Marker上, 离开cpu的请求会被标记上wid. 标记是被硬件自动触发的. L1&#x2F;L2&#x2F;L3 cache 缓存也有wid的字段标记. trusted configuration WID 是被硬编码的, 记录了受信WID.其他核心的wid值模式是no-access值, 需要被配置.</p>
+<h3 id="DMA-配置"><a href="#DMA-配置" class="headerlink" title="DMA 配置"></a>DMA 配置</h3><p>DMA的每个通道都有一个wid, 由拥有受信wid的受信核心配置, 不同的通道可以配置相同的wid值, 离开dma的请求会携带对应的wid标记.</p>
+<ul>
+<li>推荐做法是分配一个受信wid专用的通道</li>
+<li>其他通道的资源将受到应用WID的限制</li>
+</ul>
+<h3 id="WorldGuard-CLINT"><a href="#WorldGuard-CLINT" class="headerlink" title="WorldGuard CLINT"></a>WorldGuard CLINT</h3><p>The SiFive Core-Local Interruptor (CLINT), 包含一个timecmp寄存器，用于与基于时间的中断进行比较，触发时钟中断(通常作为tick使用)。 安全问题是，一个hart的timecmp register可以被另一个hart配置，这可能对第一个hart运行的软件产生严重影响。</p>
+<p>WorldGuard通过添加一个配置前端来确保CLINT的安全，根据与hart相对应的WID值过滤它们的timecmp寄存器。这些WID值是由受信核心设定的。</p>
+<h3 id="中断管理"><a href="#中断管理" class="headerlink" title="中断管理"></a>中断管理</h3><p>WorldGuard解决方案实现了中断管理，中断处理程序可以将world 它的wid联系起来。尤其适用于进程驱动模式，在这种模式下，不同的WID可以在同一个内核上使用。 FULL isr in U mode.</p>
+<ul>
+<li>一些中断是通过CSR授权给一个特定的core。</li>
+<li>Platform-Level Interrupt Controller (PLIC), 在M 模式下绑定一个特定的中断处理 PLIC handler.</li>
+<li>M层的secure monitor, 记为WIDi, 来自于WID-Mmode register, RTOS 或 kernel 运行在S模式上, 记为WIDj. 来自于WID-Smode register. 应用task wid记为 WIDn, 来自WID-Umode register.</li>
+<li>S模式的中断处理程序是在中断源被完全识别后管理中断的，名为 “源处理程序”。这些源处理程序的地址表是由S模式在初始化时配置的；一旦完成，这个表就被M模式的安全监视器锁定在PMP中。这个表以后将被M模式的PLIC处理程序访问。</li>
+<li>正在U模式下运行task时, 如果这些中断(各S模式注册的中断)之一被触发，PLIC会向内核发送一个中断信号，进而触发以M模式运行的PLIC handler。自动把WID切换到WIDi。</li>
+<li>M模式的PLIC处理程序将应用task的WID值添加到堆栈，并执行上下文备份。</li>
+<li>M模式的PLIC处理程序精确地确定了中断源，然后确定了这个源的中断处理程序的地址。</li>
+<li>M模式的PLIC处理程序切换到S模式，自动将WID切换到WIDj，然后跳转到这个源处理程序。</li>
+<li>S 模式上的中断处理函数处理中断, 设置WID_Umode 寄存器</li>
+<li>中断结束, 回到M模式, wid 自动切换为WIDi, M层 ecall 的handler 恢复应用task的上下文, 恢复task wid, 继续运行zhi前被中断了的U task.</li>
+</ul>
+<h3 id="slave-实现"><a href="#slave-实现" class="headerlink" title="slave 实现"></a>slave 实现</h3><p>存储器，如RAM，可能没有任何寄存器用于访问或甚至配置它们。filtering interface用于过滤请求的WID值。例如，filtering将带有WID标记的数据访问请求与授权的内存范围和访问模式（R&#x2F;W）进行比较。如果它在范围内并且是被批准的访问模式，则请求被批准。否则，就会触发一个异常&#x2F;中断。过滤接口可由具有可信配置WID的受信核心读写，可选的,允许其他核对其WID分配的资源进行只读访问。</p>
+<h4 id="memory-实现"><a href="#memory-实现" class="headerlink" title="memory 实现"></a>memory 实现</h4><p>WG-PMP 定义了开始和结束地址，读&#x2F;写访问模式。这种内存配置重用了PMP寄存器的规范。</p>
+<p>WG-PMP 寄存器的数目可以被定制</p>
+<p>不同的WID 可以访问同一个内存区域</p>
+<p>WG-PMP 用于过滤合法的wid 数据请求. 不合法即不在其范围内, 会发生异常</p>
+<p>可选的, 受信核心的wid 总是被允许, 而不用管WG-PMP的配置</p>
+<p>可选的, WG-PMP 配置可以被锁定, 不能再被修改直到重启.</p>
+<h4 id="外设的实现"><a href="#外设的实现" class="headerlink" title="外设的实现"></a>外设的实现</h4><p> WG-filters 用于管理外设的访问权限. 由受信wid 受信固件配置. 可选的, 拥有受信wid的受信固件总是可以使用该外设, 不论WG-filters配置是什么. 可选的, WG-filters寄存器可以被冻结,直到重启.</p>
+<ul>
+<li>方案1: 可信wid 只能对WG-filters 进行配置, 不能使用这个外设. 意味着有两组wid, 一组用于配置, 一组用于使用.</li>
+<li>方案2: 可信wid的软件即可以对其进行配置, 也能使用. 只有一组wid</li>
+</ul>
+<p>外设配置与外设特性相适应。例如，可能有与使用寄存器不同的内存配置寄存器，允许在内存视图中进行分割，从而在可信配置WID和其他WID之间进行过滤。</p>
+<p><img src="/images/image-20211202155908826.png" alt="image-20211202155908826"></p>
+<h3 id="L-cache-缓存-的实现"><a href="#L-cache-缓存-的实现" class="headerlink" title="L-cache (缓存)的实现"></a>L-cache (缓存)的实现</h3><p>在cache line tag基础上添加了wid字段, 每次访问cache时, 需要额外检查wid 是否匹配</p>
+<ul>
+<li>该缓存WID字段与核心WID值进行比较，以进行读取访问。如果它不一样，就有一个缓存错误–即使tag相同。</li>
+<li>如发生了cache 替换(cache line满了), tag标记相同, 也会发生替换, wid 被修改为本次访问请求对应的wid</li>
+<li>每次cache line的update, wid 会同步update.</li>
+<li>发生cache miss时,wid标记的请求会发到下一级的cache, 如都不命中, 最终发送给memory</li>
+<li>访问请求来自于core或其他master(如DMA), 访问请求会被其wid标记.</li>
+</ul>
+<h3 id="TileLink"><a href="#TileLink" class="headerlink" title="TileLink"></a>TileLink</h3><p>由于TileLink是SiFive Core Complex内使用的总线，其技术主要用于传输WID信息。WID是通过WID字段来传输的。</p>
+<ul>
+<li>WID通过TileLink总线传输到相关的slave。</li>
+<li>WID 标记来自于发出请求的master(包括core)</li>
+<li>从slave 发送到master的请求, wid 仍是master的.</li>
+<li>从TileLink 传输到AXI, 需要WID的桥器件.</li>
+</ul>
+<p>WorldGuard解决方案可用于包括RISC-V和非RISC-V内核（如Arm内核）的异构平台，通过使用其他总线技术（如AXI或AMBA）处理其他特权和安全权利。转换桥必须设计在不同的端口上（前端口、系统端口、外围端口、内存端口），这取决于信号的来源&#x2F;去向。例如，前端口执行从AXI信号到WG WID（WG_AXI-TL_MARKER）值的转换，而内存端口将WG-WID值转换为AxPROT位（WG_AXI_MARKER）。</p>
+<h3 id="迁移方案"><a href="#迁移方案" class="headerlink" title="迁移方案"></a>迁移方案</h3><p>arm trust zone based TEE 方案迁移, </p>
+<p>• One world in M-mode, the trusted-WID<br>• Two worlds in S-mode: kernel-WID and rich-OS-WID<br>• multi worlds in secure U-mode: TA#1-WID TA#2-WID …<br>• multi worlds in normal U-mode: UA#1-WID UA#2-WID …</p>
+<p>M 层受信固件可以配置WID-[mode] register 以及 WID_[mode]-list register, 启动rich os 和 teeos. 如果发生了中断，M层固件会以M模式管理它。根据中断的情况，对寄存器和WID进行相应的配置，并执行正确的处理程序。事实上，WorldGuard解决方案远远超出了TEE和REE之间的分割，因为它还提供了不受信任的任务之间的隔离和受信任任务之间的隔离。</p>
+<p><img src="/images/image-20211202162337213.png" alt="image-20211202162337213"></p>
+<h3 id="WorldGuard-Modules"><a href="#WorldGuard-Modules" class="headerlink" title="WorldGuard Modules"></a>WorldGuard Modules</h3><p>需要的硬件module:</p>
+<p><img src="/images/image-20211202162524636.png" alt="image-20211202162524636"></p>
+<p><img src="/images/image-20211202162610803.png" alt="image-20211202162610803"></p>
+<p><img src="/images/image-20211202162711482.png" alt="image-20211202162711482"></p>
+<p><img src="/images/image-20211202162730130.png" alt="image-20211202162730130"></p>
+<p>为了使复杂或传统的IP块适应World-Guard，可能需要额外的模块。除了DMA的例子之外，加密IP也是为WorldGuard定制的重要IP块，因为它可以从通过世界管理的受控访问中受益。密钥的值和使用通常是不能在不同world之间共享的资源。因此，必须提供类似于DMA多个独立通道的密钥上下文。</p>
+<h3 id="WorldGuard-Configuration-Code"><a href="#WorldGuard-Configuration-Code" class="headerlink" title="WorldGuard Configuration Code"></a>WorldGuard Configuration Code</h3><p>一旦安全启动执行完成，由于其硬编码值，受信任的核心将检查并执行WorldGuard配置代码。这段代码设置了整个系统的配置，即核心WID-[mode] register WID_[mode]-list register、WG-PMPs和WG-filters。</p>
+<p>其他core的WID寄存器值将被分配到由受信任的内核管理的配置文件中提供的值。该配置文件存储在一个非易失性存储器（NVM）中，通常是一个闪存或OTP存储器。</p>
+<p>受信核心是第一个启动的，其WID-Mmode register 会被自动分配受信wid。</p>
+<ul>
+<li>受信核心WG配置代码用受信WID值来配置它需要的任何内部RAM区域的访问。</li>
+<li>受信核心WG配置代码用受信WID值来配置访问存储了wid配置的NVM区域。</li>
+<li>通过nvm的wid配置配置其他核的相关的wid 寄存器或其他master的WID寄存器还有WG-PMPs WG-filters.</li>
+<li>受信core启动其他core</li>
+<li>受信core 继续运行M层 S层代码 U层代码</li>
+<li>其他core 运行其M层 S层代码 U层代码</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/riscv/" rel="tag"># riscv</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/04/20/hxd_new/%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3/HSM%20%E7%9B%B8%E5%85%B3%E6%8E%A2%E8%AE%A8/" rel="prev" title="HSM 相关">
+      <i class="fa fa-chevron-left"></i> HSM 相关
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/07/12/TEE/linux%20cryptoapi%20%E9%80%82%E9%85%8D%E5%8F%82%E8%80%83/" rel="next" title="linux cryptoapi 适配">
+      linux cryptoapi 适配 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#The-SiFive-WorldGuard-WhitePaper"><span class="nav-number">1.</span> <span class="nav-text">The SiFive WorldGuard WhitePaper</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#pmp-%E6%96%B9%E6%A1%88"><span class="nav-number">1.1.</span> <span class="nav-text">pmp 方案</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#sPmp-%E6%96%B9%E6%A1%88"><span class="nav-number">1.2.</span> <span class="nav-text">sPmp 方案</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#world-guard-%E6%96%B9%E6%A1%88"><span class="nav-number">1.3.</span> <span class="nav-text">world guard 方案</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E9%A9%B1%E5%8A%A8%E7%AD%96%E7%95%A5"><span class="nav-number">1.3.1.</span> <span class="nav-text">核心驱动策略</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E9%A9%B1%E5%8A%A8%E7%AD%96%E7%95%A5"><span class="nav-number">1.3.2.</span> <span class="nav-text">进程驱动策略</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE"><span class="nav-number">1.3.3.</span> <span class="nav-text">配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A1%86%E5%9B%BE"><span class="nav-number">1.3.4.</span> <span class="nav-text">框图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%9A%E7%94%A8%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%A1%88"><span class="nav-number">1.3.5.</span> <span class="nav-text">通用设计方案</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AF%B9%E4%BA%8Emaster%E8%80%8C%E8%A8%80-%E9%99%A4%E4%BA%86core%E4%B9%8B%E5%A4%96"><span class="nav-number">1.3.5.1.</span> <span class="nav-text">对于master而言(除了core之外):</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AF%B9%E4%BA%8Ecore"><span class="nav-number">1.3.5.2.</span> <span class="nav-text">对于core:</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AF%B9%E4%BA%8Eslave-%E4%BE%A7"><span class="nav-number">1.3.5.3.</span> <span class="nav-text">对于slave 侧:</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AF%B9%E4%BA%8Ecache-%E7%89%87%E5%86%85%E7%BC%93%E5%AD%98"><span class="nav-number">1.3.5.4.</span> <span class="nav-text">对于cache(片内缓存):</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AF%B9%E4%BA%8Ebus-%E6%80%BB%E7%BA%BF"><span class="nav-number">1.3.5.5.</span> <span class="nav-text">对于bus 总线:</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E9%A9%B1%E5%8A%A8%E7%AD%96%E7%95%A5%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.3.6.</span> <span class="nav-text">核心驱动策略的实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E9%A9%B1%E5%8A%A8%E7%AD%96%E7%95%A5%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.3.7.</span> <span class="nav-text">进程驱动策略的实现</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%9B%B8%E5%85%B3%E7%9A%84%E5%AF%84%E5%AD%98%E5%99%A8"><span class="nav-number">1.3.7.1.</span> <span class="nav-text">相关的寄存器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#WID-marker%E5%AF%84%E5%AD%98%E5%99%A8"><span class="nav-number">1.3.7.2.</span> <span class="nav-text">WID-marker寄存器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#M-mode-registers"><span class="nav-number">1.3.7.3.</span> <span class="nav-text">M-mode registers</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#S-mode-registers"><span class="nav-number">1.3.7.4.</span> <span class="nav-text">S-mode registers</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#U-mode-registers"><span class="nav-number">1.3.7.5.</span> <span class="nav-text">U-mode registers</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93"><span class="nav-number">1.3.7.6.</span> <span class="nav-text">小结</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DMA-%E9%85%8D%E7%BD%AE"><span class="nav-number">1.3.8.</span> <span class="nav-text">DMA 配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WorldGuard-CLINT"><span class="nav-number">1.3.9.</span> <span class="nav-text">WorldGuard CLINT</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%AD%E6%96%AD%E7%AE%A1%E7%90%86"><span class="nav-number">1.3.10.</span> <span class="nav-text">中断管理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#slave-%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.3.11.</span> <span class="nav-text">slave 实现</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#memory-%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.3.11.1.</span> <span class="nav-text">memory 实现</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A4%96%E8%AE%BE%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.3.11.2.</span> <span class="nav-text">外设的实现</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#L-cache-%E7%BC%93%E5%AD%98-%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.3.12.</span> <span class="nav-text">L-cache (缓存)的实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TileLink"><span class="nav-number">1.3.13.</span> <span class="nav-text">TileLink</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%81%E7%A7%BB%E6%96%B9%E6%A1%88"><span class="nav-number">1.3.14.</span> <span class="nav-text">迁移方案</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WorldGuard-Modules"><span class="nav-number">1.3.15.</span> <span class="nav-text">WorldGuard Modules</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WorldGuard-Configuration-Code"><span class="nav-number">1.3.16.</span> <span class="nav-text">WorldGuard Configuration Code</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

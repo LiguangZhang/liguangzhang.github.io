@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="1. 并发编程笔记1.1. 容器加锁注意事项 加锁可以防止容器的迭代溢出. 迭代期间对容器进行加锁会降低程序的可伸缩性. 降低程序性能及cpu使用率.甚至可能造成死锁.取决于容器的规模. 替代方法是克隆容器.(克隆过程中仍然需要加锁,会有额外的性能开销) 使用容器的一些方法时,会隐藏使用迭代器.  1.2. 并发容器Queue  BlockingQueue  ConcurrentHashMap">
+<meta property="og:type" content="article">
+<meta property="og:title" content="github 加速">
+<meta property="og:url" content="https://liguangzhang.github.io/2018/09/20/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E7%AC%94%E8%AE%B0/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="1. 并发编程笔记1.1. 容器加锁注意事项 加锁可以防止容器的迭代溢出. 迭代期间对容器进行加锁会降低程序的可伸缩性. 降低程序性能及cpu使用率.甚至可能造成死锁.取决于容器的规模. 替代方法是克隆容器.(克隆过程中仍然需要加锁,会有额外的性能开销) 使用容器的一些方法时,会隐藏使用迭代器.  1.2. 并发容器Queue  BlockingQueue  ConcurrentHashMap">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2018-09-20T02:00:01.000Z">
+<meta property="article:modified_time" content="2024-04-15T10:57:08.133Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="C++">
+<meta property="article:tag" content="并发">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2018/09/20/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E7%AC%94%E8%AE%B0/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>github 加速 | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2018/09/20/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E7%AC%94%E8%AE%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          github 加速
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-09-20 10:00:01" itemprop="dateCreated datePublished" datetime="2018-09-20T10:00:01+08:00">2018-09-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-15 18:57:08" itemprop="dateModified" datetime="2024-04-15T18:57:08+08:00">2024-04-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%AF%BB%E4%B9%A6/" itemprop="url" rel="index"><span itemprop="name">读书</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="1-并发编程笔记"><a href="#1-并发编程笔记" class="headerlink" title="1. 并发编程笔记"></a>1. 并发编程笔记</h1><h2 id="1-1-容器加锁注意事项"><a href="#1-1-容器加锁注意事项" class="headerlink" title="1.1. 容器加锁注意事项"></a>1.1. 容器加锁注意事项</h2><ul>
+<li>加锁可以防止容器的迭代溢出.</li>
+<li>迭代期间对容器进行加锁会降低程序的可伸缩性. 降低程序性能及cpu使用率.甚至可能造成死锁.取决于容器的规模.</li>
+<li>替代方法是克隆容器.(克隆过程中仍然需要加锁,会有额外的性能开销)</li>
+<li>使用容器的一些方法时,会隐藏使用迭代器.</li>
+</ul>
+<h2 id="1-2-并发容器"><a href="#1-2-并发容器" class="headerlink" title="1.2. 并发容器"></a>1.2. 并发容器</h2><p>Queue  BlockingQueue  ConcurrentHashMap  ConcurrentMap CopyOnWriteArrayList </p>
+<p>PriorityBlockingQueue SynchronousQueue(put take一直阻塞)</p>
+<h2 id="1-3-模式"><a href="#1-3-模式" class="headerlink" title="1.3. 模式"></a>1.3. 模式</h2><p>生产者消费者模式  (如BlockingQueue 所有消费者有一个共享的工作队列)</p>
+<p>工作密取(对应双端队列 如BlockingDeque, 每个消费者都有各自的工作队列,如果一个消费者完成了自己双端队列上的全部工作,它可以从其它消费者双端队列上秘密的获取工作,适合执行某个工作时发现有更多的工作.)</p>
+<h2 id="1-4-闭锁"><a href="#1-4-闭锁" class="headerlink" title="1.4. 闭锁"></a>1.4. 闭锁</h2><p>一种同步工具类, 可以延迟线程的进度直到达到终止状态.</p>
+<ul>
+<li><p>CountDownLatch</p>
+</li>
+<li><p>FutureTask</p>
+<p>等待执行 正在运行 运行完成</p>
+<p>Future的行为取决于任务的状态, 任务未完成时,会阻塞直到任务到运行完成阶段.</p>
+</li>
+</ul>
+<h2 id="1-5-信号量"><a href="#1-5-信号量" class="headerlink" title="1.5. 信号量"></a>1.5. 信号量</h2><ul>
+<li>计算信号量用来控制同时访问某个特定资源的操作数量,或执行某个指定操作的数量.</li>
+<li>Semaphore管理一组虚拟的许可. 许可的初始数量可以通过构造函数指定.在执行操作时首先获取许可(只要还有剩余的许可),并在使用后释放许可.如果没有剩余的许可,acquire将阻塞直到有许可.</li>
+</ul>
+<h2 id="1-6-栅栏"><a href="#1-6-栅栏" class="headerlink" title="1.6. 栅栏"></a>1.6. 栅栏</h2><p>类似与闭锁, 能阻塞一组线程直到某个事件发生.与闭锁的区别在于:</p>
+<ul>
+<li>闭锁用于等待事件</li>
+<li>栅栏等待其他线程.所有线程必须同时到达栅栏位置(适用于一些迭代算法,如某个步骤中的计算可以并行执行,但必须等到该步骤中的所有计算执行完毕后才能进入下一个步骤).</li>
+<li>CyclicBarrier Exchanger(交换缓冲区)</li>
+</ul>
+<h1 id="2-结构化并发应用程序"><a href="#2-结构化并发应用程序" class="headerlink" title="2. 结构化并发应用程序"></a>2. 结构化并发应用程序</h1><h2 id="2-1-任务执行"><a href="#2-1-任务执行" class="headerlink" title="2.1. 任务执行"></a>2.1. 任务执行</h2><h3 id="2-1-1-无限制创建线程的不足"><a href="#2-1-1-无限制创建线程的不足" class="headerlink" title="2.1.1. 无限制创建线程的不足"></a>2.1.1. 无限制创建线程的不足</h3><p>即为每个任务创建一个线程的做法是不可取的.</p>
+<ul>
+<li><p>线程生命周期的开销非常高</p>
+</li>
+<li><p>资源消耗  </p>
+<p>活跃的线程会消耗系统资源,尤其是内存. 有足够多的线程使CPU处于忙碌状态,创建更多的线程会导致线程竞争CPU, 大量线程被闲置, 将造成性能下降</p>
+</li>
+<li><p>稳定性 在可创建线程的数量上存在限制,如超出限制, 可能抛出内存溢出.(JVM启动参数,Thread构造函数中请求的栈大小等,取决于平台.)</p>
+</li>
+</ul>
+<h2 id="2-2-线程池"><a href="#2-2-线程池" class="headerlink" title="2.2. 线程池"></a>2.2. 线程池</h2><p>Executor框架:</p>
+<p>Java提供了一种灵活的线程池实现作为Executor框架的一部分.提供了生命周期的支持,统计信息收集,应用管理机制和性能监视等机制.</p>
+<ul>
+<li>newFixedThreadPool</li>
+<li>newCachedThreadPool  可缓存的线程池, 回收空闲线程, 线程池的规模不受限制.</li>
+<li>newSingleThreadExecutor</li>
+<li>newScheduledThreadPool  以延迟或定时的方式执行任务,类似Timer</li>
+</ul>
+<p>基于生产者消费者模式,提交任务的操作相当于生产者,执行任务的线程相当于消费者.</p>
+<p>ExecutorService 生命周期: 扩展了Executor        子类.</p>
+<p>三种状态: 运行 关闭 已终止.</p>
+<p>shutdown方法执行平缓的关闭过程:不再接受新的任务, 同事等待已经提交的任务执行完成.shutdownNow执行粗暴的关闭过程.尝试取消所有运行中的任务.</p>
+<h3 id="2-2-1-延迟任务与周期任务"><a href="#2-2-1-延迟任务与周期任务" class="headerlink" title="2.2.1. 延迟任务与周期任务"></a>2.2.1. 延迟任务与周期任务</h3><p>ScheduledThreadPoolExecutor</p>
+<ul>
+<li>Timer会引起线程泄漏(发生异常时,会终止整个Timer)</li>
+<li>Timer 绝对时间的调度机制, ScheduledThreadPoolExecutor 相对时间</li>
+</ul>
+<h4 id="2-2-1-1-携带结果的任务Callable-与-Future"><a href="#2-2-1-1-携带结果的任务Callable-与-Future" class="headerlink" title="2.2.1.1. 携带结果的任务Callable 与 Future"></a>2.2.1.1. 携带结果的任务Callable 与 Future</h4><p>Runnable 与 Callable</p>
+<ul>
+<li>Runnable不能返回值或者抛出一个受检查的异常</li>
+<li>Callable相对Runnable是一种更好的抽象, call主入口点将返回值或者抛出异常.</li>
+</ul>
+<p>ExecutorService中的所有submit方法(参数为一个Runnable或Callable)返回一个Future, Future用来获取任务的执行结果或者用来取消任务.</p>
+<p>CompletionService将Executor和BlockingQueue组合在一起. 将Callable任务提交给它执行, 使用类似队列操作的take和poll等方法来获得已完成的结果.完成时被封装成Future. </p>
+<h1 id="3-取消与关闭"><a href="#3-取消与关闭" class="headerlink" title="3. 取消与关闭"></a>3. 取消与关闭</h1><p>一个可取消的任务必须拥有取消策略:</p>
+<ul>
+<li>如何请求取消该任务</li>
+<li>任务何时检查是否已经请求了取消</li>
+<li>响应取消请求时应该执行哪些操作</li>
+</ul>
+<p>不可靠的取消操作将把生产者置于阻塞的操作中.</p>
+<h2 id="3-1-中断"><a href="#3-1-中断" class="headerlink" title="3.1. 中断"></a>3.1. 中断</h2><p>每个线程都有一个布尔类型的中断标志.当中断线程时,这个线程的中断状态变为true.在Thread中包含了中断线程及查询线程中断的方法.interrput能中断目标线程.isInterrputed方法能返回目标线程的中断状态.interrupted方法清除当前线程的中断状态,并返回它之前的值.也是清除中断状态的唯一方法.</p>
+<blockquote>
+<p>  调用interrupt并不意味者立即停止目标线程正在执行的操作.而只是传递了请求中断的消息,使线程的中断标志位变为true</p>
+</blockquote>
+<p>如Thread.wait sleep join等方法,收到中断请求或者开始执行时发现已经设置好中断标志位时,将抛出InterruptedException.</p>
+<blockquote>
+<p>  中断是实现取消的最合理的方式</p>
+</blockquote>
+<p>如果一个线程由于等待某个内置锁而阻塞,那么将无法响应中断.在Lock类中提供的lockInterruptibly方法,允许在等待一个锁的同时仍能响应中断</p>
+<h2 id="3-2-停止基于线程的服务"><a href="#3-2-停止基于线程的服务" class="headerlink" title="3.2. 停止基于线程的服务"></a>3.2. 停止基于线程的服务</h2><blockquote>
+<p>  对于持有线程的服务,只要服务的存在时间大于创建线程的方法的存在时间,就应该提供生命周期方法,如ExecutorService的shutdown方法.</p>
+</blockquote>
+<h2 id="3-3-处理非正常的线程终止"><a href="#3-3-处理非正常的线程终止" class="headerlink" title="3.3. 处理非正常的线程终止"></a>3.3. 处理非正常的线程终止</h2><p>导致线程提前死亡的主要原因是RuntimeException</p>
+<p>线程非正常退出的后果可能是良性的,当一个线程由于未捕获异常退出时,JVM将这个事件报告给应用程序提供的UncaughtExceptionHandler异常处理器.可以使用新的线程替代异常退出的线程.</p>
+<h1 id="线程池的使用"><a href="#线程池的使用" class="headerlink" title="线程池的使用"></a>线程池的使用</h1><h2 id="3-4-线程池的创建和销毁"><a href="#3-4-线程池的创建和销毁" class="headerlink" title="3.4. 线程池的创建和销毁"></a>3.4. 线程池的创建和销毁</h2><p>线程池的基本大小, 最大大小,以及存活时间等因素共同负责线程的创建和销毁.</p>
+<ul>
+<li>基本大小即线程池的目标大小,在没有任务执行时线程池的大小</li>
+<li>最大大小表示可同时活动的线程数量的上限</li>
+<li>如某个线程的空闲时间超过了存活时间,该线程会被标记为可回收的.线程池的当前大小超过了基本大小时,这个线程会被终止.</li>
+</ul>
+<p>newFixedThreadPool将线程池的基本大小和最大大小设置为参数中指定的值,且创建的线程池不会超时</p>
+<p>newCachedThreadPool将线程池的最大大小设置为Interger.MAX_VALUE,基本大小设置为0, 超时时间设置为1min.创建出来的线程池可被无限扩展,当需求降低时(线程的空闲时间增大)会自动收缩.</p>
+<p>只有当任务相互独立时,为线程池或工作队列设置界限才是合理的.如果任务之间存在依赖性,那么有界的线程池或队列可能导致线程饥饿死锁问题,此时应使用无界的线程池.</p>
+<h2 id="3-5-饱和策略"><a href="#3-5-饱和策略" class="headerlink" title="3.5. 饱和策略"></a>3.5. 饱和策略</h2><p>有界队列被填满后,饱和策略开始发挥作用.可以通过setRejectedExceptionHandler来修改.</p>
+<ul>
+<li>中止策略是默认的饱和策略,抛出未检查的RejectedExecutionException,调用者可捕获该异常,根据需求处理代码</li>
+<li>当新提交的任务无法保存到队列中等待执行时,抛弃策略会抛弃该任务</li>
+<li>调用者运行策略不会抛弃任务,也不会抛出异常,而是将任务回退给调用者,由调用者所在的线程执行(调用execute函数的线程.)</li>
+</ul>
+<h2 id="3-6-扩展ThreadPoolExecutor"><a href="#3-6-扩展ThreadPoolExecutor" class="headerlink" title="3.6. 扩展ThreadPoolExecutor"></a>3.6. 扩展ThreadPoolExecutor</h2><p>可以在子类中覆写的方法:</p>
+<p>beforeExecute afterExecute terminated</p>
+<p>在线程池完成关闭操作时调用terminated,即所有任务都已经完成且工作者线程已经关闭后.可以用来释放Executor在生命周期里分配的各种资源,执行发送通知,记录日志等.</p>
+<p>无论任务从run中正常返回还是抛出一个异常返回,afterExecute都被调用. (任务在完成后带有一个ERROR,则不会调用afterExecute).</p>
+<p>如beforeExecute抛出一个RuntimeException, 也不会调用afterExecute.</p>
+<h1 id="4-活跃性-性能测试-死锁问题"><a href="#4-活跃性-性能测试-死锁问题" class="headerlink" title="4. 活跃性\性能测试 死锁问题"></a>4. 活跃性\性能测试 死锁问题</h1><h2 id="4-1-锁顺序死锁"><a href="#4-1-锁顺序死锁" class="headerlink" title="4.1. 锁顺序死锁"></a>4.1. 锁顺序死锁</h2><blockquote>
+<p>  如果所有线程以固定顺序获得锁,程序中不会出现锁顺序死锁问题</p>
+</blockquote>
+<p>想验证锁顺序的一致性,需要对程序中的加锁行为进行全局分析.</p>
+<h3 id="4-1-1-动态的锁顺序死锁"><a href="#4-1-1-动态的锁顺序死锁" class="headerlink" title="4.1.1. 动态的锁顺序死锁"></a>4.1.1. 动态的锁顺序死锁</h3><p>如锁参数问题,锁了两个传参问题, 无法保证参数的调用顺序则有可能发生死锁.</p>
+<p>可以使用System.identityHashCode方法,比较参数的hashcode值,来保证锁顺序.</p>
+<p>但两个对象可能拥有相同的hashcode值,可使用加时赛锁,在获得两个锁之前,首先需要获得这个加时赛锁.从而保证每次只有一个线程以未知的顺序获得这两个锁.</p>
+<h3 id="4-1-2-在协作对象之间发生的死锁"><a href="#4-1-2-在协作对象之间发生的死锁" class="headerlink" title="4.1.2. 在协作对象之间发生的死锁"></a>4.1.2. 在协作对象之间发生的死锁</h3><p>如果在持有锁时调用某个外部方法,将出现活跃性问题.在这个外部方法中可能会获得其他锁,或阻塞时间过长,导致其他线程无法获得当前被持有的锁</p>
+<h4 id="4-1-2-1-开放调用"><a href="#4-1-2-1-开放调用" class="headerlink" title="4.1.2.1. 开放调用"></a>4.1.2.1. 开放调用</h4><p>在调用某个方法时不需要持有锁,该调用被称为开放调用.更易于找出哪些需要获取多个锁的代码路径.</p>
+<blockquote>
+<p>  在程序中尽量使用开放调用,与那些在持有锁时调用外部方法的程序相比,更易于对依赖于开放调用的程序进行死锁分析.</p>
+</blockquote>
+<h3 id="4-1-3-资源死锁"><a href="#4-1-3-资源死锁" class="headerlink" title="4.1.3. 资源死锁"></a>4.1.3. 资源死锁</h3><p>在相同的资源集合上等待时,也会发生死锁</p>
+<ul>
+<li>如数据库连接池,每个资源池有多个连接,在发生死锁时不仅需要N个循环等待的线程,且需要大量不恰当的时序</li>
+</ul>
+<h4 id="4-1-3-1-线程饥饿死锁"><a href="#4-1-3-1-线程饥饿死锁" class="headerlink" title="4.1.3.1. 线程饥饿死锁"></a>4.1.3.1. 线程饥饿死锁</h4><p>如<code>单线程</code>Exector中,一个任务提交另一个任务.第一个任务将永远等待下去,并使得另一个任务以及这个Executor上执行的所有任务都停止执行.</p>
+<blockquote>
+<p>  有界线程池&#x2F;资源池与相互依赖的任务不能一起使用</p>
+</blockquote>
+<h2 id="4-2-死锁的避免和诊断"><a href="#4-2-死锁的避免和诊断" class="headerlink" title="4.2. 死锁的避免和诊断"></a>4.2. 死锁的避免和诊断</h2><h2 id="4-3-定时锁"><a href="#4-3-定时锁" class="headerlink" title="4.3. 定时锁"></a>4.3. 定时锁</h2><p>tryLock,可指定一个超时时限,在等待超过该时间后返回一个失败信息.同时获取两个锁时才有效,如果在嵌套的方法调用中请求多个锁,也无法释放超时锁.</p>
+<h3 id="4-3-1-线程转储信息"><a href="#4-3-1-线程转储信息" class="headerlink" title="4.3.1. 线程转储信息"></a>4.3.1. 线程转储信息</h3><p>UNIX上 kill -3</p>
+<p>显示的Lock类上获得的信息比在内置锁上获得的信息精确度低.内置锁与获得它们所在的线程栈帧是相关联的.显示的Lock只与获得它的线程相关.</p>
+<h2 id="4-4-其他活跃性危险"><a href="#4-4-其他活跃性危险" class="headerlink" title="4.4. 其他活跃性危险"></a>4.4. 其他活跃性危险</h2><p>饥饿\丢失信号\活锁</p>
+<blockquote>
+<p>  要避免使用线程优先级,会增加平台依赖性,并可能导致活跃性问题.</p>
+</blockquote>
+<p>在Thread API中定义的线程优先级只是作为线程调度的参考.定义了10个优先级.JVM根据需要将他们映射到操作系统的调度优先级.这种映射与特定平台相关.在某个操作系统中,两个不同的JAVA优先级可能被映射到同一优先级.在另一个操作系统中可能被映射到另一个不同的优先级.</p>
+<h4 id="4-4-1-1-糟糕的响应性"><a href="#4-4-1-1-糟糕的响应性" class="headerlink" title="4.4.1.1. 糟糕的响应性"></a>4.4.1.1. 糟糕的响应性</h4><p>GUI程序中计算密集型的后台任务(可适当降低优先级)和不良的锁管理.</p>
+<h4 id="4-4-1-2-活锁"><a href="#4-4-1-2-活锁" class="headerlink" title="4.4.1.2. 活锁"></a>4.4.1.2. 活锁</h4><p>通常发生在处理事务消息的程序中.如果不能成功的处理某个消息,消息处理机制将回滚整个事物.将重新放到队列的开头.由于这条消息又被放回队列开头,因此处理器将被反复调用,并返回相同的结果.错误的将不可修复的错误作为可修复的错误.</p>
+<p>当多个相互协作的线程都对彼此进行响应从而修改各自的状态,使得任何一个线程都无法继续执行时,将发生上述问题. </p>
+<p>在重试机制中引入随机性,使得相互协作的线程发生时间随机不撞车.</p>
+<h2 id="4-5-性能与可伸缩性"><a href="#4-5-性能与可伸缩性" class="headerlink" title="4.5. 性能与可伸缩性"></a>4.5. 性能与可伸缩性</h2><p>执行过程中串行部分所占的比例影响计算资源的可加速比.</p>
+<p>降低锁的竞争程度:</p>
+<ul>
+<li>减少锁的持有时间</li>
+<li>降低锁的请求频率</li>
+<li>使用带有协调机制的独占锁,这些机制允许更高的并发性</li>
+</ul>
+<p>尽管缩小同步代码块能提高可伸缩性,但同步代码块也不能过小.当把一个同步代码块分解为多个时,反而会对性能产生负面影响.</p>
+<h3 id="4-5-1-减小锁的粒度"><a href="#4-5-1-减小锁的粒度" class="headerlink" title="4.5.1. 减小锁的粒度"></a>4.5.1. 减小锁的粒度</h3><p>采用多个相互独立的锁保护独立的状态变量,从而改变这些变量在之前由单个锁保护的情况,降低锁的请求频率.</p>
+<p>将锁分解技术进一步扩展为一组独立对象上的锁进行分解,称为锁分段</p>
+<p>ConcurrentHashMap对于大多数读操作并不会加锁,并且在写入操作以及其他一些需要锁的读操作中使用了锁分段技术.</p>
+<h3 id="4-5-2-避免热点域"><a href="#4-5-2-避免热点域" class="headerlink" title="4.5.2. 避免热点域"></a>4.5.2. 避免热点域</h3><p>一些常见的优化措施,如将一些反复计算的结果缓存起来,都会引入一些热点域,而限制可伸缩性.</p>
+<p>原子变量提供了一种方式降低更新热点域,如静态计数器\序列发生器\链表中头节点的引用.</p>
+<h3 id="4-5-3-并发程序中避免使用对象池"><a href="#4-5-3-并发程序中避免使用对象池" class="headerlink" title="4.5.3. 并发程序中避免使用对象池"></a>4.5.3. 并发程序中避免使用对象池</h3><p>通常对象分配操作的开销比同步的开销更低.</p>
+<h2 id="4-6-并发程序的测试"><a href="#4-6-并发程序的测试" class="headerlink" title="4.6. 并发程序的测试"></a>4.6. 并发程序的测试</h2><h3 id="4-6-1-安全性测试"><a href="#4-6-1-安全性测试" class="headerlink" title="4.6.1. 安全性测试"></a>4.6.1. 安全性测试</h3><blockquote>
+<p>  要最大程度的检测出一些对执行时序敏感的数据竞争,测试中的线程数量应该多于CPU数量,在任意时刻都会有一些线程在运行,而另一些被交换出去,从而可以监测线程间交替行为的可预测性</p>
+</blockquote>
+<h4 id="4-6-1-1-产生更多的交替操作-可提高发现错误的概率"><a href="#4-6-1-1-产生更多的交替操作-可提高发现错误的概率" class="headerlink" title="4.6.1.1. 产生更多的交替操作,可提高发现错误的概率"></a>4.6.1.1. 产生更多的交替操作,可提高发现错误的概率</h4><p>处理器的数量小于活跃线程的数量.</p>
+<p>在访问共享状态的操作中,使用Thread.yield产生更多的上下文切换或睡眠时间较短的sleep.</p>
+<h1 id="5-显示锁"><a href="#5-显示锁" class="headerlink" title="5. 显示锁"></a>5. 显示锁</h1><p>ReentrantLock</p>
+<p>显示锁提供了一种无条件的\可轮询的\定时的以及可中断的锁获取操作.</p>
+<p>内置锁在功能上存在局限性: 无法中断一个正在等待获取锁的线程.无法在请求获取一个锁时无限的等待下去.</p>
+<p>显示锁必须在finally中释放lock.</p>
+<h2 id="5-1-轮询锁与定时锁"><a href="#5-1-轮询锁与定时锁" class="headerlink" title="5.1. 轮询锁与定时锁"></a>5.1. 轮询锁与定时锁</h2><p>tryLock 可避免死锁的发生.</p>
+<p>释放已经获得的锁,重新获取所有锁.(或将这个失败记录,或采取其他措施)</p>
+<blockquote>
+<p>  如使用tryLock获取两个锁,如不能同时获得,回退重试尝试,在休眠时间包括固定部分和随机部分,从而降低活锁的发生性.如在指定时间不能获得所需要的锁,最终返回一个失败的状态.</p>
+</blockquote>
+<p>定时锁可用tryLock实现,超过timeout失败.</p>
+<p>可中断的锁,Lock.lockInterruptibly(替代lock)可在获取锁的同时保持对中断的响应.</p>
+<p>非公平锁的性能要高于公平锁的性能,显示锁和内置锁都没有保证锁是公平的(显示锁可设置公平锁)</p>
+<h2 id="5-2-内置锁与显示锁的选择"><a href="#5-2-内置锁与显示锁的选择" class="headerlink" title="5.2. 内置锁与显示锁的选择"></a>5.2. 内置锁与显示锁的选择</h2><p>显示锁vs内置锁:</p>
+<ul>
+<li>显示锁提供了一种无条件的\可轮询的\定时的以及可中断的锁获取操作.</li>
+<li>显示锁如未被正确使用,在finally中释放锁,可能引起灾难性后果</li>
+<li>内置锁在线程转储过程中可给出线程栈帧.并能监测和识别发生死锁的线程.</li>
+<li>java的高级版本中已经对显示锁支持更多的调试信息.可通过管理接口进行注册等.</li>
+</ul>
+<blockquote>
+<p>在内置锁不能满足要求时,才可以考虑使用显示锁</p>
+</blockquote>
+<h2 id="5-3-读写锁"><a href="#5-3-读写锁" class="headerlink" title="5.3. 读写锁"></a>5.3. 读写锁</h2><p>一个资源可以被多个读操作访问,或者被一个写操作访问,但两者不能同时进行</p>
+<h1 id="6-构建自定义的同步工具"><a href="#6-构建自定义的同步工具" class="headerlink" title="6. 构建自定义的同步工具"></a>6. 构建自定义的同步工具</h1><p>条件队列使构建高效以及高响应性的状态依赖性变得更容易.但同时也很容易被不正确的使用.</p>
+<p>wait notify notifyAll方法</p>
+<p>在编译器或系统平台上可能没有遵循正确使用条件队列的规则,尽量避免使用条件队列.</p>
+<h2 id="6-1-使用条件队列"><a href="#6-1-使用条件队列" class="headerlink" title="6.1. 使用条件队列"></a>6.1. 使用条件队列</h2><p>条件谓词: 使某个操作成为状态依赖操作的前提条件</p>
+<p>在条件等待中存在一条重要的三元关系:</p>
+<p>加锁\wait方法\条件谓词</p>
+<blockquote>
+<p>  锁对象和条件队列对象(调用wait和notify所在的对象)必须是同一对象,锁保护者条件谓词的状态变量.</p>
+</blockquote>
+<p>wait方法将释放锁,阻塞当前线程,并等待直到超时,然后线程被中断或者通过一个通知被唤醒.在唤醒进程后,wait在返回前还要重新获取锁,当线程从wait方法中被唤醒时,它在重新请求锁时不具有任何特殊的优先级,要去其他尝试进入同步代码块的线程一起竞争.</p>
+<h3 id="6-1-1-wait过早唤醒"><a href="#6-1-1-wait过早唤醒" class="headerlink" title="6.1.1. wait过早唤醒"></a>6.1.1. wait过早唤醒</h3><p>wait方法的返回并不一定意味这线程正在等待的条件谓词已经成真.</p>
+<p>在发出通知的线程调用notifyAll时,条件谓词变为真,但该等待线程在重新获取锁时条件谓词可能已经变成假的了.或者并不知道另一个线程为什么调用notify或notifyAll,也许是因为与同一队列相关的另一个条件谓词变成了真.</p>
+<blockquote>
+<p>  一个条件队列可能有多个条件谓词相关.</p>
+</blockquote>
+<p>基于上述条件,每次从wait线程中唤醒时,都必须再次测试条件谓词.需要在while循环中调用wait,每次迭代都检测条件谓词.</p>
+<blockquote>
+<p>  当使用条件等待时(wait)</p>
+<ul>
+<li>通常都有一个条件谓词</li>
+<li>在调用wait之前测试条件谓词,并且从wait返回时再次进行测试</li>
+<li>在循环中调用wait</li>
+<li>确保使用与条件队列相关的锁来保护构成条件谓词的各个状态变量</li>
+<li>当使用wait\notify\notifyAll等方法时,一定要持有与条件队列相关的锁</li>
+<li>在检查条件谓词之后以及开始执行相应的操作之前,不要释放锁</li>
+</ul>
+</blockquote>
+<h3 id="6-1-2-丢失信号"><a href="#6-1-2-丢失信号" class="headerlink" title="6.1.2. 丢失信号"></a>6.1.2. 丢失信号</h3><p>在wait没有检查条件谓词时,会出现这种情况</p>
+<h3 id="6-1-3-通知-notify"><a href="#6-1-3-通知-notify" class="headerlink" title="6.1.3. 通知 notify"></a>6.1.3. 通知 notify</h3><blockquote>
+<p>  每当在等待一个条件时,一定要确保在条件谓词变为真时通过某种方式发出通知.</p>
+</blockquote>
+<ul>
+<li>notify<br>JVM从条件队列上等待的多条线程中选择其中一个唤醒</li>
+<li>notifyAll<br>唤醒所有…</li>
+</ul>
+<p>发出通知的线程应尽快释放锁,以使wait的线程重新获得锁.</p>
+<blockquote>
+<p>  只有同时满足以下两个条件时,才能用单一的notify而不是notifyAll:</p>
+<ul>
+<li>所有等待线程的类型都相同.只有一个条件谓词与条件队列相关,并且每个线程在从wait返回后都执行相同的操作</li>
+<li>单进单出. 在条件变量上的每次通知,最多只能唤醒一个线程来执行.</li>
+</ul>
+</blockquote>
+<h2 id="6-2-显示的Condition对象"><a href="#6-2-显示的Condition对象" class="headerlink" title="6.2. 显示的Condition对象"></a>6.2. 显示的Condition对象</h2><p>内置锁和内置条件队列存在一些缺陷,每个内置锁都只能有一个相关联的条件队列.</p>
+<p>在Condition中,await signal sinalAll</p>
+<p>Condition比内置条件队列提供了更丰富的功能:</p>
+<ul>
+<li>在每个锁上可存在多个等待</li>
+<li>条件等待可以是可中断的或不可中断的</li>
+<li>基于时限的等待</li>
+<li>公平的或非公平的队列操作</li>
+</ul>
+<p>对每个Lock,可有任意数量的Condition对象.一次sinal会唤醒所有在该lock上等待的线程.</p>
+<p>即在每个锁上等待多个线程集.</p>
+<p>要实现一个依赖状态的类,如果没有满足依赖状态的前提条件,这个类的方法必须阻塞,最好的方式是基于现有的类库来构建,如Semaphore BlockingQueue 或CountDonwLatch.如现有类库不能提供足够功能,可使用内置的条件队列\显示的Condition对象或AQS来构建自己的同步器.</p>
+<h1 id="7-原子变量与非阻塞同步机制"><a href="#7-原子变量与非阻塞同步机制" class="headerlink" title="7. 原子变量与非阻塞同步机制"></a>7. 原子变量与非阻塞同步机制</h1><p>volatile变量的使用,不能用于构建原子的符合操作.不能实现计数器或互斥体.</p>
+<p>计数操作目前为止只能用锁的方式实现.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/C/" rel="tag"># C++</a>
+              <a href="/tags/%E5%B9%B6%E5%8F%91/" rel="tag"># 并发</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%90%86%E8%A7%A3/" rel="prev" title="文件系统调研">
+      <i class="fa fa-chevron-left"></i> 文件系统调研
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/10/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/%E4%BD%8E%E5%AD%98%E5%82%A8%E6%9C%BA%E5%88%B6%E8%AF%B4%E6%98%8E/" rel="next" title="低存储机制说明">
+      低存储机制说明 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E7%AC%94%E8%AE%B0"><span class="nav-number">1.</span> <span class="nav-text">1. 并发编程笔记</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-%E5%AE%B9%E5%99%A8%E5%8A%A0%E9%94%81%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9"><span class="nav-number">1.1.</span> <span class="nav-text">1.1. 容器加锁注意事项</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-%E5%B9%B6%E5%8F%91%E5%AE%B9%E5%99%A8"><span class="nav-number">1.2.</span> <span class="nav-text">1.2. 并发容器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.3.</span> <span class="nav-text">1.3. 模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-4-%E9%97%AD%E9%94%81"><span class="nav-number">1.4.</span> <span class="nav-text">1.4. 闭锁</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-5-%E4%BF%A1%E5%8F%B7%E9%87%8F"><span class="nav-number">1.5.</span> <span class="nav-text">1.5. 信号量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-6-%E6%A0%85%E6%A0%8F"><span class="nav-number">1.6.</span> <span class="nav-text">1.6. 栅栏</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E7%BB%93%E6%9E%84%E5%8C%96%E5%B9%B6%E5%8F%91%E5%BA%94%E7%94%A8%E7%A8%8B%E5%BA%8F"><span class="nav-number">2.</span> <span class="nav-text">2. 结构化并发应用程序</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-%E4%BB%BB%E5%8A%A1%E6%89%A7%E8%A1%8C"><span class="nav-number">2.1.</span> <span class="nav-text">2.1. 任务执行</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-1-%E6%97%A0%E9%99%90%E5%88%B6%E5%88%9B%E5%BB%BA%E7%BA%BF%E7%A8%8B%E7%9A%84%E4%B8%8D%E8%B6%B3"><span class="nav-number">2.1.1.</span> <span class="nav-text">2.1.1. 无限制创建线程的不足</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-%E7%BA%BF%E7%A8%8B%E6%B1%A0"><span class="nav-number">2.2.</span> <span class="nav-text">2.2. 线程池</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-1-%E5%BB%B6%E8%BF%9F%E4%BB%BB%E5%8A%A1%E4%B8%8E%E5%91%A8%E6%9C%9F%E4%BB%BB%E5%8A%A1"><span class="nav-number">2.2.1.</span> <span class="nav-text">2.2.1. 延迟任务与周期任务</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#2-2-1-1-%E6%90%BA%E5%B8%A6%E7%BB%93%E6%9E%9C%E7%9A%84%E4%BB%BB%E5%8A%A1Callable-%E4%B8%8E-Future"><span class="nav-number">2.2.1.1.</span> <span class="nav-text">2.2.1.1. 携带结果的任务Callable 与 Future</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E5%8F%96%E6%B6%88%E4%B8%8E%E5%85%B3%E9%97%AD"><span class="nav-number">3.</span> <span class="nav-text">3. 取消与关闭</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-%E4%B8%AD%E6%96%AD"><span class="nav-number">3.1.</span> <span class="nav-text">3.1. 中断</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-%E5%81%9C%E6%AD%A2%E5%9F%BA%E4%BA%8E%E7%BA%BF%E7%A8%8B%E7%9A%84%E6%9C%8D%E5%8A%A1"><span class="nav-number">3.2.</span> <span class="nav-text">3.2. 停止基于线程的服务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-%E5%A4%84%E7%90%86%E9%9D%9E%E6%AD%A3%E5%B8%B8%E7%9A%84%E7%BA%BF%E7%A8%8B%E7%BB%88%E6%AD%A2"><span class="nav-number">3.3.</span> <span class="nav-text">3.3. 处理非正常的线程终止</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E6%B1%A0%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="nav-number">4.</span> <span class="nav-text">线程池的使用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-4-%E7%BA%BF%E7%A8%8B%E6%B1%A0%E7%9A%84%E5%88%9B%E5%BB%BA%E5%92%8C%E9%94%80%E6%AF%81"><span class="nav-number">4.1.</span> <span class="nav-text">3.4. 线程池的创建和销毁</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-5-%E9%A5%B1%E5%92%8C%E7%AD%96%E7%95%A5"><span class="nav-number">4.2.</span> <span class="nav-text">3.5. 饱和策略</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-6-%E6%89%A9%E5%B1%95ThreadPoolExecutor"><span class="nav-number">4.3.</span> <span class="nav-text">3.6. 扩展ThreadPoolExecutor</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E6%B4%BB%E8%B7%83%E6%80%A7-%E6%80%A7%E8%83%BD%E6%B5%8B%E8%AF%95-%E6%AD%BB%E9%94%81%E9%97%AE%E9%A2%98"><span class="nav-number">5.</span> <span class="nav-text">4. 活跃性\性能测试 死锁问题</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-%E9%94%81%E9%A1%BA%E5%BA%8F%E6%AD%BB%E9%94%81"><span class="nav-number">5.1.</span> <span class="nav-text">4.1. 锁顺序死锁</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-1-%E5%8A%A8%E6%80%81%E7%9A%84%E9%94%81%E9%A1%BA%E5%BA%8F%E6%AD%BB%E9%94%81"><span class="nav-number">5.1.1.</span> <span class="nav-text">4.1.1. 动态的锁顺序死锁</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-2-%E5%9C%A8%E5%8D%8F%E4%BD%9C%E5%AF%B9%E8%B1%A1%E4%B9%8B%E9%97%B4%E5%8F%91%E7%94%9F%E7%9A%84%E6%AD%BB%E9%94%81"><span class="nav-number">5.1.2.</span> <span class="nav-text">4.1.2. 在协作对象之间发生的死锁</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#4-1-2-1-%E5%BC%80%E6%94%BE%E8%B0%83%E7%94%A8"><span class="nav-number">5.1.2.1.</span> <span class="nav-text">4.1.2.1. 开放调用</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-3-%E8%B5%84%E6%BA%90%E6%AD%BB%E9%94%81"><span class="nav-number">5.1.3.</span> <span class="nav-text">4.1.3. 资源死锁</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#4-1-3-1-%E7%BA%BF%E7%A8%8B%E9%A5%A5%E9%A5%BF%E6%AD%BB%E9%94%81"><span class="nav-number">5.1.3.1.</span> <span class="nav-text">4.1.3.1. 线程饥饿死锁</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-%E6%AD%BB%E9%94%81%E7%9A%84%E9%81%BF%E5%85%8D%E5%92%8C%E8%AF%8A%E6%96%AD"><span class="nav-number">5.2.</span> <span class="nav-text">4.2. 死锁的避免和诊断</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-3-%E5%AE%9A%E6%97%B6%E9%94%81"><span class="nav-number">5.3.</span> <span class="nav-text">4.3. 定时锁</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-3-1-%E7%BA%BF%E7%A8%8B%E8%BD%AC%E5%82%A8%E4%BF%A1%E6%81%AF"><span class="nav-number">5.3.1.</span> <span class="nav-text">4.3.1. 线程转储信息</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-4-%E5%85%B6%E4%BB%96%E6%B4%BB%E8%B7%83%E6%80%A7%E5%8D%B1%E9%99%A9"><span class="nav-number">5.4.</span> <span class="nav-text">4.4. 其他活跃性危险</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#4-4-1-1-%E7%B3%9F%E7%B3%95%E7%9A%84%E5%93%8D%E5%BA%94%E6%80%A7"><span class="nav-number">5.4.0.1.</span> <span class="nav-text">4.4.1.1. 糟糕的响应性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-4-1-2-%E6%B4%BB%E9%94%81"><span class="nav-number">5.4.0.2.</span> <span class="nav-text">4.4.1.2. 活锁</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-5-%E6%80%A7%E8%83%BD%E4%B8%8E%E5%8F%AF%E4%BC%B8%E7%BC%A9%E6%80%A7"><span class="nav-number">5.5.</span> <span class="nav-text">4.5. 性能与可伸缩性</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-5-1-%E5%87%8F%E5%B0%8F%E9%94%81%E7%9A%84%E7%B2%92%E5%BA%A6"><span class="nav-number">5.5.1.</span> <span class="nav-text">4.5.1. 减小锁的粒度</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-5-2-%E9%81%BF%E5%85%8D%E7%83%AD%E7%82%B9%E5%9F%9F"><span class="nav-number">5.5.2.</span> <span class="nav-text">4.5.2. 避免热点域</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-5-3-%E5%B9%B6%E5%8F%91%E7%A8%8B%E5%BA%8F%E4%B8%AD%E9%81%BF%E5%85%8D%E4%BD%BF%E7%94%A8%E5%AF%B9%E8%B1%A1%E6%B1%A0"><span class="nav-number">5.5.3.</span> <span class="nav-text">4.5.3. 并发程序中避免使用对象池</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-6-%E5%B9%B6%E5%8F%91%E7%A8%8B%E5%BA%8F%E7%9A%84%E6%B5%8B%E8%AF%95"><span class="nav-number">5.6.</span> <span class="nav-text">4.6. 并发程序的测试</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-6-1-%E5%AE%89%E5%85%A8%E6%80%A7%E6%B5%8B%E8%AF%95"><span class="nav-number">5.6.1.</span> <span class="nav-text">4.6.1. 安全性测试</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#4-6-1-1-%E4%BA%A7%E7%94%9F%E6%9B%B4%E5%A4%9A%E7%9A%84%E4%BA%A4%E6%9B%BF%E6%93%8D%E4%BD%9C-%E5%8F%AF%E6%8F%90%E9%AB%98%E5%8F%91%E7%8E%B0%E9%94%99%E8%AF%AF%E7%9A%84%E6%A6%82%E7%8E%87"><span class="nav-number">5.6.1.1.</span> <span class="nav-text">4.6.1.1. 产生更多的交替操作,可提高发现错误的概率</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-%E6%98%BE%E7%A4%BA%E9%94%81"><span class="nav-number">6.</span> <span class="nav-text">5. 显示锁</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#5-1-%E8%BD%AE%E8%AF%A2%E9%94%81%E4%B8%8E%E5%AE%9A%E6%97%B6%E9%94%81"><span class="nav-number">6.1.</span> <span class="nav-text">5.1. 轮询锁与定时锁</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-2-%E5%86%85%E7%BD%AE%E9%94%81%E4%B8%8E%E6%98%BE%E7%A4%BA%E9%94%81%E7%9A%84%E9%80%89%E6%8B%A9"><span class="nav-number">6.2.</span> <span class="nav-text">5.2. 内置锁与显示锁的选择</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-3-%E8%AF%BB%E5%86%99%E9%94%81"><span class="nav-number">6.3.</span> <span class="nav-text">5.3. 读写锁</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#6-%E6%9E%84%E5%BB%BA%E8%87%AA%E5%AE%9A%E4%B9%89%E7%9A%84%E5%90%8C%E6%AD%A5%E5%B7%A5%E5%85%B7"><span class="nav-number">7.</span> <span class="nav-text">6. 构建自定义的同步工具</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#6-1-%E4%BD%BF%E7%94%A8%E6%9D%A1%E4%BB%B6%E9%98%9F%E5%88%97"><span class="nav-number">7.1.</span> <span class="nav-text">6.1. 使用条件队列</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#6-1-1-wait%E8%BF%87%E6%97%A9%E5%94%A4%E9%86%92"><span class="nav-number">7.1.1.</span> <span class="nav-text">6.1.1. wait过早唤醒</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-1-2-%E4%B8%A2%E5%A4%B1%E4%BF%A1%E5%8F%B7"><span class="nav-number">7.1.2.</span> <span class="nav-text">6.1.2. 丢失信号</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-1-3-%E9%80%9A%E7%9F%A5-notify"><span class="nav-number">7.1.3.</span> <span class="nav-text">6.1.3. 通知 notify</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-2-%E6%98%BE%E7%A4%BA%E7%9A%84Condition%E5%AF%B9%E8%B1%A1"><span class="nav-number">7.2.</span> <span class="nav-text">6.2. 显示的Condition对象</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#7-%E5%8E%9F%E5%AD%90%E5%8F%98%E9%87%8F%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%90%8C%E6%AD%A5%E6%9C%BA%E5%88%B6"><span class="nav-number">8.</span> <span class="nav-text">7. 原子变量与非阻塞同步机制</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

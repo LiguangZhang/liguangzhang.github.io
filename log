@@ -1,0 +1,773 @@
+~/myblog/sshblog/source ❯ hexo g | tee log                                                                                         18:28:42
+INFO  Validating config
+INFO  Start processing
+ERROR Process failed: _posts/OTA相关/动态分区相关简介.md
+YAMLException: end of the stream or a document separator is expected (7:1)
+
+ 4 | 
+ 5 | ## 1.1. 动态分区机型
+ 6 | 
+ 7 | - J1/J2/J11 sm8250
+-----^
+ 8 | - G7A         sm7250
+ 9 | - J6A/B/C   sm6250
+    at generateError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:183:10)
+    at throwError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:187:9)
+    at readDocument (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1645:5)
+    at loadDocuments (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1688:5)
+    at Object.load (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1714:19)
+    at parseYAML (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:65:38)
+    at parse (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:49:16)
+    at /home/liguang/myblog/sshblog/node_modules/hexo/dist/plugins/processor/post.js:45:52
+    at tryCatcher (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/util.js:16:23)
+    at Promise._settlePromiseFromHandler (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:544:35)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:604:18)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+    at PromiseArray._resolve (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:127:19)
+    at PromiseArray._promiseFulfilled (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:145:14)
+    at PromiseArray._iterate (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:115:31)
+    at PromiseArray.init [as _init] (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:79:10)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:601:21)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+ERROR Process failed: _posts/hxd_new/x2000 secure boot 版本制作流程.md
+YAMLException: end of the stream or a document separator is expected (5:1)
+
+ 2 | 
+ 3 | # 烧录key
+ 4 | 
+ 5 | 将附件中的 `key.bin` 替换烧录器目录下的  "secu ...
+-----^
+ 6 | 烧录器勾选 EFUSE 选项卡下的 安全 -> 烧录密钥选项,  ...
+ 7 | 点击右下角的保存
+    at generateError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:183:10)
+    at throwError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:187:9)
+    at readDocument (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1645:5)
+    at loadDocuments (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1688:5)
+    at Object.load (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1714:19)
+    at parseYAML (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:65:38)
+    at parse (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:49:16)
+    at /home/liguang/myblog/sshblog/node_modules/hexo/dist/plugins/processor/post.js:45:52
+    at tryCatcher (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/util.js:16:23)
+    at Promise._settlePromiseFromHandler (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:544:35)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:604:18)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+    at PromiseArray._resolve (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:127:19)
+    at PromiseArray._promiseFulfilled (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:145:14)
+    at PromiseArray._iterate (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:115:31)
+    at PromiseArray.init [as _init] (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:79:10)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:601:21)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+ERROR Process failed: _posts/hxd_new/kernel 中断相关.md
+YAMLException: a line break is expected (2:3)
+
+ 1 | 
+ 2 | > 本文由 [简悦 SimpRead](http://ksria.c ...
+-------^
+ 3 | 
+ 4 | > 在面试的时候我们常常被问及一个问题：几种中断下半部机制 soft ...
+    at generateError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:183:10)
+    at throwError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:187:9)
+    at readLineBreak (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:391:5)
+    at readBlockScalar (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:879:5)
+    at composeNode (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1445:35)
+    at readDocument (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1625:3)
+    at loadDocuments (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1688:5)
+    at Object.load (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1714:19)
+    at parseYAML (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:65:38)
+    at parse (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:49:16)
+    at /home/liguang/myblog/sshblog/node_modules/hexo/dist/plugins/processor/post.js:45:52
+    at tryCatcher (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/util.js:16:23)
+    at Promise._settlePromiseFromHandler (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:544:35)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:604:18)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+    at PromiseArray._resolve (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:127:19)
+    at PromiseArray._promiseFulfilled (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:145:14)
+    at PromiseArray._iterate (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:115:31)
+    at PromiseArray.init [as _init] (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:79:10)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:601:21)
+ERROR Process failed: _posts/log分析/MIUI-2021840问题分析.md
+YAMLException: end of the stream or a document separator is expected (1:1)
+
+ 1 | ```asm
+-----^
+ 2 | Timestamp: 2020-11-16 23:04:42+0800
+ 3 | pid: 1075, tid: 2385, name: Bind ...
+    at generateError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:183:10)
+    at throwError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:187:9)
+    at readDocument (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1645:5)
+    at loadDocuments (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1688:5)
+    at Object.load (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1714:19)
+    at parseYAML (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:65:38)
+    at parse (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:49:16)
+    at /home/liguang/myblog/sshblog/node_modules/hexo/dist/plugins/processor/post.js:45:52
+    at tryCatcher (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/util.js:16:23)
+    at Promise._settlePromiseFromHandler (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:544:35)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:604:18)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+    at PromiseArray._resolve (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:127:19)
+    at PromiseArray._promiseFulfilled (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:145:14)
+    at PromiseArray._iterate (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:115:31)
+    at PromiseArray.init [as _init] (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:79:10)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:601:21)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+ERROR Process failed: _posts/OTA相关/AB调试笔记.md
+YAMLException: end of the stream or a document separator is expected (7:1)
+
+ 4 | 
+ 5 | ## 相关文档
+ 6 | ### 官方文档
+ 7 | [AB官方文档](https://source.android. ...
+-----^
+ 8 | 
+ 9 | 在启用了 A/B 的设备上，可以在后台对应用进行编译，以更新到新 ...
+    at generateError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:183:10)
+    at throwError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:187:9)
+    at readDocument (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1645:5)
+    at loadDocuments (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1688:5)
+    at Object.load (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1714:19)
+    at parseYAML (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:65:38)
+    at parse (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:49:16)
+    at /home/liguang/myblog/sshblog/node_modules/hexo/dist/plugins/processor/post.js:45:52
+    at tryCatcher (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/util.js:16:23)
+    at Promise._settlePromiseFromHandler (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:544:35)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:604:18)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+    at PromiseArray._resolve (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:127:19)
+    at PromiseArray._promiseFulfilled (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:145:14)
+    at PromiseArray._iterate (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:115:31)
+    at PromiseArray.init [as _init] (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:79:10)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:601:21)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+ERROR Process failed: _posts/其他调研/gfm语法.md
+YAMLException: unidentified alias "**加粗斜体***" (2:11)
+
+ 1 | # 1. gfm语法
+ 2 | ***加粗斜体***
+---------------^
+ 3 | **加粗**
+ 4 | *斜体*
+    at generateError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:183:10)
+    at throwError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:187:9)
+    at readAlias (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1357:5)
+    at composeNode (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1450:20)
+    at readBlockMapping (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1104:12)
+    at composeNode (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1441:12)
+    at readDocument (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1625:3)
+    at loadDocuments (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1688:5)
+    at Object.load (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1714:19)
+    at parseYAML (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:65:38)
+    at parse (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:49:16)
+    at /home/liguang/myblog/sshblog/node_modules/hexo/dist/plugins/processor/post.js:45:52
+    at tryCatcher (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/util.js:16:23)
+    at Promise._settlePromiseFromHandler (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:544:35)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:604:18)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+    at PromiseArray._resolve (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:127:19)
+    at PromiseArray._promiseFulfilled (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:145:14)
+    at PromiseArray._iterate (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:115:31)
+    at PromiseArray.init [as _init] (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:79:10)
+ERROR Process failed: _posts/hxd_new/mips通用指令.md
+YAMLException: unidentified alias "*MIPS通用寄存器**" (1:14)
+
+ 1 | **MIPS通用寄存器**
+------------------^
+ 2 | 
+ 3 | MIPS有32个通用寄存器（$0-$31），各寄存器的功能及汇编程序中使用约定如下：
+    at generateError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:183:10)
+    at throwError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:187:9)
+    at readAlias (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1357:5)
+    at composeNode (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1450:20)
+    at readBlockMapping (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1104:12)
+    at composeNode (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1441:12)
+    at readDocument (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1625:3)
+    at loadDocuments (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1688:5)
+    at Object.load (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1714:19)
+    at parseYAML (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:65:38)
+    at parse (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:49:16)
+    at /home/liguang/myblog/sshblog/node_modules/hexo/dist/plugins/processor/post.js:45:52
+    at tryCatcher (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/util.js:16:23)
+    at Promise._settlePromiseFromHandler (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:544:35)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:604:18)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+    at PromiseArray._resolve (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:127:19)
+    at PromiseArray._promiseFulfilled (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:145:14)
+    at PromiseArray._iterate (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:115:31)
+    at PromiseArray.init [as _init] (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:79:10)
+ERROR Process failed: _posts/稳定性/arm64寄存器.md
+YAMLException: end of the stream or a document separator is expected (11:34)
+
+  8 | 
+  9 | | 寄存器  | 位数 | 描述                                                 ...
+ 10 | | ------- | ---- | --------------------------------------------- ...
+ 11 | | x0-x30  | 64   | 通用寄存器, 可以作 位使用: w0-w30 (访问寄存器的低位)         |
+---------------------------------------^
+ 12 | | x0-x7   | 64   | 用于子程序调用时参数传递(形参), x0 还用于返回值传递          |
+ 13 | | FP(x29) | 64   | 当前栈帧的栈底 (android上 向上增长), 栈顶地址 < 栈底         |
+    at generateError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:183:10)
+    at throwError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:187:9)
+    at readDocument (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1645:5)
+    at loadDocuments (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1688:5)
+    at Object.load (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1714:19)
+    at parseYAML (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:65:38)
+    at parse (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:49:16)
+    at /home/liguang/myblog/sshblog/node_modules/hexo/dist/plugins/processor/post.js:45:52
+    at tryCatcher (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/util.js:16:23)
+    at Promise._settlePromiseFromHandler (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:544:35)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:604:18)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+    at PromiseArray._resolve (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:127:19)
+    at PromiseArray._promiseFulfilled (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:145:14)
+    at PromiseArray._iterate (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:115:31)
+    at PromiseArray.init [as _init] (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:79:10)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:601:21)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+ERROR Process failed: _posts/稳定性/scudo 介绍.md
+YAMLException: end of the stream or a document separator is expected (10:1)
+
+  7 | ```
+  8 | # 概念
+  9 | 
+ 10 | scudo 大概分为以下几个部分：
+------^
+ 11 | 
+ 12 | 1. **前端FrontEnd：**使用Primary或Sec ...
+    at generateError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:183:10)
+    at throwError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:187:9)
+    at readDocument (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1645:5)
+    at loadDocuments (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1688:5)
+    at Object.load (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1714:19)
+    at parseYAML (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:65:38)
+    at parse (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:49:16)
+    at /home/liguang/myblog/sshblog/node_modules/hexo/dist/plugins/processor/post.js:45:52
+    at tryCatcher (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/util.js:16:23)
+    at Promise._settlePromiseFromHandler (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:544:35)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:604:18)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+    at PromiseArray._resolve (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:127:19)
+    at PromiseArray._promiseFulfilled (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:145:14)
+    at PromiseArray._iterate (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:115:31)
+    at PromiseArray.init [as _init] (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:79:10)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:601:21)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+ERROR Process failed: _posts/hxd_new/虚拟化/Linux 中断子系统（2）- 通用框架处理.md
+YAMLException: a line break is expected (1:3)
+
+ 1 | > 本文由 [简悦 SimpRead](http://ksria.c ...
+-------^
+ 2 | 
+ 3 | 背景
+    at generateError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:183:10)
+    at throwError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:187:9)
+    at readLineBreak (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:391:5)
+    at readBlockScalar (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:879:5)
+    at composeNode (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1445:35)
+    at readDocument (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1625:3)
+    at loadDocuments (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1688:5)
+    at Object.load (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1714:19)
+    at parseYAML (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:65:38)
+    at parse (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:49:16)
+    at /home/liguang/myblog/sshblog/node_modules/hexo/dist/plugins/processor/post.js:45:52
+    at tryCatcher (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/util.js:16:23)
+    at Promise._settlePromiseFromHandler (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:544:35)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:604:18)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+    at PromiseArray._resolve (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:127:19)
+    at PromiseArray._promiseFulfilled (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:145:14)
+    at PromiseArray._iterate (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:115:31)
+    at PromiseArray.init [as _init] (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:79:10)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:601:21)
+ERROR Process failed: _posts/hxd_new/虚拟化/Linux 中断子系统（1）- 中断控制器及驱动分析.md
+YAMLException: a line break is expected (1:3)
+
+ 1 | > 本文由 [简悦 SimpRead](http://ksria.c ...
+-------^
+ 2 | 
+ 3 | 背景
+    at generateError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:183:10)
+    at throwError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:187:9)
+    at readLineBreak (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:391:5)
+    at readBlockScalar (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:879:5)
+    at composeNode (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1445:35)
+    at readDocument (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1625:3)
+    at loadDocuments (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1688:5)
+    at Object.load (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1714:19)
+    at parseYAML (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:65:38)
+    at parse (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:49:16)
+    at /home/liguang/myblog/sshblog/node_modules/hexo/dist/plugins/processor/post.js:45:52
+    at tryCatcher (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/util.js:16:23)
+    at Promise._settlePromiseFromHandler (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:544:35)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:604:18)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+    at PromiseArray._resolve (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:127:19)
+    at PromiseArray._promiseFulfilled (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:145:14)
+    at PromiseArray._iterate (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:115:31)
+    at PromiseArray.init [as _init] (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:79:10)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:601:21)
+ERROR Process failed: _posts/稳定性/scudo相关.md
+YAMLException: end of the stream or a document separator is expected (3:1)
+
+ 1 | # llvm 编译
+ 2 | 
+ 3 | ```shell
+-----^
+ 4 | # 废弃
+ 5 | clang++ -fPIC -std=c++11 -msse4. ...
+    at generateError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:183:10)
+    at throwError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:187:9)
+    at readDocument (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1645:5)
+    at loadDocuments (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1688:5)
+    at Object.load (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1714:19)
+    at parseYAML (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:65:38)
+    at parse (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:49:16)
+    at /home/liguang/myblog/sshblog/node_modules/hexo/dist/plugins/processor/post.js:45:52
+    at tryCatcher (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/util.js:16:23)
+    at Promise._settlePromiseFromHandler (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:544:35)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:604:18)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+    at PromiseArray._resolve (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:127:19)
+    at PromiseArray._promiseFulfilled (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:145:14)
+    at PromiseArray._iterate (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:115:31)
+    at PromiseArray.init [as _init] (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:79:10)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:601:21)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+ERROR Process failed: _posts/hxd_new/虚拟化/Linux 中断子系统（3）- softirq 和 tasklet.md
+YAMLException: a line break is expected (1:3)
+
+ 1 | > 本文由 [简悦 SimpRead](http://ksria.c ...
+-------^
+ 2 | 
+ 3 | 背景
+    at generateError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:183:10)
+    at throwError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:187:9)
+    at readLineBreak (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:391:5)
+    at readBlockScalar (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:879:5)
+    at composeNode (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1445:35)
+    at readDocument (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1625:3)
+    at loadDocuments (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1688:5)
+    at Object.load (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1714:19)
+    at parseYAML (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:65:38)
+    at parse (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:49:16)
+    at /home/liguang/myblog/sshblog/node_modules/hexo/dist/plugins/processor/post.js:45:52
+    at tryCatcher (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/util.js:16:23)
+    at Promise._settlePromiseFromHandler (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:544:35)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:604:18)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+    at PromiseArray._resolve (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:127:19)
+    at PromiseArray._promiseFulfilled (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:145:14)
+    at PromiseArray._iterate (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:115:31)
+    at PromiseArray.init [as _init] (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:79:10)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:601:21)
+ERROR Process failed: _posts/hxd_new/虚拟化/Linux 虚拟化 KVM-Qemu 分析（10）之 virtio 驱动.md
+YAMLException: a line break is expected (1:3)
+
+ 1 | > 本文由 [简悦 SimpRead](http://ksria.c ...
+-------^
+ 2 | 
+ 3 | 背景
+    at generateError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:183:10)
+    at throwError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:187:9)
+    at readLineBreak (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:391:5)
+    at readBlockScalar (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:879:5)
+    at composeNode (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1445:35)
+    at readDocument (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1625:3)
+    at loadDocuments (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1688:5)
+    at Object.load (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1714:19)
+    at parseYAML (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:65:38)
+    at parse (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:49:16)
+    at /home/liguang/myblog/sshblog/node_modules/hexo/dist/plugins/processor/post.js:45:52
+    at tryCatcher (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/util.js:16:23)
+    at Promise._settlePromiseFromHandler (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:544:35)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:604:18)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+    at PromiseArray._resolve (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:127:19)
+    at PromiseArray._promiseFulfilled (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:145:14)
+    at PromiseArray._iterate (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:115:31)
+    at PromiseArray.init [as _init] (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:79:10)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:601:21)
+ERROR Process failed: _posts/hxd_new/虚拟化/Linux 中断子系统（4）- Workqueue.md
+YAMLException: a line break is expected (1:3)
+
+ 1 | > 本文由 [简悦 SimpRead](http://ksria.c ...
+-------^
+ 2 | 
+ 3 | 背景
+    at generateError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:183:10)
+    at throwError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:187:9)
+    at readLineBreak (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:391:5)
+    at readBlockScalar (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:879:5)
+    at composeNode (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1445:35)
+    at readDocument (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1625:3)
+    at loadDocuments (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1688:5)
+    at Object.load (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1714:19)
+    at parseYAML (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:65:38)
+    at parse (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:49:16)
+    at /home/liguang/myblog/sshblog/node_modules/hexo/dist/plugins/processor/post.js:45:52
+    at tryCatcher (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/util.js:16:23)
+    at Promise._settlePromiseFromHandler (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:544:35)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:604:18)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+    at PromiseArray._resolve (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:127:19)
+    at PromiseArray._promiseFulfilled (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:145:14)
+    at PromiseArray._iterate (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:115:31)
+    at PromiseArray.init [as _init] (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:79:10)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:601:21)
+ERROR Process failed: _posts/稳定性/信号.md
+YAMLException: a line break is expected (1:3)
+
+ 1 | > 本文由 [简悦 SimpRead](http://ksria.c ...
+-------^
+ 2 | 
+ 3 | > 信号是Linux编程中非常重要的部分，本文将详细介绍信号机制的基 ...
+    at generateError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:183:10)
+    at throwError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:187:9)
+    at readLineBreak (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:391:5)
+    at readBlockScalar (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:879:5)
+    at composeNode (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1445:35)
+    at readDocument (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1625:3)
+    at loadDocuments (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1688:5)
+    at Object.load (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1714:19)
+    at parseYAML (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:65:38)
+    at parse (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:49:16)
+    at /home/liguang/myblog/sshblog/node_modules/hexo/dist/plugins/processor/post.js:45:52
+    at tryCatcher (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/util.js:16:23)
+    at Promise._settlePromiseFromHandler (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:544:35)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:604:18)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+    at PromiseArray._resolve (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:127:19)
+    at PromiseArray._promiseFulfilled (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:145:14)
+    at PromiseArray._iterate (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:115:31)
+    at PromiseArray.init [as _init] (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:79:10)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:601:21)
+ERROR Process failed: _posts/hxd_new/虚拟化/Linux 虚拟化 KVM-Qemu 分析（11）之 virtqueue.md
+YAMLException: a line break is expected (1:3)
+
+ 1 | > 本文由 [简悦 SimpRead](http://ksria.c ...
+-------^
+ 2 | 
+ 3 | 背景
+    at generateError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:183:10)
+    at throwError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:187:9)
+    at readLineBreak (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:391:5)
+    at readBlockScalar (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:879:5)
+    at composeNode (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1445:35)
+    at readDocument (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1625:3)
+    at loadDocuments (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1688:5)
+    at Object.load (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1714:19)
+    at parseYAML (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:65:38)
+    at parse (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:49:16)
+    at /home/liguang/myblog/sshblog/node_modules/hexo/dist/plugins/processor/post.js:45:52
+    at tryCatcher (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/util.js:16:23)
+    at Promise._settlePromiseFromHandler (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:544:35)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:604:18)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+    at PromiseArray._resolve (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:127:19)
+    at PromiseArray._promiseFulfilled (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:145:14)
+    at PromiseArray._iterate (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:115:31)
+    at PromiseArray.init [as _init] (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:79:10)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:601:21)
+ERROR Process failed: _posts/hxd_new/虚拟化/Linux 虚拟化 KVM-Qemu 分析（1）.md
+YAMLException: a line break is expected (1:3)
+
+ 1 | > 本文由 [简悦 SimpRead](http://ksria.c ...
+-------^
+ 2 | 
+ 3 | 背景
+    at generateError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:183:10)
+    at throwError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:187:9)
+    at readLineBreak (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:391:5)
+    at readBlockScalar (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:879:5)
+    at composeNode (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1445:35)
+    at readDocument (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1625:3)
+    at loadDocuments (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1688:5)
+    at Object.load (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1714:19)
+    at parseYAML (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:65:38)
+    at parse (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:49:16)
+    at /home/liguang/myblog/sshblog/node_modules/hexo/dist/plugins/processor/post.js:45:52
+    at tryCatcher (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/util.js:16:23)
+    at Promise._settlePromiseFromHandler (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:544:35)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:604:18)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+    at PromiseArray._resolve (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:127:19)
+    at PromiseArray._promiseFulfilled (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:145:14)
+    at PromiseArray._iterate (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:115:31)
+    at PromiseArray.init [as _init] (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:79:10)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:601:21)
+ERROR Process failed: _posts/hxd_new/虚拟化/Linux 虚拟化 KVM-Qemu 分析（2）之 ARMv8 虚拟化.md
+YAMLException: a line break is expected (1:3)
+
+ 1 | > 本文由 [简悦 SimpRead](http://ksria.c ...
+-------^
+ 2 | 
+ 3 | 背景
+    at generateError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:183:10)
+    at throwError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:187:9)
+    at readLineBreak (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:391:5)
+    at readBlockScalar (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:879:5)
+    at composeNode (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1445:35)
+    at readDocument (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1625:3)
+    at loadDocuments (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1688:5)
+    at Object.load (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1714:19)
+    at parseYAML (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:65:38)
+    at parse (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:49:16)
+    at /home/liguang/myblog/sshblog/node_modules/hexo/dist/plugins/processor/post.js:45:52
+    at tryCatcher (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/util.js:16:23)
+    at Promise._settlePromiseFromHandler (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:544:35)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:604:18)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+    at PromiseArray._resolve (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:127:19)
+    at PromiseArray._promiseFulfilled (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:145:14)
+    at PromiseArray._iterate (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:115:31)
+    at PromiseArray.init [as _init] (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:79:10)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:601:21)
+ERROR Process failed: _posts/hxd_new/虚拟化/Linux 虚拟化 KVM-Qemu 分析（5）之内存虚拟化.md
+YAMLException: a line break is expected (1:3)
+
+ 1 | > 本文由 [简悦 SimpRead](http://ksria.c ...
+-------^
+ 2 | 
+ 3 | 背景
+    at generateError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:183:10)
+    at throwError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:187:9)
+    at readLineBreak (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:391:5)
+    at readBlockScalar (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:879:5)
+    at composeNode (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1445:35)
+    at readDocument (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1625:3)
+    at loadDocuments (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1688:5)
+    at Object.load (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1714:19)
+    at parseYAML (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:65:38)
+    at parse (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:49:16)
+    at /home/liguang/myblog/sshblog/node_modules/hexo/dist/plugins/processor/post.js:45:52
+    at tryCatcher (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/util.js:16:23)
+    at Promise._settlePromiseFromHandler (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:544:35)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:604:18)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+    at PromiseArray._resolve (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:127:19)
+    at PromiseArray._promiseFulfilled (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:145:14)
+    at PromiseArray._iterate (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:115:31)
+    at PromiseArray.init [as _init] (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:79:10)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:601:21)
+ERROR Process failed: _posts/hxd_new/虚拟化/Linux 虚拟化 KVM-Qemu 分析（6）之中断虚拟化.md
+YAMLException: a line break is expected (1:3)
+
+ 1 | > 本文由 [简悦 SimpRead](http://ksria.c ...
+-------^
+ 2 | 
+ 3 | 背景
+    at generateError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:183:10)
+    at throwError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:187:9)
+    at readLineBreak (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:391:5)
+    at readBlockScalar (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:879:5)
+    at composeNode (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1445:35)
+    at readDocument (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1625:3)
+    at loadDocuments (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1688:5)
+    at Object.load (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1714:19)
+    at parseYAML (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:65:38)
+    at parse (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:49:16)
+    at /home/liguang/myblog/sshblog/node_modules/hexo/dist/plugins/processor/post.js:45:52
+    at tryCatcher (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/util.js:16:23)
+    at Promise._settlePromiseFromHandler (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:544:35)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:604:18)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+    at PromiseArray._resolve (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:127:19)
+    at PromiseArray._promiseFulfilled (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:145:14)
+    at PromiseArray._iterate (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:115:31)
+    at PromiseArray.init [as _init] (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:79:10)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:601:21)
+ERROR Process failed: _posts/hxd_new/虚拟化/Linux 虚拟化 KVM-Qemu 分析（8）之 virtio 初探.md
+YAMLException: a line break is expected (1:3)
+
+ 1 | > 本文由 [简悦 SimpRead](http://ksria.c ...
+-------^
+ 2 | 
+ 3 | 背景
+    at generateError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:183:10)
+    at throwError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:187:9)
+    at readLineBreak (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:391:5)
+    at readBlockScalar (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:879:5)
+    at composeNode (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1445:35)
+    at readDocument (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1625:3)
+    at loadDocuments (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1688:5)
+    at Object.load (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1714:19)
+    at parseYAML (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:65:38)
+    at parse (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:49:16)
+    at /home/liguang/myblog/sshblog/node_modules/hexo/dist/plugins/processor/post.js:45:52
+    at tryCatcher (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/util.js:16:23)
+    at Promise._settlePromiseFromHandler (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:544:35)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:604:18)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+    at PromiseArray._resolve (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:127:19)
+    at PromiseArray._promiseFulfilled (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:145:14)
+    at PromiseArray._iterate (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:115:31)
+    at PromiseArray.init [as _init] (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:79:10)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:601:21)
+ERROR Process failed: _posts/hxd_new/riscv调研/虚拟化/iommu/玄铁 iommu.md
+YAMLException: end of the stream or a document separator is expected (6:1)
+
+ 3 | 
+ 4 | ## Feature
+ 5 | 
+ 6 | `iommucap` register
+-----^
+ 7 | - S bit: 支持 2-stage 地址翻译
+ 8 | - A bit: 支持 AIA
+    at generateError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:183:10)
+    at throwError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:187:9)
+    at readDocument (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1645:5)
+    at loadDocuments (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1688:5)
+    at Object.load (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1714:19)
+    at parseYAML (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:65:38)
+    at parse (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:49:16)
+    at /home/liguang/myblog/sshblog/node_modules/hexo/dist/plugins/processor/post.js:45:52
+    at tryCatcher (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/util.js:16:23)
+    at Promise._settlePromiseFromHandler (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:544:35)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:604:18)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+    at PromiseArray._resolve (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:127:19)
+    at PromiseArray._promiseFulfilled (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:145:14)
+    at PromiseArray._iterate (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:115:31)
+    at PromiseArray.init [as _init] (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:79:10)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:601:21)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+ERROR Process failed: _posts/hxd_new/虚拟化/riscv kvm 调研.md
+YAMLException: tag suffix cannot contain flow indicator characters (3:93)
+
+ 1 |  ... 
+ 2 |  ... 
+ 3 |  ... 0201107233844101-140556043.png)
+-----------------------------------------^
+ 4 |  ... 
+ 5 |  ... 
+    at generateError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:183:10)
+    at throwError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:187:9)
+    at readTagProperty (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1275:7)
+    at composeNode (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1407:12)
+    at readDocument (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1625:3)
+    at loadDocuments (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1688:5)
+    at Object.load (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1714:19)
+    at parseYAML (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:65:38)
+    at parse (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:49:16)
+    at /home/liguang/myblog/sshblog/node_modules/hexo/dist/plugins/processor/post.js:45:52
+    at tryCatcher (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/util.js:16:23)
+    at Promise._settlePromiseFromHandler (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:544:35)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:604:18)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+    at PromiseArray._resolve (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:127:19)
+    at PromiseArray._promiseFulfilled (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:145:14)
+    at PromiseArray._iterate (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:115:31)
+    at PromiseArray.init [as _init] (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:79:10)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:601:21)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+ERROR Process failed: _posts/hxd_new/riscv调研/虚拟化/iommu/riscv-iommu.md
+YAMLException: end of the stream or a document separator is expected (2:1)
+
+ 1 | 
+ 2 | ```shell
+-----^
+ 3 | git clone --branch riscv_iommu_v ...
+ 4 | git clone --branch riscv_iommu_v ...
+    at generateError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:183:10)
+    at throwError (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:187:9)
+    at readDocument (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1645:5)
+    at loadDocuments (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1688:5)
+    at Object.load (/home/liguang/myblog/sshblog/node_modules/js-yaml/lib/loader.js:1714:19)
+    at parseYAML (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:65:38)
+    at parse (/home/liguang/myblog/sshblog/node_modules/hexo-front-matter/dist/front_matter.js:49:16)
+    at /home/liguang/myblog/sshblog/node_modules/hexo/dist/plugins/processor/post.js:45:52
+    at tryCatcher (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/util.js:16:23)
+    at Promise._settlePromiseFromHandler (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:544:35)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:604:18)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+    at PromiseArray._resolve (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:127:19)
+    at PromiseArray._promiseFulfilled (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:145:14)
+    at PromiseArray._iterate (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:115:31)
+    at PromiseArray.init [as _init] (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise_array.js:79:10)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:601:21)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:729:18)
+    at Promise._fulfill (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:673:18)
+FATAL Something's wrong. Maybe you can find the solution here: https://hexo.io/docs/troubleshooting.html
+Nunjucks Error: _posts/textgenerator/prompts/trash/awesomechatgpt/academicianAwesome.md [Line 1, Column 3] parseAggregate: expected colon after dict key
+    =====               Context Dump               =====
+    === (line number probably different from source) ===
+  1 | {{{selection}}}
+  2 | 
+    =====             Context Dump Ends            =====
+    at formatNunjucksError (/home/liguang/myblog/sshblog/node_modules/hexo/dist/extend/tag.js:145:15)
+    at /home/liguang/myblog/sshblog/node_modules/hexo/dist/extend/tag.js:213:46
+    at tryCatcher (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/util.js:16:23)
+    at Promise._settlePromiseFromHandler (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:547:31)
+    at Promise._settlePromise (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:604:18)
+    at Promise._settlePromise0 (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:649:10)
+    at Promise._settlePromises (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/promise.js:725:18)
+    at _drainQueueStep (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/async.js:93:12)
+    at _drainQueue (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/async.js:86:9)
+    at Async._drainQueues (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/async.js:102:5)
+    at Async.drainQueues [as _onImmediate] (/home/liguang/myblog/sshblog/node_modules/bluebird/js/release/async.js:15:14)
+    at process.processImmediate (node:internal/timers:478:21)
+

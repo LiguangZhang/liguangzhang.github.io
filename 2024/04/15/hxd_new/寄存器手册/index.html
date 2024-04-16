@@ -1,0 +1,2269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="Addr offset Name Width R&#x2F;W Default Value Description    0x0 AES_MSG_CFG 32 RW 0x00000000 AES Message Encryption&#x2F;Decryption Control Register   0x4 AES_CTX_CFG 32 RW 0x00000001 AES Context">
+<meta property="og:type" content="article">
+<meta property="og:title" content="blog">
+<meta property="og:url" content="https://liguangzhang.github.io/2024/04/15/hxd_new/%E5%AF%84%E5%AD%98%E5%99%A8%E6%89%8B%E5%86%8C/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="Addr offset Name Width R&#x2F;W Default Value Description    0x0 AES_MSG_CFG 32 RW 0x00000000 AES Message Encryption&#x2F;Decryption Control Register   0x4 AES_CTX_CFG 32 RW 0x00000001 AES Context">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-04-15T09:59:59.771Z">
+<meta property="article:modified_time" content="2024-04-15T09:59:59.771Z">
+<meta property="article:author" content="liguang.zhang">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2024/04/15/hxd_new/%E5%AF%84%E5%AD%98%E5%99%A8%E6%89%8B%E5%86%8C/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title> | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2024/04/15/hxd_new/%E5%AF%84%E5%AD%98%E5%99%A8%E6%89%8B%E5%86%8C/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-04-15 17:59:59" itemprop="dateCreated datePublished" datetime="2024-04-15T17:59:59+08:00">2024-04-15</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <table>
+<thead>
+<tr>
+<th>Addr offset</th>
+<th>Name</th>
+<th>Width</th>
+<th>R&#x2F;W</th>
+<th>Default Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0x0</td>
+<td><a href="#AES!B58">AES_MSG_CFG</a></td>
+<td>32</td>
+<td>RW</td>
+<td>0x00000000</td>
+<td>AES Message Encryption&#x2F;Decryption Control Register</td>
+</tr>
+<tr>
+<td>0x4</td>
+<td><a href="#AES!B66">AES_CTX_CFG</a></td>
+<td>32</td>
+<td>RW</td>
+<td>0x00000001</td>
+<td>AES Context Control Register</td>
+</tr>
+<tr>
+<td>0x8</td>
+<td><a href="#AES!B70">AES_MSG_TOT_BYTES</a></td>
+<td>32</td>
+<td>RW</td>
+<td>0x00000000</td>
+<td>AES Message Data Length Register</td>
+</tr>
+<tr>
+<td>0xc</td>
+<td><a href="#AES!B75">AES_MSG_AAD_BYTES</a></td>
+<td>32</td>
+<td>RW</td>
+<td>0x00000000</td>
+<td>AES AAD and Current Segement Data Length Register</td>
+</tr>
+<tr>
+<td>0x10</td>
+<td><a href="#AES!B79">AES_GCM_AAD_BYTES</a></td>
+<td>32</td>
+<td>RW</td>
+<td>0x00000000</td>
+<td>AES AAD Data Length in GCM mode Register</td>
+</tr>
+<tr>
+<td>0x14</td>
+<td><a href="#AES!B83">AES_CTX_KEY_MODE_SEL</a></td>
+<td>32</td>
+<td>RW</td>
+<td>0x00000001</td>
+<td>AES Key Selection Register</td>
+</tr>
+<tr>
+<td>0x18</td>
+<td>RESERVED</td>
+<td>32</td>
+<td></td>
+<td></td>
+<td>Reserved Register</td>
+</tr>
+<tr>
+<td>0x1c</td>
+<td>RESERVED</td>
+<td>32</td>
+<td></td>
+<td></td>
+<td>Reserved Register</td>
+</tr>
+<tr>
+<td>0x20</td>
+<td><a href="#AES!B87">AES_CTX_KEY_VAL0</a></td>
+<td>32</td>
+<td><a href="#AES!B46">RAZ&#x2F;W</a></td>
+<td>N&#x2F;A</td>
+<td><a href="#AES!B46">AES Context Key Value First 32bit Value Shadow Register</a></td>
+</tr>
+<tr>
+<td>0x24</td>
+<td><a href="#AES!B91">AES_CTX_KEY_VAL1</a></td>
+<td>32</td>
+<td>RAZ&#x2F;W</td>
+<td>N&#x2F;A</td>
+<td>AES Context Key Value Second 32bit Value Shadow Register</td>
+</tr>
+<tr>
+<td>0x28</td>
+<td><a href="#AES!B95">AES_CTX_KEY_VAL2</a></td>
+<td>32</td>
+<td>RAZ&#x2F;W</td>
+<td>N&#x2F;A</td>
+<td>AES Context Key Value Third 32bit Value Shadow Register</td>
+</tr>
+<tr>
+<td>0x2c</td>
+<td><a href="#AES!B99">AES_CTX_KEY_VAL3</a></td>
+<td>32</td>
+<td>RAZ&#x2F;W</td>
+<td>N&#x2F;A</td>
+<td>AES Context Key Value Forth 32bit Value Shadow Register</td>
+</tr>
+<tr>
+<td>0x30</td>
+<td><a href="#AES!B103">AES_CTX_KEY_VAL4</a></td>
+<td>32</td>
+<td>RAZ&#x2F;W</td>
+<td>N&#x2F;A</td>
+<td>AES Context Key Value Fifth 32bit Value Shadow Register</td>
+</tr>
+<tr>
+<td>0x34</td>
+<td><a href="#AES!B107">AES_CTX_KEY_VAL5</a></td>
+<td>32</td>
+<td>RAZ&#x2F;W</td>
+<td>N&#x2F;A</td>
+<td>AES Context Key Value Sixth 32bit Value Shadow Register</td>
+</tr>
+<tr>
+<td>0x38</td>
+<td><a href="#AES!B111">AES_CTX_KEY_VAL6</a></td>
+<td>32</td>
+<td>RAZ&#x2F;W</td>
+<td>N&#x2F;A</td>
+<td>AES Context Key Value Seventh 32bit Value Shadow Register</td>
+</tr>
+<tr>
+<td>0x3c</td>
+<td><a href="#AES!B115">AES_CTX_KEY_VAL7</a></td>
+<td>32</td>
+<td>RAZ&#x2F;W</td>
+<td>N&#x2F;A</td>
+<td>AES Context Key Value Eighth 32bit Value Shadow Register</td>
+</tr>
+<tr>
+<td>0x40</td>
+<td><a href="#AES!B119">AES_CTX_CBC_KEY_VAL0</a></td>
+<td>32</td>
+<td>RW</td>
+<td>N&#x2F;A</td>
+<td>AES Context CBC-KEY First 32bit Value Shadow Register</td>
+</tr>
+<tr>
+<td>0x44</td>
+<td><a href="#AES!B123">AES_CTX_CBC_KEY_VAL1</a></td>
+<td>32</td>
+<td>RW</td>
+<td>N&#x2F;A</td>
+<td>AES Context CBC-KEY Second 32bit Value Shadow Register</td>
+</tr>
+<tr>
+<td>0x48</td>
+<td><a href="#AES!B127">AES_CTX_CBC_KEY_VAL2</a></td>
+<td>32</td>
+<td>RW</td>
+<td>N&#x2F;A</td>
+<td>AES Context CBC-KEY Third 32bit Value Shadow Register</td>
+</tr>
+<tr>
+<td>0x4c</td>
+<td><a href="#AES!B131">AES_CTX_CBC_KEY_VAL3</a></td>
+<td>32</td>
+<td>RW</td>
+<td>N&#x2F;A</td>
+<td>AES Context CBC-KEY Forth 32bit Value Shadow Register</td>
+</tr>
+<tr>
+<td>0x50</td>
+<td><a href="#AES!B135">AES_CTX_CTR_VAL0</a></td>
+<td>32</td>
+<td>RW</td>
+<td>N&#x2F;A</td>
+<td>AES Context CTR First 32bit Value Shadow Register</td>
+</tr>
+<tr>
+<td>0x54</td>
+<td><a href="#AES!B139">AES_CTX_CTR_VAL1</a></td>
+<td>32</td>
+<td>RW</td>
+<td>N&#x2F;A</td>
+<td>AES Context CTR Second 32bit Value Shadow Register</td>
+</tr>
+<tr>
+<td>0x58</td>
+<td><a href="#AES!B143">AES_CTX_CTR_VAL2</a></td>
+<td>32</td>
+<td>RW</td>
+<td>N&#x2F;A</td>
+<td>AES Context CTR Third 32bit Value Shadow Register</td>
+</tr>
+<tr>
+<td>0x5c</td>
+<td><a href="#AES!B147">AES_CTX_CTR_VAL3</a></td>
+<td>32</td>
+<td>RW</td>
+<td>N&#x2F;A</td>
+<td>AES Context CTR Forth 32bit Value Shadow Register</td>
+</tr>
+<tr>
+<td>0x60</td>
+<td><a href="#AES!B151">AES_CTX_IV_VAL0</a></td>
+<td>32</td>
+<td>RW</td>
+<td>N&#x2F;A</td>
+<td>AES Context IV First 32bit Value Shadow Register</td>
+</tr>
+<tr>
+<td>0x64</td>
+<td><a href="#AES!B155">AES_CTX_IV_VAL1</a></td>
+<td>32</td>
+<td>RW</td>
+<td>N&#x2F;A</td>
+<td>AES Context IV Second 32bit Value Shadow Register</td>
+</tr>
+<tr>
+<td>0x68</td>
+<td><a href="#AES!B159">AES_CTX_IV_VAL2</a></td>
+<td>32</td>
+<td>RW</td>
+<td>N&#x2F;A</td>
+<td>AES Context IV Third 32bit Value Shadow Register</td>
+</tr>
+<tr>
+<td>0x6c</td>
+<td><a href="#AES!B163">AES_CTX_IV_VAL3</a></td>
+<td>32</td>
+<td>RW</td>
+<td>N&#x2F;A</td>
+<td>AES Context IV Forth 32bit Value Shadow Register</td>
+</tr>
+<tr>
+<td>0x70</td>
+<td><a href="#AES!B167">AES_CTX_MAC_VAL0</a></td>
+<td>32</td>
+<td>RW</td>
+<td>N&#x2F;A</td>
+<td>AES Context MAC First 32bit Value Shadow Register</td>
+</tr>
+<tr>
+<td>0x74</td>
+<td><a href="#AES!B171">AES_CTX_MAC_VAL1</a></td>
+<td>32</td>
+<td>RW</td>
+<td>N&#x2F;A</td>
+<td>AES Context MAC Second 32bit Value Shadow Register</td>
+</tr>
+<tr>
+<td>0x78</td>
+<td><a href="#AES!B175">AES_CTX_MAC_VAL2</a></td>
+<td>32</td>
+<td>RW</td>
+<td>N&#x2F;A</td>
+<td>AES Context MAC Third 32bit Value Shadow Register</td>
+</tr>
+<tr>
+<td>0x7c</td>
+<td><a href="#AES!B179">AES_CTX_MAC_VAL3</a></td>
+<td>32</td>
+<td>RW</td>
+<td>N&#x2F;A</td>
+<td>AES Context MAC Forth 32bit Value Shadow Register</td>
+</tr>
+<tr>
+<td>0x80</td>
+<td><a href="#AES!B183">AES_INGRESS_FIFO</a></td>
+<td>32</td>
+<td>W</td>
+<td>N&#x2F;A</td>
+<td>AES Ingress FIFO Data Shadow Register</td>
+</tr>
+<tr>
+<td>0x84</td>
+<td><a href="#AES!B188">AES_INGRESS_FIFO_STATUS</a></td>
+<td>32</td>
+<td>R</td>
+<td>0x00000001</td>
+<td>AES Ingress FIFO Status Shadow Register</td>
+</tr>
+<tr>
+<td>0x88</td>
+<td><a href="#AES!B192">AES_EGRESS_FIFO</a></td>
+<td>32</td>
+<td>R</td>
+<td>N&#x2F;A</td>
+<td>AES Egress FIFO Data Shadow Register</td>
+</tr>
+<tr>
+<td>0x8c</td>
+<td><a href="#AES!B197">AES_EGRESS_FIFO_STATUS</a></td>
+<td>32</td>
+<td>R</td>
+<td>0x00000001</td>
+<td>AES Egress FIFO Status Shadow Register</td>
+</tr>
+<tr>
+<td>0x90</td>
+<td><a href="#AES!B201">AES_INGRESS_DMA_TOT_BYTES</a></td>
+<td>32</td>
+<td>RW</td>
+<td>0x00000000</td>
+<td>AES Ingress DMA Transfer Data Total Number Register</td>
+</tr>
+<tr>
+<td>0x94</td>
+<td><a href="#AES!B208">AES_INGRESS_DMA_CTL</a></td>
+<td>32</td>
+<td>RW</td>
+<td>0xc0000012</td>
+<td>AES Ingress DMA Control Register</td>
+</tr>
+<tr>
+<td>0x98</td>
+<td><a href="#AES!B212">AES_ENGRESS_DMA_TOT_BYTES</a></td>
+<td>32</td>
+<td>RW</td>
+<td>0x00000000</td>
+<td>AES Egress DMA Transfer Data Total Number Register</td>
+</tr>
+<tr>
+<td>0x9c</td>
+<td><a href="#AES!B219">AES_ENGRESS_DMA_CTL</a></td>
+<td>32</td>
+<td>RW</td>
+<td>0xc0000012</td>
+<td>AES Egress DMA Control Register</td>
+</tr>
+<tr>
+<td>0xa0</td>
+<td><a href="#AES!B224">AES_DONE_STAT</a></td>
+<td>32</td>
+<td>RW</td>
+<td>0x00000000</td>
+<td>AES Encryption&#x2F;Decryption Done Register</td>
+</tr>
+<tr>
+<td>0xa4</td>
+<td><a href="#AES!B228">AES_INGRESS_DMA_DONE</a></td>
+<td>32</td>
+<td>RW</td>
+<td>0x00000000</td>
+<td>AES Ingress DMA Transfer Data Done Register</td>
+</tr>
+<tr>
+<td>0xa8</td>
+<td><a href="#AES!B231">AES_EGRESS_DMA_DONE</a></td>
+<td>32</td>
+<td>RW</td>
+<td>0x00000000</td>
+<td>AES Egress DMA Transfer Data Done Register</td>
+</tr>
+<tr>
+<td>* RAZ: Read as Zero</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>* Shadow Register: Not physically implemented but just provided a sw program view</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_MSG_CFG (0x0)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>13:12</td>
+<td>AES_KEY_SIZE</td>
+<td>2</td>
+<td>RW</td>
+<td>0x0</td>
+<td>Specifies key size: 0&#x3D;128 bits, 2&#x3D;256 bits</td>
+</tr>
+<tr>
+<td>11:8</td>
+<td>AES_MAC_LEN</td>
+<td>4</td>
+<td>RW</td>
+<td>0x0</td>
+<td>Length of MAC or ICV (only for CCM, CMAC and XCBC modes)</td>
+</tr>
+<tr>
+<td>7:4</td>
+<td>AES_ALG_MODE</td>
+<td>4</td>
+<td>RW</td>
+<td>0x0</td>
+<td>Selects mode of operations as follows: 0&#x3D;ECB, 1&#x3D;CBC, 2&#x3D;CTR, 3&#x3D;CCM, 4&#x3D;CMAC,5&#x3D;GCM</td>
+</tr>
+<tr>
+<td>3</td>
+<td>AES_ENCRYPT</td>
+<td>1</td>
+<td>RW</td>
+<td>0x0</td>
+<td>1’b1: Encrypt operation 1’b0: Decrypt operation</td>
+</tr>
+<tr>
+<td>2</td>
+<td>AES_MSG_BEGIN</td>
+<td>1</td>
+<td>RW</td>
+<td>0x0</td>
+<td>Current operation is with data segment containing the first byte of the  message. Context data required for the current mode is retrieved  automatically prior to ciphering data.</td>
+</tr>
+<tr>
+<td>1</td>
+<td>AES_MSG_END</td>
+<td>1</td>
+<td>RW</td>
+<td>0x0</td>
+<td>Current operation is with data segment containing the last byte of the  message. If the result of the operation is a MAC or ICV, it is  automatically saved into context memory at the end of the cipher operation.</td>
+</tr>
+<tr>
+<td>0</td>
+<td>AES_GO</td>
+<td>1</td>
+<td>RW</td>
+<td>0x0</td>
+<td>Start the cipher operation. This signal must remain asserted and all  other control inputs must remain constant until AES_DONE asserts</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_CTX_CFG (0x4)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>15:4</td>
+<td>AES_CTX_INDEX</td>
+<td>12</td>
+<td>RW</td>
+<td>0x000</td>
+<td>Index of context page to retrieve from or store into.</td>
+</tr>
+<tr>
+<td>3</td>
+<td>AES_INV_KEY_STR</td>
+<td>1</td>
+<td>RW</td>
+<td>0x0</td>
+<td>Store last round key (‘inverse’ key) into context memory.</td>
+</tr>
+<tr>
+<td>2</td>
+<td>AES_INV_KEY_RET</td>
+<td>1</td>
+<td>RW</td>
+<td>0x0</td>
+<td>Keys being retrieved are ‘inverse’ keys (last AES round key).</td>
+</tr>
+<tr>
+<td>1</td>
+<td>AES_CTX_STR</td>
+<td>1</td>
+<td>RW</td>
+<td>0x0</td>
+<td>Stores intermediate context data back into context memory.</td>
+</tr>
+<tr>
+<td>0</td>
+<td>AES_CTX_RET</td>
+<td>1</td>
+<td>RW</td>
+<td>0x1</td>
+<td>Retrieves intermediate context data from context memory.</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_MSG_TOT_BYTES (0x8)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>27:0</td>
+<td>TOTAL_MSG_BYTES</td>
+<td>28</td>
+<td>RW</td>
+<td>0x0000000</td>
+<td>Total length of message data (across all segments), not including AD, to process. Required in CCM and GCM modes.</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_MSG_AAD_BYTES (0xc)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>31:16</td>
+<td>AAD_LEN</td>
+<td>16</td>
+<td>RW</td>
+<td>0x0000</td>
+<td>Number of bytes of Additional Data (AD) in current CCM or GCM  operation.</td>
+</tr>
+<tr>
+<td>15:0</td>
+<td>MSG_LEN</td>
+<td>16</td>
+<td>RW</td>
+<td>0x0000</td>
+<td>Number of bytes of Message in current operation.  Note: This length from the waveform observed should include the message and AAD for current operation or segment.</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_GCM_AAD_BYTES (0x10)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>27:0</td>
+<td>AAD_LEN_TOT</td>
+<td>28</td>
+<td>RW</td>
+<td>0x0000000</td>
+<td>Total length of AD data (across all segments), not including message data, to process. Required in GCM mode</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_CTX_KEY_MODE_SEL (0x14)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>2:0</td>
+<td>KEY_SEL</td>
+<td>3</td>
+<td>RW</td>
+<td></td>
+<td>There are total three Key resources available for ECC encryption&#x2F;decryption. Before loading the Key into AES_CTX_KEY_VAL0 ~ AES_CTX_KEY_VAL7, it requires to select the Key from the above three resources first. When SW configures AES_CTX_KEY_VAL0 ~ AES_CTX_KEY_VAL7, HW will load the Key automatically from the three sources according to this field.   Note: when setting to ‘001, the KEY value is just the programed content that SW configures to AES_CTX_KEY_VAL0 ~ AES_CTX_KEY_VAL7 registers. While setting to ‘100 or ‘010, the KEY value comes from OTP, and it still requires SW configures AES_CTX_KEY_VAL0 ~ AES_CTX_KEY_VAL7, though in this case the content that SW programs is useless, and HW automatically truncates the value from OTP KEY[255:0] to corresponding registers.   3’b100: OTP KEYB    KEYB deriven from KEY6 in ARM OTP Secure RAM  3’b010: OTP KEYA    KEYA deriven from KEY5 in ARM OTP Secure RAM  3’b001: Core Configured KEY    Key value configured by software via AHB interface</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_CTX_KEY_VAL0 (0x20)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>31:0</td>
+<td>KEY_VAL0</td>
+<td>32</td>
+<td>RAZ&#x2F;W</td>
+<td></td>
+<td>AES Context Key Value First 32bit Value; Read as zero</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_CTX_KEY_VAL1 (0x24)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>31:0</td>
+<td>KEY_VAL1</td>
+<td>32</td>
+<td>RAZ&#x2F;W</td>
+<td></td>
+<td>AES Context Key Value Second 32bit Value; Read as zero</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_CTX_KEY_VAL2 (0x28)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>31:0</td>
+<td>KEY_VAL2</td>
+<td>32</td>
+<td>RAZ&#x2F;W</td>
+<td></td>
+<td>AES Context Key Value Third 32bit Value; Read as zero</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_CTX_KEY_VAL3 (0x2c)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>31:0</td>
+<td>KEY_VAL3</td>
+<td>32</td>
+<td>RAZ&#x2F;W</td>
+<td></td>
+<td>AES Context Key Value Forth 32bit Value; Read as zero</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_CTX_KEY_VAL4 (0x30)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>31:0</td>
+<td>KEY_VAL4</td>
+<td>32</td>
+<td>RAZ&#x2F;W</td>
+<td></td>
+<td>AES Context Key Value Fifth 32bit Value; Read as zero</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_CTX_KEY_VAL5 (0x34)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>31:0</td>
+<td>KEY_VAL5</td>
+<td>32</td>
+<td>RAZ&#x2F;W</td>
+<td></td>
+<td>AES Context Key Value Sixth 32bit Value; Read as zero</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_CTX_KEY_VAL6 (0x38)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>31:0</td>
+<td>KEY_VAL6</td>
+<td>32</td>
+<td>RAZ&#x2F;W</td>
+<td></td>
+<td>AES Context Key Value Seventh 32bit Value; Read as zero</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_CTX_KEY_VAL7 (0x3c)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>31:0</td>
+<td>KEY_VAL7</td>
+<td>32</td>
+<td>RAZ&#x2F;W</td>
+<td></td>
+<td>AES Context Key Value Eighth 32bit Value; Read as zero</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_CTX_CBC_KEY_VAL0 (0x40)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>31:0</td>
+<td>CBC_KEY_VAL0</td>
+<td>32</td>
+<td>RW</td>
+<td></td>
+<td>AES Context CBC-KEY First 32bit Value</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_CTX_CBC_KEY_VAL1 (0x44)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>31:0</td>
+<td>CBC_KEY_VAL1</td>
+<td>32</td>
+<td>RW</td>
+<td></td>
+<td>AES Context CBC-KEY Second 32bit Value</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_CTX_CBC_KEY_VAL2 (0x48)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>31:0</td>
+<td>CBC_KEY_VAL2</td>
+<td>32</td>
+<td>RW</td>
+<td></td>
+<td>AES Context CBC-KEY Third 32bit Value</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_CTX_CBC_KEY_VAL3 (0x4c)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>31:0</td>
+<td>CBC_KEY_VAL3</td>
+<td>32</td>
+<td>RW</td>
+<td></td>
+<td>AES Context CBC-KEY Forth 32bit Value</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_CTX_CTR_VAL0 (0x50)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>31:0</td>
+<td>CTX_CTR_VAL0</td>
+<td>32</td>
+<td>RW</td>
+<td></td>
+<td>AES Context CTR First 32bit Value</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_CTX_CTR_VAL1 (0x54)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>31:0</td>
+<td>CTX_CTR_VAL1</td>
+<td>32</td>
+<td>RW</td>
+<td></td>
+<td>AES Context CTR Second 32bit Value</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_CTX_CTR_VAL2 (0x58)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>31:0</td>
+<td>CTX_CTR_VAL2</td>
+<td>32</td>
+<td>RW</td>
+<td></td>
+<td>AES Context CTR Third 32bit Value</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_CTX_CTR_VAL3 (0x5c)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>31:0</td>
+<td>CTX_CTR_VAL3</td>
+<td>32</td>
+<td>RW</td>
+<td></td>
+<td>AES Context CTR Forth 32bit Value</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_CTX_IV_VAL0 (0x60)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>31:0</td>
+<td>CTX_IV_VAL0</td>
+<td>32</td>
+<td>RW</td>
+<td></td>
+<td>AES Context IV First 32bit Value</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_CTX_IV_VAL1 (0x64)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>31:0</td>
+<td>CTX_IV_VAL1</td>
+<td>32</td>
+<td>RW</td>
+<td></td>
+<td>AES Context IV Second 32bit Value</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_CTX_IV_VAL2 (0x68)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>31:0</td>
+<td>CTX_IV_VAL2</td>
+<td>32</td>
+<td>RW</td>
+<td></td>
+<td>AES Context IV Third 32bit Value</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_CTX_IV_VAL3 (0x6c)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>31:0</td>
+<td>CTX_IV_VAL3</td>
+<td>32</td>
+<td>RW</td>
+<td></td>
+<td>AES Context IV Forth 32bit Value</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_CTX_MAC_VAL0 (0x70)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>31:0</td>
+<td>CTX_MAC_VAL0</td>
+<td>32</td>
+<td>RW</td>
+<td></td>
+<td>AES Context MAC First 32bit Value</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_CTX_MAC_VAL1 (0x74)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>31:0</td>
+<td>CTX_MAC_VAL1</td>
+<td>32</td>
+<td>RW</td>
+<td></td>
+<td>AES Context MAC Second 32bit Value</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_CTX_MAC_VAL2 (0x78)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>31:0</td>
+<td>CTX_MAC_VAL2</td>
+<td>32</td>
+<td>RW</td>
+<td></td>
+<td>AES Context MAC Third 32bit Value</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_CTX_MAC_VAL3 (0x7c)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>31:0</td>
+<td>CTX_MAC_VAL3</td>
+<td>32</td>
+<td>RW</td>
+<td></td>
+<td>AES Context MAC Forth 32bit Value</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_INGRESS_FIFO (0x80)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>31:0</td>
+<td>INGRESS_FIFO_DATA</td>
+<td>32</td>
+<td>W</td>
+<td></td>
+<td>Ingress FIFO Write Data</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_INGRESS_FIFO_STATUS (0x84)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>1</td>
+<td>INGRESS_FIFO_FULL</td>
+<td>1</td>
+<td>R</td>
+<td>0x0</td>
+<td>Ingress FIFO Full indication</td>
+</tr>
+<tr>
+<td>0</td>
+<td>INGRESS_FIFO_EMPTY</td>
+<td>1</td>
+<td>R</td>
+<td>0x1</td>
+<td>Ingress FIFO Empty indication</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_EGRESS_FIFO (0x88)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>31:0</td>
+<td>EGRESS_FIFO_DATA</td>
+<td>32</td>
+<td>R</td>
+<td></td>
+<td>Egress FIFO Read Data</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_EGRESS_FIFO_STATUS (0x8c)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>1</td>
+<td>EGRESS_FIFO_FULL</td>
+<td>1</td>
+<td>R</td>
+<td>0x0</td>
+<td>Egress FIFO Full indication</td>
+</tr>
+<tr>
+<td>0</td>
+<td>EGRESS_FIFO_EMPTY</td>
+<td>1</td>
+<td>R</td>
+<td>0x1</td>
+<td>Egress FIFO Empty indication</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_INGRESS_DMA_TOT_BYTES (0x90)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>31:0</td>
+<td>INGRESS_DMA_DATA_NUM</td>
+<td>32</td>
+<td>RW</td>
+<td>0x00000000</td>
+<td>Total byte numbers for Ingress DMA to transfer data from memory to  Ingress FIFO. AES Use this info to generate Single&#x2F;Burst request for  DMA hardware interface</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_INGRESS_DMA_CTL (0x94)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>31</td>
+<td>INGRESS_DMA_PLAINTEXT_REQ</td>
+<td>1</td>
+<td>RW</td>
+<td>0x1</td>
+<td>This bit indicates whether current AES mode needs or requires plaintext data to transfer in. 1’b1: AES core requires plaintext to do encryption-generation process.  1’b0: AES core doesn’t require any plaintext. Default: 1’b1  [Note]:  This bit MUST set correctly since this relates to AES core clock gating.</td>
+</tr>
+<tr>
+<td>30</td>
+<td>INGRESS_DMA_EN</td>
+<td>1</td>
+<td>RW</td>
+<td>0x1</td>
+<td>This bits indicates whether plaintext data is transferred by Ingress DMA or CPU write to 1’b1: Plaintext Data transferred by DMA 1’b0: Plaintext Data transferred by CPU  Default： 1’b1  [Note]:  This bit is only valid when the 31th bit is asserted.</td>
+</tr>
+<tr>
+<td>5:3</td>
+<td>INGRESS_DMA_DST_MSIZE</td>
+<td>3</td>
+<td>RW</td>
+<td>0x2</td>
+<td>Destination burst transaction length. 000: 1 001: 4 010: 8 011: 16 100: 32 101: 64 110: 128 111: 256 Default: 010</td>
+</tr>
+<tr>
+<td>2:0</td>
+<td>INGRESS_DMA_DST_TR_WIDTH</td>
+<td>3</td>
+<td>RW</td>
+<td>0x2</td>
+<td>Destination Transfer Width: 000: 8bits 001: 16bits 010: 32bits Default: 010</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_EGRESS_DMA_TOT_BYTES (0x98)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>31:0</td>
+<td>EGRESS_DMA_DATA_NUM</td>
+<td>32</td>
+<td>RW</td>
+<td>0x00000000</td>
+<td>Total byte numbers for Ingress DMA to transfer data from memory to  Ingress FIFO. AES Use this info to generate Single&#x2F;Burst request for  DMA hardware interface</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_EGRESS_DMA_CTL (0x9c)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>31</td>
+<td>EGRESS_DMA_CIPERTEXT_REQ</td>
+<td>1</td>
+<td>RW</td>
+<td>0x1</td>
+<td>This bit indicates whether current AES mode needs or requires cipher text data to transfer out. 1’b1: AES core have cipher-text to transfer out after decryption-validation process.  1’b0: AES core doesn’t require any cipher-text to transfer out. Default: 1’b1</td>
+</tr>
+<tr>
+<td>30</td>
+<td>EGRESS_DMA_EN</td>
+<td>1</td>
+<td>RW</td>
+<td>0x1</td>
+<td>This bits indicates whether cipher-text data is transferred out by Egress DMA or CPU read out 1’b1: Plaintext Data transferred by DMA 1’b0: Plaintext Data transferred by CPU  Default： 1’b1  [Note]:  This bit is only valid when the 31th bit is asserted.</td>
+</tr>
+<tr>
+<td>5:3</td>
+<td>EGRESS_DMA_DST_MSIZE</td>
+<td>3</td>
+<td>RW</td>
+<td>0x2</td>
+<td>Destination burst transaction length. 000: 1 001: 4 010: 8 011: 16 100: 32 101: 64 110: 128 111: 256 Default: 010</td>
+</tr>
+<tr>
+<td>2:0</td>
+<td>EGRESS_DMA_DST_TR_WIDTH</td>
+<td>3</td>
+<td>RW</td>
+<td>0x2</td>
+<td>Destination Transfer Width: 000: 8bits 001: 16bits 010: 32bits Default: 010</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_DONE_STAT (0xa0)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>1</td>
+<td>AES_MAC_VALID</td>
+<td>1</td>
+<td>RW</td>
+<td>0x0</td>
+<td>Indicates validation operation was successful, i.e. given MAC matched the computed MAC. Value is valid only for as long as AES_DONE is asserted. Cleared when AES_GO asserted</td>
+</tr>
+<tr>
+<td>0</td>
+<td>AES_DONE</td>
+<td>1</td>
+<td>RW</td>
+<td>0x0</td>
+<td>Indicates that cipher operation has completed. Cleared when AES_GO asserted</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_INGRESS_DMA_DONE (0xa4)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>0</td>
+<td>INGRESS_DMA_DONE</td>
+<td>1</td>
+<td>RW</td>
+<td>0x0</td>
+<td>Indicates that ingress dma data transfer has completed</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>AES_EGRESS_DMA_DONE (0xa8)</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Bit Field</td>
+<td>Name</td>
+<td>Width</td>
+<td>RW</td>
+<td>Default Value</td>
+<td>Description</td>
+</tr>
+<tr>
+<td>0</td>
+<td>EGRESS_DMA_DONE</td>
+<td>1</td>
+<td>RW</td>
+<td>0x0</td>
+<td>Indicates that engress dma data transfer has completed</td>
+</tr>
+</tbody></table>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/04/15/hxd_new/TI%20crypto/" rel="prev" title="">
+      <i class="fa fa-chevron-left"></i> 
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2024/04/15/hxd_new/%E6%96%B0%E4%BA%BA%E6%96%87%E6%A1%A3/" rel="next" title="">
+       <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

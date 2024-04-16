@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="1. 磁盘配额调研报告 1.1. 实际磁盘配额控制1.1.1. 依赖项情况 Ext4文件系统默认开启了DQUOT_USAGE_ENABLED     Kernel中 filesystem support中开启了quota support   1.1.2. 磁盘配额初始化 由Installd开启data分区的磁盘配额 （&#x2F;mnt&#x2F;runtime&#x2F;default）     Sd卡格式化内部存储后，应该">
+<meta property="og:type" content="article">
+<meta property="og:title" content="磁盘配额调研报告">
+<meta property="og:url" content="https://liguangzhang.github.io/2017/07/18/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/%E7%A3%81%E7%9B%98%E9%85%8D%E9%A2%9D%E8%B0%83%E7%A0%94%E6%8A%A5%E5%91%8A/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="1. 磁盘配额调研报告 1.1. 实际磁盘配额控制1.1.1. 依赖项情况 Ext4文件系统默认开启了DQUOT_USAGE_ENABLED     Kernel中 filesystem support中开启了quota support   1.1.2. 磁盘配额初始化 由Installd开启data分区的磁盘配额 （&#x2F;mnt&#x2F;runtime&#x2F;default）     Sd卡格式化内部存储后，应该">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2017-07-18T10:15:54.000Z">
+<meta property="article:modified_time" content="2024-04-15T09:59:59.475Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="AndroidO">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2017/07/18/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/%E7%A3%81%E7%9B%98%E9%85%8D%E9%A2%9D%E8%B0%83%E7%A0%94%E6%8A%A5%E5%91%8A/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>磁盘配额调研报告 | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2017/07/18/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/%E7%A3%81%E7%9B%98%E9%85%8D%E9%A2%9D%E8%B0%83%E7%A0%94%E6%8A%A5%E5%91%8A/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          磁盘配额调研报告
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-07-18 18:15:54" itemprop="dateCreated datePublished" datetime="2017-07-18T18:15:54+08:00">2017-07-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-15 17:59:59" itemprop="dateModified" datetime="2024-04-15T17:59:59+08:00">2024-04-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="1-磁盘配额调研报告"><a href="#1-磁盘配额调研报告" class="headerlink" title="1. 磁盘配额调研报告"></a>1. 磁盘配额调研报告</h1><hr>
+<h2 id="1-1-实际磁盘配额控制"><a href="#1-1-实际磁盘配额控制" class="headerlink" title="1.1. 实际磁盘配额控制"></a>1.1. 实际磁盘配额控制</h2><h3 id="1-1-1-依赖项情况"><a href="#1-1-1-依赖项情况" class="headerlink" title="1.1.1. 依赖项情况"></a>1.1.1. 依赖项情况</h3><ul>
+<li><code>Ext4</code>文件系统默认开启了<code>DQUOT_USAGE_ENABLED</code></li>
+</ul>
+<blockquote>
+<p>  <code>Kernel</code>中 <code>filesystem support</code>中开启了<code>quota support</code> </p>
+</blockquote>
+<h3 id="1-1-2-磁盘配额初始化"><a href="#1-1-2-磁盘配额初始化" class="headerlink" title="1.1.2. 磁盘配额初始化"></a>1.1.2. 磁盘配额初始化</h3><ul>
+<li>由<code>Installd</code>开启<code>data</code>分区的磁盘配额 （<code>/mnt/runtime/default</code>）</li>
+</ul>
+<blockquote>
+<p>  Sd卡格式化内部存储后，应该也可以支持</p>
+</blockquote>
+<p><code>StorageStatesService</code>和<code>installd</code>的联动</p>
+<p>在<code>invalidateMounts</code> 函数中完成了磁盘配额的初始化</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Found quota mount <span class="string">&quot; &lt;&lt; source &lt;&lt; &quot;</span> at <span class="string">&quot; &lt;&lt; target;</span></span><br><span class="line"><span class="string">quotactl(QCMD(Q_QUOTAON, USRQUOTA), source.</span></span><br><span class="line"><span class="string">quotactl(QCMD(Q_QUOTAON, GRPQUOTA), source</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>  并没有将配置放在fstab中，使用fstab对分区的文件系统进行自动配额调整。可以使用fstab对某一分区进行配额的设定。</p>
+</blockquote>
+<h3 id="1-1-3-磁盘配额的额外设定"><a href="#1-1-3-磁盘配额的额外设定" class="headerlink" title="1.1.3. 磁盘配额的额外设定"></a>1.1.3. 磁盘配额的额外设定</h3><p>为每个应用设置的实际磁盘配额 ：</p>
+<ul>
+<li><strong>90%</strong> of <code>disk blocks</code>, or<strong>50%</strong> of disk inodes.</li>
+</ul>
+<blockquote>
+<p>  <em><strong>设定原因</strong></em>：</p>
+<p>  Abusive or broken apps can go crazy and try allocating all of the disk space on the device.  To mitigate the impact on system health,</p>
+<p>  set hard limits to block any given app from using more than 90% of disk blocks, or 50% of disk inodes.</p>
+<p>  Also define the hard limit for AID_MEDIA_RW to avoid filling up the device via the SD card.    </p>
+<p>  Kick QUOTAON when scanning devices, since ext4 doesn’t toggle DQUOT_LIMITS_ENABLED during initial mount.</p>
+</blockquote>
+<h1 id="2-虚拟的磁盘配额-cache-quota"><a href="#2-虚拟的磁盘配额-cache-quota" class="headerlink" title="2. 虚拟的磁盘配额(cache quota)"></a>2. 虚拟的磁盘配额(cache quota)</h1><p>Android O 围绕缓存数据提供更加出色的导航和性能。每个应用均获得一定的磁盘空间配额，用于存储 <a href="#getCacheQuotaBytes(java.io.File)">getCacheQuotaBytes(File)</a> 返回的缓存数据。</p>
+<h2 id="2-1-cache-quota-初始化"><a href="#2-1-cache-quota-初始化" class="headerlink" title="2.1. cache quota 初始化"></a>2.1. cache quota 初始化</h2><p>由<code>Framework</code>层的<code>StorageStatsService</code>进行初始化：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mHandler.sendEmptyMessage(H.MSG_LOAD_CACHED_QUOTAS_FROM_FILE);</span><br></pre></td></tr></table></figure>
+
+<p>默认生成<code>/data/system/cachequota.xml</code>文件，用于持久化应用初始的cache磁盘配额。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=&#x27;1.0&#x27; encoding=&#x27;utf-8&#x27; standalone=&#x27;yes&#x27; ?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">cache-info</span> <span class="attr">previousBytes</span>=<span class="string">&quot;0&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">quota</span> <span class="attr">uid</span>=<span class="string">&quot;1000&quot;</span> <span class="attr">bytes</span>=<span class="string">&quot;338152713&quot;</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">quota</span> <span class="attr">uid</span>=<span class="string">&quot;10012&quot;</span> <span class="attr">bytes</span>=<span class="string">&quot;235993028&quot;</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">cache-info</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">@startuml</span><br><span class="line">	  StorageStatsService -&gt; StorageStatsService: &#123;&#125;create /data/system/cachequota.xml</span><br><span class="line">	  StorageStatsService-&gt;StorageStatsService: &#123;&#125;MSG:MSG_LOAD_CACHED_QUOTAS_FROM_FILE</span><br><span class="line">	  StorageStatsService-&gt;CacheQuotaStrategy: setupQuotasFromFile</span><br><span class="line">	  CacheQuotaStrategy-&gt;CacheQuotaStrategy:    readFromXml(cachequota.xml)</span><br><span class="line">	  CacheQuotaStrategy-&gt;CacheQuotaStrategy:   pushProcessedQuotas(item): </span><br><span class="line">	  note right of CacheQuotaStrategy: \nupdate item value in java and native(installd)</span><br><span class="line">	  StorageStatsService-&gt;StorageStatsService:&#123;&#125;:MSG: MSG_CHECK_STORAGE_DELTADELAY_IN_MILLIS</span><br><span class="line">	  loop default 30s</span><br><span class="line">	  StorageStatsService-&gt;StorageStatsService:MSG_CHECK_STORAGE_DELTADELAY_IN_MILLIS</span><br><span class="line">	          opt previousBytes - available bytes &lt; 0.05 * total bytes &#123; perviousBytes保存了上一次调整时的available bytes &#125;</span><br><span class="line">	              StorageStatsService-&gt;CacheQuotaStrategy: recalculateQuotas</span><br><span class="line">	              CacheQuotaStrategy-&gt;CacheQuotaStrategy: getUnfulfilledRequests</span><br><span class="line">	              CacheQuotaStrategy-&gt;UsageStatsService: queryUsageStatsForUser[to get application usage]</span><br><span class="line">	              CacheQuotaStrategy-&gt;CacheQuotaService: computeCacheQuotaHints(In: application usage) </span><br><span class="line">	              CacheQuotaService--&gt;CacheQuotaService: MSG: MSG_SEND_LIST</span><br><span class="line">	              CacheQuotaService-&gt;CacheQuotaService: onComputeCacheQuotaHints</span><br><span class="line">	              note right of CacheQuotaService:使用根据应用的使用时间进行排序， 排序后放在队列中。\n 根据在队列中的位置，  按照一定的加权值分配相应的配额。\n 总配额(freesize * 0.15)使用的时间越长， 获得的配额越大</span><br><span class="line">	              CacheQuotaService-&gt;StorageStatsService: reply</span><br><span class="line">	          end</span><br><span class="line"></span><br><span class="line">@enduml</span><br></pre></td></tr></table></figure>
+
+<h2 id="2-2-内部存储不足时，根据cache-quota-释放cache"><a href="#2-2-内部存储不足时，根据cache-quota-释放cache" class="headerlink" title="2.2. 内部存储不足时，根据cache quota 释放cache"></a>2.2. 内部存储不足时，根据cache quota 释放cache</h2><p>当系统需要释放磁盘空间时，将开始从超过配额最多的应用中删除缓存文件。因此，如果将您的缓存数据量始终保持低于配额的水平，则在必须清除系统中的某些文件时，您的缓存文件将能坚持到最后。系统在决定删除您的应用中的哪些缓存文件时，将首先考虑删除最旧的文件（由修改时间决定）。</p>
+<h4 id="2-2-1-1-目录的两种删除机制"><a href="#2-2-1-1-目录的两种删除机制" class="headerlink" title="2.2.1.1. 目录的两种删除机制"></a>2.2.1.1. 目录的两种删除机制</h4><p>可以针对每个目录启用两种新行为，以控制系统如何释放缓存数据：</p>
+<h6 id="2-2-1-1-1-1-整体"><a href="#2-2-1-1-1-1-整体" class="headerlink" title="2.2.1.1.1.1. 整体"></a>2.2.1.1.1.1. 整体</h6><ul>
+<li><p>setCacheBehaviorAtomic(File, boolean)</p>
+<p> 可用于指示某个目录及其所有内容应作为一个不可分割的整体进行删除。只能作用于目录。设置后，该目录下的所有子目录及文件都标记为一个整体。  </p>
+<blockquote>
+<p>  其下面的每一个文件的修改，修改时间都会标记到该目录层级上。</p>
+</blockquote>
+</li>
+</ul>
+<h6 id="2-2-1-1-1-2-截断"><a href="#2-2-1-1-1-2-截断" class="headerlink" title="2.2.1.1.1.2. 截断"></a>2.2.1.1.1.2. 截断</h6><ul>
+<li><p>setCacheBehaviorTombstone(File, boolean)</p>
+<p>  可用于指示不应删除某个目录内的文件，而应将它们截断到 0 字节长度，使空文件保持完好。也可用于目录，则该级目录下的所有文件（除链接之外的）删除时都会截断到0字节长度。</p>
+</li>
+</ul>
+<p><span id="jump">跳转到的地方</span></p>
+<h4 id="2-2-1-2-根据cache-quota-释放-cache"><a href="#2-2-1-2-根据cache-quota-释放-cache" class="headerlink" title="2.2.1.2. 根据cache quota 释放 cache"></a>2.2.1.2. 根据cache quota 释放 cache</h4><ul>
+<li><p>删除目录层次：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">/data/user/&lt;user_id&gt;/</span><br><span class="line">/data/user_de/&lt;user_id&gt;</span><br><span class="line">/data/media/&lt;user_id&gt;/Android/data/</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>以<code>uid</code> 为索引，创建相应的<code>tracker</code>。特殊的对于<code>media</code>下的，其为 <code>external data</code></li>
+<li>以 <code>getCacheRatio</code> (<code>cacheUsed</code>&#x2F; <code>quota配额</code>)为排序依据保存了<code>tracker</code></li>
+<li><code>cacheRatio</code>越大，越排在前面</li>
+<li><code>tracker</code>中保存应用下 <code>cache</code>  <code>code_cache</code>  子目录中的各级文件: 保存到了<code>items</code> 的<code>vector</code>中。</li>
+<li><code>items</code> 按照修改时间进行排序，特定的对于使用前面两个接口设置文件绑定关系(<a href="#%E6%95%B4%E4%BD%93">1</a> <a href="#%E6%88%AA%E6%96%AD">2</a>)的，会绑定为一个item。</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>  <em><strong>在对item进行删除时，首先找到cacheRatio最大的应用相关的目录，去其中的文件按照修改时间的顺序进行删除，每删除一项，检查删除后的空间是否满足要求，如果满足要求，则不再进行删除，如果不满足，重新计算每个应用的cacheRadio，然后，对cacheRadio最大的，找到其中修改时间最早的项。进行删除。  依此步骤，直到删除到满足条件为止。</strong></em></p>
+</blockquote>
+<h3 id="2-2-2-为应用分配空间时，查询可使用的空间"><a href="#2-2-2-为应用分配空间时，查询可使用的空间" class="headerlink" title="2.2.2. 为应用分配空间时，查询可使用的空间"></a>2.2.2. 为应用分配空间时，查询可使用的空间</h3><p>在需要为大文件分配磁盘空间时，可考虑使用新的 [allocateBytes(File, long, int)](#allocateBytes(java.io.File, long, int)) API，它将&#x3D;&#x3D;自动清除&#x3D;&#x3D;属于其他应用的缓存文件（根据需要），以满足您的请求。在确定设备是否有足够的磁盘空间保存您的新数据时，请调用 [getAllocatableBytes(File, int)](#getAllocatableBytes(java.io.File, int)) 而不要使用 <a href="#getUsableSpace()">getUsableSpace()</a>，因为前者会考虑系统要为您清除的任何缓存数据。</p>
+<p><a href="#jump">跳转</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/AndroidO/" rel="tag"># AndroidO</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2016/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E6%96%87%E4%BB%B6IO%E6%B5%8B%E8%AF%95/" rel="prev" title="文件IO测试调研">
+      <i class="fa fa-chevron-left"></i> 文件IO测试调研
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2017/07/19/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/cts%20%E8%B7%91%E6%B5%8B%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95/" rel="next" title="cts 跑测使用方法">
+      cts 跑测使用方法 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E7%A3%81%E7%9B%98%E9%85%8D%E9%A2%9D%E8%B0%83%E7%A0%94%E6%8A%A5%E5%91%8A"><span class="nav-number">1.</span> <span class="nav-text">1. 磁盘配额调研报告</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-%E5%AE%9E%E9%99%85%E7%A3%81%E7%9B%98%E9%85%8D%E9%A2%9D%E6%8E%A7%E5%88%B6"><span class="nav-number">1.1.</span> <span class="nav-text">1.1. 实际磁盘配额控制</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-1-%E4%BE%9D%E8%B5%96%E9%A1%B9%E6%83%85%E5%86%B5"><span class="nav-number">1.1.1.</span> <span class="nav-text">1.1.1. 依赖项情况</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-2-%E7%A3%81%E7%9B%98%E9%85%8D%E9%A2%9D%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-number">1.1.2.</span> <span class="nav-text">1.1.2. 磁盘配额初始化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-3-%E7%A3%81%E7%9B%98%E9%85%8D%E9%A2%9D%E7%9A%84%E9%A2%9D%E5%A4%96%E8%AE%BE%E5%AE%9A"><span class="nav-number">1.1.3.</span> <span class="nav-text">1.1.3. 磁盘配额的额外设定</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E8%99%9A%E6%8B%9F%E7%9A%84%E7%A3%81%E7%9B%98%E9%85%8D%E9%A2%9D-cache-quota"><span class="nav-number">2.</span> <span class="nav-text">2. 虚拟的磁盘配额(cache quota)</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-cache-quota-%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-number">2.1.</span> <span class="nav-text">2.1. cache quota 初始化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-%E5%86%85%E9%83%A8%E5%AD%98%E5%82%A8%E4%B8%8D%E8%B6%B3%E6%97%B6%EF%BC%8C%E6%A0%B9%E6%8D%AEcache-quota-%E9%87%8A%E6%94%BEcache"><span class="nav-number">2.2.</span> <span class="nav-text">2.2. 内部存储不足时，根据cache quota 释放cache</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#2-2-1-1-%E7%9B%AE%E5%BD%95%E7%9A%84%E4%B8%A4%E7%A7%8D%E5%88%A0%E9%99%A4%E6%9C%BA%E5%88%B6"><span class="nav-number">2.2.0.1.</span> <span class="nav-text">2.2.1.1. 目录的两种删除机制</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#2-2-1-1-1-1-%E6%95%B4%E4%BD%93"><span class="nav-number">2.2.0.1.0.1.</span> <span class="nav-text">2.2.1.1.1.1. 整体</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#2-2-1-1-1-2-%E6%88%AA%E6%96%AD"><span class="nav-number">2.2.0.1.0.2.</span> <span class="nav-text">2.2.1.1.1.2. 截断</span></a></li></ol></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-2-1-2-%E6%A0%B9%E6%8D%AEcache-quota-%E9%87%8A%E6%94%BE-cache"><span class="nav-number">2.2.0.2.</span> <span class="nav-text">2.2.1.2. 根据cache quota 释放 cache</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-2-%E4%B8%BA%E5%BA%94%E7%94%A8%E5%88%86%E9%85%8D%E7%A9%BA%E9%97%B4%E6%97%B6%EF%BC%8C%E6%9F%A5%E8%AF%A2%E5%8F%AF%E4%BD%BF%E7%94%A8%E7%9A%84%E7%A9%BA%E9%97%B4"><span class="nav-number">2.2.1.</span> <span class="nav-text">2.2.2. 为应用分配空间时，查询可使用的空间</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

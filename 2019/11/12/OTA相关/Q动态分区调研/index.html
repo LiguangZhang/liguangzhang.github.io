@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="1. Q动态分区调研1.1. 相关文档 [Android Bootcamp 2019 - Dynamic Partitions in Q (go_android-dynamic-partitions-slides).pdf](..&#x2F;..&#x2F;..&#x2F;google_document&#x2F;Android Bootcamp 2019 - Dynamic Partitions">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Q动态分区调研">
+<meta property="og:url" content="https://liguangzhang.github.io/2019/11/12/OTA%E7%9B%B8%E5%85%B3/Q%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E8%B0%83%E7%A0%94/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="1. Q动态分区调研1.1. 相关文档 [Android Bootcamp 2019 - Dynamic Partitions in Q (go_android-dynamic-partitions-slides).pdf](..&#x2F;..&#x2F;..&#x2F;google_document&#x2F;Android Bootcamp 2019 - Dynamic Partitions">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/zhangliguang1/tuchuang/raw/master/img/20191121145705297_155299023.png">
+<meta property="og:image" content="https://gitee.com/zhangliguang1/tuchuang/raw/master/img/20191121145723177_2107832549.png">
+<meta property="og:image" content="https://gitee.com/zhangliguang1/tuchuang/raw/master/img/20191121145634636_712779062.png">
+<meta property="og:image" content="https://liguangzhang.github.io/home/mi/Pictures/documents/dynamic_partition/data_analyze.zip">
+<meta property="og:image" content="http://www.sysnote.org/2015/08/06/linux-io-stack/io-stack.png">
+<meta property="og:image" content="https://arkingc.github.io/img/in-post/post-linux-lvm/dm.png">
+<meta property="og:image" content="https://gitee.com/zhangliguang1/tuchuang/raw/master/img/example.png">
+<meta property="og:image" content="https://gitee.com/zhangliguang1/tuchuang/raw/master/img/20191121145450363_1270541820.png">
+<meta property="og:image" content="https://gitee.com/zhangliguang1/tuchuang/raw/master/img/20191121145257141_746207219.png">
+<meta property="article:published_time" content="2019-11-12T10:15:54.000Z">
+<meta property="article:modified_time" content="2024-04-16T07:22:45.136Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="vab">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/zhangliguang1/tuchuang/raw/master/img/20191121145705297_155299023.png">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2019/11/12/OTA%E7%9B%B8%E5%85%B3/Q%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E8%B0%83%E7%A0%94/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Q动态分区调研 | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/11/12/OTA%E7%9B%B8%E5%85%B3/Q%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E8%B0%83%E7%A0%94/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Q动态分区调研
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-11-12 18:15:54" itemprop="dateCreated datePublished" datetime="2019-11-12T18:15:54+08:00">2019-11-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 15:22:45" itemprop="dateModified" datetime="2024-04-16T15:22:45+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="1-Q动态分区调研"><a href="#1-Q动态分区调研" class="headerlink" title="1. Q动态分区调研"></a>1. Q动态分区调研</h1><h2 id="1-1-相关文档"><a href="#1-1-相关文档" class="headerlink" title="1.1. 相关文档"></a>1.1. 相关文档</h2><p> [Android Bootcamp 2019 - Dynamic Partitions in Q (go_android-dynamic-partitions-slides).pdf](..&#x2F;..&#x2F;..&#x2F;google_document&#x2F;Android Bootcamp 2019 - Dynamic Partitions in Q (go_android-dynamic-partitions-slides).pdf) </p>
+<p> <a href="../../../google_document/06._Dynamic_Partitions_-_LPC_Android_MC_v2.pdf">06.<em>Dynamic_Partitions</em>-_LPC_Android_MC_v2.pdf</a> </p>
+<h2 id="1-2-代码路径"><a href="#1-2-代码路径" class="headerlink" title="1.2. 代码路径"></a>1.2. 代码路径</h2><p>bootable&#x2F;recovery&#x2F;updater&#x2F; <a href="../../../../work_space/q9/bootable/recovery/updater/dynamic_partitions.cpp">dynamic_partitions.cpp</a> </p>
+<p>system&#x2F;core&#x2F;fs_mgr&#x2F; <a href="/home/mi/work_space/q9/system/core/fs_mgr/liblp">liblp</a></p>
+<p>system&#x2F;core&#x2F;fastboot&#x2F;device  <a href="/home/mi/work_space/q9/system/core/fastboot/device">fastbootd</a></p>
+<p>build&#x2F;core&#x2F;Makefile</p>
+<h2 id="1-3-宏配置"><a href="#1-3-宏配置" class="headerlink" title="1.3. 宏配置"></a>1.3. 宏配置</h2><ul>
+<li>PRODUCT_USE_DYNAMIC_PARTITIONS :&#x3D; true</li>
+<li>BOARD_SUPER_PARTITION_SIZE :&#x3D; <size-in-bytes></li>
+<li>BOARD_SUPER_PARTITION_GROUPS :&#x3D; group_oem</li>
+<li>BOARD_GROUP_OEM_SIZE :&#x3D; <size-in-bytes></li>
+<li>BOARD_GROUP_OEM_PARTITION_LIST :&#x3D; system vendor odm product</li>
+<li>BOARD_SUPER_PARTITION_$(device)_DEVICE_SIZE</li>
+</ul>
+<blockquote>
+<p># BOARD_SUPER_PARTITION_GROUPS defines a list of “updatable groups”. Each updatable group is a  group of partitions that share the same pool of free spaces.  For each group in BOARD_SUPER_PARTITION_GROUPS, a BOARD_{GROUP}<em>SIZE and BOARD</em>{GROUP}_PARTITION_PARTITION_LIST may be defined.  </p>
+<ul>
+<li><p>BOARD_{GROUP}_SIZE: The maximum sum of sizes of all partitions in the group. Must not be empty.</p>
+</li>
+<li><p>BOARD_{GROUP}_PARTITION_PARTITION_LIST: the list of partitions that belongs to this group. If empty, no partitions belong to this group, and the sum of sizes is effectively 0.</p>
+</li>
+</ul>
+</blockquote>
+<h2 id="1-4-刷机"><a href="#1-4-刷机" class="headerlink" title="1.4. 刷机"></a>1.4. 刷机</h2><p>对于动态分区的特有img, 可以直接通过fastboot 烧写super.img, super.img是包含所有设定为动态的分区的镜像的总和.</p>
+<p>也可以进入用户空间的fastbootd, 烧写单独的动态的分区.</p>
+<ul>
+<li>fastboot reboot fastboot</li>
+</ul>
+<h3 id="1-4-1-fastbootd-commands"><a href="#1-4-1-fastbootd-commands" class="headerlink" title="1.4.1. fastbootd commands"></a>1.4.1. fastbootd commands</h3><table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+<th>Available when device is OEM locked</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>getvar is-userspace</td>
+<td>Return yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>getvar<br/>is-logical:<partition></td>
+<td>Return yes if the given partition is a<br/>logical partition, no otherwise</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>getvar super-partition-name</td>
+<td>MUST return super for a device<br/>launching with logical partitions</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>create-logical-partition<br/><partition> <size></td>
+<td>Create a logical partition with the<br/>given name and size</td>
+<td>No</td>
+</tr>
+<tr>
+<td>delete-logical-partition<br/><partition></td>
+<td>Delete the given logical partition</td>
+<td>No</td>
+</tr>
+<tr>
+<td>resize-logical-partition<br/><partition> <size></td>
+<td>Resize the logical partition to the new<br/>size without changing its contents</td>
+<td>No</td>
+</tr>
+<tr>
+<td>update-super <partition></td>
+<td>Similar to flash super, except rather<br/>than flashing raw data to the super<br/>partition, this will ensure that all<br/>partitions within the downloaded<br/>image are created</td>
+<td>No</td>
+</tr>
+<tr>
+<td>getvar max-download-size</td>
+<td>Return the maximum size of an image<br/>that can be downloaded in bytes in<br/>hex</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>getvar partition-type<br/><partition-name></td>
+<td>Return file system type: ext4, f2fs,<br/>raw</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>flash <partition name> [<br/><filename> ]</td>
+<td>Flash the partition through a series of<br/>download and flash fastboot<br/>protocol commands</td>
+<td>No</td>
+</tr>
+<tr>
+<td>reboot bootloader</td>
+<td>Reboot into bootloader mode</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>reboot fastboot</td>
+<td>Reboot back into fastbootd mode</td>
+<td>Yes</td>
+</tr>
+</tbody></table>
+<h2 id="1-5-super-partition-布局"><a href="#1-5-super-partition-布局" class="headerlink" title="1.5. super partition 布局"></a>1.5. super partition 布局</h2><p><img src="https://gitee.com/zhangliguang1/tuchuang/raw/master/img/20191121145705297_155299023.png" alt="init"><br><img src="https://gitee.com/zhangliguang1/tuchuang/raw/master/img/20191121145723177_2107832549.png" alt="1568031243961"></p>
+<h3 id="1-5-1-概要"><a href="#1-5-1-概要" class="headerlink" title="1.5.1. 概要"></a>1.5.1. 概要</h3><ul>
+<li>所有动态大小的分区填充到一个有固定大小的super的镜像文件中(最终烧写到super 物理分区中)</li>
+<li>super的镜像中包含这些可以调整大小的子分区的内容和一些描述信息.</li>
+<li>可以调整大小的分区对应在实际的物理分区表中被super替代了</li>
+<li>非只读分区不能配置进去</li>
+</ul>
+<h3 id="1-5-2-实现"><a href="#1-5-2-实现" class="headerlink" title="1.5.2. 实现"></a>1.5.2. 实现</h3><ul>
+<li>super镜像文件中预留1M空间给动态分区表:<ul>
+<li>动态分区名+块的索引</li>
+<li>上述描述信息(metadata)的备份</li>
+<li>AB系统的A&#x2F;B各自的描述信息</li>
+</ul>
+</li>
+<li>描述信息(metadata)统一由liblp管理</li>
+<li>liblp被集成在init&#x2F;updata_engine&#x2F;OTA updater&#x2F;fastbootd中</li>
+<li>liblp是用户空间的, kernel bootloader访问不到</li>
+</ul>
+<h3 id="1-5-3-AB-non-ab-metadata的配置"><a href="#1-5-3-AB-non-ab-metadata的配置" class="headerlink" title="1.5.3. AB&#x2F;non_ab metadata的配置"></a>1.5.3. AB&#x2F;non_ab metadata的配置</h3><ul>
+<li>AB系统, AB各一套metadata<ul>
+<li>正在运行的系统读取另外一个未运行的系统的metadata</li>
+<li>保证目标版本升级失败后仍能回退老的版本</li>
+</ul>
+</li>
+<li>non_AB系统, 有一个备份的metadata, 防止在metadata进行update时意外断电引起的metadata损坏.</li>
+</ul>
+<h2 id="1-6-开机修改"><a href="#1-6-开机修改" class="headerlink" title="1.6. 开机修改"></a>1.6. 开机修改</h2><ul>
+<li>boot里又加上ramdisk了</li>
+<li>boot的ramdisk里包含了first-stage阶段的init和vendor的fstab<ul>
+<li>init在first-stage阶段使用liblp解析super分区的metadata描述信息, 为super中包含的每一个可调大小的子分区创建对应的dm设备</li>
+<li>上述这些子分区在fstab中标识first_stage_mount的首先挂载上</li>
+</ul>
+</li>
+<li>system被挂载上后, boot的ramdisk被丢弃, 切换到second-stage阶段的init(system_root的ramdisk)</li>
+</ul>
+<h2 id="1-7-动态分区调整大小代码跟踪"><a href="#1-7-动态分区调整大小代码跟踪" class="headerlink" title="1.7. 动态分区调整大小代码跟踪"></a>1.7. 动态分区调整大小代码跟踪</h2><p>以增加分区大小为例, 跟踪下相关调用过程:</p>
+<p>update_script</p>
+<p>resize system <size></p>
+<p>PerformOpResize</p>
+<p>需要先构造builder, 从builder中找到partition, 再通过builder的ResizePartition接口调整相应的分区大小.</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1.</span> <span class="keyword">auto</span> partition = params.builder-&gt;<span class="built_in">FindPartition</span>(partition_name);</span><br><span class="line"><span class="comment">// 调整分区前先要将对应的dm设备销毁</span></span><br><span class="line"><span class="number">2.</span> <span class="built_in">UnmapPartitionOnDeviceMapper</span>(partition_name)</span><br><span class="line"><span class="number">3.</span> builder-&gt;<span class="built_in">ResizePartition</span>(partition, size.<span class="built_in">value</span>());</span><br></pre></td></tr></table></figure>
+
+<h3 id="1-7-1-构造builder-MetadataBuilder"><a href="#1-7-1-构造builder-MetadataBuilder" class="headerlink" title="1.7.1. 构造builder(MetadataBuilder)"></a>1.7.1. 构造builder(MetadataBuilder)</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 对应super的block设备节点  </span></span><br><span class="line"><span class="keyword">auto</span> super_device = <span class="built_in">GetSuperDevice</span>();</span><br><span class="line"><span class="keyword">auto</span> builder = MetadataBuilder::<span class="built_in">New</span>(<span class="built_in">PartitionOpener</span>(), super_device, <span class="number">0</span>);</span><br></pre></td></tr></table></figure>
+
+<p>创建MetadataBuilder的实例前先需要读出super中的metadata信息(描述super中各个子分区的布局情况)</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">std::unique_ptr&lt;LpMetadata&gt; metadata = <span class="built_in">ReadMetadata</span>(opener, super_partition, slot_number);</span><br></pre></td></tr></table></figure>
+
+<h4 id="1-7-1-1-解析metadata过程涉及到的相关结构体"><a href="#1-7-1-1-解析metadata过程涉及到的相关结构体" class="headerlink" title="1.7.1.1. 解析metadata过程涉及到的相关结构体"></a>1.7.1.1. 解析metadata过程涉及到的相关结构体</h4><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//metadata信息在super中的配置信息</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">struct</span> <span class="title class_">LpMetadataGeometry</span> &#123;</span><br><span class="line">    <span class="comment">/*  0: Magic signature (LP_METADATA_GEOMETRY_MAGIC). */</span></span><br><span class="line">    <span class="type">uint32_t</span> magic;</span><br><span class="line">    <span class="comment">/*  4: Size of the LpMetadataGeometry struct. */</span></span><br><span class="line">    <span class="type">uint32_t</span> struct_size;</span><br><span class="line">    <span class="comment">/*  8: SHA256 checksum of this struct, with this field set to 0. */</span></span><br><span class="line">    <span class="type">uint8_t</span> checksum[<span class="number">32</span>];</span><br><span class="line">    <span class="comment">/* 40: Maximum amount of space a single copy of the metadata can use. This</span></span><br><span class="line"><span class="comment">     * must be a multiple of LP_SECTOR_SIZE.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="type">uint32_t</span> metadata_max_size;</span><br><span class="line">    <span class="comment">/* 44: Number of copies of the metadata to keep. For A/B devices, this</span></span><br><span class="line"><span class="comment">     * will be 2. For an A/B/C device, it would be 3, et cetera. For Non-A/B</span></span><br><span class="line"><span class="comment">     * it will be 1. A backup copy of each slot is kept, so if this is &quot;2&quot;,</span></span><br><span class="line"><span class="comment">     * there will be four copies total.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="type">uint32_t</span> metadata_slot_count;</span><br><span class="line">    <span class="comment">/* 48: Logical block size. This is the minimal alignment for partition and</span></span><br><span class="line"><span class="comment">     * extent sizes, and it must be a multiple of LP_SECTOR_SIZE. Note that</span></span><br><span class="line"><span class="comment">     * this must be equal across all LUNs that comprise the super partition,</span></span><br><span class="line"><span class="comment">     * and thus this field is stored in the geometry, not per-device.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="type">uint32_t</span> logical_block_size;</span><br><span class="line">&#125; __attribute__((packed)) LpMetadataGeometry;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* The logical partition metadata has a number of tables; they are described</span></span><br><span class="line"><span class="comment"> * in the header via the following structure</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="comment">// LpMetaDataHeader中对partition/extent/group的描述信息, 用来offset偏移找到对应的数据段填充对应的结构体.</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">struct</span> <span class="title class_">LpMetadataTableDescriptor</span> &#123;</span><br><span class="line">    <span class="comment">/*  0: Location of the table, relative to end of the metadata header. */</span></span><br><span class="line">    <span class="type">uint32_t</span> offset;</span><br><span class="line">    <span class="comment">// entry_size * num_entries = size of the table</span></span><br><span class="line">    <span class="comment">/*  4: Number of entries in the table. */</span></span><br><span class="line">    <span class="type">uint32_t</span> num_entries;</span><br><span class="line">    <span class="comment">/*  8: Size of each entry in the table, in bytes. */</span></span><br><span class="line">    <span class="type">uint32_t</span> entry_size;</span><br><span class="line">&#125; __attribute__((packed)) LpMetadataTableDescriptor;</span><br><span class="line"></span><br><span class="line"><span class="comment">//metadata位于物理分区的描述头信息</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">struct</span> <span class="title class_">LpMetadataHeader</span> &#123;</span><br><span class="line">    <span class="comment">/*  0: Four bytes equal to LP_METADATA_HEADER_MAGIC. */</span></span><br><span class="line">    <span class="type">uint32_t</span> magic;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*  4: Version number required to read this metadata. If the version is not</span></span><br><span class="line"><span class="comment">     * equal to the library version, the metadata should be considered</span></span><br><span class="line"><span class="comment">     * incompatible.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="type">uint16_t</span> major_version;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*  6: Minor version. A library supporting newer features should be able to</span></span><br><span class="line"><span class="comment">     * read metadata with an older minor version. However, an older library</span></span><br><span class="line"><span class="comment">     * should not support reading metadata if its minor version is higher.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="type">uint16_t</span> minor_version;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*  8: The size of this header struct. */</span></span><br><span class="line">    <span class="type">uint32_t</span> header_size;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 12: SHA256 checksum of the header, up to |header_size| bytes, computed as</span></span><br><span class="line"><span class="comment">     * if this field were set to 0.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="type">uint8_t</span> header_checksum[<span class="number">32</span>];</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 44: The total size of all tables. This size is contiguous; tables may not</span></span><br><span class="line"><span class="comment">     * have gaps in between, and they immediately follow the header.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="type">uint32_t</span> tables_size;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 48: SHA256 checksum of all table contents. */</span></span><br><span class="line">    <span class="type">uint8_t</span> tables_checksum[<span class="number">32</span>];</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 80: Partition table descriptor. */</span></span><br><span class="line">    <span class="comment">// partitions表描述信息</span></span><br><span class="line">    LpMetadataTableDescriptor partitions;</span><br><span class="line">    <span class="comment">/* 92: Extent table descriptor. */</span></span><br><span class="line">    <span class="comment">// partition 区间块组描述信息</span></span><br><span class="line">    LpMetadataTableDescriptor extents;</span><br><span class="line">    <span class="comment">/* 104: Updateable group descriptor. */</span></span><br><span class="line">    <span class="comment">// parition group表描述信息</span></span><br><span class="line">    LpMetadataTableDescriptor groups;</span><br><span class="line">    <span class="comment">/* 116: Block device table. */</span></span><br><span class="line">    <span class="comment">// block_devices表描述信息, 第一个必须是super, 如super中包含system/vendor等,第2个是system</span></span><br><span class="line">    LpMetadataTableDescriptor block_devices;</span><br><span class="line">&#125; __attribute__((packed)) LpMetadataHeader;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 各动态分区的描述信息</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">struct</span> <span class="title class_">LpMetadataPartition</span> &#123;</span><br><span class="line">    <span class="type">char</span> name[<span class="number">36</span>];</span><br><span class="line">    <span class="comment">/* 36: Attributes for the partition (see LP_PARTITION_ATTR_* flags above). */</span></span><br><span class="line">    <span class="type">uint32_t</span> attributes;</span><br><span class="line">    <span class="comment">/* 40: Index of the first extent owned by this partition. The extent will</span></span><br><span class="line"><span class="comment">     * start at logical sector 0. Gaps between extents are not allowed.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="type">uint32_t</span> first_extent_index;</span><br><span class="line">    <span class="comment">/* 44: Number of extents in the partition. Every partition must have at</span></span><br><span class="line"><span class="comment">     * least one extent.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="type">uint32_t</span> num_extents;</span><br><span class="line">    <span class="comment">/* 48: Group this partition belongs to. */</span></span><br><span class="line">    <span class="type">uint32_t</span> group_index;</span><br><span class="line">&#125; __attribute__((packed)) LpMetadataPartition;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* This struct defines an extent entry in the extent table block. */</span></span><br><span class="line"><span class="comment">// 各动态分区的区间块的描述信息</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">struct</span> <span class="title class_">LpMetadataExtent</span> &#123;</span><br><span class="line">    <span class="comment">/*  0: Length of this extent, in 512-byte sectors. */</span></span><br><span class="line">    <span class="type">uint64_t</span> num_sectors;</span><br><span class="line">    <span class="comment">/*  8: Target type for device-mapper (see LP_TARGET_TYPE_* values). */</span></span><br><span class="line">    <span class="type">uint32_t</span> target_type;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 12: Contents depends on target_type.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * LINEAR: The sector on the physical partition that this extent maps onto.</span></span><br><span class="line"><span class="comment">     * ZERO: This field must be 0.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="type">uint64_t</span> target_data;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 20: Contents depends on target_type.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * LINEAR: Must be an index into the block devices table.</span></span><br><span class="line"><span class="comment">     * ZERO: This field must be 0.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="type">uint32_t</span> target_source;</span><br><span class="line">&#125; __attribute__((packed)) LpMetadataExtent;</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">struct</span> <span class="title class_">LpMetadataPartitionGroup</span> &#123;</span><br><span class="line">    <span class="comment">/*  0: Name of this group. Any unused characters must be 0. */</span></span><br><span class="line">    <span class="type">char</span> name[<span class="number">36</span>];</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 36: Flags (see LP_GROUP_*). */</span></span><br><span class="line">    <span class="type">uint32_t</span> flags;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 40: Maximum size in bytes. If 0, the group has no maximum size. */</span></span><br><span class="line">    <span class="type">uint64_t</span> maximum_size;</span><br><span class="line">&#125; __attribute__((packed)) LpMetadataPartitionGroup;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* This struct defines an entry in the block_devices table. There must be at</span></span><br><span class="line"><span class="comment"> * least one device, and the first device must represent the partition holding</span></span><br><span class="line"><span class="comment"> * the super metadata.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">struct</span> <span class="title class_">LpMetadataBlockDevice</span> &#123;</span><br><span class="line">    <span class="comment">/* 0: First usable sector for allocating logical partitions. this will be</span></span><br><span class="line"><span class="comment">     * the first sector after the initial geometry blocks, followed by the</span></span><br><span class="line"><span class="comment">     * space consumed by metadata_max_size*metadata_slot_count*2.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="type">uint64_t</span> first_logical_sector;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 8: Alignment for defining partitions or partition extents. For example,</span></span><br><span class="line"><span class="comment">     * an alignment of 1MiB will require that all partitions have a size evenly</span></span><br><span class="line"><span class="comment">     * divisible by 1MiB, and that the smallest unit the partition can grow by</span></span><br><span class="line"><span class="comment">     * is 1MiB.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * Alignment is normally determined at runtime when growing or adding</span></span><br><span class="line"><span class="comment">     * partitions. If for some reason the alignment cannot be determined, then</span></span><br><span class="line"><span class="comment">     * this predefined alignment in the geometry is used instead. By default</span></span><br><span class="line"><span class="comment">     * it is set to 1MiB.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="type">uint32_t</span> alignment;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 12: Alignment offset for &quot;stacked&quot; devices. For example, if the &quot;super&quot;</span></span><br><span class="line"><span class="comment">     * partition itself is not aligned within the parent block device&#x27;s</span></span><br><span class="line"><span class="comment">     * partition table, then we adjust for this in deciding where to place</span></span><br><span class="line"><span class="comment">     * |first_logical_sector|.</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * Similar to |alignment|, this will be derived from the operating system.</span></span><br><span class="line"><span class="comment">     * If it cannot be determined, it is assumed to be 0.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="type">uint32_t</span> alignment_offset;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 16: Block device size, as specified when the metadata was created. This</span></span><br><span class="line"><span class="comment">     * can be used to verify the geometry against a target device.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="type">uint64_t</span> size;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 24: Partition name in the GPT. Any unused characters must be 0. */</span></span><br><span class="line">    <span class="type">char</span> partition_name[<span class="number">36</span>];</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 60: Flags (see LP_BLOCK_DEVICE_* flags below). */</span></span><br><span class="line">    <span class="type">uint32_t</span> flags;</span><br><span class="line">&#125; __attribute__((packed)) LpMetadataBlockDevice;</span><br><span class="line"></span><br><span class="line"><span class="comment">// metadata结构体</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">LpMetadata</span> &#123;</span><br><span class="line">    LpMetadataGeometry geometry;</span><br><span class="line">    LpMetadataHeader header;</span><br><span class="line">    std::vector&lt;LpMetadataPartition&gt; partitions;</span><br><span class="line">    std::vector&lt;LpMetadataExtent&gt; extents;</span><br><span class="line">    std::vector&lt;LpMetadataPartitionGroup&gt; groups;</span><br><span class="line">    std::vector&lt;LpMetadataBlockDevice&gt; block_devices;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h4 id="1-7-1-2-读取metadata配置信息"><a href="#1-7-1-2-读取metadata配置信息" class="headerlink" title="1.7.1.2. 读取metadata配置信息"></a>1.7.1.2. 读取metadata配置信息</h4><p>以非AB系统为例, slot_number在geometry中存储的信息为1</p>
+<p>略过super的头4k, 读取第2个4K内容(primaryGeometry), 填充<strong>LpMetadataGeometry</strong>结构体.</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Read and validate geometry information from a block device that holds</span></span><br><span class="line"><span class="comment">// logical partitions. If the information is corrupted, this will attempt</span></span><br><span class="line"><span class="comment">// to read it from a secondary backup location.</span></span><br><span class="line"><span class="function"><span class="type">bool</span> <span class="title">ReadLogicalPartitionGeometry</span><span class="params">(<span class="type">int</span> fd, LpMetadataGeometry* geometry)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">ReadPrimaryGeometry</span>(fd, geometry)) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">ReadBackupGeometry</span>(fd, geometry);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="type">bool</span> <span class="title">ReadPrimaryGeometry</span><span class="params">(<span class="type">int</span> fd, LpMetadataGeometry* geometry)</span> </span>&#123;</span><br><span class="line">    std::unique_ptr&lt;<span class="type">uint8_t</span>[]&gt; buffer = std::<span class="built_in">make_unique</span>&lt;<span class="type">uint8_t</span>[]&gt;(LP_METADATA_GEOMETRY_SIZE);</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">SeekFile64</span>(fd, <span class="built_in">GetPrimaryGeometryOffset</span>(), SEEK_SET) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (!android::base::<span class="built_in">ReadFully</span>(fd, buffer.<span class="built_in">get</span>(), LP_METADATA_GEOMETRY_SIZE)) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">ParseGeometry</span>(buffer.<span class="built_in">get</span>(), geometry);</span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">memcpy</span>(geometry, buffer, <span class="built_in">sizeof</span>(*geometry));</span><br></pre></td></tr></table></figure>
+
+<p>读取第3个4K内容(backup_geometry), 填充到backup_geometry</p>
+<p>从第4个4k开始, 读取geometry中配置的metadata大小, 填充到<strong>LpMetadata</strong>结构体, primary_metadata.</p>
+<p>…</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Parse and validate all metadata at the current position in the given file</span></span><br><span class="line"><span class="comment">// descriptor.</span></span><br><span class="line"><span class="function"><span class="type">static</span> std::unique_ptr&lt;LpMetadata&gt; <span class="title">ParseMetadata</span><span class="params">(<span class="type">const</span> LpMetadataGeometry&amp; geometry,</span></span></span><br><span class="line"><span class="params"><span class="function">                                                 Reader* reader)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 填充LpMetadataHeader, 包含了metadata的版本等</span></span><br><span class="line">    std::unique_ptr&lt;LpMetadata&gt; metadata = std::<span class="built_in">make_unique</span>&lt;LpMetadata&gt;();</span><br><span class="line">    <span class="keyword">if</span> (!reader-&gt;<span class="built_in">ReadFully</span>(&amp;metadata-&gt;header, <span class="built_in">sizeof</span>(metadata-&gt;header))) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (!<span class="built_in">ValidateMetadataHeader</span>(metadata-&gt;header)) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 填充LpMetadataGeometry</span></span><br><span class="line">    metadata-&gt;geometry = geometry;</span><br><span class="line">    LpMetadataHeader&amp; header = metadata-&gt;header;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Read the metadata payload. Allocation is fallible in case the metadata is</span></span><br><span class="line">    <span class="comment">// corrupt and has some huge value.</span></span><br><span class="line">    <span class="comment">// 读取LpMetadata中LpMetaDataHeader外剩下的数据, 算一个checksum和header中的checksum比对, 必须是一致的</span></span><br><span class="line">    <span class="function">std::unique_ptr&lt;<span class="type">uint8_t</span>[]&gt; <span class="title">buffer</span><span class="params">(<span class="keyword">new</span> (std::nothrow) <span class="type">uint8_t</span>[header.tables_size])</span></span>;</span><br><span class="line">    <span class="keyword">if</span> (!reader-&gt;<span class="built_in">ReadFully</span>(buffer.<span class="built_in">get</span>(), header.tables_size)) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="type">uint8_t</span> checksum[<span class="number">32</span>];</span><br><span class="line">    <span class="built_in">SHA256</span>(buffer.<span class="built_in">get</span>(), header.tables_size, checksum);</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">memcmp</span>(checksum, header.tables_checksum, <span class="built_in">sizeof</span>(checksum)) != <span class="number">0</span>) &#123;</span><br><span class="line">        LERROR &lt;&lt; <span class="string">&quot;Logical partition metadata has invalid table checksum.&quot;</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ValidateTableSize ensured that |cursor| is valid for the number of</span></span><br><span class="line">    <span class="comment">// entries in the table.</span></span><br><span class="line">    <span class="comment">// header中记录了partition 表的信息,包含了offset, 有几个分区,每个分区item的大小</span></span><br><span class="line">    <span class="type">uint8_t</span>* cursor = buffer.<span class="built_in">get</span>() + header.partitions.offset;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">size_t</span> i = <span class="number">0</span>; i &lt; header.partitions.num_entries; i++) &#123;</span><br><span class="line">        LpMetadataPartition partition;</span><br><span class="line">        <span class="built_in">memcpy</span>(&amp;partition, cursor, <span class="built_in">sizeof</span>(partition));</span><br><span class="line">        <span class="comment">// 一共num_entries个partition, 遍历metadata的partition table, cursor记录了每个partition的头</span></span><br><span class="line">        cursor += header.partitions.entry_size;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// partion校验</span></span><br><span class="line">        <span class="keyword">if</span> (partition.attributes &amp; ~LP_PARTITION_ATTRIBUTE_MASK) &#123;</span><br><span class="line">            LERROR &lt;&lt; <span class="string">&quot;Logical partition has invalid attribute set.&quot;</span>;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">        <span class="comment">// 填充LpMetadata的partitions vector</span></span><br><span class="line">        metadata-&gt;partitions.<span class="built_in">push_back</span>(partition);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    cursor = buffer.<span class="built_in">get</span>() + header.extents.offset;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">size_t</span> i = <span class="number">0</span>; i &lt; header.extents.num_entries; i++) &#123;</span><br><span class="line">        LpMetadataExtent extent;</span><br><span class="line">        <span class="built_in">memcpy</span>(&amp;extent, cursor, <span class="built_in">sizeof</span>(extent));</span><br><span class="line">        cursor += header.extents.entry_size;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (extent.target_type == LP_TARGET_TYPE_LINEAR &amp;&amp;</span><br><span class="line">            extent.target_source &gt;= header.block_devices.num_entries) &#123;</span><br><span class="line">            LERROR &lt;&lt; <span class="string">&quot;Logical partition extent has invalid block device.&quot;</span>;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        metadata-&gt;extents.<span class="built_in">push_back</span>(extent);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    cursor = buffer.<span class="built_in">get</span>() + header.groups.offset;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">size_t</span> i = <span class="number">0</span>; i &lt; header.groups.num_entries; i++) &#123;</span><br><span class="line">        LpMetadataPartitionGroup group = &#123;&#125;;</span><br><span class="line">        <span class="built_in">memcpy</span>(&amp;group, cursor, <span class="built_in">sizeof</span>(group));</span><br><span class="line">        cursor += header.groups.entry_size;</span><br><span class="line"></span><br><span class="line">        metadata-&gt;groups.<span class="built_in">push_back</span>(group);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    cursor = buffer.<span class="built_in">get</span>() + header.block_devices.offset;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">size_t</span> i = <span class="number">0</span>; i &lt; header.block_devices.num_entries; i++) &#123;</span><br><span class="line">        LpMetadataBlockDevice device = &#123;&#125;;</span><br><span class="line">        <span class="built_in">memcpy</span>(&amp;device, cursor, <span class="built_in">sizeof</span>(device));</span><br><span class="line">        cursor += header.block_devices.entry_size;</span><br><span class="line"></span><br><span class="line">        metadata-&gt;block_devices.<span class="built_in">push_back</span>(device);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">const</span> LpMetadataBlockDevice* super_device = <span class="built_in">GetMetadataSuperBlockDevice</span>(*metadata.<span class="built_in">get</span>());</span><br><span class="line">    <span class="keyword">if</span> (!super_device) &#123;</span><br><span class="line">        LERROR &lt;&lt; <span class="string">&quot;Metadata does not specify a super device.&quot;</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> metadata;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="https://gitee.com/zhangliguang1/tuchuang/raw/master/img/20191121145634636_712779062.png" alt="1568276907369"></p>
+<h4 id="1-7-1-3-builder初始化"><a href="#1-7-1-3-builder初始化" class="headerlink" title="1.7.1.3. builder初始化"></a>1.7.1.3. builder初始化</h4><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">std::unique_ptr&lt;MetadataBuilder&gt; <span class="title">MetadataBuilder::New</span><span class="params">(<span class="type">const</span> LpMetadata&amp; metadata,</span></span></span><br><span class="line"><span class="params"><span class="function">                                                      <span class="type">const</span> IPartitionOpener* opener)</span> </span>&#123;</span><br><span class="line">    <span class="comment">//1. builder构造函数</span></span><br><span class="line">    <span class="function">std::unique_ptr&lt;MetadataBuilder&gt; <span class="title">builder</span><span class="params">(<span class="keyword">new</span> MetadataBuilder())</span></span>;</span><br><span class="line">    <span class="comment">//2. builder init函数</span></span><br><span class="line">    <span class="keyword">if</span> (!builder-&gt;<span class="built_in">Init</span>(metadata)) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">    &#125;</span><br><span class="line">	...</span><br><span class="line">    <span class="keyword">return</span> builder;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">MetadataBuilder::<span class="built_in">MetadataBuilder</span>() : <span class="built_in">auto_slot_suffixing_</span>(<span class="literal">false</span>), <span class="built_in">ignore_slot_suffixing_</span>(<span class="literal">false</span>) &#123;</span><br><span class="line">    <span class="comment">// 初始化geometry和header_ </span></span><br><span class="line">    <span class="built_in">memset</span>(&amp;geometry_, <span class="number">0</span>, <span class="built_in">sizeof</span>(geometry_));</span><br><span class="line">    geometry_.magic = LP_METADATA_GEOMETRY_MAGIC;</span><br><span class="line">    geometry_.struct_size = <span class="built_in">sizeof</span>(geometry_);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">memset</span>(&amp;header_, <span class="number">0</span>, <span class="built_in">sizeof</span>(header_));</span><br><span class="line">    header_.magic = LP_METADATA_HEADER_MAGIC;</span><br><span class="line">    header_.major_version = LP_METADATA_MAJOR_VERSION;</span><br><span class="line">    header_.minor_version = LP_METADATA_MINOR_VERSION;</span><br><span class="line">    header_.header_size = <span class="built_in">sizeof</span>(header_);</span><br><span class="line">    header_.partitions.entry_size = <span class="built_in">sizeof</span>(LpMetadataPartition);</span><br><span class="line">    header_.extents.entry_size = <span class="built_in">sizeof</span>(LpMetadataExtent);</span><br><span class="line">    header_.groups.entry_size = <span class="built_in">sizeof</span>(LpMetadataPartitionGroup);</span><br><span class="line">    header_.block_devices.entry_size = <span class="built_in">sizeof</span>(LpMetadataBlockDevice);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//从前面解析出的metadata信息中初始化builder的成员变量.</span></span><br><span class="line"><span class="comment">// 执行AddGroup/AddPartition/ImportExtents函数, 初始化block_devices_ groups_ paritions_ extents_成员变量</span></span><br><span class="line"><span class="function"><span class="type">bool</span> <span class="title">MetadataBuilder::Init</span><span class="params">(<span class="type">const</span> LpMetadata&amp; metadata)</span> </span>&#123;</span><br><span class="line">    geometry_ = metadata.geometry;</span><br><span class="line">    block_devices_ = metadata.block_devices;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="type">const</span> <span class="keyword">auto</span>&amp; group : metadata.groups) &#123;</span><br><span class="line">        std::string group_name = <span class="built_in">GetPartitionGroupName</span>(group);</span><br><span class="line">        <span class="keyword">if</span> (!<span class="built_in">AddGroup</span>(group_name, group.maximum_size)) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="type">const</span> <span class="keyword">auto</span>&amp; partition : metadata.partitions) &#123;</span><br><span class="line">        std::string group_name = <span class="built_in">GetPartitionGroupName</span>(metadata.groups[partition.group_index]);</span><br><span class="line">        Partition* builder =</span><br><span class="line">                <span class="built_in">AddPartition</span>(<span class="built_in">GetPartitionName</span>(partition), group_name, partition.attributes);</span><br><span class="line">        <span class="keyword">if</span> (!builder) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 对某一特定的partition执行时, 会判断extent是否相邻, 如果是相邻的, 会进行合并</span></span><br><span class="line">        <span class="built_in">ImportExtents</span>(builder, metadata, partition);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="1-7-2-builder-ResizePartition"><a href="#1-7-2-builder-ResizePartition" class="headerlink" title="1.7.2. builder-&gt;ResizePartition"></a>1.7.2. builder-&gt;ResizePartition</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">builder-&gt;<span class="built_in">ResizePartition</span>(partition, size.<span class="built_in">value</span>();</span><br><span class="line"><span class="type">bool</span> MetadataBuilder::<span class="built_in">ResizePartition</span>(Partition* partition, <span class="type">uint64_t</span> requested_size) &#123;</span><br><span class="line">    <span class="comment">// Align the space needed up to the nearest sector.</span></span><br><span class="line">    <span class="comment">// 先对新size进行对齐</span></span><br><span class="line">    <span class="type">uint64_t</span> aligned_size = <span class="built_in">AlignTo</span>(requested_size, geometry_.logical_block_size);</span><br><span class="line">    <span class="type">uint64_t</span> old_size = partition-&gt;<span class="built_in">size</span>();</span><br><span class="line">    <span class="comment">// 1. 看下新size是否超出了可调整的范围</span></span><br><span class="line">    <span class="keyword">if</span> (!<span class="built_in">ValidatePartitionSizeChange</span>(partition, old_size, aligned_size, <span class="literal">false</span>)) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//2. 分区增大了</span></span><br><span class="line">    <span class="keyword">if</span> (aligned_size &gt; old_size) &#123;</span><br><span class="line">        <span class="keyword">if</span> (!<span class="built_in">GrowPartition</span>(partition, aligned_size)) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//分区较小了</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (aligned_size &lt; partition-&gt;<span class="built_in">size</span>()) &#123;</span><br><span class="line">        <span class="built_in">ShrinkPartition</span>(partition, aligned_size);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>怎么判断分区大小是否是合法的?</li>
+</ol>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">bool</span> <span class="title">MetadataBuilder::ValidatePartitionSizeChange</span><span class="params">(Partition* partition, <span class="type">uint64_t</span> old_size,</span></span></span><br><span class="line"><span class="params"><span class="function">                                                  <span class="type">uint64_t</span> new_size, <span class="type">bool</span> force_check)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 查找partition所在的组</span></span><br><span class="line">    PartitionGroup* group = <span class="built_in">FindGroup</span>(partition-&gt;<span class="built_in">group_name</span>());</span><br><span class="line">    <span class="built_in">CHECK</span>(group);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!force_check &amp;&amp; new_size &lt;= old_size) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Figure out how much we need to allocate, and whether our group has</span></span><br><span class="line">    <span class="comment">// enough space remaining.</span></span><br><span class="line">    <span class="type">uint64_t</span> space_needed = new_size - old_size;</span><br><span class="line">    <span class="keyword">if</span> (group-&gt;<span class="built_in">maximum_size</span>() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">// 分区组的已用空间</span></span><br><span class="line">        <span class="type">uint64_t</span> group_size = <span class="built_in">TotalSizeOfGroup</span>(group);</span><br><span class="line">        <span class="keyword">if</span> (group_size &gt;= group-&gt;<span class="built_in">maximum_size</span>() ||</span><br><span class="line">            <span class="comment">// 分区组的最大空间</span></span><br><span class="line">            group-&gt;<span class="built_in">maximum_size</span>() - group_size &lt; space_needed) &#123;</span><br><span class="line">            LERROR &lt;&lt; <span class="string">&quot;Partition &quot;</span> &lt;&lt; partition-&gt;<span class="built_in">name</span>() &lt;&lt; <span class="string">&quot; is part of group &quot;</span> &lt;&lt; group-&gt;<span class="built_in">name</span>()</span><br><span class="line">                   &lt;&lt; <span class="string">&quot; which does not have enough space free (&quot;</span> &lt;&lt; space_needed &lt;&lt; <span class="string">&quot; requested, &quot;</span></span><br><span class="line">                   &lt;&lt; group_size &lt;&lt; <span class="string">&quot; used out of &quot;</span> &lt;&lt; group-&gt;<span class="built_in">maximum_size</span>() &lt;&lt; <span class="string">&quot;)&quot;</span>;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>能看到分区能调整的大小受分区所在组最大空间的限制.</p>
+<h4 id="1-7-2-1-调大分区"><a href="#1-7-2-1-调大分区" class="headerlink" title="1.7.2.1. 调大分区"></a>1.7.2.1. 调大分区</h4><p>找出空闲的extent, 加到当前待调整的partition的extents_中</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">bool</span> <span class="title">MetadataBuilder::GrowPartition</span><span class="params">(Partition* partition, <span class="type">uint64_t</span> aligned_size)</span> </span>&#123;</span><br><span class="line">    <span class="type">uint64_t</span> space_needed = aligned_size - partition-&gt;<span class="built_in">size</span>();</span><br><span class="line">    <span class="type">uint64_t</span> sectors_needed = space_needed / LP_SECTOR_SIZE;</span><br><span class="line">    <span class="comment">// 根据已有的extent, 做相邻extent的gap, gap有效即为free的</span></span><br><span class="line">    <span class="comment">//The new interval represents the free space starting at the end of</span></span><br><span class="line">        <span class="comment">//the previous interval, and ending at the start of the next interval.</span></span><br><span class="line">       <span class="comment">// free_regions-&gt;emplace_back(current.device_index, aligned, current.start);    </span></span><br><span class="line">    std::vector&lt;Interval&gt; free_regions = <span class="built_in">GetFreeRegions</span>();</span><br><span class="line"></span><br><span class="line">    <span class="type">const</span> <span class="type">uint64_t</span> sectors_per_block = geometry_.logical_block_size / LP_SECTOR_SIZE;</span><br><span class="line">    std::vector&lt;std::unique_ptr&lt;LinearExtent&gt;&gt; new_extents;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// If the last extent in the partition has a size &lt; alignment, then the</span></span><br><span class="line">    <span class="comment">// difference is unallocatable due to being misaligned. We peek for that</span></span><br><span class="line">    <span class="comment">// case here to avoid wasting space.</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">auto</span> extent = <span class="built_in">ExtendFinalExtent</span>(partition, free_regions, sectors_needed)) &#123;</span><br><span class="line">        sectors_needed -= extent-&gt;<span class="built_in">num_sectors</span>();</span><br><span class="line">        new_extents.<span class="built_in">emplace_back</span>(std::<span class="built_in">move</span>(extent));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 从free_regions中查找可以空闲的extent, 给当前正在调整大小的partition使用</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">auto</span>&amp; region : free_regions) &#123;</span><br><span class="line">        <span class="comment">// 分配够了就退出</span></span><br><span class="line">        <span class="keyword">if</span> (!sectors_needed) &#123;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">        <span class="type">uint64_t</span> sectors = std::<span class="built_in">min</span>(sectors_needed, region.<span class="built_in">length</span>());</span><br><span class="line">        <span class="keyword">auto</span> extent = std::<span class="built_in">make_unique</span>&lt;LinearExtent&gt;(sectors, region.device_index, region.start);</span><br><span class="line">        new_extents.<span class="built_in">push_back</span>(std::<span class="built_in">move</span>(extent));</span><br><span class="line">        sectors_needed -= sectors;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// Everything succeeded, so commit the new extents.</span></span><br><span class="line">    <span class="comment">// 将新的extent加到partition对应的extents中</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">auto</span>&amp; extent : new_extents) &#123;</span><br><span class="line">        partition-&gt;<span class="built_in">AddExtent</span>(std::<span class="built_in">move</span>(extent));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="1-7-3-输出新的metadata更新到disk中"><a href="#1-7-3-输出新的metadata更新到disk中" class="headerlink" title="1.7.3. 输出新的metadata更新到disk中"></a>1.7.3. 输出新的metadata更新到disk中</h3><p>有分区变动后, 需要在内存中生成一份整体的变动后的metadata信息.</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">auto</span> metadata = builder-&gt;<span class="built_in">Export</span>();</span><br><span class="line"><span class="function">std::unique_ptr&lt;LpMetadata&gt; <span class="title">MetadataBuilder::Export</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 校验group下的所有分区的空间总和小于group的最大空间</span></span><br><span class="line">    <span class="keyword">if</span> (!<span class="built_in">ValidatePartitionGroups</span>()) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 构造一份新的metadata</span></span><br><span class="line">    std::unique_ptr&lt;LpMetadata&gt; metadata = std::<span class="built_in">make_unique</span>&lt;LpMetadata&gt;();</span><br><span class="line">    metadata-&gt;header = header_;</span><br><span class="line">    metadata-&gt;geometry = geometry_;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Assign this early so the extent table can read it.</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="type">const</span> <span class="keyword">auto</span>&amp; block_device : block_devices_) &#123;</span><br><span class="line">        metadata-&gt;block_devices.<span class="built_in">emplace_back</span>(block_device);</span><br><span class="line">        <span class="keyword">if</span> (auto_slot_suffixing_) &#123;</span><br><span class="line">            metadata-&gt;block_devices.<span class="built_in">back</span>().flags |= LP_BLOCK_DEVICE_SLOT_SUFFIXED;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    std::map&lt;std::string, <span class="type">size_t</span>&gt; group_indices;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">const</span> <span class="keyword">auto</span>&amp; group : groups_) &#123;</span><br><span class="line">        LpMetadataPartitionGroup out = &#123;&#125;;</span><br><span class="line">        <span class="built_in">strncpy</span>(out.name, group-&gt;<span class="built_in">name</span>().<span class="built_in">c_str</span>(), <span class="built_in">sizeof</span>(out.name));</span><br><span class="line">        out.maximum_size = group-&gt;<span class="built_in">maximum_size</span>();</span><br><span class="line"></span><br><span class="line">        group_indices[group-&gt;<span class="built_in">name</span>()] = metadata-&gt;groups.<span class="built_in">size</span>();</span><br><span class="line">        metadata-&gt;groups.<span class="built_in">push_back</span>(out);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Flatten the partition and extent structures into an LpMetadata, which</span></span><br><span class="line">    <span class="comment">// makes it very easy to validate, serialize, or pass on to device-mapper.</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="type">const</span> <span class="keyword">auto</span>&amp; partition : partitions_) &#123;</span><br><span class="line">        LpMetadataPartition part;</span><br><span class="line">        <span class="built_in">memset</span>(&amp;part, <span class="number">0</span>, <span class="built_in">sizeof</span>(part));</span><br><span class="line">        ...</span><br><span class="line">        <span class="built_in">strncpy</span>(part.name, partition-&gt;<span class="built_in">name</span>().<span class="built_in">c_str</span>(), <span class="built_in">sizeof</span>(part.name));</span><br><span class="line">        part.first_extent_index = <span class="built_in">static_cast</span>&lt;<span class="type">uint32_t</span>&gt;(metadata-&gt;extents.<span class="built_in">size</span>());</span><br><span class="line">        part.num_extents = <span class="built_in">static_cast</span>&lt;<span class="type">uint32_t</span>&gt;(partition-&gt;<span class="built_in">extents</span>().<span class="built_in">size</span>());</span><br><span class="line">        part.attributes = partition-&gt;<span class="built_in">attributes</span>();</span><br><span class="line">        <span class="keyword">if</span> (auto_slot_suffixing_) &#123;</span><br><span class="line">            part.attributes |= LP_PARTITION_ATTR_SLOT_SUFFIXED;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">auto</span> iter = group_indices.<span class="built_in">find</span>(partition-&gt;<span class="built_in">group_name</span>());</span><br><span class="line">        part.group_index = iter-&gt;second;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (<span class="type">const</span> <span class="keyword">auto</span>&amp; extent : partition-&gt;<span class="built_in">extents</span>()) &#123;</span><br><span class="line">            <span class="comment">// 保存到metadata的extents字段中</span></span><br><span class="line">            <span class="keyword">if</span> (!extent-&gt;<span class="built_in">AddTo</span>(metadata.<span class="built_in">get</span>())) &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        metadata-&gt;partitions.<span class="built_in">push_back</span>(part);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    metadata-&gt;header.partitions.num_entries = <span class="built_in">static_cast</span>&lt;<span class="type">uint32_t</span>&gt;(metadata-&gt;partitions.<span class="built_in">size</span>());</span><br><span class="line">    metadata-&gt;header.extents.num_entries = <span class="built_in">static_cast</span>&lt;<span class="type">uint32_t</span>&gt;(metadata-&gt;extents.<span class="built_in">size</span>());</span><br><span class="line">    metadata-&gt;header.groups.num_entries = <span class="built_in">static_cast</span>&lt;<span class="type">uint32_t</span>&gt;(metadata-&gt;groups.<span class="built_in">size</span>());</span><br><span class="line">    metadata-&gt;header.block_devices.num_entries =</span><br><span class="line">            <span class="built_in">static_cast</span>&lt;<span class="type">uint32_t</span>&gt;(metadata-&gt;block_devices.<span class="built_in">size</span>());</span><br><span class="line">    <span class="keyword">return</span> metadata;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>将新的分区信息更新到对应的super的设备节点中.</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">UpdatePartitionTable</span>(super_device, *metadata, <span class="number">0</span>) &#123;</span><br><span class="line">    android::base::unique_fd fd = opener.<span class="built_in">Open</span>(super_partition, O_RDWR | O_SYNC);</span><br><span class="line">    std::string blob;</span><br><span class="line">    <span class="comment">// 校验和序列化metadata数据, 如extents/partitions/block_devices字段是否是合法的.</span></span><br><span class="line">    <span class="keyword">if</span> (!<span class="built_in">ValidateAndSerializeMetadata</span>(opener, metadata, slot_suffix, &amp;blob)) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 比较新老geometry的配置是否是一致的.  metadata_max_size/ metadata_slot_count / logical_block_size</span></span><br><span class="line">    <span class="keyword">if</span> (!<span class="built_in">CompareGeometry</span>(geometry, old_geometry)) &#123;</span><br><span class="line">        LERROR &lt;&lt; <span class="string">&quot;Incompatible geometry in new logical partition metadata&quot;</span>;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// 往磁盘中更新primary和backup的metadata</span></span><br><span class="line">    <span class="keyword">if</span> (!<span class="built_in">WriteMetadata</span>(fd, metadata, slot_number, blob, writer)) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;    </span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="1-7-4-小结"><a href="#1-7-4-小结" class="headerlink" title="1.7.4. 小结"></a>1.7.4. 小结</h3><p>主要是对涉及到的数据结构的理解</p>
+<p>对于非ab系统的(slot_count&#x3D;1)的, 可以简单看下其中涉及的结构</p>
+<p>首先是geometry, 包括primary和backup的, 每个4k, 描述了metadata的配置信息.</p>
+<p>其次是metadata, 包括primary和backup的, 大小信息被配置在geometry中, 描述了分区&#x2F;分区组&#x2F;分区的range块的信息.</p>
+<h2 id="1-8-map-partition"><a href="#1-8-map-partition" class="headerlink" title="1.8. map partition"></a>1.8. map partition</h2><p>分区调整后, 如果当前修改的分区正在被使用中, 需要卸载unmap, 再重新map和挂载. 如果是系统分区卸载和unmap的操作会影响手机的运行, 因此手机需要重启才能重新map和挂载.</p>
+<p>动态分区的调整需要重新map才能生效. 这里看下map的流程.</p>
+<p>该过程与device-mapper的使用规范是紧密关联的, 只是在user space层多加了一个DeviceMapper实例对dm设备的创建查询销毁等操作进行托管.</p>
+<h3 id="1-8-1-device-mapper"><a href="#1-8-1-device-mapper" class="headerlink" title="1.8.1. device-mapper"></a>1.8.1. device-mapper</h3><p><img src="/home/mi/Pictures/documents/dynamic_partition/data_analyze.zip" alt="图1 Device Mapper的内核体系架构"></p>
+<p><img src="http://www.sysnote.org/2015/08/06/linux-io-stack/io-stack.png" alt="“linux storage stack”的图片搜索结果"></p>
+<p>Device-mapper是 Linux 内核映射块设备的一种技术框架。提供的一种从逻辑设备（虚拟设备）到物理设备的映射框架机制，在该机制下，用户可以很方便的根据自己的需要制定实现存储资源的管理策略。</p>
+<p>当前比较流行的 Linux 下的逻辑卷管理器如 <code>LVM2</code>（Linux Volume Manager 2 version)、<code>EVMS</code>(Enterprise Volume Management System)、<code>dmraid</code>(Device Mapper Raid Tool)等都是基于该机制实现的。</p>
+<p> <code>Device Mapper</code> 工作在块级别（block），并不工作在文件级别（file）。<code>Device Mapper</code> 自 Linux 2.6.9 后编入 Linux 内核，所有基于 Linux 内核 2.6.9 以后的发行版都内置 <code>Device Mapper</code>.</p>
+<p>Device mapper 在内核中作为一个块设备驱动被注册的，它包含三个重要的对象概念:</p>
+<ul>
+<li><p>mapped device </p>
+<p>Mapped device 是一个逻辑抽象(dm-*)，可以理解成为内核向外提供的逻辑设备，它通过映射表描述的映射关系和 target device (super)建立映射。</p>
+</li>
+<li><p>映射表</p>
+<p>是由用户空间创建，传递到内核空间。映射表里有映射设备逻辑的<code>起始地址</code>、<code>范围</code>、和表示在目标设备所在物理设备的<code>地址偏移量</code>以及Target 类型等信息（注：这些地址和偏移量都是以磁盘的扇区为单位的，即 512 个字节大小，所以，当你看到 128 的时候，其实表示的是 128*512&#x3D;64K）。</p>
+</li>
+<li><p>target device</p>
+</li>
+</ul>
+<p>​       可以是真实的物理设备, 也可以是dm的虚拟设备. Device mapper 中这三个对象和 target driver 插件一起构成了一个可迭代的设备树.</p>
+<p><img src="https://arkingc.github.io/img/in-post/post-linux-lvm/dm.png" alt="undefined"></p>
+<p>映射驱动在内核空间是插件，<code>Device Mapper</code> 在内核中通过一个一个模块化的 <code>Target Driver</code> 插件实现对 IO 请求的过滤或者重新定向等工作，当前已经实现的插件包括软 Raid、加密、多路径、镜像、快照、<code>线性映射</code>等，策略和机制分离.</p>
+<p>Device mapper处理所有从<code>generic_make_request</code>和<code>submit_bio</code>接口中定向到<code>mapped device</code>的所有块读写I&#x2F;O请求。I&#x2F;O请求在device mapper的设备树中通过请求转发从上到下地进行处理. Device mapper本质功能就是根据映射关系和target driver描述的IO处理规则，将IO请求从逻辑设备mapped device转发相应的target device上</p>
+<ul>
+<li><strong>向下转发</strong>：当一个bio请求在设备树中的mapped deivce向下层转发时，一个或者多个bio的克隆被创建并发送给下层target device。然后相同的过程在设备树的每一个层次上重复，只要设备树足够大理论上这种转发过程可以无限进行下去</li>
+<li><strong>向上返回事件</strong>：在设备树上某个层次中，target driver结束某个bio请求后，将表示结束该bio请求的事件上报给它上层的mapped device，该过程在各个层次上进行直到该事件最终上传到根mapped device的为止，然后device mapper结束根mapped device上原始bio请求，结束整个I&#x2F;O请求过程.</li>
+</ul>
+<h4 id="1-8-1-1-用户空间的操作规范："><a href="#1-8-1-1-用户空间的操作规范：" class="headerlink" title="1.8.1.1. 用户空间的操作规范："></a>1.8.1.1. 用户空间的操作规范：</h4><p>Device mapper库就是对ioctl、用户空间创建删除device mapper逻辑设备所需必要操作的封装，dmsetup是一个提供给用户直接可用的创建删除device mapper设备的命令行工具。用户空间主要负责如下工作：</p>
+<ol>
+<li>发现每个mapped device相关的target device；</li>
+<li>根据配置信息创建映射表；</li>
+<li>将用户空间构建好的映射表传入内核，让内核构建该mapped device对应的dm_table结构；</li>
+<li>保存当前的映射信息，以便未来重新构建。</li>
+</ol>
+<p>dm设备举例:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">0    1024 linear /dev/sda 204</span><br><span class="line">1024 512  linear /dev/sdb 766</span><br><span class="line">1536 128  linear /dev/sdc 0</span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="https://gitee.com/zhangliguang1/tuchuang/raw/master/img/example.png" alt="undefined"></p>
+<h4 id="1-8-1-2-Q上动态分区的映射"><a href="#1-8-1-2-Q上动态分区的映射" class="headerlink" title="1.8.1.2. Q上动态分区的映射"></a>1.8.1.2. Q上动态分区的映射</h4><ul>
+<li>动态分区机制使用<code>dm-linear</code>设备驱动映射逻辑扇区到super中的system&#x2F;vendor等只读分区的物理扇区上.</li>
+<li>通过修改大小, 动态分区可能变成片段化的</li>
+</ul>
+<p>&#x2F;dev&#x2F;block&#x2F;by-name&#x2F;super       super.img</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">/dev/block/by-name/dm-0 (system):</span><br><span class="line">	dm-linear super &lt;block range 1&gt;</span><br><span class="line">/dev/block/by-name/dm-1 (vendor):</span><br><span class="line">	dm-linear super &lt;block range 2&gt;</span><br></pre></td></tr></table></figure>
+<p><img src="https://gitee.com/zhangliguang1/tuchuang/raw/master/img/20191121145450363_1270541820.png" alt="resize partition"></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">/dev/block/by-name/dm-0 (system):</span><br><span class="line">	dm-linear super &lt;block range 1&gt;</span><br><span class="line">	dm-linear super &lt;block range 3&gt;</span><br><span class="line">/dev/block/by-name/dm-1 (vendor):</span><br><span class="line">    dm-linear super &lt;block range 2&gt;</span><br><span class="line">    dm-linear super &lt;block range 4&gt;</span><br></pre></td></tr></table></figure>
+
+<h4 id="1-8-1-3-DeviceMapper库创建-用户空间"><a href="#1-8-1-3-DeviceMapper库创建-用户空间" class="headerlink" title="1.8.1.3. DeviceMapper库创建(用户空间)"></a>1.8.1.3. DeviceMapper库创建(用户空间)</h4><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">auto</span> state = DeviceMapper::<span class="built_in">Instance</span>().<span class="built_in">GetState</span>(partition_name);</span><br><span class="line"><span class="keyword">if</span> (state == DmDeviceState::INVALID) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">CreateLogicalPartition</span>(<span class="built_in">GetSuperDevice</span>(), <span class="number">0</span> <span class="comment">/* metadata slot */</span>, partition_name,</span><br><span class="line">                                  <span class="literal">true</span> <span class="comment">/* force writable */</span>, kMapTimeout, path);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="type">static</span> <span class="type">bool</span> <span class="title">CreateLogicalPartition</span><span class="params">(<span class="type">const</span> LpMetadata&amp; metadata, <span class="type">const</span> LpMetadataPartition&amp; partition,</span></span></span><br><span class="line"><span class="params"><span class="function">                                   <span class="type">bool</span> force_writable, <span class="type">const</span> std::chrono::milliseconds&amp; timeout_ms,</span></span></span><br><span class="line"><span class="params"><span class="function">                                   <span class="type">const</span> std::string&amp; super_device, std::string* path)</span> </span>&#123;</span><br><span class="line">    DeviceMapper&amp; dm = DeviceMapper::<span class="built_in">Instance</span>();</span><br><span class="line"></span><br><span class="line">    DmTable table;</span><br><span class="line">    <span class="comment">// ---&gt; 1. 创建dm映射表</span></span><br><span class="line">    <span class="keyword">if</span> (!<span class="built_in">CreateDmTable</span>(metadata, partition, super_device, &amp;table)) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (force_writable) &#123;</span><br><span class="line">        table.<span class="built_in">set_readonly</span>(<span class="literal">false</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// ---&gt; 2. 根据映射表和target_device创建mapped_device</span></span><br><span class="line">    std::string name = <span class="built_in">GetPartitionName</span>(partition);</span><br><span class="line">    <span class="keyword">if</span> (!dm.<span class="built_in">CreateDevice</span>(name, table)) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (!dm.<span class="built_in">GetDmDevicePathByName</span>(name, path)) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (timeout_ms &gt; std::chrono::milliseconds::<span class="built_in">zero</span>()) &#123;</span><br><span class="line">    <span class="comment">// ---&gt; 3. 等待mapped_device创建完成, 超时销毁</span></span><br><span class="line">        <span class="keyword">if</span> (!<span class="built_in">fs_mgr_wait_for_file</span>(*path, timeout_ms, FileWaitMode::Exists)) &#123;</span><br><span class="line">            <span class="built_in">DestroyLogicalPartition</span>(name, &#123;&#125;);</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// ----&gt; 1. 创建映射表</span></span><br><span class="line"><span class="function"><span class="type">static</span> <span class="type">bool</span> <span class="title">CreateDmTable</span><span class="params">(<span class="type">const</span> LpMetadata&amp; metadata, <span class="type">const</span> LpMetadataPartition&amp; partition,</span></span></span><br><span class="line"><span class="params"><span class="function">                          <span class="type">const</span> std::string&amp; super_device, DmTable* table)</span> </span>&#123;</span><br><span class="line">    <span class="type">uint64_t</span> sector = <span class="number">0</span>;</span><br><span class="line">    <span class="comment">// 对应于一个子分区, 其中所属的extent range块已经被编排到metadata的extents段中, 是相连的. start是partition的first_extent_index, 往后num_extents个item都是属于该子分区的. 这个编排是在builder Init时通过ImportExtents函数做的</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="type">size_t</span> i = <span class="number">0</span>; i &lt; partition.num_extents; i++) &#123;</span><br><span class="line">        <span class="type">const</span> <span class="keyword">auto</span>&amp; extent = metadata.extents[partition.first_extent_index + i];</span><br><span class="line">        std::unique_ptr&lt;DmTarget&gt; target;</span><br><span class="line">        <span class="keyword">switch</span> (extent.target_type) &#123;</span><br><span class="line">            ...</span><br><span class="line">            <span class="keyword">case</span> LP_TARGET_TYPE_LINEAR: &#123;</span><br><span class="line">                <span class="type">const</span> <span class="keyword">auto</span>&amp; block_device = metadata.block_devices[extent.target_source];</span><br><span class="line">                std::string path;</span><br><span class="line">                <span class="built_in">GetPhysicalPartitionDevicePath</span>(metadata, block_device, super_device, &amp;path)</span><br><span class="line">                <span class="comment">// 对应每个extent range块,构造对应的target item(开始的扇区号,多少个扇区,block_device name, 映射的物理扇区的起始扇区号)</span></span><br><span class="line">                target = std::<span class="built_in">make_unique</span>&lt;DmTargetLinear&gt;(sector, extent.num_sectors, path,</span><br><span class="line">                                                          extent.target_data);</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            ...</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 每个extent range块构造的target item串联起来,放在table的targets下. target item的target_data是从小往大排的</span></span><br><span class="line">        <span class="keyword">if</span> (!table-&gt;<span class="built_in">AddTarget</span>(std::<span class="built_in">move</span>(target))) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        sector += extent.num_sectors;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (partition.attributes &amp; LP_PARTITION_ATTR_READONLY) &#123;</span><br><span class="line">        table-&gt;<span class="built_in">set_readonly</span>(<span class="literal">true</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ---&gt; 2. 根据映射表和target_device创建mapped_device</span></span><br><span class="line">dm.<span class="built_in">CreateDevice</span>(name, table)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">dm_ioctl</span> io;</span><br><span class="line">    <span class="built_in">InitIo</span>(&amp;io, name);</span><br><span class="line">    <span class="comment">// 通过ioctl创建dm设备</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">ioctl</span>(fd_, DM_DEV_CREATE, &amp;io)) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="built_in">LoadTableAndActivate</span>(name, table) &#123;</span><br><span class="line">        <span class="function">std::string <span class="title">ioctl_buffer</span><span class="params">(<span class="keyword">sizeof</span>(<span class="keyword">struct</span> dm_ioctl), <span class="number">0</span>)</span></span>;</span><br><span class="line">        <span class="comment">// ==========&gt; 2.1 调用映射表的序列化函数将前面的target_序列化输出到ioctl_buffer中</span></span><br><span class="line">        ioctl_buffer += table.<span class="built_in">Serialize</span>();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">struct</span> <span class="title class_">dm_ioctl</span>* io = <span class="built_in">reinterpret_cast</span>&lt;<span class="keyword">struct</span> dm_ioctl*&gt;(&amp;ioctl_buffer[<span class="number">0</span>]);</span><br><span class="line">        <span class="built_in">InitIo</span>(io, name);</span><br><span class="line">        io-&gt;data_size = ioctl_buffer.<span class="built_in">size</span>();</span><br><span class="line">        io-&gt;data_start = <span class="built_in">sizeof</span>(<span class="keyword">struct</span> dm_ioctl);</span><br><span class="line">        io-&gt;target_count = <span class="built_in">static_cast</span>&lt;<span class="type">uint32_t</span>&gt;(table.<span class="built_in">num_targets</span>());</span><br><span class="line">        <span class="keyword">if</span> (table.<span class="built_in">readonly</span>()) &#123;</span><br><span class="line">            io-&gt;flags |= DM_READONLY_FLAG;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//Load a table into the &#x27;inactive&#x27; slot for the device</span></span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">ioctl</span>(fd_, DM_TABLE_LOAD, io)) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">InitIo</span>(io, name);</span><br><span class="line">        <span class="comment">// 设备处于就绪状态或resume状态, 根据上面传入的io的flag决定. 没有带DM_SUSPEND_FLAG的flag, 是走resume状态</span></span><br><span class="line">        <span class="comment">/*If a table is present in the &#x27;inactive&#x27;</span></span><br><span class="line"><span class="comment"> 		 * slot, it will be moved to the active slot, then the old table from the active slot will be               _destroyed_.  Finally the device is resumed.</span></span><br><span class="line"><span class="comment"> 		 */</span></span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">ioctl</span>(fd_, DM_DEV_SUSPEND, io)) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">        &#125;    </span><br><span class="line">    &#125;    </span><br><span class="line">	<span class="comment">// 通过ioctl获取dm设备的状态</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">ioctl</span>(fd_, DM_DEV_STATUS, &amp;io) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="type">uint32_t</span> dev_num = <span class="built_in">minor</span>(io.dev);</span><br><span class="line">    <span class="comment">//dm-&lt;minor&gt; 设备对应io-&gt;name(target_device)绑定的mapped_device</span></span><br><span class="line">    *path = <span class="string">&quot;/dev/block/dm-&quot;</span> + std::<span class="built_in">to_string</span>(dev_num);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// ---&gt; 3. 等待mapped_device dm-&lt;minior&gt;创建完成, 超时销毁</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>在上面创建映射表并初始化dm设备的过程中, 最重要的参数是dmtarget的序列化做的工作</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ==========&gt; 2.1 调用映射表的序列化函数将前面的target_序列化输出到ioctl_buffer中</span></span><br><span class="line">ioctl_buffer += table.<span class="built_in">Serialize</span>();</span><br><span class="line"><span class="function">std::string <span class="title">DmTable::Serialize</span><span class="params">()</span> <span class="type">const</span> </span>&#123;</span><br><span class="line">    std::string table;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">const</span> <span class="keyword">auto</span>&amp; target : targets_) &#123;</span><br><span class="line">        table += target-&gt;<span class="built_in">Serialize</span>();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> table;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function">std::string <span class="title">DmTarget::Serialize</span><span class="params">()</span> <span class="type">const</span> </span>&#123;</span><br><span class="line">    <span class="comment">// Create a string containing a dm_target_spec, parameter data, and an</span></span><br><span class="line">    <span class="comment">// explicit null terminator.</span></span><br><span class="line">    <span class="function">std::string <span class="title">data</span><span class="params">(<span class="keyword">sizeof</span>(dm_target_spec), <span class="string">&#x27;\0&#x27;</span>)</span></span>;</span><br><span class="line">    <span class="comment">//构造头部, block_device_ + &quot; &quot; + std::to_string(physical_sector_); // target_data</span></span><br><span class="line">    data += <span class="built_in">GetParameterString</span>();</span><br><span class="line">    data.<span class="built_in">push_back</span>(<span class="string">&#x27;\0&#x27;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// The kernel expects each target to be 8-byte aligned.</span></span><br><span class="line">    <span class="type">size_t</span> padding = <span class="built_in">DM_ALIGN</span>(data.<span class="built_in">size</span>()) - data.<span class="built_in">size</span>();</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">size_t</span> i = <span class="number">0</span>; i &lt; padding; i++) &#123;</span><br><span class="line">        data.<span class="built_in">push_back</span>(<span class="string">&#x27;\0&#x27;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Finally fill in the dm_target_spec.</span></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">dm_target_spec</span>* spec = <span class="built_in">reinterpret_cast</span>&lt;<span class="keyword">struct</span> dm_target_spec*&gt;(&amp;data[<span class="number">0</span>]);</span><br><span class="line">    <span class="comment">// 开始的扇区号</span></span><br><span class="line">    spec-&gt;sector_start = <span class="built_in">start</span>();</span><br><span class="line">    <span class="comment">// 包含多少个扇区</span></span><br><span class="line">    spec-&gt;length = <span class="built_in">size</span>();</span><br><span class="line">    <span class="comment">// 这里的name对应dm-linear的name即&quot;linear&quot;, device-mapper驱动是通过target-type转到对应的插件去处理的</span></span><br><span class="line">    <span class="built_in">snprintf</span>(spec-&gt;target_type, <span class="built_in">sizeof</span>(spec-&gt;target_type), <span class="string">&quot;%s&quot;</span>, <span class="built_in">name</span>().<span class="built_in">c_str</span>());</span><br><span class="line">    <span class="comment">// 将本段的大小偏移量作为下一段dm_target_spec的起始, 多个dm_target_spec item首尾相连</span></span><br><span class="line">    spec-&gt;next = (<span class="type">uint32_t</span>)data.<span class="built_in">size</span>();</span><br><span class="line">    <span class="keyword">return</span> data;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>用户空间使用ioctl的步骤:</p>
+<ul>
+<li><p>先创建一个dm-ioctl和dm_target_spec对象</p>
+</li>
+<li><p>配置一下他们的参数</p>
+</li>
+<li><p>在<code>dm_target_spec</code>后面跟一个特定设备的特定参数(special param)</p>
+<p>将三者结合到dm-ioctl上，通过调用一下命令就可以在device mapper中load一个dm设备了</p>
+</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">dm_target_spec</span> &#123;</span><br><span class="line">	__u64 sector_start;</span><br><span class="line">	__u64 length;</span><br><span class="line">	__s32 status;		<span class="comment">/* used when reading from kernel only */</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Location of the next dm_target_spec.</span></span><br><span class="line"><span class="comment">	 * - When specifying targets on a DM_TABLE_LOAD command, this value is</span></span><br><span class="line"><span class="comment">	 *   the number of bytes from the start of the &quot;current&quot; dm_target_spec</span></span><br><span class="line"><span class="comment">	 *   to the start of the &quot;next&quot; dm_target_spec.</span></span><br><span class="line"><span class="comment">	 * - When retrieving targets on a DM_TABLE_STATUS command, this value</span></span><br><span class="line"><span class="comment">	 *   is the number of bytes from the start of the first dm_target_spec</span></span><br><span class="line"><span class="comment">	 *   (that follows the dm_ioctl struct) to the start of the &quot;next&quot;</span></span><br><span class="line"><span class="comment">	 *   dm_target_spec.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	__u32 next;</span><br><span class="line"></span><br><span class="line">	<span class="type">char</span> target_type[DM_MAX_TYPE_NAME];</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>相关ioctl源代码<a target="_blank" rel="noopener" href="http://opengrok.pt.xiaomi.com/opengrok2/xref/miui-q-umi-dev/kernel/">kernel</a>&#x2F;<a target="_blank" rel="noopener" href="http://opengrok.pt.xiaomi.com/opengrok2/xref/miui-q-umi-dev/kernel/msm-4.19/">msm-4.19</a>&#x2F;<a target="_blank" rel="noopener" href="http://opengrok.pt.xiaomi.com/opengrok2/xref/miui-q-umi-dev/kernel/msm-4.19/drivers/">drivers</a>&#x2F;<a target="_blank" rel="noopener" href="http://opengrok.pt.xiaomi.com/opengrok2/xref/miui-q-umi-dev/kernel/msm-4.19/drivers/md/">md</a>&#x2F;<a target="_blank" rel="noopener" href="http://opengrok.pt.xiaomi.com/opengrok2/xref/miui-q-umi-dev/kernel/msm-4.19/drivers/md/dm-ioctl.c">dm-ioctl.c</a></p>
+<p><img src="https://gitee.com/zhangliguang1/tuchuang/raw/master/img/20191121145257141_746207219.png" alt="device_map"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/vab/" rel="tag"># vab</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/11/12/OTA%E7%9B%B8%E5%85%B3/AB%E8%B0%83%E8%AF%95%E7%AC%94%E8%AE%B0/" rel="prev" title="AB调试笔记">
+      <i class="fa fa-chevron-left"></i> AB调试笔记
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/11/12/OTA%E7%9B%B8%E5%85%B3/Q%20recovery%20fastboot%E8%B0%83%E8%AF%95/" rel="next" title="Q动态分区 recovey fastbootd 调研">
+      Q动态分区 recovey fastbootd 调研 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-Q%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E8%B0%83%E7%A0%94"><span class="nav-number">1.</span> <span class="nav-text">1. Q动态分区调研</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-%E7%9B%B8%E5%85%B3%E6%96%87%E6%A1%A3"><span class="nav-number">1.1.</span> <span class="nav-text">1.1. 相关文档</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-%E4%BB%A3%E7%A0%81%E8%B7%AF%E5%BE%84"><span class="nav-number">1.2.</span> <span class="nav-text">1.2. 代码路径</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-%E5%AE%8F%E9%85%8D%E7%BD%AE"><span class="nav-number">1.3.</span> <span class="nav-text">1.3. 宏配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-4-%E5%88%B7%E6%9C%BA"><span class="nav-number">1.4.</span> <span class="nav-text">1.4. 刷机</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-4-1-fastbootd-commands"><span class="nav-number">1.4.1.</span> <span class="nav-text">1.4.1. fastbootd commands</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-5-super-partition-%E5%B8%83%E5%B1%80"><span class="nav-number">1.5.</span> <span class="nav-text">1.5. super partition 布局</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-5-1-%E6%A6%82%E8%A6%81"><span class="nav-number">1.5.1.</span> <span class="nav-text">1.5.1. 概要</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-5-2-%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.5.2.</span> <span class="nav-text">1.5.2. 实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-5-3-AB-non-ab-metadata%E7%9A%84%E9%85%8D%E7%BD%AE"><span class="nav-number">1.5.3.</span> <span class="nav-text">1.5.3. AB&#x2F;non_ab metadata的配置</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-6-%E5%BC%80%E6%9C%BA%E4%BF%AE%E6%94%B9"><span class="nav-number">1.6.</span> <span class="nav-text">1.6. 开机修改</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-7-%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E8%B0%83%E6%95%B4%E5%A4%A7%E5%B0%8F%E4%BB%A3%E7%A0%81%E8%B7%9F%E8%B8%AA"><span class="nav-number">1.7.</span> <span class="nav-text">1.7. 动态分区调整大小代码跟踪</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-7-1-%E6%9E%84%E9%80%A0builder-MetadataBuilder"><span class="nav-number">1.7.1.</span> <span class="nav-text">1.7.1. 构造builder(MetadataBuilder)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-7-1-1-%E8%A7%A3%E6%9E%90metadata%E8%BF%87%E7%A8%8B%E6%B6%89%E5%8F%8A%E5%88%B0%E7%9A%84%E7%9B%B8%E5%85%B3%E7%BB%93%E6%9E%84%E4%BD%93"><span class="nav-number">1.7.1.1.</span> <span class="nav-text">1.7.1.1. 解析metadata过程涉及到的相关结构体</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-7-1-2-%E8%AF%BB%E5%8F%96metadata%E9%85%8D%E7%BD%AE%E4%BF%A1%E6%81%AF"><span class="nav-number">1.7.1.2.</span> <span class="nav-text">1.7.1.2. 读取metadata配置信息</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-7-1-3-builder%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-number">1.7.1.3.</span> <span class="nav-text">1.7.1.3. builder初始化</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-7-2-builder-ResizePartition"><span class="nav-number">1.7.2.</span> <span class="nav-text">1.7.2. builder-&gt;ResizePartition</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-7-2-1-%E8%B0%83%E5%A4%A7%E5%88%86%E5%8C%BA"><span class="nav-number">1.7.2.1.</span> <span class="nav-text">1.7.2.1. 调大分区</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-7-3-%E8%BE%93%E5%87%BA%E6%96%B0%E7%9A%84metadata%E6%9B%B4%E6%96%B0%E5%88%B0disk%E4%B8%AD"><span class="nav-number">1.7.3.</span> <span class="nav-text">1.7.3. 输出新的metadata更新到disk中</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-7-4-%E5%B0%8F%E7%BB%93"><span class="nav-number">1.7.4.</span> <span class="nav-text">1.7.4. 小结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-8-map-partition"><span class="nav-number">1.8.</span> <span class="nav-text">1.8. map partition</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-8-1-device-mapper"><span class="nav-number">1.8.1.</span> <span class="nav-text">1.8.1. device-mapper</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-8-1-1-%E7%94%A8%E6%88%B7%E7%A9%BA%E9%97%B4%E7%9A%84%E6%93%8D%E4%BD%9C%E8%A7%84%E8%8C%83%EF%BC%9A"><span class="nav-number">1.8.1.1.</span> <span class="nav-text">1.8.1.1. 用户空间的操作规范：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-8-1-2-Q%E4%B8%8A%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E7%9A%84%E6%98%A0%E5%B0%84"><span class="nav-number">1.8.1.2.</span> <span class="nav-text">1.8.1.2. Q上动态分区的映射</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-8-1-3-DeviceMapper%E5%BA%93%E5%88%9B%E5%BB%BA-%E7%94%A8%E6%88%B7%E7%A9%BA%E9%97%B4"><span class="nav-number">1.8.1.3.</span> <span class="nav-text">1.8.1.3. DeviceMapper库创建(用户空间)</span></a></li></ol></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

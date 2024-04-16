@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="文件加密FBE&amp;DirectBoot模式介绍 1. File based EncryptionAndroid 7.0及以上版本提供基于文件的加密方式(FBE). 这种方式允许使用不同的密钥对不同的文件进行加密, 并且可以独立进行解密.Android 7.0为基于文件的加密引入了新的功能, 命名为Direct Boot. 它允许加密设备直接启动至锁定屏幕的状态. 在以前的版本中, 使用全局磁">
+<meta property="og:type" content="article">
+<meta property="og:title" content="文件加密FBE&amp;DirectBoot模式介绍">
+<meta property="og:url" content="https://liguangzhang.github.io/2018/10/12/OTA%E7%9B%B8%E5%85%B3/%E7%A1%AC%E4%BB%B6%E5%8A%A0%E5%AF%86%E6%95%B4%E7%90%86/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="文件加密FBE&amp;DirectBoot模式介绍 1. File based EncryptionAndroid 7.0及以上版本提供基于文件的加密方式(FBE). 这种方式允许使用不同的密钥对不同的文件进行加密, 并且可以独立进行解密.Android 7.0为基于文件的加密引入了新的功能, 命名为Direct Boot. 它允许加密设备直接启动至锁定屏幕的状态. 在以前的版本中, 使用全局磁">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://liguangzhang.github.io/_v_images/20190314173517721_1383852013.png">
+<meta property="og:image" content="https://liguangzhang.github.io/_v_images/20190315102422314_506081545.png">
+<meta property="og:image" content="https://liguangzhang.github.io/_v_images/20190315102511557_679987494.png">
+<meta property="og:image" content="https://liguangzhang.github.io/_v_images/20190315103423887_1682470034.png">
+<meta property="article:published_time" content="2018-10-12T10:15:54.000Z">
+<meta property="article:modified_time" content="2024-04-16T07:15:00.274Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="Android">
+<meta property="article:tag" content="FBE">
+<meta property="article:tag" content="FDE">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://liguangzhang.github.io/_v_images/20190314173517721_1383852013.png">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2018/10/12/OTA%E7%9B%B8%E5%85%B3/%E7%A1%AC%E4%BB%B6%E5%8A%A0%E5%AF%86%E6%95%B4%E7%90%86/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>文件加密FBE&DirectBoot模式介绍 | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2018/10/12/OTA%E7%9B%B8%E5%85%B3/%E7%A1%AC%E4%BB%B6%E5%8A%A0%E5%AF%86%E6%95%B4%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          文件加密FBE&DirectBoot模式介绍
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-10-12 18:15:54" itemprop="dateCreated datePublished" datetime="2018-10-12T18:15:54+08:00">2018-10-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 15:15:00" itemprop="dateModified" datetime="2024-04-16T15:15:00+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/%E5%8A%A0%E5%AF%86/" itemprop="url" rel="index"><span itemprop="name">加密</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>文件加密FBE&amp;DirectBoot模式介绍</p>
+<h1 id="1-File-based-Encryption"><a href="#1-File-based-Encryption" class="headerlink" title="1. File based Encryption"></a>1. File based Encryption</h1><p>Android 7.0及以上版本提供基于文件的加密方式(FBE). 这种方式允许使用不同的密钥对不同的文件进行加密, 并且可以独立进行解密.<br>Android 7.0为基于文件的加密引入了新的功能, 命名为Direct Boot. 它允许加密设备直接启动至锁定屏幕的状态. 在以前的版本中, 使用全局磁盘加密(FDE)的设备,<br>用户需要在任何数据能够被访问前提供认证凭证(图形&#x2F;密码&#x2F;指纹), 来预防设备可能被进行的任何基本操作.<br>如: 闹钟无法执行, 辅助功能服务无法使用, 电话无法接受通话请求, 除了最基本的紧急通话操作.<br>使用基于文件加密的设备, 应用可以了解当前加密的情况, 同时被允许执行限定范围内的操作. 这些操作能够在用户提供认证凭证前执行, 同时依然能够保护私有用户信息.<br>在使用FBE的设备上, 设备的每个用户对于设备应用均拥有两个存储空间:</p>
+<ul>
+<li>凭证加密存储区间(<code>Credential Encrypted (CE)</code>), 这是缺省的存储空间, 并且只有当用户解锁设备后才可用.</li>
+<li>设备加密存储空间(<code>Device Encrypted (DE)</code>), 该存储空间在Direct Boot模式和用户解锁设备后均可用.</li>
+</ul>
+<h2 id="1-1-FDE-Vs-FBE"><a href="#1-1-FDE-Vs-FBE" class="headerlink" title="1.1. FDE Vs FBE:"></a>1.1. FDE Vs FBE:</h2><ul>
+<li>FBE: FILE BASED ENCRYPTION:<ul>
+<li>每一个用户一个CE key，CE key的加密信息存储在data分区的相应文件夹中。</li>
+<li>每个用户对应一个DE key，除此之外，还有一个全局的DE key用来为与用户非强关联的文件夹设置加密。</li>
+<li>设备未解锁之前，可以使用CE区域以外的文件夹。</li>
+<li>加密针对文件夹级别，加密机制利用了Ext4 文件系统的加密特性。</li>
+<li>这种区分能够使工作模型更为安全, 因为它允许在同一时间能够保护多个用户，并不是基于一个启动时密码。</li>
+</ul>
+</li>
+<li>FDE（FULL DISK ENCTYPTION）<ul>
+<li>只有一个key，key的加密信息存储在磁盘尾部区域。</li>
+<li>设备未解锁之前，data目录是以tmpfs格式挂载的data分区处于完全不可使用状态。</li>
+<li>加密针对的是分区级别，加密机制利用了dm-crypt加密特性。</li>
+</ul>
+</li>
+</ul>
+<h2 id="1-2-Dependencies"><a href="#1-2-Dependencies" class="headerlink" title="1.2. Dependencies"></a>1.2. Dependencies</h2><p>设备必须满足以下的要求来安全使用AOSP的FBE实现:</p>
+<ul>
+<li><p>Kernel支持ext4加密(相关的kernel config为: EXT4_FS_ENCRYPTION)</p>
+</li>
+<li><p>Keymaster支持1.0&#x2F;2.0的HAL版本. 0.3版本的keymaster hal并不提供相关需要的属性支持, 而且不能保证加密密钥的安全保护机制.</p>
+</li>
+<li><p>Keymaster&#x2F;Keystore 和 GateKeeper必须在可信任执行环境(TEE)中实现, 用以提供对DE密钥的保护, 该情况下, 未认证的系统OS(自行输入到设备上的OS)将不能简单的访问DE密钥.</p>
+</li>
+<li><p>kernel中提供的加密性能必须达到使用AES-XTS时最低为50MB&#x2F;s来保证良好的用户体验.</p>
+</li>
+<li><p>Verified Boot机制下 Keymaster root of trust 必须绑定至keymaster的初始化过程中. 这将保证设备加密证书不会被未验证的操作系统访问到</p>
+</li>
+<li><p>bootloader passes the following information to the TEE after boot&#x2F;recovery partition verification and</p>
+<p>TEE initialization to bind the Keymaster root of trust:</p>
+<ul>
+<li>the public key that was used to sign the boot partition</li>
+</ul>
+</li>
+</ul>
+<h2 id="1-3-加密规则-Encryption-policy"><a href="#1-3-加密规则-Encryption-policy" class="headerlink" title="1.3. 加密规则 Encryption policy"></a>1.3. 加密规则 Encryption policy</h2><p>Ext4加密可以将加密规则应用到文件夹级别. 当设备的用户数据分区初次创建时, 由init脚本来赋值基本的结构和规则. 该脚本同时会触发来创建第一个用户(0用户)的CE&#x2F;DE密钥, 并且定义那些目录需要由该密钥进行加密.<br>当其余的用户和工作模式被创建时, 相关所需的密钥会被创建, 相关的存储目录会被创建并且由加密规则将密钥和目录链接起来.<br>在当前的AOSP实现中, 加密规则被硬编码到以下的位置:<br><code>/system/extras/ext4_utils/ext4_crypt_init_extensions.cpp</code><br>可以通过在这个文件中增加例外的规则来避免指定的目录被加密, 目录可以加入到directories_to_exclude列表中. 如果进行了该类的修改, 设备提供商必须包含增加SElinux的规则, 以使得只有必须使用未加密目录的应用才能获取访问权限, 其他未授权的应用必须被排除在外.</p>
+<h2 id="1-4-打开文件加密特性"><a href="#1-4-打开文件加密特性" class="headerlink" title="1.4. 打开文件加密特性"></a>1.4. 打开文件加密特性</h2><p>fstab中指定标志位 fileencryption 时默认开启文件加密。<br><code>/dev/block/platform/soc.0/f9824900.sdhci/by-name/userdata /data ext4 noatime,nosuid,nodev,barrier=1,data=ordered,nomblk_io_submit,noauto_da_alloc,errors=panic wait,check,fileencryption</code><br>同时可以通过以下方法来测试设备上的FBE实现. 可以指定标志位:<br>forcefdeorfbe<br>开启该标志位后，在开发者选项中，会多出一个菜单<code>convert encryption to file</code>。用户点击后，可以开启设备的文件加密特性。<br>fastboot模式中也可以转变FBE模式:<br><code>$ fastboot --wipe-and-use-fbe</code></p>
+<h2 id="1-5-文件加密相关流程"><a href="#1-5-文件加密相关流程" class="headerlink" title="1.5. 文件加密相关流程"></a>1.5. 文件加密相关流程</h2><h3 id="1-5-1-Implementation"><a href="#1-5-1-Implementation" class="headerlink" title="1.5.1. Implementation"></a>1.5.1. Implementation</h3><ul>
+<li><p>Setting中开启文件加密</p>
+<ul>
+<li>forcefdeorfbe</li>
+<li>forcefdeorfbe<br>&#x3D;&#x3D;&gt; covert to file encryption<br>MASTER_CLEAR-&gt; wipe –reason&#x3D;convert_fbe –&gt; wipe_data –&gt;<br>format –&gt; make_ext4fs_directory(CONVERT_FBE_DIR)</li>
+</ul>
+</li>
+<li><p>fs阶段 mount_all时判断是否进入文件加密模式</p>
+<ul>
+<li>MF_FILEENCRYPTION</li>
+<li>MF_FORCEFDEORFBE&amp;data&#x2F;convert_fbe 文件存在<ul>
+<li>install_keyring 调用add_key 创建一个session keyring</li>
+<li>密钥环创建完成后，设置属性：<ul>
+<li>ro.crypto.state encrypted</li>
+<li>ro.crypto.type file</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>post-fs-data （late-init阶段 trigger）installkey 前置条件：ro.crypto.type&#x3D;file</p>
+<ul>
+<li><p>installkey</p>
+<ul>
+<li>创建目录 &#x2F;data&#x2F;unencrypted</li>
+<li>启动vdc service 对vold下发命令 cryptfs enablefilecrypto<ul>
+<li>创建&#x2F;data&#x2F;unencrypted&#x2F;key 目录</li>
+<li>读取随机密钥ikey1： &#x2F;dev&#x2F;urandom 读取 64字节作为文件加密的主密钥</li>
+<li>读取密钥种子 &#x2F;dev&#x2F;urandom 读取1 &lt;&lt; 14字节存储到 secdiscardable文件中</li>
+<li>将scrypt扩展因子存储到stretching文件中 （ro.crypto.scrypt_params）</li>
+<li>读取加密盐 &#x2F;dev&#x2F;urandom 读取1 &lt;&lt; 4字节存储到salt文件中</li>
+<li>根据auth token（验证令牌）、密钥种子、扩展因子、加密盐生成APPLICATION_ID</li>
+<li>TEE根据auth token和 APPLICATION_ID 生成<code>keymaster_key_blob</code>（加密数据块）数据保存在 keymaster_key_blob文件中。</li>
+<li>TEE根据auth token、APPLICATION_ID、keymaster_key_blob、随机密钥ikey1生成加密主键保存在encrypted_key文件中。</li>
+<li>对ikey1 做两次Sha512算法处理，得到ikey1的摘要key_ref2</li>
+<li>搜索keyring（找到前面fs阶段调用add_key建立的session keyring），返回keyring的序列号</li>
+<li>将当前的ikey1经过封装后加入到该keyring中。<ul>
+<li>ikey1封装成payload数据块。<ul>
+<li>mode: EXT4_ENCRYPTION_MODE_AES_256_XTS</li>
+<li>ikey1</li>
+<li>ikey1-&gt;size</li>
+</ul>
+</li>
+<li>add_key( “logon”, ext4:key_ref2, payload, session-keyring )</li>
+</ul>
+</li>
+<li>将ikey1的摘要key_ref2存储到&#x2F;data&#x2F;unencrypted&#x2F;key&#x2F;ref 文件中</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>init_user0 (ro.crypto.type&#x3D;file)</p>
+<ul>
+<li><p>创建目录：</p>
+<ul>
+<li>data&#x2F;misc&#x2F;vold&#x2F;user_keys</li>
+<li>data&#x2F;misc&#x2F;vold&#x2F;user_keys&#x2F;ce</li>
+<li>data&#x2F;misc&#x2F;vold&#x2F;user_keys&#x2F;de</li>
+<li>data&#x2F;misc&#x2F;vold&#x2F;user_keys&#x2F;de&#x2F;0</li>
+<li>data&#x2F;misc&#x2F;vold&#x2F;user_keys&#x2F;ce&#x2F;0</li>
+</ul>
+</li>
+<li><p>create_and_install_user_keys</p>
+<ul>
+<li>为user0 创建其对应的ce&#x2F;de key<ul>
+<li>读取&#x2F;dev&#x2F;urandom 创建 ce_ikey1, de_ikey1</li>
+<li>在data&#x2F;misc&#x2F;vold&#x2F;user_keys&#x2F;ce&#x2F;0下根据ce_ikey1计算存储各个加密过程的文件。 存储到data&#x2F;misc&#x2F;vold&#x2F;user_keys&#x2F;ce&#x2F;0&#x2F;current</li>
+<li>在data&#x2F;misc&#x2F;vold&#x2F;user_keys&#x2F;de&#x2F;0下根据de_ikey1计算存储各个加密过程的文件。 存储到data&#x2F;misc&#x2F;vold&#x2F;user_keys&#x2F;de&#x2F;0&#x2F;</li>
+<li>加密过程文件： version、secdiscardable、stretching、salt、keymaster_key_blob</li>
+<li>将ce_ikey1,de_ikey1添加到keyring中。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>load_all_de_keys将根据加密过程文件进行解密出对应的de_key并安装到session-keyring中。</p>
+</li>
+<li><p>e4crypt_prepare_user_storage(DE) 准备DE区域文件夹，并设置加密策略. 以空token和seceret调用e4crypt_unlock_user_key 计算ce_key,或初始化ce_key</p>
+<ul>
+<li><p>e4crypt_prepare_user_storage</p>
+<ul>
+<li><p>&#x2F;data&#x2F;misc_de&#x2F;0</p>
+</li>
+<li><p>&#x2F;data&#x2F;system_de&#x2F;0</p>
+</li>
+<li><p>&#x2F;data&#x2F;user_de&#x2F;0&#x2F;</p>
+</li>
+<li><p>加密策略存储在文件系统级别，通过</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ioctl (fd, EXT4_IOC_SET_ENCRYPTION_POLICY | EXT4_IOC_GET_ENCRYPTION_POLICY, &amp; ext4_encryption_policy)</span><br></pre></td></tr></table></figure>
+
+<p>，主要是master_key_descriptor字段，保存了de_key的摘要信息。如果文件夹是空文件夹，则执行SET，非空则GET，并校验policy信息是否正确。</p>
+<ul>
+<li>e4crypt_unlock_user_key<ul>
+<li>前置条件 ro.crypto.type&#x3D;file persist.sys.emulate_fbe&#x3D;false</li>
+<li>解密的流程与前面create_and_install_user_keys的思路基本一致。在<code>/data/misc/vold/user_keys/&lt;userid&gt;/current</code>目录下读取<strong>version、secdiscardable、stretching、salt、keymaster_key_blob、encrypted_key及auth 解出加密键 ce_key</strong>。将解出的key（对应前面的随机key）进行两次Sha512计算得出摘要。</li>
+<li>将计算出的ce_key，摘要作为descriptor，add logon key 到 session-keyring中。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="1-6-ext4-加密"><a href="#1-6-ext4-加密" class="headerlink" title="1.6. ext4 加密"></a>1.6. ext4 加密</h2><p>AOSP实现使用kernel中的ext4加密功能, kernel被配置为:</p>
+<ul>
+<li>使用XTS模式的 AES-256 加密文件内容.</li>
+<li>使用CBC-CTS模式的AES-256 加密文件名.<br>密钥管理:</li>
+<li>使用512位的AES-XTS密钥作为文件的加密密钥</li>
+<li>它被保存在TEE中的另一份密钥进行加密，加密之后保存到encrypt_key文件中</li>
+<li>如果需要使用TEE密钥, 必须满足以下三个条件:<ul>
+<li>验证令牌. The auth token<br>Auth token是由GateKeeper在用户成功登录时产生的加密令牌. TEE只有在正确的加密令牌被提供时才能够对AES-XTS密钥进行处理. 如果当前用户并没有证书, 那么验证的令牌将不被使用。</li>
+<li>扩展证书. The stretched credential<br>Stretched credential是用户的证书, 同时经过了加密算法和加盐的处理. 并且在由lock setting服务传递给vold进行加密运算前, 还进行过hash处理. 该证书同所有通过APPLICATION_ID进行的提权行为绑定, 并通过TEE中的密钥进行加密. 如果用户没有证书, 该扩展证书将不存在或者没有必要使用.</li>
+<li>随机hash. The “secdiscardable hash”<br><code>Secdiscardable hash</code>是一个随机的16KB单独存放的文件, 用来重建密钥, 密码种子. 这份文件将在密钥删除时同样被安全删除掉, 或者被以其他方式再加密. 这个额外的保护将限制攻击者必须使用这个文件重建密钥. 这同样通过APPLICATION_ID同TEE中的密钥进行绑定.</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>所有的DE KEY、 默认密码的CE KEY及global key，对应空的token、空的secret、空的用户证书，保证了不需要用户参与即可解锁。APPLICATION_ID可以理解为同TEE的一次会话连接ID。</p>
+</blockquote>
+<h2 id="1-7-密钥管理"><a href="#1-7-密钥管理" class="headerlink" title="1.7. 密钥管理"></a>1.7. 密钥管理</h2><p><img src="/_v_images/20190314173517721_1383852013.png" alt="密钥管理"></p>
+<h2 id="1-8-FBE开机流程"><a href="#1-8-FBE开机流程" class="headerlink" title="1.8. FBE开机流程"></a>1.8. FBE开机流程</h2><p>recoveryinitvoldformat_volume(&#x2F;data)&#x2F;data&#x2F;convert_fbemount_allinstall_keyringro.crypto.state&#x3D;encryptedro.encrypto.type&#x3D;fileinstallkeyvdc vold enablefileencryptoinit_user0mkdirdecrypt key from&#x2F;data&#x2F;uncrypt&#x2F;refe4crypt_policy_ensure(dir)apply a global policy to all &#x2F;data&#x2F; folderscreated viamkdirenablefileencryptodecrypt key&#x2F;data&#x2F;uncrypted&#x2F;refe4crypt_initialize_global_de&#x2F;data&#x2F;unencrypted&#x2F;keyversionsecdiscardablesaltstretchingencrypted_keykeymaster_key_blobadd key to keyring Logon&#x2F;dev&#x2F;unrandom 64bite4crypt_init_user0create_and_install_user_keys&#x2F;data&#x2F;misc&#x2F;vold&#x2F;user_keys&#x2F;de&#x2F;0&#x2F;data&#x2F;misc&#x2F;vold&#x2F;user_keys&#x2F;ce&#x2F;0&#x2F;currentversionsecdiscardalbesaltstrectchingencrypted_keykeymaster_key_blobinstall_key(dekey&amp;cekey)add_key to keyring logonload_all_de_keysdecrypt all dekey from diradd all key to keyringencrypt_prepare_user_storage(de)&#x2F;data&#x2F;system&#x2F;users&#x2F;0&#x2F;data&#x2F;misc&#x2F;user&#x2F;0&#x2F;data&#x2F;misc&#x2F;profiles&#x2F;cur&#x2F;0&#x2F;data&#x2F;misc&#x2F;profiles&#x2F;cur&#x2F;0&#x2F;forign-dex&#x2F;&#x2F;data&#x2F;misc_de&#x2F;0&#x2F;data&#x2F;system_de&#x2F;0&#x2F;data&#x2F;user_de&#x2F;0e4crypt_policy_ensure(dir)已经设置过加密, check当前的key_ref与node中保存的key_ref是否相同EXT4_IOC_GET_ENCRYPTION_POLICYioctl(fd,EXT4_IOC_SET_ENCRYPTION_POLICY,ext4_encryption_policy)fsinode set EXT4_INODE_ENCRYPT flag 访问文件夹时,会check EXT4_INODE_ENCRYPT flag如果有, 说明已经加密,会进行request_key的操作,policy&#x3D;&#x3D;key_refconvert_to_file_encryption–wipe-data-reason&#x3D;convert_fbeMF_FORCEFDEORFBEyesreboot生成reboot&#x2F;data&#x2F;convert_fbe &amp;&amp; MF_FORCEFDEORFBEyesro.crypto.type is fileyesin directories_to_exclude&#x2F;data&#x2F;的下级目录no&#x2F;data&#x2F;uncrypted&#x2F;key existyesno2-Sha512&#x2F;data&#x2F;misc&#x2F;vold&#x2F;user_keys&#x2F;de&#x2F;0 existno 123查询之前保存到内存中的key_ref信息dir is emptynot emptydir is empty</p>
+<h2 id="1-9-解锁流程"><a href="#1-9-解锁流程" class="headerlink" title="1.9. 解锁流程"></a>1.9. 解锁流程</h2><p>AMSUserControllervoldbootAnimationCompletefinishBootingsendBootCompletedLockedfinishUserBootmaybeUnlockUserunlockUserClearedunlockUserKeyunlock_user_keyparse_hex(token, secret)retrieveKeydecrypt ce key from:&#x2F;data&#x2F;misc&#x2F;vold&#x2F;user_keys&#x2F;ce&#x2F;0&#x2F;currentversionsecdiscardablesaltstretchingencrypted_keykeymaster_key_blobadd ce key to keyringsend prepare_user_storage to volde4crypt_unlock_user_key(ce)lookup ce_key_refs from s_ce_key_raw_refs:&#x2F;data&#x2F;system_ce&#x2F;0&#x2F;data&#x2F;misc_ce&#x2F;0&#x2F;data&#x2F;media&#x2F;0&#x2F;data&#x2F;data&#x2F;data&#x2F;user&#x2F;<userid>ensure_policy(dir)add user to mLocalUnlockedUsersfinishUserUnlockingonBeforeUnlockUserprepareUserDataprepareUserDataLIprepareUserStorage”ro.crypto.file is file&amp;&amp;user not in mLocalUnlockedUsers”yessuccess</p>
+<h2 id="1-10-加解密流程图"><a href="#1-10-加解密流程图" class="headerlink" title="1.10. 加解密流程图"></a>1.10. 加解密流程图</h2><p><img src="/_v_images/20190315102422314_506081545.png" alt="加密"><br><img src="/_v_images/20190315102511557_679987494.png" alt="解密"></p>
+<h1 id="2-Linux-key-retention-service"><a href="#2-Linux-key-retention-service" class="headerlink" title="2. Linux key retention service"></a>2. Linux key retention service</h1><p>在 Linux 内核中缓存身份验证数据。远程文件系统和其他内核服务可以使用这个服务来管理密码学、身份验证标记、跨域用户映射和其他安全问题。它还使 Linux 内核能够快速访问所需的密钥，并可以用来将密钥操作（比如添加、更新和删除）委托给用户空间。<br>密钥的属性:</p>
+<ul>
+<li>序列号（Serial number）：一个惟一的 32 位非零正数</li>
+<li>类型（Type）：Linux 密钥保留服务定义两个标准密钥类型：user 和 keyring。要添加新的密钥类型，必须由一个内核服务注册它。用户空间程序不允许创建新的密钥类型</li>
+<li>描述（Description）：一个描述密钥的可输出字符串。这个属性还可以用来执行搜索操作</li>
+<li>访问控制信息（Access control information）：每个密钥有一个所有者 ID、一个 GID 和一个权限掩码，权限掩码表示如何响应用户级或内核级程序。权限掩码给四个可能的密钥访问者类型各分配 8 位：所有者、用户、组和其他。</li>
+<li>密钥类型 (预定义的密钥类型)<ul>
+<li>keyring</li>
+<li>user</li>
+<li>logon</li>
+</ul>
+</li>
+</ul>
+<h2 id="2-1-访问控制信息"><a href="#2-1-访问控制信息" class="headerlink" title="2.1. 访问控制信息"></a>2.1. 访问控制信息</h2><table>
+<thead>
+<tr>
+<th align="center">访问控制信息</th>
+<th align="center">UID</th>
+<th align="center">GID</th>
+<th align="center">Other</th>
+<th align="center">Permission Granted</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">01000000</td>
+<td align="center">00010000</td>
+<td align="center">00000100</td>
+<td align="center">00000001</td>
+<td align="center">View</td>
+</tr>
+<tr>
+<td align="center">02000000</td>
+<td align="center">00020000</td>
+<td align="center">00000200</td>
+<td align="center">00000002</td>
+<td align="center">Read</td>
+</tr>
+<tr>
+<td align="center">04000000</td>
+<td align="center">00040000</td>
+<td align="center">00000400</td>
+<td align="center">00000004</td>
+<td align="center">Write</td>
+</tr>
+<tr>
+<td align="center">08000000</td>
+<td align="center">00080000</td>
+<td align="center">00000800</td>
+<td align="center">00000008</td>
+<td align="center">Search</td>
+</tr>
+<tr>
+<td align="center">10000000</td>
+<td align="center">00100000</td>
+<td align="center">00001000</td>
+<td align="center">00000010</td>
+<td align="center">Link</td>
+</tr>
+<tr>
+<td align="center">20000000</td>
+<td align="center">00200000</td>
+<td align="center">00002000</td>
+<td align="center">00000020</td>
+<td align="center">Set Attribute</td>
+</tr>
+</tbody></table>
+<p><img src="/_v_images/20190315103423887_1682470034.png" alt="keyring 钥匙环"></p>
+<h3 id="2-1-1-keyring"><a href="#2-1-1-keyring" class="headerlink" title="2.1.1. keyring"></a>2.1.1. keyring</h3><p>Keyrings are special key types that may contain links to sequences of other keys of any type. If this interface is used to create a keyring.<br>keyring 包含一组到其他密钥或 keyring 的链接。</p>
+<ul>
+<li>线程特有的</li>
+<li>进程特有的</li>
+<li>会话特有的</li>
+<li>用户特有的会话</li>
+<li>用户默认的会话<br>用户特有的会话 keyring 通常会链接到一个会话特有的 keyring。<br>登录进程将绑定到用户默认的会话 keyring，直到创建另一个会话为止。</li>
+</ul>
+<h4 id="2-1-1-1-SESSION-KEYRING"><a href="#2-1-1-1-SESSION-KEYRING" class="headerlink" title="2.1.1.1. SESSION-KEYRING"></a>2.1.1.1. SESSION-KEYRING</h4><p>进程的session-keyring能够被其fork clone的进程保留。新进程可以通过设置uid、gid继承session<br>当指向这个session-keyring的最后一个进程终止后，该session会被杀掉。<br>进程可以创建新的session，也可以重新绑定已经存在的session。</p>
+<h3 id="2-1-2-Linux-key相关的系统调用"><a href="#2-1-2-Linux-key相关的系统调用" class="headerlink" title="2.1.2. Linux key相关的系统调用"></a>2.1.2. Linux key相关的系统调用</h3><ul>
+<li>add_key 在用户空间中操作密钥<br>add_key 系统调用用来创建类型为 type、长度为 plen 的密钥。密钥描述由 desc 定义，它的有效内容由 payload 指定。密钥链接到 keyring。密钥类型可以是 user 或 keyring或logon（新增，与user类型的区别是不允许读payload的内容）。其他任何密钥类型必须已经通过内核服务向内核注册，然后才能使用。</li>
+<li>request_key 由ext4 文件系统层调用<br>request_key 系统调用搜索一个进程 keyring，寻找一个密钥是否匹配查询的type和description。<br>查询不到返回ENOKEY（android中 Required key not available）</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">|-exam_dir</span><br><span class="line">       |-encrypt_file  &quot;abcd&quot;            read  modify rename ok</span><br><span class="line">       |-encrypt_dir</span><br><span class="line">	      |-encrypt_file1 &quot;abcd&quot;</span><br><span class="line">                |-sub_dir                         mkdir touch &quot;No such file or directory&quot;    (no process inherit）</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">继承权限的有完全的访问读写权限, 没有继承的进程能查看修改当前已经有的文件，没法创建新的</span></span><br><span class="line">|-exam_dir</span><br><span class="line">       |-GWblA3FA88KbBtt70xeCHC  &quot;?&quot;                   mkdir create  mv &quot;No such file or directory&quot;</span><br><span class="line">       |-i5,V3FkRLu2LWiq8kqJSKC                              chmod   ok     rm ok</span><br><span class="line">	      |-B,W714L8gi9jCZBChCUosA &quot;?&quot;             modify read  &quot;Required key not available&quot;</span><br><span class="line">                |-iDxJ0XhpXRowbkO2iPQHID</span><br></pre></td></tr></table></figure>
+
+<h1 id="3-在应用中支持Direct-Boot"><a href="#3-在应用中支持Direct-Boot" class="headerlink" title="3. 在应用中支持Direct Boot"></a>3. 在应用中支持Direct Boot</h1><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">application</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:directBootAware</span>=<span class="string">&quot;true&quot;</span>   <span class="attr">适用所有应用</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:defaultToDeviceProtectedStorage</span>=<span class="string">&quot;true&quot;</span>&gt;</span>   默认使用DE目录存储  仅适用于系统应用</span><br></pre></td></tr></table></figure>
+
+<p>应用级别的directBootAware作用是表明该应用中的所有组件都是已经和加密相关的.<br>当DE区域解锁以后，应用可以收到<code>LOCKED_BOOT_COMPLETED</code>的广播，定义了<code>directBootAware</code>的组件可以使用<br>即DE区域解锁以后，CE区域解锁之前，只有定义<code>directBootAware</code>的组件可以使用<br><code>Context.createDeviceProtectedStorageContext()</code><br>使用此上下文执行的所有存储 API 调用均访问设备加密存储（DE）<br><code>Context.createCredentialProtectedStorageContext()</code><br>使用此上下文执行的所有存储 API 调用均访问凭证加密存储（CE）<br>Android7.0 上默认的应用存储空间指向CE区间。<br><code>defaultToDeviceProtectedStorag</code>e属性将缺省的应用存储空间由原来的指向CE区间重新连接指向DE区间。<br>使用该属性标志的应用必须仔细调整所有存储于缺省空间的敏感数据，将其中的敏感数据修改路径存储至CE空间. 使用标志的设备提供商应用也必须仔细考虑,<br>在存储相关数据时, 必须确保在DE空间内不包含用户信息相关的内容.<br><code>Context.isCredentialProtectedStorage() Context.isDeviceProtectedStorage()</code></p>
+<blockquote>
+<p>此处 CE目录 DE目录 目前生效的只有&#x2F;data&#x2F;user|user_ce&#x2F;目录</p>
+</blockquote>
+<p>重启后一旦用户解锁了设备，您的应用即可切换至访问凭据加密存储，并使用依赖用户凭据的常规系统服务。<br>应用需要监听 <code>ACTION_USER_UNLOCKED</code>广播，来确定用户已经解锁了CE区域。<br>或者可以接收现有 <code>ACTION_BOOT_COMPLETED</code> 消息，该消息现在表明设备已启动，且用户已解锁设备。<br>可以通过调用 <code>UserManager.isUserUnlocked()</code>直接查询用户是否已解锁设备<br>当设备解锁后，可能需要将现有数据迁移到设备加密存储。<br><code>Context.moveSharedPreferencesFrom(context，filename)</code><br><code>Context.moveDatabaseFrom(context, filename)</code><br>根据应用自身情况决定哪些数据需要迁移，不应该将用户的私密信息迁移到DE区域<br>默认情况下，应用不会在“直接启动”模式下运行。如果应用需要在“直接启动”模式下进行操作，您可以注册在此模式期间应运行的应用组件。 对于需要在“直接启动”模式下运行的应用，常见的一些用例包括：</p>
+<ul>
+<li>已安排通知的应用，如闹钟应用。</li>
+<li>提供重要用户通知的应用，如短信应用。</li>
+<li>提供无障碍服务的应用，如 Talkback。<br>如果应用在“直接启动”模式下运行时需要访问数据，则使用设备加密存储。<br>设备加密存储包含使用密钥加密的数据，仅在设备已成功执行验证启动后密钥才可用。</li>
+</ul>
+<p>对于应使用与用户凭据（如 PIN 或密码）关联的密钥加密的数据，使用凭据加密存储。凭据加密存储仅在用户已成功解锁设备后可用，直到用户再次重启设备。 如果用户在解锁设备后启用锁定屏幕，则不会锁定凭据加密存储。</p>
+<h2 id="3-1-支持DirectBoot的相关应用"><a href="#3-1-支持DirectBoot的相关应用" class="headerlink" title="3.1. 支持DirectBoot的相关应用:"></a>3.1. 支持DirectBoot的相关应用:</h2><p>vold负责提供android中管理存储设备和卷标的功能. FBE向vold提供了额外的新命令, 以支持在多用户情况下对于CE&#x2F;DE的密钥进行管理的功能.<br>使用kernel支持的基于ext4 encryption的加密属性, 很多系统应用包括锁屏界面和SystemUI都被修改以支持FBE和Direct Boot功能.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Android/" rel="tag"># Android</a>
+              <a href="/tags/FBE/" rel="tag"># FBE</a>
+              <a href="/tags/FDE/" rel="tag"># FDE</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/10/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/%E4%BD%8E%E5%AD%98%E5%82%A8%E6%9C%BA%E5%88%B6%E8%AF%B4%E6%98%8E/" rel="prev" title="低存储机制说明">
+      <i class="fa fa-chevron-left"></i> 低存储机制说明
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/10/21/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E8%AE%BE%E7%BD%AE%E4%B8%AD%E7%BB%9F%E4%B8%80%E6%90%9C%E7%B4%A2%E6%8E%A5%E5%8F%A3%E5%AE%9E%E7%8E%B0/" rel="next" title="Settings 搜索框架调研">
+      Settings 搜索框架调研 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-File-based-Encryption"><span class="nav-number">1.</span> <span class="nav-text">1. File based Encryption</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-FDE-Vs-FBE"><span class="nav-number">1.1.</span> <span class="nav-text">1.1. FDE Vs FBE:</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-Dependencies"><span class="nav-number">1.2.</span> <span class="nav-text">1.2. Dependencies</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-%E5%8A%A0%E5%AF%86%E8%A7%84%E5%88%99-Encryption-policy"><span class="nav-number">1.3.</span> <span class="nav-text">1.3. 加密规则 Encryption policy</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-4-%E6%89%93%E5%BC%80%E6%96%87%E4%BB%B6%E5%8A%A0%E5%AF%86%E7%89%B9%E6%80%A7"><span class="nav-number">1.4.</span> <span class="nav-text">1.4. 打开文件加密特性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-5-%E6%96%87%E4%BB%B6%E5%8A%A0%E5%AF%86%E7%9B%B8%E5%85%B3%E6%B5%81%E7%A8%8B"><span class="nav-number">1.5.</span> <span class="nav-text">1.5. 文件加密相关流程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-5-1-Implementation"><span class="nav-number">1.5.1.</span> <span class="nav-text">1.5.1. Implementation</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-6-ext4-%E5%8A%A0%E5%AF%86"><span class="nav-number">1.6.</span> <span class="nav-text">1.6. ext4 加密</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-7-%E5%AF%86%E9%92%A5%E7%AE%A1%E7%90%86"><span class="nav-number">1.7.</span> <span class="nav-text">1.7. 密钥管理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-8-FBE%E5%BC%80%E6%9C%BA%E6%B5%81%E7%A8%8B"><span class="nav-number">1.8.</span> <span class="nav-text">1.8. FBE开机流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-9-%E8%A7%A3%E9%94%81%E6%B5%81%E7%A8%8B"><span class="nav-number">1.9.</span> <span class="nav-text">1.9. 解锁流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-10-%E5%8A%A0%E8%A7%A3%E5%AF%86%E6%B5%81%E7%A8%8B%E5%9B%BE"><span class="nav-number">1.10.</span> <span class="nav-text">1.10. 加解密流程图</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-Linux-key-retention-service"><span class="nav-number">2.</span> <span class="nav-text">2. Linux key retention service</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-%E8%AE%BF%E9%97%AE%E6%8E%A7%E5%88%B6%E4%BF%A1%E6%81%AF"><span class="nav-number">2.1.</span> <span class="nav-text">2.1. 访问控制信息</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-1-keyring"><span class="nav-number">2.1.1.</span> <span class="nav-text">2.1.1. keyring</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#2-1-1-1-SESSION-KEYRING"><span class="nav-number">2.1.1.1.</span> <span class="nav-text">2.1.1.1. SESSION-KEYRING</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-2-Linux-key%E7%9B%B8%E5%85%B3%E7%9A%84%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8"><span class="nav-number">2.1.2.</span> <span class="nav-text">2.1.2. Linux key相关的系统调用</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E5%9C%A8%E5%BA%94%E7%94%A8%E4%B8%AD%E6%94%AF%E6%8C%81Direct-Boot"><span class="nav-number">3.</span> <span class="nav-text">3. 在应用中支持Direct Boot</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-%E6%94%AF%E6%8C%81DirectBoot%E7%9A%84%E7%9B%B8%E5%85%B3%E5%BA%94%E7%94%A8"><span class="nav-number">3.1.</span> <span class="nav-text">3.1. 支持DirectBoot的相关应用:</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

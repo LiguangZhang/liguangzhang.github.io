@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="opensbi底层初始化先进入_start函数, 将a0-a2 保存到 s0-s2, 启动 fw_boot_hart, a0-a2 是qemu传递给opensbi的参数.在riscv模式中会将riscv的core称为hart(硬件线程) 代码重定位, 判断 _load_start 与 _link_start 是否一致, 如不一致, 则需要重定位清除寄存器值, 清除除 a0-a2 外的所有寄存器的值">
+<meta property="og:type" content="article">
+<meta property="og:title" content="opensbi框架">
+<meta property="og:url" content="https://liguangzhang.github.io/2013/07/01/riscv/opensbi%E6%A1%86%E6%9E%B6/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="opensbi底层初始化先进入_start函数, 将a0-a2 保存到 s0-s2, 启动 fw_boot_hart, a0-a2 是qemu传递给opensbi的参数.在riscv模式中会将riscv的core称为hart(硬件线程) 代码重定位, 判断 _load_start 与 _link_start 是否一致, 如不一致, 则需要重定位清除寄存器值, 清除除 a0-a2 外的所有寄存器的值">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://liguangzhang.github.io/images/Pasted%20image%2020220909154542.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/Pasted%20image%2020220909154558.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/Pasted%20image%2020220909151943.png">
+<meta property="og:image" content="https://img2022.cnblogs.com/blog/1148192/202208/1148192-20220815160759991-799793992.png">
+<meta property="og:image" content="https://img2022.cnblogs.com/blog/1148192/202208/1148192-20220815161001163-1222444423.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/Pasted%20image%2020220909143229.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/Pasted%20image%2020220909143242.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/Pasted%20image%2020220909162903.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/Pasted%20image%2020220909163134.png">
+<meta property="article:published_time" content="2013-06-30T16:00:00.000Z">
+<meta property="article:modified_time" content="2024-04-16T07:53:38.491Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="opensbi 调研">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://liguangzhang.github.io/images/Pasted%20image%2020220909154542.png">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2013/07/01/riscv/opensbi%E6%A1%86%E6%9E%B6/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>opensbi框架 | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2013/07/01/riscv/opensbi%E6%A1%86%E6%9E%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          opensbi框架
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2013-07-01 00:00:00" itemprop="dateCreated datePublished" datetime="2013-07-01T00:00:00+08:00">2013-07-01</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 15:53:38" itemprop="dateModified" datetime="2024-04-16T15:53:38+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/RISCV/" itemprop="url" rel="index"><span itemprop="name">RISCV</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="opensbi底层初始化"><a href="#opensbi底层初始化" class="headerlink" title="opensbi底层初始化"></a>opensbi底层初始化</h1><p>先进入<code>_start</code>函数, 将a0-a2 保存到 s0-s2, 启动 fw_boot_hart, a0-a2 是qemu传递给opensbi的参数.<br>在riscv模式中会将riscv的core称为hart(硬件线程)</p>
+<p>代码重定位, 判断 <code>_load_start</code> 与 <code>_link_start</code> 是否一致, 如不一致, 则需要重定位<br>清除寄存器值, 清除除 a0-a2 外的所有寄存器的值<br>清空bss, <code>_bss_start</code> 到 <code>_bss_end</code> 范围设置为0<br>设置临时的 trap_hander 为 <code>_start_hang</code><br>设置 sp, 紧挨 bss 段, 大小为 0x1000 * 2, 向上增长, 所以 sp top 为 bss_end + 0x2000位置<br>读取设备树中的信息:<br><code>fw_platform_init</code> (opensbi&#x2F;platform&#x2F;generic&#x2F;platform.c)<br>a1是设备树地址, 从设备树中解析qemu中设定相关的信息</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">qemu-system-riscv64 -m 2G -nographic -machine virt -bios /keystone/build/bootrom.build/bootrom.bin -kernel /keystone/build/sm.build/platform/generic/firmware/fw_payload.elf</span><br></pre></td></tr></table></figure>
+
+<p><strong>fdt重定位</strong></p>
+<p>需要把设备树重定位，从而让 uboot 也知道<br>初始化scratch space, 紧挨着stack, 大小为0x1000</p>
+<ul>
+<li>存储 <code>_fw_start</code> 和 <code>_fw_end</code> 到 scratch space </li>
+<li>存储 next arg1 (FW_JUMP_FDT_ADDR 0x82200000)</li>
+<li>存储 payload_bin, FW_PAYLOAD_PATH 被填充到 opensbi 预留的指令地址处, 0x80200000, 此处把 kernel 的 bin 填充到这个地方了 </li>
+<li>存储 fw_next_mode, S 模式</li>
+<li>warm_boot address</li>
+<li>platform address</li>
+<li><code>_hartid_to_scratch</code> <code>_trap_exit</code> fw_options等</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&quot;-DFW_TEXT_START=0x80000000&quot;,</span><br><span class="line">&quot;-DFW_JUMP_ADDR=0x80200000&quot;,</span><br><span class="line">&quot;-DFW_JUMP_FDT_ADDR=0x82200000&quot;,</span><br><span class="line">&quot;-DFW_PAYLOAD_PATH=\&quot;/keystone/build/linux.build/arch/riscv/boot/Image\&quot;&quot;,</span><br><span class="line">&quot;-DFW_PAYLOAD_OFFSET=0x200000&quot;,</span><br><span class="line">&quot;-DFW_PAYLOAD_FDT_ADDR=0x82200000&quot;,</span><br></pre></td></tr></table></figure>
+
+<p>start_warm 除 a0-a2 外的所有寄存器重置, 禁用中断, 读取 hartid(CSR_MHARTID), 根据 hartid 查找对应的 scratch space, 设置对应的 sp, 设置_trap_handler 为最终的陷阱入口函数, 支持的 hardid count 数是通过 qemu-system-riscv64 命令行传入的, 定制到 fdt 中去的 <code>platform.hart_count = hart_count;</code> </p>
+<h2 id="进入c函数"><a href="#进入c函数" class="headerlink" title="进入c函数"></a>进入c函数</h2><p>sbi_init -&gt; init_coldboot (参数为 scratch, 即前面 scratch space 空间填充的数据, 对应的结构体为 <code>struct sbi_scratch</code>), nextmode 固定为 S<br>init_coldboot  做的事情很多, 下面进行详细拆解</p>
+<h3 id="sbi-scratch-init"><a href="#sbi-scratch-init" class="headerlink" title="sbi_scratch_init"></a>sbi_scratch_init</h3><p>根据 hardid 填充 hartid_to_scratch_table </p>
+<h3 id="sbi-domain-init"><a href="#sbi-domain-init" class="headerlink" title="sbi_domain_init"></a><strong>sbi_domain_init</strong></h3><p>初始化动态加载的镜像的模块, 应该是当前域 root_domain, root_memregs, 设定内存地址范围, order(位宽), base(基址), 填充 root domain, root domain 的 hardid 同当前唤起的 coldboot 的 hardid, 最后将 root domain 填充到 <code>domidx_to_domain_table</code>, index 为 hardid </p>
+<h3 id="sbi-scratch-alloc-offset"><a href="#sbi-scratch-alloc-offset" class="headerlink" title="sbi_scratch_alloc_offset"></a>sbi_scratch_alloc_offset</h3><p>为 scratch space 分配空间, 内容清0 </p>
+<h3 id="sbi-hsm-init"><a href="#sbi-hsm-init" class="headerlink" title="sbi_hsm_init"></a>sbi_hsm_init</h3><p>为 <code>struct sbi_hsm_data</code> 分配空间, 并初始化 SBI_HART_STARTING (当前 hartid), 其他的 hartid 为 SBI_HART_STOPPED  </p>
+<h3 id="sbi-platform-early-init"><a href="#sbi-platform-early-init" class="headerlink" title="sbi_platform_early_init"></a>sbi_platform_early_init</h3><p>平台早期初始化, 调用 plat-&gt;early_init, plat 为 scratch 里的 platform_addr 指向(sbi_platform 结构体, 该结构体由前面的 <code>fw_platform_init</code> 过程根据 fdt 设备树内容填充, 来自于 qemu), 而 platform_ops_addr 不是填充的, 而是初始的 Generic 设备的 platform_ops. 可以插桩或自定义实现平台相关的初始化代码. </p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">sbi_platform_operations</span> <span class="title">platform_ops</span> =</span> &#123;</span><br><span class="line">	.early_init		= generic_early_init,</span><br><span class="line">	.final_init		= generic_final_init,</span><br><span class="line">	.early_exit		= generic_early_exit,</span><br><span class="line">	.final_exit		= generic_final_exit,</span><br><span class="line">	.domains_init		= generic_domains_init,</span><br><span class="line">	.console_putc		= fdt_serial_putc,</span><br><span class="line">	.console_getc		= fdt_serial_getc,</span><br><span class="line">	.console_init		= fdt_serial_init,</span><br><span class="line">	.irqchip_init		= fdt_irqchip_init,</span><br><span class="line">	.irqchip_exit		= fdt_irqchip_exit,</span><br><span class="line">	.ipi_send		= fdt_ipi_send,</span><br><span class="line">	.ipi_clear		= fdt_ipi_clear,</span><br><span class="line">	.ipi_init		= fdt_ipi_init,</span><br><span class="line">	.ipi_exit		= fdt_ipi_exit,</span><br><span class="line">	.get_tlbr_flush_limit	= generic_tlbr_flush_limit,</span><br><span class="line">	.timer_value		= fdt_timer_value,</span><br><span class="line">	.timer_event_stop	= fdt_timer_event_stop,</span><br><span class="line">	.timer_event_start	= fdt_timer_event_start,</span><br><span class="line">	.timer_init		= fdt_timer_init,</span><br><span class="line">	.timer_exit		= fdt_timer_exit,</span><br><span class="line">	.system_reset_check	= generic_system_reset_check,</span><br><span class="line">	.system_reset		= generic_system_reset,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h3 id="sbi-hart-init"><a href="#sbi-hart-init" class="headerlink" title="sbi_hart_init"></a>sbi_hart_init</h3><p>该核心线程协处理器相关初始化, 处理器支持的特性保存在 hart_features 结构体中, 在 scratch space 中为该结构体分配内存并初始化为0.<br>接下来需要判定处理器支持哪些 feature. </p>
+<ul>
+<li>pmp 内存访问是否支持 </li>
+<li>是否支持 SCOUNTEREN</li>
+<li>是否支持 MCOUNTEREN</li>
+<li>是否支持 CSR_TIME</li>
+</ul>
+<p>如 misa_extension 含 ‘H’, With H-extension so, MTVAL2 and MTINST CSRs available </p>
+<blockquote>
+<p>这个地方怎么判断处理器支持哪些 feature 的, 是通过强制写一些协处理器, 并将 mtvec 临时变为 <code>__sbi_expected_trap</code> 或 <code>__sbi_expected_trap_hext</code> (根据 H extension 的状态), 该异常入口会将 <code>mepc</code>, <code>mcause</code> 等寄存器状态保存到 sbi_trap_info 结构体的临时变量中(传递参数为 a3), 如果发生了异常, 对应的 cause 非0, 这种情况就表明不支持该 feature. 反之, 则表明支持这个 feature. </p>
+</blockquote>
+<h4 id="mstatus-init"><a href="#mstatus-init" class="headerlink" title="mstatus_init"></a>mstatus_init</h4><p>mstatus 初始化</p>
+<ul>
+<li>D|F enable FPU</li>
+<li>V ENABLE VECTOR 向量扩展, 如支持, <code>对应位置1 (23|24)</code>, (如果对应位是0, 执行向量相关的指令或访问 v 寄存器会报异常)  <ul>
+<li>Attempts to execute any vector instruction, or to access the vector CSRs, raise an illegal-instruction exception when the VS field is set to off.</li>
+</ul>
+</li>
+<li>启用性能计数器</li>
+<li>禁用中断</li>
+<li>禁用S模式mmu</li>
+</ul>
+<h4 id="delegate-traps"><a href="#delegate-traps" class="headerlink" title="delegate_traps"></a>delegate_traps</h4><p>Send M-mode interrupts and most exceptions to S-mode<br>设置 <code>CSR_MIDELEG</code> 和 <code>CSR_MEDELEG</code> 寄存器, 在S模式的陷阱中处理M模式的中断和大部分异常</p>
+<h3 id="sbi-console-init"><a href="#sbi-console-init" class="headerlink" title="sbi_console_init"></a>sbi_console_init</h3><p>这之后, 就能从串口打印log, 还是调用的平台的插桩函数 plat-&gt;console_init</p>
+<h3 id="sbi-platform-irqchip-init"><a href="#sbi-platform-irqchip-init" class="headerlink" title="sbi_platform_irqchip_init"></a>sbi_platform_irqchip_init</h3><p>irq中断初始化, Initialize the platform interrupt controller for current HART, 平台的插桩函数 plat-&gt;irqchip_init</p>
+<h3 id="sbi-ipi-init"><a href="#sbi-ipi-init" class="headerlink" title="sbi_ipi_init"></a>sbi_ipi_init</h3><p>核间通信初始化</p>
+<ul>
+<li>为核间通信交换数据在 scratch space 中分配空间, 并初始化为0 </li>
+<li>ipi 通信可能需要多种唤醒的事件, 如可约定多种核间通信的事件, 保存在 ipi_ops_array 数组中, <code>struct sbi_ipi_event_ops *ipi_ops_array[SBI_IPI_EVENT_MAX]</code>, 通过 <code>sbi_ipi_event_create</code> 创建一个事件, 可以创建多个事件, 最终都保存到 ipi_ops_array 数组中, 这里注册了 ipi_smode_ops 和 ipi_halt_ops 事件, 分别处理其他核发来的让该核处理 S 模式中断的事件(mip ssip pending 置1)和让该核暂停的事件 </li>
+<li>平台插桩代码, plat-&gt;ipi_init, 平台按需实现</li>
+<li>启用 M 模式中断</li>
+</ul>
+<h3 id="sbi-tlb-init"><a href="#sbi-tlb-init" class="headerlink" title="sbi_tlb_init"></a>sbi_tlb_init</h3><p>mmu的tlb表的初始化<br>注册 tlb_ops 事件, 在 scratch space 中分配空间存放 <code>IPI_TLB_SYNC IPI_TLB_FIFO IPI_TLB_FIFO_MEM</code> 数据, 初始化 sbi_fifo </p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">sbi_ipi_event_ops</span> <span class="title">tlb_ops</span> =</span> &#123;</span><br><span class="line">	.name = <span class="string">&quot;IPI_TLB&quot;</span>,</span><br><span class="line">	.update = sbi_tlb_update,</span><br><span class="line">	.sync = sbi_tlb_sync,</span><br><span class="line">	.process = sbi_tlb_process,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h3 id="sbi-timer-init"><a href="#sbi-timer-init" class="headerlink" title="sbi_timer_init"></a>sbi_timer_init</h3><p>timer 初始化, 在 scratch space 中分配空间存放 time_delta<br>平台插桩函数 plat-&gt;timer_init, 平台按需实现<br>如支持 timer, 注册 get_ticks 函数安装到 get_time_val, 否则由平台实现 plat-&gt;timer_value </p>
+<h3 id="sbi-ecall-init"><a href="#sbi-ecall-init" class="headerlink" title="sbi_ecall_init"></a>sbi_ecall_init</h3><p>ecall 初始化, riscv 的系统调用都是 ecall, 如 linux 的 posix 接口在 riscv 上都是用 ecall 实现的, 由 U&#x2F;S 模式发送 ecall 路由到 M 模式<br>调用 sbi_ecall_register_extension 注册相应的中断处理函数, 根据 extid_start extid_end 找到对应的 handler. 这个地方用到的频率非常高, 比较重要  </p>
+<h3 id="sbi-domain-finalize"><a href="#sbi-domain-finalize" class="headerlink" title="sbi_domain_finalize"></a>sbi_domain_finalize</h3><p>当前域(root 域)完成初始化</p>
+<ul>
+<li>plat-&gt;domains_init (Initialize and populate domains for the platform) </li>
+<li>遍历 domidx_to_domain_table, 这个时候还只有 root domain, 所以只能遍历一次, 由于是coldboot, 最后只设置了scratch-&gt;next_addr, next_mode , next_arg1, 用于启动下一个镜像(这里应该是kernel)</li>
+</ul>
+<h3 id="sbi-hart-pmp-configure"><a href="#sbi-hart-pmp-configure" class="headerlink" title="sbi_hart_pmp_configure"></a>sbi_hart_pmp_configure</h3><p>设置下一个镜像的pmp, 内存权限</p>
+<p>这里用到了前面设置过的 root_memregs</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">root_memregs[ROOT_FW_REGION].order = log2roundup(scratch-&gt;fw_size);</span><br><span class="line">root_memregs[ROOT_FW_REGION].base = scratch-&gt;fw_start &amp;</span><br><span class="line">			~((<span class="number">1UL</span> &lt;&lt; root_memregs[<span class="number">0</span>].order) - <span class="number">1UL</span>);</span><br><span class="line">root_memregs[ROOT_FW_REGION].flags = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* Root domain allow everything memory region */</span></span><br><span class="line">root_memregs[ROOT_ALL_REGION].order = __riscv_xlen;</span><br><span class="line">root_memregs[ROOT_ALL_REGION].base = <span class="number">0</span>;</span><br><span class="line">root_memregs[ROOT_ALL_REGION].flags = (SBI_DOMAIN_MEMREGION_READABLE |</span><br><span class="line">					SBI_DOMAIN_MEMREGION_WRITEABLE |</span><br><span class="line">					SBI_DOMAIN_MEMREGION_EXECUTABLE);</span><br><span class="line"></span><br><span class="line"><span class="comment">/* Root domain memory region end */</span></span><br><span class="line">root_memregs[ROOT_END_REGION].order = <span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+
+<p> 其中 ROOT_ALL_REGION 就是为下一级镜像准备的, 这里flags是 rwx, order是64, 只占一个pmp entry, 权限为rwx</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pmp_set(pmp_idx++, pmp_flags, reg-&gt;base, reg-&gt;order);</span><br></pre></td></tr></table></figure>
+
+<h3 id="sbi-platform-final-init"><a href="#sbi-platform-final-init" class="headerlink" title="sbi_platform_final_init"></a>sbi_platform_final_init</h3><p>插桩函数, plat-&gt;final_init , 平台按需实现</p>
+<p>Platform final initialization should be last so that it sees correct domain assignment and PMP configuration.</p>
+<p>domain设置完了, pmp也设置了, 这个地方平台的实现能看到这些了</p>
+<h3 id="sbi-boot-print-hart"><a href="#sbi-boot-print-hart" class="headerlink" title="sbi_boot_print_hart"></a>sbi_boot_print_hart</h3><p>平台启动信息的打印</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Boot HART ID              : <span class="number">0</span></span><br><span class="line">Boot HART Domain          : root</span><br><span class="line">Boot HART ISA             : rv64imafdcsu</span><br><span class="line">Boot HART Features        : scounteren,mcounteren,time</span><br><span class="line">Boot HART PMP Count       : <span class="number">16</span></span><br><span class="line">Boot HART PMP Granularity : <span class="number">4</span></span><br><span class="line">Boot HART PMP Address Bits: <span class="number">54</span></span><br><span class="line">Boot HART MHPM Count      : <span class="number">0</span></span><br><span class="line">Boot HART MHPM Count      : <span class="number">0</span></span><br><span class="line">Boot HART MIDELEG         : <span class="number">0x0000000000000222</span></span><br><span class="line">Boot HART MEDELEG         : <span class="number">0x000000000000b109</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="wake-coldboot-harts"><a href="#wake-coldboot-harts" class="headerlink" title="wake_coldboot_harts"></a>wake_coldboot_harts</h3><p>当前核启动完成, coldboot 完成, 告诉其他核 coldboot 完成了 </p>
+<h3 id="sbi-hsm-prepare-next-jump"><a href="#sbi-hsm-prepare-next-jump" class="headerlink" title="sbi_hsm_prepare_next_jump"></a>sbi_hsm_prepare_next_jump</h3><p>核状态 由<code>SBI_HART_STARTING</code> -&gt; <code>SBI_HART_STARTED</code> </p>
+<h3 id="sbi-hart-switch-mode"><a href="#sbi-hart-switch-mode" class="headerlink" title="sbi_hart_switch_mode"></a>sbi_hart_switch_mode</h3><p>启动下一级镜像</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sbi_hart_switch_mode(hartid, scratch-&gt;next_arg1, scratch-&gt;next_addr,</span><br><span class="line">		     scratch-&gt;next_mode, FALSE);</span><br></pre></td></tr></table></figure>
+
+<p>根据模式以及模式的支持情况( misa_extension 是否支持 S&#x2F;U 模式), 选择启动到对应的模式, 如不支持则把核 hang 住<br>mstatus mpp 位置为对应的模式 mpie 置0<br>mepc 设置为 next_addr, ( 这个地方已经设置为了 kernel 的入口地址 0x82200000)<br>如下一级为 S 模式, 则 stvec 设置为 next_addr, sscratch 置0 , sie 置0, sip 置0, satp 置0.<br>传递next_args1 (a1), 0x82200000<br>mret 跳转到 mepc 的位置, 正式启动到下一级镜像, 这里是 kernel<br>provisioning of roots <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=50&x=460&y=96&id=7">051</a></p>
+<h2 id="opensbi-介绍"><a href="#opensbi-介绍" class="headerlink" title="opensbi 介绍"></a>opensbi 介绍</h2><h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>RISC-V指令集的SBI标准规定了类Unix平台下，操作系统运行环境的规范。这个规范拥有多种实现，OpenSBI是它的一种实现.<br>这个运行环境不仅将引导启动RISC-V下的操作系统， 还将常驻后台，为操作系统提供一系列二进制接口，以便其获取和操作硬件信息。 RISC-V给出了此类环境和二进制接口的规范，称为“操作系统二进制接口”，即“SBI”。<br>SBI是在M模式下运行的特定于平台的固件，它将管理S、U等特权上的程序或通用的操作系统。</p>
+<h4 id="RISCV-模式"><a href="#RISCV-模式" class="headerlink" title="RISCV 模式"></a>RISCV 模式</h4><ul>
+<li><p>机器模式（Machine Mode）</p>
+<ul>
+<li>处理器内核被复位后，默认处于 Machine Mode</li>
+<li>在 Machine Mode 下，程序能够访问所有的 CSR 寄存器。</li>
+<li>在 Machine Mode 下，程序能够访问所有的物理地址区域</li>
+</ul>
+</li>
+<li><p>监督者模式（Supervisor mode） </p>
+</li>
+<li><p>用户模式（User Mode） </p>
+</li>
+<li><p>Machine-Level ISA</p>
+<ul>
+<li>machine mode 读写的寄存器，如 mhartid、mstatus、mtvec、mcause </li>
+<li>machine 特权指令，如 ecall(所有模式)、mret、sret、wfi(所有模式、U 模式可选) </li>
+<li>复位、NMI 发生后 hart 状态 </li>
+<li>PMA 物理内存属性，原子、order、一致性 </li>
+<li>PMP 物理内存保护机制和寄存器</li>
+</ul>
+</li>
+<li><p>Supervisor-Level ISA</p>
+<ul>
+<li>Supervisor mode 读写的寄存器，如 sstaus、stvec、scause、satp </li>
+<li>Supervisor 特权指令，如 ecal、sret、sfence.vma </li>
+<li>Page-Based 32&#x2F;39&#x2F;48&#x2F;57-bit Virtual-Memory Systems</li>
+</ul>
+</li>
+<li><p>Hypervisor Extension</p>
+<ul>
+<li>hypervisor 虚拟化读写的寄存器，如 hstatus、vstvec、vepc </li>
+<li>hypervisor 特权指令，load&#x2F;store、fence</li>
+</ul>
+</li>
+</ul>
+<p>![[..&#x2F;Excalidraw&#x2F;opensbi框架 2022-09-09 14.33.53.excalidraw]]</p>
+<ul>
+<li>为操作系统层(S-mode) 提供 sbi 接口的高特权级别的软件被称为sbi 实现或 特权执行环境(SEE).  sbi 实现或SEE工作在M层, 带H扩展的 Host S层 os 也可以实现相关的sbi 接口用来与Guest os 交互通信.</li>
+</ul>
+<p><img src="/../images/Pasted%20image%2020220909154542.png"><br><img src="/../images/Pasted%20image%2020220909154558.png"></p>
+<h3 id="SBI-的作用"><a href="#SBI-的作用" class="headerlink" title="SBI 的作用"></a>SBI 的作用</h3><ul>
+<li><p>可以为多个 os 提供公共 driver </p>
+</li>
+<li><p>可以避免为每个不同 os 适配平台相关的功能, 将功能做到 sbi 层, 其他的各种 os 只需要 ecall 调用, 访问 sbi 层来实现平台的功能 </p>
+</li>
+<li><p>在 S 层工作的 OS 可以通过 ecall sbi 来访问或修改受限在 M 层的硬件资源 </p>
+</li>
+<li><p>多个 OS 之间的通信媒介,  限制不同 OS 的可以访问的硬件资源 (如 PMP 限制 os 可以使用哪些内存地址) </p>
+</li>
+<li><p>AEE: application execution environment</p>
+</li>
+<li><p>ABI: application binary interface</p>
+</li>
+<li><p>The ABI includes the supported user-level ISA plus a set of ABI calls to interact with the AEE. The ABI hides details of the AEE from the application to allow greater flexibility in implementing the AEE.</p>
+</li>
+<li><p>SEE: supervisor execution environment</p>
+</li>
+<li><p>SBI: supervisor binary interface</p>
+</li>
+<li><p>HEE: hypervisor execution environment</p>
+<ul>
+<li>isolate the hypervisor from details of the hardware platform.</li>
+</ul>
+</li>
+<li><p>HBI: hypervisor binary interface</p>
+</li>
+</ul>
+<p><img src="/../images/Pasted%20image%2020220909151943.png"></p>
+<p>所有硬件必须提供M-mode，因为它拥有访问整个机器的能力，最简单的RISC-V实现只有M-mode，但是不能抑制恶意APP。<br>未扩展前，不支持 hypervisor 模式<br><img src="https://img2022.cnblogs.com/blog/1148192/202208/1148192-20220815160759991-799793992.png"><br>hypervisor扩展模式，V标识当前hart是否处于虚拟化模式<br><img src="https://img2022.cnblogs.com/blog/1148192/202208/1148192-20220815161001163-1222444423.png"><br><img src="/../images/Pasted%20image%2020220909143229.png"><br><img src="/../images/Pasted%20image%2020220909143242.png"></p>
+<h4 id="SBI-EXTENSION"><a href="#SBI-EXTENSION" class="headerlink" title="SBI EXTENSION"></a>SBI EXTENSION</h4><ul>
+<li><ol>
+<li>Base Extension (EID <code>#0x10</code>)</li>
+</ol>
+</li>
+<li><ol start="2">
+<li>Legacy Extensions (EIDs <code>#0x00</code> - <code>#0x0F</code>)</li>
+</ol>
+</li>
+<li><ol start="3">
+<li>Timer Extension (EID <code>#0x54494D45</code> “TIME”)</li>
+</ol>
+</li>
+<li><ol start="4">
+<li>IPI Extension (EID <code>#0x735049</code> “sPI: s-mode IPI”)</li>
+</ol>
+</li>
+<li><ol start="5">
+<li>RFENCE Extension (EID <code>#0x52464E43</code> “RFNC”)</li>
+</ol>
+</li>
+<li><ol start="6">
+<li>Hart State Management Extension (EID <code>#0x48534D</code> “HSM”)</li>
+</ol>
+</li>
+<li><ol start="7">
+<li>System Reset Extension (EID <code>#0x53525354</code> “SRST”)</li>
+</ol>
+</li>
+<li><ol start="8">
+<li>Performance Monitoring Unit Extension (EID <code>#0x504D55</code> “PMU”)</li>
+</ol>
+</li>
+<li><ol start="9">
+<li>Experimental SBI Extension Space (EIDs <code>#0x08000000</code> - <code>#0x08FFFFFF</code>)</li>
+</ol>
+</li>
+<li><ol start="10">
+<li>Vendor-Specific SBI Extension Space (EIDs <code>#0x09000000</code> - <code>#0x09FFFFFF</code>)</li>
+</ol>
+</li>
+<li><ol start="11">
+<li>Firmware Specific SBI Extension Space (EIDs <code>#0x0A000000</code> - <code>#0x0AFFFFFF</code>)</li>
+</ol>
+</li>
+</ul>
+<h4 id="引导过程"><a href="#引导过程" class="headerlink" title="引导过程"></a>引导过程</h4><p>RISC-V芯片的启动流程演变历程:<br><img src="/../images/Pasted%20image%2020220909162903.png"></p>
+<ol>
+<li>**Zeroth Stage Boot Loader(ZSBL)**，安装在板载的ROM中，处于M-mode</li>
+<li>**First Stage Boot Loader(FSBL)**，brings up PPLs and DDR, 处于M-mode</li>
+<li>**Berkeley Boot Loader(BBL)**，adds emulation for soft instructions，处于M-mode</li>
+<li><strong>User Payload</strong>，包含软件，如Linux，处于S-mode或U-mode</li>
+</ol>
+<h5 id="ZSBL（第0阶段Bootloader）"><a href="#ZSBL（第0阶段Bootloader）" class="headerlink" title="ZSBL（第0阶段Bootloader）"></a>ZSBL（第0阶段Bootloader）</h5><p>处于M-mode的ZSBL保存在maskROM 中地址为0x1_0000的位置，它负责从GPT中加载更为复杂的FSBL（寻找uuid的GPT分区）。通过先加载GPT的头文件，然后一块一块（块大小为512bytes）的顺序地扫描GPT。加载过程结束后，FSBL被加载进地址为0x0800_0000的L2 LIM缓存中，随后，将执行FSBL阶段。</p>
+<h4 id="FSBL（第1阶段Bootloader）"><a href="#FSBL（第1阶段Bootloader）" class="headerlink" title="FSBL（第1阶段Bootloader）"></a>FSBL（第1阶段Bootloader）</h4><p>处于M-mode的FSBL从L2 LIM地址为0x0800_0000的缓存上执行，它负责为在DDR上运行系统做准备，可大概分为如下的这些任务：</p>
+<ul>
+<li>配置芯片上的PLL 核心频率</li>
+<li>配置DDR PLL，PHY和DDR控制器</li>
+<li>外部PHY，重置</li>
+<li>从编号为uuid的GTP分区下载BBL</li>
+<li>扫描OTP获取的芯片序列号</li>
+<li>将DTB（硬件设备树）复制到DDR，填写FSBL版本，内存大小和MAC地址</li>
+<li>跳转到DDR上地址为0x8000_0000的位置, 启动BBL 或 opensbi</li>
+</ul>
+<h4 id="BBL（第2阶段的Bootloader）"><a href="#BBL（第2阶段的Bootloader）" class="headerlink" title="BBL（第2阶段的Bootloader）"></a>BBL（第2阶段的Bootloader）</h4><p>处于M-mode的BBL从DDR上地址为0x8000_0000的位置执行。它负责为如SBI（Supervisor Binary Interface）等RISC-V需要的，但没有被芯片本身实现的指令。在进行写操作的时候，BBL通常包含一个嵌入的Linux内核负载，当SBI被初始化后，它将跳转的Linux内核。</p>
+<p>U-Boot属于一种bootloader，简单来说，其作用就是从flash中读出内核，随后加载在内存中，最终初始化并启动操作系统内核。<br>具体来说，可以分为下述几个方面：<br>1)U-Boot主要作用是用来启动<a target="_blank" rel="noopener" href="https://www.baidu.com/s?wd=%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%86%85%E6%A0%B8&tn=24004469_oem_dg&rsv_dl=gh_pl_sl_csd">操作系统内核</a>。体现在uboot最后一句代码就是启动内核。<br>2)U-Boot还要负责部署操作系统内核。体现在uboot最后的传参。<br>3)U-Boot中还有操作Flash等板子上硬件的驱动。例如串口要打印，ping网络，擦除、烧写flash等。提供烧写功能等<br>4)U-Boot还得提供一个命令行界面供人来操作。如果kernel 起不来, uboot命令行可以提供操作界面, 让用户来手动加载kernel</p>
+<p>OpenSBI的初始化流程如下：</p>
+<p>（1）底层初始化：</p>
+<ol>
+<li>判断 hart(Hardware Thread) id </li>
+<li>代码重定位（判断 <code>_load_start</code> 与 <code>_start</code> 函数是否一致） </li>
+<li>清除除保存设备树地址的寄存器的值</li>
+<li>清除bss段</li>
+<li>设置栈指针（预留栈空间）</li>
+<li>读取设备树中的设备信息</li>
+<li>设备树重定位，为U-Boot提供信息</li>
+<li>至此，底层初始化结束，执行sbi_init，进行正式的初始化程序</li>
+</ol>
+<p>（2）设备初始化：<br> 首先判断是通过 S-mode 还是 M-mode 启动 </p>
+<ol>
+<li>sbi_domain_init 初始化动态加载的镜像的模块 </li>
+<li>sbi_platform_early_init 平台的早期初始化</li>
+<li>sbi_console_init 控制台初始化，从这里开始，就可以使用串口输出了。</li>
+<li>sbi_platform_irqchip_init        irq中断初始化</li>
+<li>sbi_ipi_init    核间中断初始化</li>
+<li>sbi_tlb_init    mmu的tlb表的初始化</li>
+<li>sbi_timer_init    timer初始化</li>
+<li>sbi_hsm_prepare_next_jump   准备下一级的boot<br>（3）二级boot跳转，如加载U-Boot或者Linux内核</li>
+</ol>
+<h3 id="ARM架构中的Hypervisor与OpenSBI的对比"><a href="#ARM架构中的Hypervisor与OpenSBI的对比" class="headerlink" title="ARM架构中的Hypervisor与OpenSBI的对比"></a>ARM架构中的Hypervisor与OpenSBI的对比</h3><p>在 ARM 架构中，Hypervisor 层承担了虚拟化的作用，承担了如内存管理、设备模拟、设备分配、异常处理、指令捕获、虚拟异常管理、中断控制器管理、调度、上下文切换、内存转换、多个虚拟地址空间管理等非常多的功能。<br>相比之下，SBI在RISC-V架构中充当了BIOS和在操作系统运行时为上层提供底层抽象的作用，功能较少。不过SBI也在不断发展中，可能在将来SBI会去承担虚拟化的功能。<br><img src="/../images/Pasted%20image%2020220909163134.png"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/opensbi-%E8%B0%83%E7%A0%94/" rel="tag"># opensbi 调研</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2013/06/30/riscv/opensbi%20%E4%BB%8B%E7%BB%8D/" rel="prev" title="opensbi 介绍">
+      <i class="fa fa-chevron-left"></i> opensbi 介绍
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2016/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E6%96%87%E4%BB%B6IO%E6%B5%8B%E8%AF%95/" rel="next" title="文件IO测试调研">
+      文件IO测试调研 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#opensbi%E5%BA%95%E5%B1%82%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-number">1.</span> <span class="nav-text">opensbi底层初始化</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9B%E5%85%A5c%E5%87%BD%E6%95%B0"><span class="nav-number">1.1.</span> <span class="nav-text">进入c函数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#sbi-scratch-init"><span class="nav-number">1.1.1.</span> <span class="nav-text">sbi_scratch_init</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sbi-domain-init"><span class="nav-number">1.1.2.</span> <span class="nav-text">sbi_domain_init</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sbi-scratch-alloc-offset"><span class="nav-number">1.1.3.</span> <span class="nav-text">sbi_scratch_alloc_offset</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sbi-hsm-init"><span class="nav-number">1.1.4.</span> <span class="nav-text">sbi_hsm_init</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sbi-platform-early-init"><span class="nav-number">1.1.5.</span> <span class="nav-text">sbi_platform_early_init</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sbi-hart-init"><span class="nav-number">1.1.6.</span> <span class="nav-text">sbi_hart_init</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#mstatus-init"><span class="nav-number">1.1.6.1.</span> <span class="nav-text">mstatus_init</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#delegate-traps"><span class="nav-number">1.1.6.2.</span> <span class="nav-text">delegate_traps</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sbi-console-init"><span class="nav-number">1.1.7.</span> <span class="nav-text">sbi_console_init</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sbi-platform-irqchip-init"><span class="nav-number">1.1.8.</span> <span class="nav-text">sbi_platform_irqchip_init</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sbi-ipi-init"><span class="nav-number">1.1.9.</span> <span class="nav-text">sbi_ipi_init</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sbi-tlb-init"><span class="nav-number">1.1.10.</span> <span class="nav-text">sbi_tlb_init</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sbi-timer-init"><span class="nav-number">1.1.11.</span> <span class="nav-text">sbi_timer_init</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sbi-ecall-init"><span class="nav-number">1.1.12.</span> <span class="nav-text">sbi_ecall_init</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sbi-domain-finalize"><span class="nav-number">1.1.13.</span> <span class="nav-text">sbi_domain_finalize</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sbi-hart-pmp-configure"><span class="nav-number">1.1.14.</span> <span class="nav-text">sbi_hart_pmp_configure</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sbi-platform-final-init"><span class="nav-number">1.1.15.</span> <span class="nav-text">sbi_platform_final_init</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sbi-boot-print-hart"><span class="nav-number">1.1.16.</span> <span class="nav-text">sbi_boot_print_hart</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#wake-coldboot-harts"><span class="nav-number">1.1.17.</span> <span class="nav-text">wake_coldboot_harts</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sbi-hsm-prepare-next-jump"><span class="nav-number">1.1.18.</span> <span class="nav-text">sbi_hsm_prepare_next_jump</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#sbi-hart-switch-mode"><span class="nav-number">1.1.19.</span> <span class="nav-text">sbi_hart_switch_mode</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#opensbi-%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.2.</span> <span class="nav-text">opensbi 介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%83%8C%E6%99%AF"><span class="nav-number">1.2.1.</span> <span class="nav-text">背景</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#RISCV-%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.2.1.1.</span> <span class="nav-text">RISCV 模式</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SBI-%E7%9A%84%E4%BD%9C%E7%94%A8"><span class="nav-number">1.2.2.</span> <span class="nav-text">SBI 的作用</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#SBI-EXTENSION"><span class="nav-number">1.2.2.1.</span> <span class="nav-text">SBI EXTENSION</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%BC%95%E5%AF%BC%E8%BF%87%E7%A8%8B"><span class="nav-number">1.2.2.2.</span> <span class="nav-text">引导过程</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#ZSBL%EF%BC%88%E7%AC%AC0%E9%98%B6%E6%AE%B5Bootloader%EF%BC%89"><span class="nav-number">1.2.2.2.1.</span> <span class="nav-text">ZSBL（第0阶段Bootloader）</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#FSBL%EF%BC%88%E7%AC%AC1%E9%98%B6%E6%AE%B5Bootloader%EF%BC%89"><span class="nav-number">1.2.2.3.</span> <span class="nav-text">FSBL（第1阶段Bootloader）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#BBL%EF%BC%88%E7%AC%AC2%E9%98%B6%E6%AE%B5%E7%9A%84Bootloader%EF%BC%89"><span class="nav-number">1.2.2.4.</span> <span class="nav-text">BBL（第2阶段的Bootloader）</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ARM%E6%9E%B6%E6%9E%84%E4%B8%AD%E7%9A%84Hypervisor%E4%B8%8EOpenSBI%E7%9A%84%E5%AF%B9%E6%AF%94"><span class="nav-number">1.2.3.</span> <span class="nav-text">ARM架构中的Hypervisor与OpenSBI的对比</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

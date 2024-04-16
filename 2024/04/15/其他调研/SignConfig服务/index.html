@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="Signed config service. This is not an Android Service, but just owns a broadcast receiver forreceiving package install and update notifications from the package manager. 1. commit id4e2ed6a90ba32bec7c">
+<meta property="og:type" content="article">
+<meta property="og:title" content="blog">
+<meta property="og:url" content="https://liguangzhang.github.io/2024/04/15/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/SignConfig%E6%9C%8D%E5%8A%A1/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="Signed config service. This is not an Android Service, but just owns a broadcast receiver forreceiving package install and update notifications from the package manager. 1. commit id4e2ed6a90ba32bec7c">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-04-15T09:59:59.487Z">
+<meta property="article:modified_time" content="2024-04-15T09:59:59.487Z">
+<meta property="article:author" content="liguang.zhang">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2024/04/15/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/SignConfig%E6%9C%8D%E5%8A%A1/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title> | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2024/04/15/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/SignConfig%E6%9C%8D%E5%8A%A1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-04-15 17:59:59" itemprop="dateCreated datePublished" datetime="2024-04-15T17:59:59+08:00">2024-04-15</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Signed config service. This is not an Android Service, but just owns a broadcast receiver for<br>receiving package install and update notifications from the package manager.</p>
+<h1 id="1-commit-id"><a href="#1-commit-id" class="headerlink" title="1. commit id"></a>1. commit id</h1><p>4e2ed6a90ba32bec7c67cf4260d65bf40430dcf9<br>b0b51c326e06db55931b57a23afcf1b73cdf8b80<br>96c419f90686ea7f16cde37cf1a137ae6cddf4c6<br>b375be55453abd78aa4c6bebe53d6883b0da9e03</p>
+<h1 id="2-modi-files"><a href="#2-modi-files" class="headerlink" title="2. modi files"></a>2. modi files</h1><pre><code>New receiver for signed config.
+
+A new receiver is added when the system server is created. It receives
+broadcasts and pulls out the config &amp; signature, but doesn&#39;t yet do
+anything with it.
+
+go/serverless-config-design
+</code></pre>
+<p>services&#x2F;core&#x2F;java&#x2F;com&#x2F;android&#x2F;server&#x2F;signedconfig&#x2F;SignedConfigApplicator.java<br>services&#x2F;core&#x2F;java&#x2F;com&#x2F;android&#x2F;server&#x2F;signedconfig&#x2F;SignedConfigService.java</p>
+<pre><code>Parser for signed configuration.
+
+Signed configuration is stored an JSON inside APK meta-data. The format
+of the JSON is as follows:
+&#123;
+  &quot;version&quot;: n,
+  &quot;config&quot;: [
+    &#123;
+      &quot;minSdk&quot;: n,
+      &quot;maxSdk&quot;: n,
+      &quot;values&quot;: [
+        &#123;
+          &quot;key&quot;: &quot;global settings key&quot;,
+          &quot;value&quot;: &quot;value for key&quot;
+        &#125;,
+    ...
+      ],
+      ...
+    &#125;
+  ]
+&#125;
+
+Test: atest SignedConfigTest
+</code></pre>
+<p>services&#x2F;core&#x2F;java&#x2F;com&#x2F;android&#x2F;server&#x2F;signedconfig&#x2F;InvalidConfigException.java<br>services&#x2F;core&#x2F;java&#x2F;com&#x2F;android&#x2F;server&#x2F;signedconfig&#x2F;SignedConfig.java<br>services&#x2F;tests&#x2F;servicestests&#x2F;src&#x2F;com&#x2F;android&#x2F;server&#x2F;signedconfig&#x2F;SignedConfigTest.java</p>
+<pre><code>Implement signature check.
+
+Currently, we just have debug keys, and always fail verification on
+user builds. Production keys will be added later.
+
+This CL also includes some helper scripts:
+- Used to generate debug keys, for the record
+- To sign data using the debug keys
+- To verify base64 encoded data, used for debugging
+
+Test: atest CtsSignedConfigHostTestCases
+Note: The test also relies on some other changes going in too; it has
+been verified with all relevant change in place, but will not pass at
+HEAD quite yet.
+</code></pre>
+<p>services&#x2F;core&#x2F;java&#x2F;com&#x2F;android&#x2F;server&#x2F;signedconfig&#x2F;SignatureVerifier.java<br>services&#x2F;core&#x2F;java&#x2F;com&#x2F;android&#x2F;server&#x2F;signedconfig&#x2F;SignedConfigApplicator.java<br>tools&#x2F;signedconfig&#x2F;</p>
+<h1 id="3-改动解析"><a href="#3-改动解析" class="headerlink" title="3. 改动解析"></a>3. 改动解析</h1><p>SystemServer启动注册监听, 在监听到<code>PackageAdd</code>或<code>ACTION_PACKAGE_REPLACED</code>广播后,启动<code>SignedConfigService</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">traceBeginAndSlog(<span class="string">&quot;SignedConfigService&quot;</span>);</span><br><span class="line">SignedConfigService.registerUpdateReceiver(mSystemContext);</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onReceive</span><span class="params">(Context context, Intent intent)</span> &#123;</span><br><span class="line">    <span class="keyword">new</span> <span class="title class_">SignedConfigService</span>(context).handlePackageBroadcast(intent);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>package MetaData:</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;version&quot;</span><span class="punctuation">:</span> n<span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;config&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">    <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;minSdk&quot;</span><span class="punctuation">:</span> n<span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;maxSdk&quot;</span><span class="punctuation">:</span> n<span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;values&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">        <span class="punctuation">&#123;</span></span><br><span class="line">          <span class="attr">&quot;key&quot;</span><span class="punctuation">:</span> <span class="string">&quot;global settings key&quot;</span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;value&quot;</span><span class="punctuation">:</span> <span class="string">&quot;value for key&quot;</span></span><br><span class="line">        <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    ...</span><br><span class="line">      <span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">      ...</span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">]</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+<p>解析<code>KEY_GLOBAL_SETTINGS</code>和<code>KEY_GLOBAL_SETTINGS_SIGNATURE</code>, 调用applyConfig, key为config, value为signature.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> <span class="title function_">applyConfig</span><span class="params">(String configStr, String signature)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (!checkSignature(configStr, signature)) &#123;</span><br><span class="line">        Slog.e(TAG, <span class="string">&quot;Signature check on global settings in package &quot;</span> + mSourcePackage</span><br><span class="line">                + <span class="string">&quot; failed; ignoring&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    SignedConfig config;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        config = SignedConfig.parse(configStr, ALLOWED_KEYS, KEY_VALUE_MAPPERS);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (InvalidConfigException e) &#123;</span><br><span class="line">        Slog.e(TAG, <span class="string">&quot;Failed to parse global settings from package &quot;</span> + mSourcePackage, e);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="type">int</span> <span class="variable">currentVersion</span> <span class="operator">=</span> getCurrentConfigVersion();</span><br><span class="line">    <span class="keyword">if</span> (currentVersion &gt;= config.version) &#123;</span><br><span class="line">        Slog.i(TAG, <span class="string">&quot;Global settings from package &quot;</span> + mSourcePackage</span><br><span class="line">                + <span class="string">&quot; is older than existing: &quot;</span> + config.version + <span class="string">&quot;&lt;=&quot;</span> + currentVersion);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// We have new config!</span></span><br><span class="line">    Slog.i(TAG, <span class="string">&quot;Got new global settings from package &quot;</span> + mSourcePackage + <span class="string">&quot;: version &quot;</span></span><br><span class="line">            + config.version + <span class="string">&quot; replacing existing version &quot;</span> + currentVersion);</span><br><span class="line">    SignedConfig.<span class="type">PerSdkConfig</span> <span class="variable">matchedConfig</span> <span class="operator">=</span></span><br><span class="line">            config.getMatchingConfig(Build.VERSION.SDK_INT);</span><br><span class="line">    <span class="keyword">if</span> (matchedConfig == <span class="literal">null</span>) &#123;</span><br><span class="line">        Slog.i(TAG, <span class="string">&quot;Settings is not applicable to current SDK version; ignoring&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    Slog.i(TAG, <span class="string">&quot;Updating global settings to version &quot;</span> + config.version);</span><br><span class="line">    updateCurrentConfig(config.version, matchedConfig.values);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/04/15/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/test/" rel="prev" title="">
+      <i class="fa fa-chevron-left"></i> 
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2024/04/15/%E7%A8%B3%E5%AE%9A%E6%80%A7/scudo%E9%85%8D%E7%BD%AE/" rel="next" title="">
+       <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-commit-id"><span class="nav-number">1.</span> <span class="nav-text">1. commit id</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-modi-files"><span class="nav-number">2.</span> <span class="nav-text">2. modi files</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E6%94%B9%E5%8A%A8%E8%A7%A3%E6%9E%90"><span class="nav-number">3.</span> <span class="nav-text">3. 改动解析</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

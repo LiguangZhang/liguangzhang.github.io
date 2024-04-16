@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="Rambus Security RT-6xx Root Policy  SW Architecture P33    ![image](Rambus Security RT-6xx Root Policy&#x2F;96d80c64dbf311f8d79277994825dbb6.png) P33fboot or sboot. 管理container load&#x2F;unload. conta">
+<meta property="og:type" content="article">
+<meta property="og:title" content="blog">
+<meta property="og:url" content="https://liguangzhang.github.io/2024/04/15/images/Rambus%20Security%20RT-6xx%20Root%20Policy/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="Rambus Security RT-6xx Root Policy  SW Architecture P33    ![image](Rambus Security RT-6xx Root Policy&#x2F;96d80c64dbf311f8d79277994825dbb6.png) P33fboot or sboot. 管理container load&#x2F;unload. conta">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-04-15T09:59:59.863Z">
+<meta property="article:modified_time" content="2024-04-15T09:59:59.863Z">
+<meta property="article:author" content="liguang.zhang">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2024/04/15/images/Rambus%20Security%20RT-6xx%20Root%20Policy/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title> | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2024/04/15/images/Rambus%20Security%20RT-6xx%20Root%20Policy/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-04-15 17:59:59" itemprop="dateCreated datePublished" datetime="2024-04-15T17:59:59+08:00">2024-04-15</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Rambus-Security-RT-6xx-Root-Policy"><a href="#Rambus-Security-RT-6xx-Root-Policy" class="headerlink" title="Rambus Security RT-6xx Root Policy"></a>Rambus Security RT-6xx Root Policy</h1><ul>
+<li><blockquote>
+<p>SW Architecture <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=33&x=151&y=48&id=1">P33</a></p>
+</blockquote>
+</li>
+<li><blockquote>
+<p>![image](Rambus Security RT-6xx Root Policy&#x2F;96d80c64dbf311f8d79277994825dbb6.png) <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=33&x=715&y=434&id=11">P33</a><br>fboot or sboot. 管理container load&#x2F;unload. container 权限管理等.<br>fboot 运行在otp中(2k)</p>
+</blockquote>
+<hr>
+</li>
+<li><blockquote>
+<p>Why Zephyr? <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=34&x=128&y=48&id=2">P34</a></p>
+</blockquote>
+</li>
+<li><blockquote>
+<p>Multiple Roots Background <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=35&x=661&y=260&id=3">P35</a></p>
+</blockquote>
+</li>
+<li><blockquote>
+<p>Multiple Roots of Trust <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=40&x=200&y=48&id=4">P40</a></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>![image](Rambus Security RT-6xx Root Policy&#x2F;84c56876778776f5568310d414f1df82.png) <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=48&x=745&y=272&id=12">P48</a><br>1.</p>
+</blockquote>
+<hr>
+<ul>
+<li><blockquote>
+<p>![image](Rambus Security RT-6xx Root Policy&#x2F;2f029f49a3f964c02f4244b074f52359.png) <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=48&x=768&y=120&id=13">P48</a></p>
+</blockquote>
+<ol>
+<li>netlist key 是在rtl 网表中, 开芯片时, 只能写一次, 同一批芯片的netlist key 是相同的, 该key pair 会同步给产线, 产线使用该key, 使用fboot container 来写otp, 并使用该key 连同trng 使用uuid算法生成uuid, 并生成unique key&#x2F;pair (这个key 应该是master root)</li>
+</ol>
+<hr>
+</li>
+<li><blockquote>
+<p>![image](Rambus Security RT-6xx Root Policy&#x2F;11725c4547173771b39816e56b9207bd.png) <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=48&x=763&y=190&id=14">P48</a><br>应该是unique key&#x2F;pair, 由fboot container 生成, fboot container 是由uart&#x2F;jtag等方式送进sram里的程序, 在产线阶段otp 全空时, 需要使用fboot container 生成key及uuid.<br>同一时间, 只会有一个container在运行</p>
+</blockquote>
+<hr>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><blockquote>
+<p>Secure Application Management &amp; the Secure Boot Use Case <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=50&x=486&y=48&id=5">P50</a></p>
+</blockquote>
+</li>
+<li><blockquote>
+<p>HW Architecture <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=7&x=272&y=48&id=9">P7</a></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>![image](Rambus Security RT-6xx Root Policy&#x2F;f5aa37d2f6448e604e86088e116b9869.png) <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=7&x=704&y=107&id=8">P7</a><br>OTP 器件选型由我们完成, 但是需要遵守规范, 大小需要是4k, offset 也应该是固定的, 不然 fboot (otp) 无法引导. apb 内存地址映射应该是需要同rambus 规范是一致的, 写的逻辑需要我们自己实现, 但按规定应该符合示例代码的要求, 只不过是在示例代码之外, 需要加上开关高压的逻辑</p>
+</blockquote>
+<hr>
+<ul>
+<li><blockquote>
+<p>Secure Application containers executed <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=57&x=466&y=381&id=40">P57</a></p>
+</blockquote>
+<p>secure application 也需要实现otp写的逻辑, 额外需要控制开关高压</p>
+<hr>
+<ul>
+<li><blockquote>
+<p>![image](Rambus Security RT-6xx Root Policy&#x2F;1e1f284ea1f006cb512e64c06afd9269.png) <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=33&x=684&y=209&id=41">P33</a></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>OTP HW Driver <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=33&x=784&y=315&id=42">P33</a></p>
+</blockquote>
+<p>额外需要控制开关高压, 来驱动otp 写的能力</p>
+<hr>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><blockquote>
+<p>![image](Rambus Security RT-6xx Root Policy&#x2F;40649749881c263fb209b87daddfacff.png) <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=7&x=845&y=453&id=10">P7</a><br>FMC 管理otp root table中高权限位相关权限, 该ip会自己从otp table中读取相应的权限位, 对应高权限级别(如是否可以派生key, 是否可以抹除root key)等. 是由硬件控制, 软件通过gpio 写feature list(对应这些高权限级别)来说是无效的, 软件只能设置对应低权限级别的feature list.</p>
+</blockquote>
+<hr>
+</li>
+</ul>
+</li>
+<li><blockquote>
+<p>Provisioning and Personalization <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=51&x=593&y=263&id=15">P51</a></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>Design Stage Security:  SoC Netlist Root Establishment (Birth Keys) <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=52&x=452&y=44&id=16">P52</a></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>![image](Rambus Security RT-6xx Root Policy&#x2F;9003b0f54b59b76f316af45cb1d980a7.png) <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=52&x=745&y=297&id=17">P52</a></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>![image](Rambus Security RT-6xx Root Policy&#x2F;39237a14cba2c544f84a50130da91dca.png) <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=52&x=616&y=406&id=18">P52</a><br>netlist key 是有两组, 一个是非对称的keypair, 但存在网表里的只是 public key的hash, 一个是对称的pnak(aes keysplit)</p>
+</blockquote>
+<hr>
+</li>
+<li><blockquote>
+<p>Netlist Public Key (Hash of key stored in netlist) <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=52&x=197&y=216&id=19">P52</a></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>Netlist Public Key used to verify perso container signature signed by the netlist private key (Secured by container author) <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=52&x=311&y=266&id=20">P52</a></p>
+</blockquote>
+<p>netlist priv&#x2F;pub key是由我们持有, 将pub key hash? 写到网表后, 再给到产线. 而fboot container 是由netlist priv key 签名的,  fboot container 的固件中带有 netlist pubkey , 由rambus的bootrom 读fboot container的pubkey, 算hash,  与rtl 网表里存的hash 对照是否一致, 如果一致再使用该pubkey 校验fboot container, 校验通过才能load 该container</p>
+<hr>
+<ul>
+<li><blockquote>
+<p>Perso Containers are pushed to RT-6xx, RT-6xx verifies the fboot container either by PNAK&#x2F;HMAC key or Netlist Public Key <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=55&x=242&y=117&id=33">P55</a></p>
+</blockquote>
+<p>可选的, fboot container 可以由 netlist pub key校验, 也可以通过 pnak &#x2F; hmac key校验</p>
+<hr>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><blockquote>
+<p>![image](Rambus Security RT-6xx Root Policy&#x2F;52cd9f0264cbc3be81ba1b46899d3989.png) <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=52&x=756&y=171&id=21">P52</a><br>推荐由hsm 生成pnak 和 netlist  priv&#x2F;pub key pair</p>
+</blockquote>
+<hr>
+</li>
+</ul>
+</li>
+<li><blockquote>
+<p>Fboot Container Explanation <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=53&x=243&y=48&id=22">P53</a></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>Note that once a root and its related permissions have been programmed to OTP, the Perso root can be disabled via a bit in OTP <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=53&x=482&y=399&id=23">P53</a></p>
+</blockquote>
+<p>master root key (unique keypair ) 和其权限位写完后, netlist key就能被禁用了, 通过master root的oblimite 位写1来禁用netlist key root</p>
+<hr>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><blockquote>
+<p>RT-6xx OTP Format for Device Serialization <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=54&x=346&y=48&id=24">P54</a></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>![image](Rambus Security RT-6xx Root Policy&#x2F;8bed3bd137fba1aab3aab97376755930.png) <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=54&x=689&y=295&id=25">P54</a></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>![image](Rambus Security RT-6xx Root Policy&#x2F;fad4769fc459609c4981db12e43dd0d8.png) <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=54&x=835&y=150&id=27">P54</a><br>netlist key 通过trng 派生出的unique keypair (provision阶段)</p>
+</blockquote>
+<hr>
+<ul>
+<li><blockquote>
+<p>DGOK (Device Generated OTP Memory Keysplit) is a unique key, generated during perso stage <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=54&x=227&y=209&id=26">P54</a></p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li><blockquote>
+<p>![image](Rambus Security RT-6xx Root Policy&#x2F;aa27f4bee1fcd506a1739293073ddc4a.png) <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=54&x=544&y=147&id=44">P54</a></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>Device specific keys are typically used as input contribution to Key Derivation Functions. <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=23&x=302&y=333&id=43">P23</a></p>
+</blockquote>
+<p>uuid 作为输入, 和trng一起作为派生DGOK的输入</p>
+<hr>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><blockquote>
+<p>![image](Rambus Security RT-6xx Root Policy&#x2F;a5caef743e1104062e4d357ce30940df.png) <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=54&x=532&y=185&id=28">P54</a></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>Application keys can be generated from DGOK via the KDC (Key Derivation Core) <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=54&x=230&y=283&id=29">P54</a></p>
+</blockquote>
+<p>unique key(DGOK) 可以用来派生其他的root key</p>
+<hr>
+</li>
+<li><blockquote>
+<p>Software has no visibility to DGOK <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=54&x=203&y=415&id=30">P54</a></p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li><blockquote>
+<p>Manufacturing Personalization <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=55&x=258&y=48&id=31">P55</a></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>The Device-ID, Device Generated Public Keys and other data can be hashed and encrypted with PNAK derived keys and pushed to an external database <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=55&x=248&y=384&id=32">P55</a></p>
+</blockquote>
+<p>uuid(Device ID) DGOK 和其他数据可以通过pnak派生的对称密钥加密, 加密后的数据上传到外部服务器</p>
+<hr>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><blockquote>
+<p>T-6xx Lifecycle Stages <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=57&x=213&y=48&id=34">P57</a></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>![image](Rambus Security RT-6xx Root Policy&#x2F;dfdb3ad3db962cf2358e4a81406dbe5a.png) <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=57&x=484&y=342&id=35">P57</a></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>![image](Rambus Security RT-6xx Root Policy&#x2F;4b777a18fd6221af2ace670e1a9600a6.png) <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=57&x=490&y=333&id=36">P57</a></p>
+</blockquote>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><blockquote>
+<p>Provisioning Environment <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=58&x=220&y=48&id=37">P58</a></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>![image](Rambus Security RT-6xx Root Policy&#x2F;8d8797ea8af276b678badf2254be85a6.png) <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=58&x=481&y=280&id=38">P58</a></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>![image](Rambus Security RT-6xx Root Policy&#x2F;2ae11d375a0a6fe849c0d2b81e9f95cc.png) <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=58&x=297&y=201&id=39">P58</a></p>
+</blockquote>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/04/15/images/u-boot%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B%202022-09-27%2014.55.20.excalidraw/" rel="prev" title="">
+      <i class="fa fa-chevron-left"></i> 
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2024/04/15/images/%E8%99%9A%E6%8B%9F%E5%8C%96%E6%8A%80%E6%9C%AF%E5%8E%9F%E7%90%86%E4%BB%8B%E7%BB%8D%202022-10-08%2015.10.45.excalidraw/" rel="next" title="">
+       <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Rambus-Security-RT-6xx-Root-Policy"><span class="nav-number">1.</span> <span class="nav-text">Rambus Security RT-6xx Root Policy</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

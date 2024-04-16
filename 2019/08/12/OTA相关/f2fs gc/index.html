@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="vnote_backup_file_826537664 &#x2F;home&#x2F;mi&#x2F;Documents&#x2F;backup&#x2F;VnoteBook&#x2F;OTA相关&#x2F;f2fs gc.md 1. f2fs gcdo_garbage_collect    -&gt; gc_data_segment        -&gt; move_data_page">
+<meta property="og:type" content="article">
+<meta property="og:title" content="f2fs gc">
+<meta property="og:url" content="https://liguangzhang.github.io/2019/08/12/OTA%E7%9B%B8%E5%85%B3/f2fs%20gc/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="vnote_backup_file_826537664 &#x2F;home&#x2F;mi&#x2F;Documents&#x2F;backup&#x2F;VnoteBook&#x2F;OTA相关&#x2F;f2fs gc.md 1. f2fs gcdo_garbage_collect    -&gt; gc_data_segment        -&gt; move_data_page">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2019-08-12T10:15:54.000Z">
+<meta property="article:modified_time" content="2024-04-16T07:18:29.363Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="f2fs">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2019/08/12/OTA%E7%9B%B8%E5%85%B3/f2fs%20gc/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>f2fs gc | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/08/12/OTA%E7%9B%B8%E5%85%B3/f2fs%20gc/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          f2fs gc
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-08-12 18:15:54" itemprop="dateCreated datePublished" datetime="2019-08-12T18:15:54+08:00">2019-08-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 15:18:29" itemprop="dateModified" datetime="2024-04-16T15:18:29+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Filesystem/" itemprop="url" rel="index"><span itemprop="name">Filesystem</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>vnote_backup_file_826537664 &#x2F;home&#x2F;mi&#x2F;Documents&#x2F;backup&#x2F;VnoteBook&#x2F;OTA相关&#x2F;f2fs gc.md</p>
+<h1 id="1-f2fs-gc"><a href="#1-f2fs-gc" class="headerlink" title="1. f2fs gc"></a>1. f2fs gc</h1><p>do_garbage_collect<br>    -&gt; gc_data_segment<br>        -&gt; move_data_page<br>           -&gt; f2fs_pin_file_control<br>    -&gt; stat_inc_seg_count</p>
+<p>解密map</p>
+<p>umi:&#x2F;data&#x2F;media&#x2F;0&#x2F;downloaded_rom # sha1sum &#x2F;cache&#x2F;recovery&#x2F;block.map<br>a31f2e057e6a02fc64f55dedd3e69ed71c2c4821  &#x2F;cache&#x2F;recovery&#x2F;block.map</p>
+<p>初次解密后</p>
+<p>umi:&#x2F;data&#x2F;media&#x2F;0&#x2F;downloaded_rom # sha1sum miui_UMI_9.11.18_6d674ad5a9_10.0.zip<br>631b3f61f9ea85911d354c277c98f9fcdb56b0bc  miui_UMI_9.11.18_6d674ad5a9_10.0.zip</p>
+<p>recovery会更改?<br>-rw-rw-r– 1 media_rw media_rw 2594048280 2019-11-18 10:14 miui_UMI_9.11.18_6d674ad5a9_10.0.zip<br>sha1sum miui_UMI_9.11.18_6d674ad5a9_10.0.zip<br>parse_ld_lib_path (null)<br>6fcdd51f751fe1a19af20c70302575b3fdb70086  miui_UMI_9.11.18_6d674ad5a9_10.0.zip</p>
+<p>原始</p>
+<p>[$] -&gt; sha1sum ~&#x2F;Downloads&#x2F;miui_UMI_9.11.18_6d674ad5a9_10.0.zip<br>88abea31fe641216b7a2659a6e63f5c4d619efaa  &#x2F;home&#x2F;mi&#x2F;Downloads&#x2F;miui_UMI_9.11.18_6d674ad5a9_10.0.zip</p>
+<p>recovery 初始block.map<br>88abea31fe641216b7a2659a6e63f5c4d619efaa</p>
+<p>Get package’s sha bay MemMapping.<br>sha1: 88abea31fe641216b7a2659a6e63f5c4d619efaa</p>
+<p>pin_file  存到文件系统的扩展属性中<br>[   34.256381] F2FS-fs (dm-4): f2fs_pin_file_control: Enable GC &#x3D; ino 204c after 801 GC trials</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">unsigned</span> <span class="type">int</span> segno = start_segno;</span><br><span class="line"><span class="type">unsigned</span> <span class="type">int</span> end_segno = start_segno + sbi-&gt;segs_per_sec;</span><br><span class="line"><span class="keyword">for</span> (segno = start_segno; segno &lt; end_segno; segno++) &#123;</span><br><span class="line">...</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">char</span> type = IS_DATASEG(get_seg_entry(sbi, segno)-&gt;type) ?</span><br><span class="line">						SUM_TYPE_DATA : SUM_TYPE_NODE;						</span><br><span class="line">	<span class="keyword">if</span> (type == SUM_TYPE_NODE)</span><br><span class="line">		submitted += gc_node_segment(sbi, sum-&gt;entries, segno,</span><br><span class="line">							gc_type);</span><br><span class="line">	<span class="keyword">else</span></span><br><span class="line">		submitted += gc_data_segment(sbi, sum-&gt;entries, gc_list,</span><br><span class="line">						segno, gc_type);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (off = <span class="number">0</span>; off &lt; sbi-&gt;blocks_per_seg; off++, entry++) &#123;</span><br><span class="line">        inode = find_gc_inode(gc_list, dni.ino);</span><br><span class="line">        <span class="keyword">if</span>(inode) &#123;</span><br><span class="line">        		<span class="keyword">if</span> (f2fs_post_read_required(inode))</span><br><span class="line">    			    err = move_data_block(inode, start_bidx,</span><br><span class="line">						gc_type, segno, off);</span><br><span class="line">						</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/f2fs/" rel="tag"># f2fs</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/08/12/OTA%E7%9B%B8%E5%85%B3/fbe%E4%B8%8E%E7%94%A8%E6%88%B7%E5%AE%89%E5%85%A8%E5%AF%86%E7%A0%81/" rel="prev" title="fbe与用户安全密码">
+      <i class="fa fa-chevron-left"></i> fbe与用户安全密码
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/08/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/gdb%20stl%E6%94%AF%E6%8C%81/" rel="next" title="Android AOSP gdb stl 支持">
+      Android AOSP gdb stl 支持 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-f2fs-gc"><span class="nav-number">1.</span> <span class="nav-text">1. f2fs gc</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

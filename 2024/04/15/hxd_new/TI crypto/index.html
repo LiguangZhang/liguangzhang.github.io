@@ -1,0 +1,3675 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="[[#introduction|introduction]] [[#sign secure boot|sign secure boot]] [[#KEK and DKEY|KEK and DKEY]] [[#KEK and DKEY#如何使用DKEK (了解)|如何使用DKEK (了解)]]   [[#OTP|OTP]] [[#keyWriter|keyWriter]]  main domain">
+<meta property="og:type" content="article">
+<meta property="og:title" content="blog">
+<meta property="og:url" content="https://liguangzhang.github.io/2024/04/15/hxd_new/TI%20crypto/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="[[#introduction|introduction]] [[#sign secure boot|sign secure boot]] [[#KEK and DKEY|KEK and DKEY]] [[#KEK and DKEY#如何使用DKEK (了解)|如何使用DKEK (了解)]]   [[#OTP|OTP]] [[#keyWriter|keyWriter]]  main domain">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220622154628.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/Pasted%20image%2020220714094900.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/Pasted%20image%2020220714095618.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/Pasted%20image%2020220714095718.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/Pasted%20image%2020220714100126.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/Pasted%20image%2020220714095757.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/Pasted%20image%2020220714095908.png">
+<meta property="og:image" content="https://software-dl.ti.com/tisci/esd/22_01_02/_images/softwareStack.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220622154629.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220622154630.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220622154631.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220622154708.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220622154704.png">
+<meta property="article:published_time" content="2024-04-15T09:59:59.771Z">
+<meta property="article:modified_time" content="2024-04-15T09:59:59.775Z">
+<meta property="article:author" content="liguang.zhang">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220622154628.png">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2024/04/15/hxd_new/TI%20crypto/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title> | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2024/04/15/hxd_new/TI%20crypto/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-04-15 17:59:59" itemprop="dateCreated datePublished" datetime="2024-04-15T17:59:59+08:00">2024-04-15</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <ul>
+<li>[[#introduction|introduction]]</li>
+<li>[[#sign secure boot|sign secure boot]]</li>
+<li>[[#KEK and DKEY|KEK and DKEY]]<ul>
+<li>[[#KEK and DKEY#如何使用DKEK (了解)|如何使用DKEK (了解)]]</li>
+</ul>
+</li>
+<li>[[#OTP|OTP]]</li>
+<li>[[#keyWriter|keyWriter]]</li>
+</ul>
+<h1 id="main-domain"><a href="#main-domain" class="headerlink" title="main domain"></a>main domain</h1><p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220622154628.png"></p>
+<p>加密硬件加速器 – 带 ECC 的 PKA、AES、SHA、 RNG、DES 和 3DES<br>Asymmetrische Kryptografie: RSA und ECC-Funktionen<br>• Hash-Funktionen: Message Digest Algorithm (MD5), SHA1 und SHA2-224&#x2F;256&#x2F;384&#x2F;512<br>• Symmetrische Kryptografie-Funktionen: AES-128&#x2F;192&#x2F;256<br>• Hardware-TRNG-Modul mit Nachbearbeitung für einen deterministischen Zufallsbitgenerator (DRBG)</p>
+<h1 id="wakeup-domain-DMSC"><a href="#wakeup-domain-DMSC" class="headerlink" title="wakeup domain DMSC"></a>wakeup domain DMSC</h1><p><img src="/../images/Pasted%20image%2020220714094900.png"></p>
+<p>Main components of the DMSC are:<br>•Arm Cortex-M3 processor core (ARMv7-M architecture profile)<br>•160 KB ROM to allow boot sequence, authentication and provide security service (M3 accessible only)</p>
+<ul>
+<li>Two separate local memory banks for Instruction code (I-code) and Data space (D-code) with single error correction and double error detection</li>
+<li>Firewall enabled 32-bit VBUSP CBASS interconnect</li>
+<li>Interrupt Aggregator with support of up to 80 interrupt inputs to the DMSC</li>
+<li>Four dual-mode 32-bit timers</li>
+<li>DMSC control module - contains various control, configuration and status MMRs for power management functions</li>
+<li>Security Manager module for device security management, device type control (GP, EMU, HS), emulation and JTAG control, and key management</li>
+<li>AES engine with 128, 192 and 256-bits support and DPA&#x2F;EMA countermeasures</li>
+</ul>
+<h2 id="TIFS-world-安全通信能力"><a href="#TIFS-world-安全通信能力" class="headerlink" title="TIFS world 安全通信能力"></a>TIFS world 安全通信能力</h2><p>SoC中的每个物理处理器都有能力在不同的模式下运行，如特权和非特权，安全或不安全。主机的定义超出了物理处理器的范围，也区分了处理器的操作模式。</p>
+<p>On devices with distributed TIFS and DM services across multiple cores, the interaction between the hosts and the security and device manager is as below:</p>
+<p><img src="/../images/Pasted%20image%2020220714095618.png" alt="Software on different cores and secure proxy communication channels"><br>Software on different cores and secure proxy communication channels</p>
+<p>For secure cores the communication mechanism is as below:<br><img src="/../images/Pasted%20image%2020220714095718.png"><br>这一层通过了DMSC的加密中转, 为了开发一种安全的车辆 E&#x2F;E 架构，需要在 ECU 内部实现一套复杂的加密计算过程。TI 为了解决这个问题，在 DMSC 中集成了AES，RNG，SHA 等安全加速器，用来对启动过程中的加密，验签提供硬件加速，这些硬件 IP 对上层提供的服务可以通过标准的 crypto driver 被调用<br><img src="/../images/Pasted%20image%2020220714100126.png"><br>For messages running from <code>MCU R5F</code> the communication mechanism is as below:<br><img src="/../images/Pasted%20image%2020220714095757.png"><br>For messages running from other non-secure cores the communication mechanism is as below:<br><img src="/../images/Pasted%20image%2020220714095908.png"></p>
+<h3 id="secure-Proxy-J7-描述"><a href="#secure-Proxy-J7-描述" class="headerlink" title="secure Proxy J7 描述"></a>secure Proxy J7 描述</h3><p><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/5_soc_doc/j721e/sec_proxy.html">J721E Secure Proxy Descriptions</a></p>
+<h4 id="Secure-Proxy-thread-allocation-for-NAVSS0-SEC-PROXY-0"><a href="#Secure-Proxy-thread-allocation-for-NAVSS0-SEC-PROXY-0" class="headerlink" title="Secure Proxy thread allocation for NAVSS0_SEC_PROXY_0"></a>Secure Proxy thread allocation for NAVSS0_SEC_PROXY_0</h4><table>
+<thead>
+<tr>
+<th>Secure Proxy Thread ID</th>
+<th>Direction (write or read)</th>
+<th>Number of Messages</th>
+<th>Host</th>
+<th>Host Function</th>
+<th>IRQ (threshold)</th>
+<th>IRQ (error)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td>read</td>
+<td>2</td>
+<td>A72_0</td>
+<td>notify</td>
+<td>COMPUTE_CLUSTER0_CLEC&#x2F;SOC_EVENTS_IN_64, COMPUTE_CLUSTER0_GIC500SS&#x2F;SPI_64</td>
+<td>COMPUTE_CLUSTER0_CLEC&#x2F;SOC_EVENTS_IN_64, COMPUTE_CLUSTER0_GIC500SS&#x2F;SPI_64</td>
+</tr>
+<tr>
+<td>1</td>
+<td>read</td>
+<td>30</td>
+<td>A72_0</td>
+<td>response</td>
+<td>COMPUTE_CLUSTER0_CLEC&#x2F;SOC_EVENTS_IN_65, COMPUTE_CLUSTER0_GIC500SS&#x2F;SPI_65</td>
+<td>COMPUTE_CLUSTER0_CLEC&#x2F;SOC_EVENTS_IN_65, COMPUTE_CLUSTER0_GIC500SS&#x2F;SPI_65</td>
+</tr>
+<tr>
+<td>2</td>
+<td>write</td>
+<td>10</td>
+<td>A72_0</td>
+<td>high_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>3</td>
+<td>write</td>
+<td>20</td>
+<td>A72_0</td>
+<td>low_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>4</td>
+<td>write</td>
+<td>2</td>
+<td>A72_0</td>
+<td>notify_resp</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>5</td>
+<td>read</td>
+<td>2</td>
+<td>A72_1</td>
+<td>notify</td>
+<td>COMPUTE_CLUSTER0_CLEC&#x2F;SOC_EVENTS_IN_66, COMPUTE_CLUSTER0_GIC500SS&#x2F;SPI_66</td>
+<td>COMPUTE_CLUSTER0_CLEC&#x2F;SOC_EVENTS_IN_66, COMPUTE_CLUSTER0_GIC500SS&#x2F;SPI_66</td>
+</tr>
+<tr>
+<td>6</td>
+<td>read</td>
+<td>30</td>
+<td>A72_1</td>
+<td>response</td>
+<td>COMPUTE_CLUSTER0_CLEC&#x2F;SOC_EVENTS_IN_67, COMPUTE_CLUSTER0_GIC500SS&#x2F;SPI_67</td>
+<td>COMPUTE_CLUSTER0_CLEC&#x2F;SOC_EVENTS_IN_67, COMPUTE_CLUSTER0_GIC500SS&#x2F;SPI_67</td>
+</tr>
+<tr>
+<td>7</td>
+<td>write</td>
+<td>10</td>
+<td>A72_1</td>
+<td>high_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>8</td>
+<td>write</td>
+<td>20</td>
+<td>A72_1</td>
+<td>low_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>9</td>
+<td>write</td>
+<td>2</td>
+<td>A72_1</td>
+<td>notify_resp</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>10</td>
+<td>read</td>
+<td>2</td>
+<td>A72_2</td>
+<td>notify</td>
+<td>COMPUTE_CLUSTER0_CLEC&#x2F;SOC_EVENTS_IN_68, COMPUTE_CLUSTER0_GIC500SS&#x2F;SPI_68</td>
+<td>COMPUTE_CLUSTER0_CLEC&#x2F;SOC_EVENTS_IN_68, COMPUTE_CLUSTER0_GIC500SS&#x2F;SPI_68</td>
+</tr>
+<tr>
+<td>11</td>
+<td>read</td>
+<td>22</td>
+<td>A72_2</td>
+<td>response</td>
+<td>COMPUTE_CLUSTER0_CLEC&#x2F;SOC_EVENTS_IN_69, COMPUTE_CLUSTER0_GIC500SS&#x2F;SPI_69</td>
+<td>COMPUTE_CLUSTER0_CLEC&#x2F;SOC_EVENTS_IN_69, COMPUTE_CLUSTER0_GIC500SS&#x2F;SPI_69</td>
+</tr>
+<tr>
+<td>12</td>
+<td>write</td>
+<td>2</td>
+<td>A72_2</td>
+<td>high_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>13</td>
+<td>write</td>
+<td>20</td>
+<td>A72_2</td>
+<td>low_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>14</td>
+<td>write</td>
+<td>2</td>
+<td>A72_2</td>
+<td>notify_resp</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>15</td>
+<td>read</td>
+<td>2</td>
+<td>A72_3</td>
+<td>notify</td>
+<td>COMPUTE_CLUSTER0_CLEC&#x2F;SOC_EVENTS_IN_70, COMPUTE_CLUSTER0_GIC500SS&#x2F;SPI_70</td>
+<td>COMPUTE_CLUSTER0_CLEC&#x2F;SOC_EVENTS_IN_70, COMPUTE_CLUSTER0_GIC500SS&#x2F;SPI_70</td>
+</tr>
+<tr>
+<td>16</td>
+<td>read</td>
+<td>7</td>
+<td>A72_3</td>
+<td>response</td>
+<td>COMPUTE_CLUSTER0_CLEC&#x2F;SOC_EVENTS_IN_71, COMPUTE_CLUSTER0_GIC500SS&#x2F;SPI_71</td>
+<td>COMPUTE_CLUSTER0_CLEC&#x2F;SOC_EVENTS_IN_71, COMPUTE_CLUSTER0_GIC500SS&#x2F;SPI_71</td>
+</tr>
+<tr>
+<td>17</td>
+<td>write</td>
+<td>2</td>
+<td>A72_3</td>
+<td>high_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>18</td>
+<td>write</td>
+<td>5</td>
+<td>A72_3</td>
+<td>low_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>19</td>
+<td>write</td>
+<td>2</td>
+<td>A72_3</td>
+<td>notify_resp</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>20</td>
+<td>read</td>
+<td>2</td>
+<td>A72_4</td>
+<td>notify</td>
+<td>COMPUTE_CLUSTER0_CLEC&#x2F;SOC_EVENTS_IN_72, COMPUTE_CLUSTER0_GIC500SS&#x2F;SPI_72</td>
+<td>COMPUTE_CLUSTER0_CLEC&#x2F;SOC_EVENTS_IN_72, COMPUTE_CLUSTER0_GIC500SS&#x2F;SPI_72</td>
+</tr>
+<tr>
+<td>21</td>
+<td>read</td>
+<td>7</td>
+<td>A72_4</td>
+<td>response</td>
+<td>COMPUTE_CLUSTER0_CLEC&#x2F;SOC_EVENTS_IN_73, COMPUTE_CLUSTER0_GIC500SS&#x2F;SPI_73</td>
+<td>COMPUTE_CLUSTER0_CLEC&#x2F;SOC_EVENTS_IN_73, COMPUTE_CLUSTER0_GIC500SS&#x2F;SPI_73</td>
+</tr>
+<tr>
+<td>22</td>
+<td>write</td>
+<td>2</td>
+<td>A72_4</td>
+<td>high_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>23</td>
+<td>write</td>
+<td>5</td>
+<td>A72_4</td>
+<td>low_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>24</td>
+<td>write</td>
+<td>2</td>
+<td>A72_4</td>
+<td>notify_resp</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>25</td>
+<td>read</td>
+<td>2</td>
+<td>C7X_0</td>
+<td>notify</td>
+<td>COMPUTE_CLUSTER0_CLEC&#x2F;SOC_EVENTS_IN_734, COMPUTE_CLUSTER0_GIC500SS&#x2F;SPI_734</td>
+<td>COMPUTE_CLUSTER0_CLEC&#x2F;SOC_EVENTS_IN_734, COMPUTE_CLUSTER0_GIC500SS&#x2F;SPI_734</td>
+</tr>
+<tr>
+<td>26</td>
+<td>read</td>
+<td>7</td>
+<td>C7X_0</td>
+<td>response</td>
+<td>COMPUTE_CLUSTER0_CLEC&#x2F;SOC_EVENTS_IN_735, COMPUTE_CLUSTER0_GIC500SS&#x2F;SPI_735</td>
+<td>COMPUTE_CLUSTER0_CLEC&#x2F;SOC_EVENTS_IN_735, COMPUTE_CLUSTER0_GIC500SS&#x2F;SPI_735</td>
+</tr>
+<tr>
+<td>27</td>
+<td>write</td>
+<td>2</td>
+<td>C7X_0</td>
+<td>high_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>28</td>
+<td>write</td>
+<td>5</td>
+<td>C7X_0</td>
+<td>low_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>29</td>
+<td>write</td>
+<td>2</td>
+<td>C7X_0</td>
+<td>notify_resp</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>30</td>
+<td>read</td>
+<td>2</td>
+<td>C7X_1</td>
+<td>notify</td>
+<td>COMPUTE_CLUSTER0_CLEC&#x2F;SOC_EVENTS_IN_732, COMPUTE_CLUSTER0_GIC500SS&#x2F;SPI_732</td>
+<td>COMPUTE_CLUSTER0_CLEC&#x2F;SOC_EVENTS_IN_732, COMPUTE_CLUSTER0_GIC500SS&#x2F;SPI_732</td>
+</tr>
+<tr>
+<td>31</td>
+<td>read</td>
+<td>7</td>
+<td>C7X_1</td>
+<td>response</td>
+<td>COMPUTE_CLUSTER0_CLEC&#x2F;SOC_EVENTS_IN_733, COMPUTE_CLUSTER0_GIC500SS&#x2F;SPI_733</td>
+<td>COMPUTE_CLUSTER0_CLEC&#x2F;SOC_EVENTS_IN_733, COMPUTE_CLUSTER0_GIC500SS&#x2F;SPI_733</td>
+</tr>
+<tr>
+<td>32</td>
+<td>write</td>
+<td>2</td>
+<td>C7X_1</td>
+<td>high_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>33</td>
+<td>write</td>
+<td>5</td>
+<td>C7X_1</td>
+<td>low_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>34</td>
+<td>write</td>
+<td>2</td>
+<td>C7X_1</td>
+<td>notify_resp</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>35</td>
+<td>read</td>
+<td>2</td>
+<td>C6X_0_0</td>
+<td>notify</td>
+<td>C66SS0_CORE0&#x2F;C66_EVENT_IN_SYNC_4</td>
+<td>C66SS0_CORE0&#x2F;C66_EVENT_IN_SYNC_4</td>
+</tr>
+<tr>
+<td>36</td>
+<td>read</td>
+<td>7</td>
+<td>C6X_0_0</td>
+<td>response</td>
+<td>C66SS0_CORE0&#x2F;C66_EVENT_IN_SYNC_5</td>
+<td>C66SS0_CORE0&#x2F;C66_EVENT_IN_SYNC_5</td>
+</tr>
+<tr>
+<td>37</td>
+<td>write</td>
+<td>2</td>
+<td>C6X_0_0</td>
+<td>high_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>38</td>
+<td>write</td>
+<td>5</td>
+<td>C6X_0_0</td>
+<td>low_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>39</td>
+<td>write</td>
+<td>2</td>
+<td>C6X_0_0</td>
+<td>notify_resp</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>40</td>
+<td>read</td>
+<td>2</td>
+<td>C6X_0_1</td>
+<td>notify</td>
+<td>C66SS0_CORE0&#x2F;C66_EVENT_IN_SYNC_6</td>
+<td>C66SS0_CORE0&#x2F;C66_EVENT_IN_SYNC_6</td>
+</tr>
+<tr>
+<td>41</td>
+<td>read</td>
+<td>7</td>
+<td>C6X_0_1</td>
+<td>response</td>
+<td>C66SS0_CORE0&#x2F;C66_EVENT_IN_SYNC_7</td>
+<td>C66SS0_CORE0&#x2F;C66_EVENT_IN_SYNC_7</td>
+</tr>
+<tr>
+<td>42</td>
+<td>write</td>
+<td>2</td>
+<td>C6X_0_1</td>
+<td>high_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>43</td>
+<td>write</td>
+<td>5</td>
+<td>C6X_0_1</td>
+<td>low_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>44</td>
+<td>write</td>
+<td>2</td>
+<td>C6X_0_1</td>
+<td>notify_resp</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>45</td>
+<td>read</td>
+<td>2</td>
+<td>C6X_1_0</td>
+<td>notify</td>
+<td>C66SS1_CORE0&#x2F;C66_EVENT_IN_SYNC_4</td>
+<td>C66SS1_CORE0&#x2F;C66_EVENT_IN_SYNC_4</td>
+</tr>
+<tr>
+<td>46</td>
+<td>read</td>
+<td>7</td>
+<td>C6X_1_0</td>
+<td>response</td>
+<td>C66SS1_CORE0&#x2F;C66_EVENT_IN_SYNC_5</td>
+<td>C66SS1_CORE0&#x2F;C66_EVENT_IN_SYNC_5</td>
+</tr>
+<tr>
+<td>47</td>
+<td>write</td>
+<td>2</td>
+<td>C6X_1_0</td>
+<td>high_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>48</td>
+<td>write</td>
+<td>5</td>
+<td>C6X_1_0</td>
+<td>low_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>49</td>
+<td>write</td>
+<td>2</td>
+<td>C6X_1_0</td>
+<td>notify_resp</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>50</td>
+<td>read</td>
+<td>2</td>
+<td>C6X_1_1</td>
+<td>notify</td>
+<td>C66SS1_CORE0&#x2F;C66_EVENT_IN_SYNC_6</td>
+<td>C66SS1_CORE0&#x2F;C66_EVENT_IN_SYNC_6</td>
+</tr>
+<tr>
+<td>51</td>
+<td>read</td>
+<td>7</td>
+<td>C6X_1_1</td>
+<td>response</td>
+<td>C66SS1_CORE0&#x2F;C66_EVENT_IN_SYNC_7</td>
+<td>C66SS1_CORE0&#x2F;C66_EVENT_IN_SYNC_7</td>
+</tr>
+<tr>
+<td>52</td>
+<td>write</td>
+<td>2</td>
+<td>C6X_1_1</td>
+<td>high_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>53</td>
+<td>write</td>
+<td>5</td>
+<td>C6X_1_1</td>
+<td>low_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>54</td>
+<td>write</td>
+<td>2</td>
+<td>C6X_1_1</td>
+<td>notify_resp</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>55</td>
+<td>read</td>
+<td>2</td>
+<td>GPU_0</td>
+<td>notify</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>56</td>
+<td>read</td>
+<td>7</td>
+<td>GPU_0</td>
+<td>response</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>57</td>
+<td>write</td>
+<td>2</td>
+<td>GPU_0</td>
+<td>high_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>58</td>
+<td>write</td>
+<td>5</td>
+<td>GPU_0</td>
+<td>low_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>59</td>
+<td>write</td>
+<td>2</td>
+<td>GPU_0</td>
+<td>notify_resp</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>60</td>
+<td>read</td>
+<td>2</td>
+<td>MAIN_0_R5_0</td>
+<td>notify</td>
+<td>R5FSS0_CORE0&#x2F;INTR_224</td>
+<td>R5FSS0_CORE0&#x2F;INTR_224</td>
+</tr>
+<tr>
+<td>61</td>
+<td>read</td>
+<td>7</td>
+<td>MAIN_0_R5_0</td>
+<td>response</td>
+<td>R5FSS0_CORE0&#x2F;INTR_225</td>
+<td>R5FSS0_CORE0&#x2F;INTR_225</td>
+</tr>
+<tr>
+<td>62</td>
+<td>write</td>
+<td>2</td>
+<td>MAIN_0_R5_0</td>
+<td>high_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>63</td>
+<td>write</td>
+<td>5</td>
+<td>MAIN_0_R5_0</td>
+<td>low_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>64</td>
+<td>write</td>
+<td>2</td>
+<td>MAIN_0_R5_0</td>
+<td>notify_resp</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>65</td>
+<td>read</td>
+<td>2</td>
+<td>MAIN_0_R5_1</td>
+<td>notify</td>
+<td>R5FSS0_CORE0&#x2F;INTR_226</td>
+<td>R5FSS0_CORE0&#x2F;INTR_226</td>
+</tr>
+<tr>
+<td>66</td>
+<td>read</td>
+<td>7</td>
+<td>MAIN_0_R5_1</td>
+<td>response</td>
+<td>R5FSS0_CORE0&#x2F;INTR_227</td>
+<td>R5FSS0_CORE0&#x2F;INTR_227</td>
+</tr>
+<tr>
+<td>67</td>
+<td>write</td>
+<td>2</td>
+<td>MAIN_0_R5_1</td>
+<td>high_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>68</td>
+<td>write</td>
+<td>5</td>
+<td>MAIN_0_R5_1</td>
+<td>low_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>69</td>
+<td>write</td>
+<td>2</td>
+<td>MAIN_0_R5_1</td>
+<td>notify_resp</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>70</td>
+<td>read</td>
+<td>1</td>
+<td>MAIN_0_R5_2</td>
+<td>notify</td>
+<td>R5FSS0_CORE1&#x2F;INTR_224</td>
+<td>R5FSS0_CORE1&#x2F;INTR_224</td>
+</tr>
+<tr>
+<td>71</td>
+<td>read</td>
+<td>2</td>
+<td>MAIN_0_R5_2</td>
+<td>response</td>
+<td>R5FSS0_CORE1&#x2F;INTR_225</td>
+<td>R5FSS0_CORE1&#x2F;INTR_225</td>
+</tr>
+<tr>
+<td>72</td>
+<td>write</td>
+<td>1</td>
+<td>MAIN_0_R5_2</td>
+<td>high_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>73</td>
+<td>write</td>
+<td>1</td>
+<td>MAIN_0_R5_2</td>
+<td>low_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>74</td>
+<td>write</td>
+<td>1</td>
+<td>MAIN_0_R5_2</td>
+<td>notify_resp</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>75</td>
+<td>read</td>
+<td>1</td>
+<td>MAIN_0_R5_3</td>
+<td>notify</td>
+<td>R5FSS0_CORE1&#x2F;INTR_226</td>
+<td>R5FSS0_CORE1&#x2F;INTR_226</td>
+</tr>
+<tr>
+<td>76</td>
+<td>read</td>
+<td>2</td>
+<td>MAIN_0_R5_3</td>
+<td>response</td>
+<td>R5FSS0_CORE1&#x2F;INTR_227</td>
+<td>R5FSS0_CORE1&#x2F;INTR_227</td>
+</tr>
+<tr>
+<td>77</td>
+<td>write</td>
+<td>1</td>
+<td>MAIN_0_R5_3</td>
+<td>high_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>78</td>
+<td>write</td>
+<td>1</td>
+<td>MAIN_0_R5_3</td>
+<td>low_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>79</td>
+<td>write</td>
+<td>1</td>
+<td>MAIN_0_R5_3</td>
+<td>notify_resp</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>80</td>
+<td>read</td>
+<td>2</td>
+<td>MAIN_1_R5_0</td>
+<td>notify</td>
+<td>R5FSS1_CORE0&#x2F;INTR_224</td>
+<td>R5FSS1_CORE0&#x2F;INTR_224</td>
+</tr>
+<tr>
+<td>81</td>
+<td>read</td>
+<td>7</td>
+<td>MAIN_1_R5_0</td>
+<td>response</td>
+<td>R5FSS1_CORE0&#x2F;INTR_225</td>
+<td>R5FSS1_CORE0&#x2F;INTR_225</td>
+</tr>
+<tr>
+<td>82</td>
+<td>write</td>
+<td>2</td>
+<td>MAIN_1_R5_0</td>
+<td>high_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>83</td>
+<td>write</td>
+<td>5</td>
+<td>MAIN_1_R5_0</td>
+<td>low_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>84</td>
+<td>write</td>
+<td>2</td>
+<td>MAIN_1_R5_0</td>
+<td>notify_resp</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>85</td>
+<td>read</td>
+<td>2</td>
+<td>MAIN_1_R5_1</td>
+<td>notify</td>
+<td>R5FSS1_CORE0&#x2F;INTR_226</td>
+<td>R5FSS1_CORE0&#x2F;INTR_226</td>
+</tr>
+<tr>
+<td>86</td>
+<td>read</td>
+<td>7</td>
+<td>MAIN_1_R5_1</td>
+<td>response</td>
+<td>R5FSS1_CORE0&#x2F;INTR_227</td>
+<td>R5FSS1_CORE0&#x2F;INTR_227</td>
+</tr>
+<tr>
+<td>87</td>
+<td>write</td>
+<td>2</td>
+<td>MAIN_1_R5_1</td>
+<td>high_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>88</td>
+<td>write</td>
+<td>5</td>
+<td>MAIN_1_R5_1</td>
+<td>low_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>89</td>
+<td>write</td>
+<td>2</td>
+<td>MAIN_1_R5_1</td>
+<td>notify_resp</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>90</td>
+<td>read</td>
+<td>1</td>
+<td>MAIN_1_R5_2</td>
+<td>notify</td>
+<td>R5FSS1_CORE1&#x2F;INTR_224</td>
+<td>R5FSS1_CORE1&#x2F;INTR_224</td>
+</tr>
+<tr>
+<td>91</td>
+<td>read</td>
+<td>2</td>
+<td>MAIN_1_R5_2</td>
+<td>response</td>
+<td>R5FSS1_CORE1&#x2F;INTR_225</td>
+<td>R5FSS1_CORE1&#x2F;INTR_225</td>
+</tr>
+<tr>
+<td>92</td>
+<td>write</td>
+<td>1</td>
+<td>MAIN_1_R5_2</td>
+<td>high_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>93</td>
+<td>write</td>
+<td>1</td>
+<td>MAIN_1_R5_2</td>
+<td>low_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>94</td>
+<td>write</td>
+<td>1</td>
+<td>MAIN_1_R5_2</td>
+<td>notify_resp</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>95</td>
+<td>read</td>
+<td>1</td>
+<td>MAIN_1_R5_3</td>
+<td>notify</td>
+<td>R5FSS1_CORE1&#x2F;INTR_226</td>
+<td>R5FSS1_CORE1&#x2F;INTR_226</td>
+</tr>
+<tr>
+<td>96</td>
+<td>read</td>
+<td>2</td>
+<td>MAIN_1_R5_3</td>
+<td>response</td>
+<td>R5FSS1_CORE1&#x2F;INTR_227</td>
+<td>R5FSS1_CORE1&#x2F;INTR_227</td>
+</tr>
+<tr>
+<td>97</td>
+<td>write</td>
+<td>1</td>
+<td>MAIN_1_R5_3</td>
+<td>high_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>98</td>
+<td>write</td>
+<td>1</td>
+<td>MAIN_1_R5_3</td>
+<td>low_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>99</td>
+<td>write</td>
+<td>1</td>
+<td>MAIN_1_R5_3</td>
+<td>notify_resp</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>100</td>
+<td>read</td>
+<td>2</td>
+<td>ICSSG_0</td>
+<td>notify</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>101</td>
+<td>read</td>
+<td>7</td>
+<td>ICSSG_0</td>
+<td>response</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>102</td>
+<td>write</td>
+<td>2</td>
+<td>ICSSG_0</td>
+<td>high_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>103</td>
+<td>write</td>
+<td>5</td>
+<td>ICSSG_0</td>
+<td>low_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>104</td>
+<td>write</td>
+<td>2</td>
+<td>ICSSG_0</td>
+<td>notify_resp</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+</tbody></table>
+<h4 id="Secure-Proxy-thread-allocation-for-MCU-NAVSS0-SEC-PROXY0"><a href="#Secure-Proxy-thread-allocation-for-MCU-NAVSS0-SEC-PROXY0" class="headerlink" title="Secure Proxy thread allocation for MCU_NAVSS0_SEC_PROXY0"></a>Secure Proxy thread allocation for MCU_NAVSS0_SEC_PROXY0</h4><table>
+<thead>
+<tr>
+<th>Secure Proxy Thread ID</th>
+<th>Direction (write or read)</th>
+<th>Number of Messages</th>
+<th>Host</th>
+<th>Host Function</th>
+<th>IRQ (threshold)</th>
+<th>IRQ (error)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td>read</td>
+<td>2</td>
+<td>MCU_0_R5_0</td>
+<td>notify</td>
+<td>MCU_R5FSS0_CORE0&#x2F;INTR_64</td>
+<td>MCU_R5FSS0_CORE0&#x2F;INTR_64</td>
+</tr>
+<tr>
+<td>1</td>
+<td>read</td>
+<td>20</td>
+<td>MCU_0_R5_0</td>
+<td>response</td>
+<td>MCU_R5FSS0_CORE0&#x2F;INTR_65</td>
+<td>MCU_R5FSS0_CORE0&#x2F;INTR_65</td>
+</tr>
+<tr>
+<td>2</td>
+<td>write</td>
+<td>10</td>
+<td>MCU_0_R5_0</td>
+<td>high_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>3</td>
+<td>write</td>
+<td>10</td>
+<td>MCU_0_R5_0</td>
+<td>low_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>4</td>
+<td>write</td>
+<td>2</td>
+<td>MCU_0_R5_0</td>
+<td>notify_resp</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>5</td>
+<td>read</td>
+<td>2</td>
+<td>MCU_0_R5_1</td>
+<td>notify</td>
+<td>MCU_R5FSS0_CORE0&#x2F;INTR_66</td>
+<td>MCU_R5FSS0_CORE0&#x2F;INTR_66</td>
+</tr>
+<tr>
+<td>6</td>
+<td>read</td>
+<td>20</td>
+<td>MCU_0_R5_1</td>
+<td>response</td>
+<td>MCU_R5FSS0_CORE0&#x2F;INTR_67</td>
+<td>MCU_R5FSS0_CORE0&#x2F;INTR_67</td>
+</tr>
+<tr>
+<td>7</td>
+<td>write</td>
+<td>10</td>
+<td>MCU_0_R5_1</td>
+<td>high_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>8</td>
+<td>write</td>
+<td>10</td>
+<td>MCU_0_R5_1</td>
+<td>low_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>9</td>
+<td>write</td>
+<td>2</td>
+<td>MCU_0_R5_1</td>
+<td>notify_resp</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>10</td>
+<td>read</td>
+<td>1</td>
+<td>MCU_0_R5_2</td>
+<td>notify</td>
+<td>MCU_R5FSS0_CORE1&#x2F;INTR_64</td>
+<td>MCU_R5FSS0_CORE1&#x2F;INTR_64</td>
+</tr>
+<tr>
+<td>11</td>
+<td>read</td>
+<td>2</td>
+<td>MCU_0_R5_2</td>
+<td>response</td>
+<td>MCU_R5FSS0_CORE1&#x2F;INTR_65</td>
+<td>MCU_R5FSS0_CORE1&#x2F;INTR_65</td>
+</tr>
+<tr>
+<td>12</td>
+<td>write</td>
+<td>1</td>
+<td>MCU_0_R5_2</td>
+<td>high_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>13</td>
+<td>write</td>
+<td>1</td>
+<td>MCU_0_R5_2</td>
+<td>low_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>14</td>
+<td>write</td>
+<td>1</td>
+<td>MCU_0_R5_2</td>
+<td>notify_resp</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>15</td>
+<td>read</td>
+<td>1</td>
+<td>MCU_0_R5_3</td>
+<td>notify</td>
+<td>MCU_R5FSS0_CORE1&#x2F;INTR_66</td>
+<td>MCU_R5FSS0_CORE1&#x2F;INTR_66</td>
+</tr>
+<tr>
+<td>16</td>
+<td>read</td>
+<td>2</td>
+<td>MCU_0_R5_3</td>
+<td>response</td>
+<td>MCU_R5FSS0_CORE1&#x2F;INTR_67</td>
+<td>MCU_R5FSS0_CORE1&#x2F;INTR_67</td>
+</tr>
+<tr>
+<td>17</td>
+<td>write</td>
+<td>1</td>
+<td>MCU_0_R5_3</td>
+<td>high_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>18</td>
+<td>write</td>
+<td>1</td>
+<td>MCU_0_R5_3</td>
+<td>low_priority</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>19</td>
+<td>write</td>
+<td>1</td>
+<td>MCU_0_R5_3</td>
+<td>notify_resp</td>
+<td>N&#x2F;A</td>
+<td>N&#x2F;A</td>
+</tr>
+</tbody></table>
+<h4 id="Secure-Proxy-thread-allocation-for-MCU-NAVSS0-SEC-PROXY0-1"><a href="#Secure-Proxy-thread-allocation-for-MCU-NAVSS0-SEC-PROXY0-1" class="headerlink" title="Secure Proxy thread allocation for MCU_NAVSS0_SEC_PROXY0"></a>Secure Proxy thread allocation for MCU_NAVSS0_SEC_PROXY0</h4><h3 id="List-of-priv-ids"><a href="#List-of-priv-ids" class="headerlink" title="List of priv-ids"></a>List of priv-ids</h3><table>
+<thead>
+<tr>
+<th>Master name</th>
+<th>priv-id</th>
+<th>secure</th>
+<th>non-secure</th>
+<th>privileged</th>
+<th>user</th>
+<th>HOST-IDs</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>a72_non_secure_supervisor</td>
+<td>1</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>12,13,14</td>
+</tr>
+<tr>
+<td>a72_secure_supervisor</td>
+<td>1</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>False</td>
+<td>10,11</td>
+</tr>
+<tr>
+<td>sproxy_private</td>
+<td>11</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>main_0_c7x_0_secure</td>
+<td>21</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>20</td>
+</tr>
+<tr>
+<td>main_0_c7x_0_nonsecure</td>
+<td>21</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>21</td>
+</tr>
+<tr>
+<td>pulsar_0</td>
+<td>96</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>3,4</td>
+</tr>
+<tr>
+<td>dm</td>
+<td>96</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>pulsar_1</td>
+<td>97</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>False</td>
+<td>5,6</td>
+</tr>
+<tr>
+<td>main_0_icssg_0</td>
+<td>136</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>50</td>
+</tr>
+<tr>
+<td>gpu_0</td>
+<td>187</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>30</td>
+</tr>
+<tr>
+<td>everyone</td>
+<td>195</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>block_everyone</td>
+<td>197</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>dmsc</td>
+<td>202</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>N&#x2F;A</td>
+</tr>
+<tr>
+<td>main_0_r5_0_nonsecure</td>
+<td>212</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>35</td>
+</tr>
+<tr>
+<td>main_0_r5_0_secure</td>
+<td>212</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>36</td>
+</tr>
+<tr>
+<td>main_0_r5_1_nonsecure</td>
+<td>213</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>37</td>
+</tr>
+<tr>
+<td>main_0_r5_1_secure</td>
+<td>213</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>38</td>
+</tr>
+<tr>
+<td>main_1_r5_0_nonsecure</td>
+<td>214</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>40</td>
+</tr>
+<tr>
+<td>main_1_r5_0_secure</td>
+<td>214</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>41</td>
+</tr>
+<tr>
+<td>main_1_r5_1_nonsecure</td>
+<td>215</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>42</td>
+</tr>
+<tr>
+<td>main_1_r5_1_secure</td>
+<td>215</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>43</td>
+</tr>
+<tr>
+<td>main_0_c6x_0_secure</td>
+<td>220</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>25</td>
+</tr>
+<tr>
+<td>main_0_c6x_0_nonsecure</td>
+<td>220</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>26</td>
+</tr>
+<tr>
+<td>main_0_c6x_1_secure</td>
+<td>221</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>27</td>
+</tr>
+<tr>
+<td>main_0_c6x_1_nonsecure</td>
+<td>221</td>
+<td>False</td>
+<td>True</td>
+<td>True</td>
+<td>True</td>
+<td>28</td>
+</tr>
+</tbody></table>
+<h3 id="J721E-Host-Descriptions"><a href="#J721E-Host-Descriptions" class="headerlink" title="J721E Host Descriptions"></a>J721E Host Descriptions</h3><h4 id="Enumeration-of-Host-IDs"><a href="#Enumeration-of-Host-IDs" class="headerlink" title="Enumeration of Host IDs"></a>Enumeration of Host IDs</h4><table>
+<thead>
+<tr>
+<th>Host ID</th>
+<th>Host Name</th>
+<th>Security Status</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td>DMSC</td>
+<td>Secure</td>
+<td>Security Controller</td>
+</tr>
+<tr>
+<td>3</td>
+<td>MCU_0_R5_0</td>
+<td>Non Secure</td>
+<td>Cortex R5 context 0 on MCU island</td>
+</tr>
+<tr>
+<td>4</td>
+<td>MCU_0_R5_1</td>
+<td>Secure</td>
+<td>Cortex R5 context 1 on MCU island(Boot)</td>
+</tr>
+<tr>
+<td>5</td>
+<td>MCU_0_R5_2</td>
+<td>Non Secure</td>
+<td>Cortex R5 context 2 on MCU island</td>
+</tr>
+<tr>
+<td>6</td>
+<td>MCU_0_R5_3</td>
+<td>Secure</td>
+<td>Cortex R5 context 3 on MCU island</td>
+</tr>
+<tr>
+<td>10</td>
+<td>A72_0</td>
+<td>Secure</td>
+<td>Cortex A72 context 0 on Main island</td>
+</tr>
+<tr>
+<td>11</td>
+<td>A72_1</td>
+<td>Secure</td>
+<td>Cortex A72 context 1 on Main island</td>
+</tr>
+<tr>
+<td>12</td>
+<td>A72_2</td>
+<td>Non Secure</td>
+<td>Cortex A72 context 2 on Main island</td>
+</tr>
+<tr>
+<td>13</td>
+<td>A72_3</td>
+<td>Non Secure</td>
+<td>Cortex A72 context 3 on Main island</td>
+</tr>
+<tr>
+<td>14</td>
+<td>A72_4</td>
+<td>Non Secure</td>
+<td>Cortex A72 context 4 on Main island</td>
+</tr>
+<tr>
+<td>20</td>
+<td>C7X_0</td>
+<td>Secure</td>
+<td>C7x Context 0 on Main island</td>
+</tr>
+<tr>
+<td>21</td>
+<td>C7X_1</td>
+<td>Non Secure</td>
+<td>C7x context 1 on Main island</td>
+</tr>
+<tr>
+<td>25</td>
+<td>C6X_0_0</td>
+<td>Secure</td>
+<td>C6x_0 Context 0 on Main island</td>
+</tr>
+<tr>
+<td>26</td>
+<td>C6X_0_1</td>
+<td>Non Secure</td>
+<td>C6x_0 context 1 on Main island</td>
+</tr>
+<tr>
+<td>27</td>
+<td>C6X_1_0</td>
+<td>Secure</td>
+<td>C6x_1 Context 0 on Main island</td>
+</tr>
+<tr>
+<td>28</td>
+<td>C6X_1_1</td>
+<td>Non Secure</td>
+<td>C6x_1 context 1 on Main island</td>
+</tr>
+<tr>
+<td>30</td>
+<td>GPU_0</td>
+<td>Non Secure</td>
+<td>RGX context 0 on Main island</td>
+</tr>
+<tr>
+<td>35</td>
+<td>MAIN_0_R5_0</td>
+<td>Non Secure</td>
+<td>Cortex R5_0 context 0 on Main island</td>
+</tr>
+<tr>
+<td>36</td>
+<td>MAIN_0_R5_1</td>
+<td>Secure</td>
+<td>Cortex R5_0 context 1 on Main island</td>
+</tr>
+<tr>
+<td>37</td>
+<td>MAIN_0_R5_2</td>
+<td>Non Secure</td>
+<td>Cortex R5_0 context 2 on Main island</td>
+</tr>
+<tr>
+<td>38</td>
+<td>MAIN_0_R5_3</td>
+<td>Secure</td>
+<td>Cortex R5_0 context 3 on MCU island</td>
+</tr>
+<tr>
+<td>40</td>
+<td>MAIN_1_R5_0</td>
+<td>Non Secure</td>
+<td>Cortex R5_1 context 0 on Main island</td>
+</tr>
+<tr>
+<td>41</td>
+<td>MAIN_1_R5_1</td>
+<td>Secure</td>
+<td>Cortex R5_1 context 1 on Main island</td>
+</tr>
+<tr>
+<td>42</td>
+<td>MAIN_1_R5_2</td>
+<td>Non Secure</td>
+<td>Cortex R5_1 context 2 on Main island</td>
+</tr>
+<tr>
+<td>43</td>
+<td>MAIN_1_R5_3</td>
+<td>Secure</td>
+<td>Cortex R5_1 context 3 on MCU island</td>
+</tr>
+<tr>
+<td>50</td>
+<td>ICSSG_0</td>
+<td>Non Secure</td>
+<td>ICSSG context 0 on Main island</td>
+</tr>
+</tbody></table>
+<h3 id="J721E-Devices-Descriptions"><a href="#J721E-Devices-Descriptions" class="headerlink" title="J721E Devices Descriptions"></a>J721E Devices Descriptions</h3><h4 id="Enumeration-of-Device-IDs"><a href="#Enumeration-of-Device-IDs" class="headerlink" title="Enumeration of Device IDs"></a>Enumeration of Device IDs</h4><table>
+<thead>
+<tr>
+<th>Device ID</th>
+<th>Device Name</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td>J721E_DEV_MCU_ADC12_16FFC0</td>
+</tr>
+<tr>
+<td>1</td>
+<td>J721E_DEV_MCU_ADC12_16FFC1</td>
+</tr>
+<tr>
+<td>2</td>
+<td>J721E_DEV_ATL0</td>
+</tr>
+<tr>
+<td>3</td>
+<td>J721E_DEV_COMPUTE_CLUSTER0</td>
+</tr>
+<tr>
+<td>4</td>
+<td>J721E_DEV_A72SS0</td>
+</tr>
+<tr>
+<td>5</td>
+<td>J721E_DEV_COMPUTE_CLUSTER0_CFG_WRAP</td>
+</tr>
+<tr>
+<td>6</td>
+<td>J721E_DEV_COMPUTE_CLUSTER0_CLEC</td>
+</tr>
+<tr>
+<td>7</td>
+<td>J721E_DEV_COMPUTE_CLUSTER0_CORE_CORE</td>
+</tr>
+<tr>
+<td>8</td>
+<td>J721E_DEV_COMPUTE_CLUSTER0_DDR32SS_EMIF0_EW</td>
+</tr>
+<tr>
+<td>9</td>
+<td>J721E_DEV_COMPUTE_CLUSTER0_DEBUG_WRAP</td>
+</tr>
+<tr>
+<td>10</td>
+<td>J721E_DEV_COMPUTE_CLUSTER0_DIVH2_DIVH0</td>
+</tr>
+<tr>
+<td>11</td>
+<td>J721E_DEV_COMPUTE_CLUSTER0_DIVP_TFT0</td>
+</tr>
+<tr>
+<td>12</td>
+<td>J721E_DEV_COMPUTE_CLUSTER0_DMSC_WRAP</td>
+</tr>
+<tr>
+<td>13</td>
+<td>J721E_DEV_COMPUTE_CLUSTER0_EN_MSMC_DOMAIN</td>
+</tr>
+<tr>
+<td>14</td>
+<td>J721E_DEV_COMPUTE_CLUSTER0_GIC500SS</td>
+</tr>
+<tr>
+<td>15</td>
+<td>J721E_DEV_C71SS0</td>
+</tr>
+<tr>
+<td>16</td>
+<td>J721E_DEV_C71SS0_MMA</td>
+</tr>
+<tr>
+<td>17</td>
+<td>J721E_DEV_COMPUTE_CLUSTER0_PBIST_WRAP</td>
+</tr>
+<tr>
+<td>18</td>
+<td>J721E_DEV_MCU_CPSW0</td>
+</tr>
+<tr>
+<td>19</td>
+<td>J721E_DEV_CPSW0</td>
+</tr>
+<tr>
+<td>20</td>
+<td>J721E_DEV_CPT2_AGGR0</td>
+</tr>
+<tr>
+<td>21</td>
+<td>J721E_DEV_CPT2_AGGR1</td>
+</tr>
+<tr>
+<td>22</td>
+<td>J721E_DEV_WKUP_DMSC0</td>
+</tr>
+<tr>
+<td>23</td>
+<td>J721E_DEV_CPT2_AGGR2</td>
+</tr>
+<tr>
+<td>24</td>
+<td>J721E_DEV_MCU_CPT2_AGGR0</td>
+</tr>
+<tr>
+<td>25</td>
+<td>J721E_DEV_CSI_PSILSS0</td>
+</tr>
+<tr>
+<td>26</td>
+<td>J721E_DEV_CSI_RX_IF0</td>
+</tr>
+<tr>
+<td>27</td>
+<td>J721E_DEV_CSI_RX_IF1</td>
+</tr>
+<tr>
+<td>28</td>
+<td>J721E_DEV_CSI_TX_IF0</td>
+</tr>
+<tr>
+<td>29</td>
+<td>J721E_DEV_STM0</td>
+</tr>
+<tr>
+<td>30</td>
+<td>J721E_DEV_DCC0</td>
+</tr>
+<tr>
+<td>31</td>
+<td>J721E_DEV_DCC1</td>
+</tr>
+<tr>
+<td>32</td>
+<td>J721E_DEV_DCC2</td>
+</tr>
+<tr>
+<td>33</td>
+<td>J721E_DEV_DCC3</td>
+</tr>
+<tr>
+<td>34</td>
+<td>J721E_DEV_DCC4</td>
+</tr>
+<tr>
+<td>35</td>
+<td>J721E_DEV_MCU_TIMER0</td>
+</tr>
+<tr>
+<td>36</td>
+<td>J721E_DEV_DCC5</td>
+</tr>
+<tr>
+<td>37</td>
+<td>J721E_DEV_DCC6</td>
+</tr>
+<tr>
+<td>38</td>
+<td>J721E_DEV_DCC7</td>
+</tr>
+<tr>
+<td>39</td>
+<td>J721E_DEV_DCC8</td>
+</tr>
+<tr>
+<td>40</td>
+<td>J721E_DEV_DCC9</td>
+</tr>
+<tr>
+<td>41</td>
+<td>J721E_DEV_DCC10</td>
+</tr>
+<tr>
+<td>42</td>
+<td>J721E_DEV_DCC11</td>
+</tr>
+<tr>
+<td>43</td>
+<td>J721E_DEV_DCC12</td>
+</tr>
+<tr>
+<td>44</td>
+<td>J721E_DEV_MCU_DCC0</td>
+</tr>
+<tr>
+<td>45</td>
+<td>J721E_DEV_MCU_DCC1</td>
+</tr>
+<tr>
+<td>46</td>
+<td>J721E_DEV_MCU_DCC2</td>
+</tr>
+<tr>
+<td>47</td>
+<td>J721E_DEV_DDR0</td>
+</tr>
+<tr>
+<td>48</td>
+<td>J721E_DEV_DMPAC0</td>
+</tr>
+<tr>
+<td>49</td>
+<td>J721E_DEV_TIMER0</td>
+</tr>
+<tr>
+<td>50</td>
+<td>J721E_DEV_TIMER1</td>
+</tr>
+<tr>
+<td>51</td>
+<td>J721E_DEV_TIMER2</td>
+</tr>
+<tr>
+<td>52</td>
+<td>J721E_DEV_TIMER3</td>
+</tr>
+<tr>
+<td>53</td>
+<td>J721E_DEV_TIMER4</td>
+</tr>
+<tr>
+<td>54</td>
+<td>J721E_DEV_TIMER5</td>
+</tr>
+<tr>
+<td>55</td>
+<td>J721E_DEV_TIMER6</td>
+</tr>
+<tr>
+<td>57</td>
+<td>J721E_DEV_TIMER7</td>
+</tr>
+<tr>
+<td>58</td>
+<td>J721E_DEV_TIMER8</td>
+</tr>
+<tr>
+<td>59</td>
+<td>J721E_DEV_TIMER9</td>
+</tr>
+<tr>
+<td>60</td>
+<td>J721E_DEV_TIMER10</td>
+</tr>
+<tr>
+<td>61</td>
+<td>J721E_DEV_GTC0</td>
+</tr>
+<tr>
+<td>62</td>
+<td>J721E_DEV_TIMER11</td>
+</tr>
+<tr>
+<td>63</td>
+<td>J721E_DEV_TIMER12</td>
+</tr>
+<tr>
+<td>64</td>
+<td>J721E_DEV_TIMER13</td>
+</tr>
+<tr>
+<td>65</td>
+<td>J721E_DEV_TIMER14</td>
+</tr>
+<tr>
+<td>66</td>
+<td>J721E_DEV_TIMER15</td>
+</tr>
+<tr>
+<td>67</td>
+<td>J721E_DEV_TIMER16</td>
+</tr>
+<tr>
+<td>68</td>
+<td>J721E_DEV_TIMER17</td>
+</tr>
+<tr>
+<td>69</td>
+<td>J721E_DEV_TIMER18</td>
+</tr>
+<tr>
+<td>70</td>
+<td>J721E_DEV_TIMER19</td>
+</tr>
+<tr>
+<td>71</td>
+<td>J721E_DEV_MCU_TIMER1</td>
+</tr>
+<tr>
+<td>72</td>
+<td>J721E_DEV_MCU_TIMER2</td>
+</tr>
+<tr>
+<td>73</td>
+<td>J721E_DEV_MCU_TIMER3</td>
+</tr>
+<tr>
+<td>74</td>
+<td>J721E_DEV_MCU_TIMER4</td>
+</tr>
+<tr>
+<td>75</td>
+<td>J721E_DEV_MCU_TIMER5</td>
+</tr>
+<tr>
+<td>76</td>
+<td>J721E_DEV_MCU_TIMER6</td>
+</tr>
+<tr>
+<td>77</td>
+<td>J721E_DEV_MCU_TIMER7</td>
+</tr>
+<tr>
+<td>78</td>
+<td>J721E_DEV_MCU_TIMER8</td>
+</tr>
+<tr>
+<td>79</td>
+<td>J721E_DEV_MCU_TIMER9</td>
+</tr>
+<tr>
+<td>80</td>
+<td>J721E_DEV_ECAP0</td>
+</tr>
+<tr>
+<td>81</td>
+<td>J721E_DEV_ECAP1</td>
+</tr>
+<tr>
+<td>82</td>
+<td>J721E_DEV_ECAP2</td>
+</tr>
+<tr>
+<td>83</td>
+<td>J721E_DEV_EHRPWM0</td>
+</tr>
+<tr>
+<td>84</td>
+<td>J721E_DEV_EHRPWM1</td>
+</tr>
+<tr>
+<td>85</td>
+<td>J721E_DEV_EHRPWM2</td>
+</tr>
+<tr>
+<td>86</td>
+<td>J721E_DEV_EHRPWM3</td>
+</tr>
+<tr>
+<td>87</td>
+<td>J721E_DEV_EHRPWM4</td>
+</tr>
+<tr>
+<td>88</td>
+<td>J721E_DEV_EHRPWM5</td>
+</tr>
+<tr>
+<td>89</td>
+<td>J721E_DEV_ELM0</td>
+</tr>
+<tr>
+<td>90</td>
+<td>J721E_DEV_EMIF_DATA_0_VD</td>
+</tr>
+<tr>
+<td>91</td>
+<td>J721E_DEV_MMCSD0</td>
+</tr>
+<tr>
+<td>92</td>
+<td>J721E_DEV_MMCSD1</td>
+</tr>
+<tr>
+<td>93</td>
+<td>J721E_DEV_MMCSD2</td>
+</tr>
+<tr>
+<td>94</td>
+<td>J721E_DEV_EQEP0</td>
+</tr>
+<tr>
+<td>95</td>
+<td>J721E_DEV_EQEP1</td>
+</tr>
+<tr>
+<td>96</td>
+<td>J721E_DEV_EQEP2</td>
+</tr>
+<tr>
+<td>97</td>
+<td>J721E_DEV_ESM0</td>
+</tr>
+<tr>
+<td>98</td>
+<td>J721E_DEV_MCU_ESM0</td>
+</tr>
+<tr>
+<td>99</td>
+<td>J721E_DEV_WKUP_ESM0</td>
+</tr>
+<tr>
+<td>100</td>
+<td>J721E_DEV_MCU_FSS0</td>
+</tr>
+<tr>
+<td>101</td>
+<td>J721E_DEV_MCU_FSS0_FSAS_0</td>
+</tr>
+<tr>
+<td>102</td>
+<td>J721E_DEV_MCU_FSS0_HYPERBUS1P0_0</td>
+</tr>
+<tr>
+<td>103</td>
+<td>J721E_DEV_MCU_FSS0_OSPI_0</td>
+</tr>
+<tr>
+<td>104</td>
+<td>J721E_DEV_MCU_FSS0_OSPI_1</td>
+</tr>
+<tr>
+<td>105</td>
+<td>J721E_DEV_GPIO0</td>
+</tr>
+<tr>
+<td>106</td>
+<td>J721E_DEV_GPIO1</td>
+</tr>
+<tr>
+<td>107</td>
+<td>J721E_DEV_GPIO2</td>
+</tr>
+<tr>
+<td>108</td>
+<td>J721E_DEV_GPIO3</td>
+</tr>
+<tr>
+<td>109</td>
+<td>J721E_DEV_GPIO4</td>
+</tr>
+<tr>
+<td>110</td>
+<td>J721E_DEV_GPIO5</td>
+</tr>
+<tr>
+<td>111</td>
+<td>J721E_DEV_GPIO6</td>
+</tr>
+<tr>
+<td>112</td>
+<td>J721E_DEV_GPIO7</td>
+</tr>
+<tr>
+<td>113</td>
+<td>J721E_DEV_WKUP_GPIO0</td>
+</tr>
+<tr>
+<td>114</td>
+<td>J721E_DEV_WKUP_GPIO1</td>
+</tr>
+<tr>
+<td>115</td>
+<td>J721E_DEV_GPMC0</td>
+</tr>
+<tr>
+<td>116</td>
+<td>J721E_DEV_I3C0</td>
+</tr>
+<tr>
+<td>117</td>
+<td>J721E_DEV_MCU_I3C0</td>
+</tr>
+<tr>
+<td>118</td>
+<td>J721E_DEV_MCU_I3C1</td>
+</tr>
+<tr>
+<td>119</td>
+<td>J721E_DEV_PRU_ICSSG0</td>
+</tr>
+<tr>
+<td>120</td>
+<td>J721E_DEV_PRU_ICSSG1</td>
+</tr>
+<tr>
+<td>121</td>
+<td>J721E_DEV_C66SS0_INTROUTER0</td>
+</tr>
+<tr>
+<td>122</td>
+<td>J721E_DEV_C66SS1_INTROUTER0</td>
+</tr>
+<tr>
+<td>123</td>
+<td>J721E_DEV_CMPEVENT_INTRTR0</td>
+</tr>
+<tr>
+<td>124</td>
+<td>J721E_DEV_GPU0</td>
+</tr>
+<tr>
+<td>125</td>
+<td>J721E_DEV_GPU0_GPU_0</td>
+</tr>
+<tr>
+<td>126</td>
+<td>J721E_DEV_GPU0_GPUCORE_0</td>
+</tr>
+<tr>
+<td>127</td>
+<td>J721E_DEV_LED0</td>
+</tr>
+<tr>
+<td>128</td>
+<td>J721E_DEV_MAIN2MCU_LVL_INTRTR0</td>
+</tr>
+<tr>
+<td>130</td>
+<td>J721E_DEV_MAIN2MCU_PLS_INTRTR0</td>
+</tr>
+<tr>
+<td>131</td>
+<td>J721E_DEV_GPIOMUX_INTRTR0</td>
+</tr>
+<tr>
+<td>132</td>
+<td>J721E_DEV_WKUP_PORZ_SYNC0</td>
+</tr>
+<tr>
+<td>133</td>
+<td>J721E_DEV_PSC0</td>
+</tr>
+<tr>
+<td>134</td>
+<td>J721E_DEV_R5FSS0_INTROUTER0</td>
+</tr>
+<tr>
+<td>135</td>
+<td>J721E_DEV_R5FSS1_INTROUTER0</td>
+</tr>
+<tr>
+<td>136</td>
+<td>J721E_DEV_TIMESYNC_INTRTR0</td>
+</tr>
+<tr>
+<td>137</td>
+<td>J721E_DEV_WKUP_GPIOMUX_INTRTR0</td>
+</tr>
+<tr>
+<td>138</td>
+<td>J721E_DEV_WKUP_PSC0</td>
+</tr>
+<tr>
+<td>139</td>
+<td>J721E_DEV_AASRC0</td>
+</tr>
+<tr>
+<td>140</td>
+<td>J721E_DEV_C66SS0</td>
+</tr>
+<tr>
+<td>141</td>
+<td>J721E_DEV_C66SS1</td>
+</tr>
+<tr>
+<td>142</td>
+<td>J721E_DEV_C66SS0_CORE0</td>
+</tr>
+<tr>
+<td>143</td>
+<td>J721E_DEV_C66SS1_CORE0</td>
+</tr>
+<tr>
+<td>144</td>
+<td>J721E_DEV_DECODER0</td>
+</tr>
+<tr>
+<td>145</td>
+<td>J721E_DEV_WKUP_DDPA0</td>
+</tr>
+<tr>
+<td>146</td>
+<td>J721E_DEV_UART0</td>
+</tr>
+<tr>
+<td>147</td>
+<td>J721E_DEV_DPHY_RX0</td>
+</tr>
+<tr>
+<td>148</td>
+<td>J721E_DEV_DPHY_RX1</td>
+</tr>
+<tr>
+<td>149</td>
+<td>J721E_DEV_MCU_UART0</td>
+</tr>
+<tr>
+<td>150</td>
+<td>J721E_DEV_DSS_DSI0</td>
+</tr>
+<tr>
+<td>151</td>
+<td>J721E_DEV_DSS_EDP0</td>
+</tr>
+<tr>
+<td>152</td>
+<td>J721E_DEV_DSS0</td>
+</tr>
+<tr>
+<td>153</td>
+<td>J721E_DEV_ENCODER0</td>
+</tr>
+<tr>
+<td>154</td>
+<td>J721E_DEV_WKUP_VTM0</td>
+</tr>
+<tr>
+<td>155</td>
+<td>J721E_DEV_MAIN2WKUPMCU_VD</td>
+</tr>
+<tr>
+<td>156</td>
+<td>J721E_DEV_MCAN0</td>
+</tr>
+<tr>
+<td>157</td>
+<td>J721E_DEV_BOARD0</td>
+</tr>
+<tr>
+<td>158</td>
+<td>J721E_DEV_MCAN1</td>
+</tr>
+<tr>
+<td>160</td>
+<td>J721E_DEV_MCAN2</td>
+</tr>
+<tr>
+<td>161</td>
+<td>J721E_DEV_MCAN3</td>
+</tr>
+<tr>
+<td>162</td>
+<td>J721E_DEV_MCAN4</td>
+</tr>
+<tr>
+<td>163</td>
+<td>J721E_DEV_MCAN5</td>
+</tr>
+<tr>
+<td>164</td>
+<td>J721E_DEV_MCAN6</td>
+</tr>
+<tr>
+<td>165</td>
+<td>J721E_DEV_MCAN7</td>
+</tr>
+<tr>
+<td>166</td>
+<td>J721E_DEV_MCAN8</td>
+</tr>
+<tr>
+<td>167</td>
+<td>J721E_DEV_MCAN9</td>
+</tr>
+<tr>
+<td>168</td>
+<td>J721E_DEV_MCAN10</td>
+</tr>
+<tr>
+<td>169</td>
+<td>J721E_DEV_MCAN11</td>
+</tr>
+<tr>
+<td>170</td>
+<td>J721E_DEV_MCAN12</td>
+</tr>
+<tr>
+<td>171</td>
+<td>J721E_DEV_MCAN13</td>
+</tr>
+<tr>
+<td>172</td>
+<td>J721E_DEV_MCU_MCAN0</td>
+</tr>
+<tr>
+<td>173</td>
+<td>J721E_DEV_MCU_MCAN1</td>
+</tr>
+<tr>
+<td>174</td>
+<td>J721E_DEV_MCASP0</td>
+</tr>
+<tr>
+<td>175</td>
+<td>J721E_DEV_MCASP1</td>
+</tr>
+<tr>
+<td>176</td>
+<td>J721E_DEV_MCASP2</td>
+</tr>
+<tr>
+<td>177</td>
+<td>J721E_DEV_MCASP3</td>
+</tr>
+<tr>
+<td>178</td>
+<td>J721E_DEV_MCASP4</td>
+</tr>
+<tr>
+<td>179</td>
+<td>J721E_DEV_MCASP5</td>
+</tr>
+<tr>
+<td>180</td>
+<td>J721E_DEV_MCASP6</td>
+</tr>
+<tr>
+<td>181</td>
+<td>J721E_DEV_MCASP7</td>
+</tr>
+<tr>
+<td>182</td>
+<td>J721E_DEV_MCASP8</td>
+</tr>
+<tr>
+<td>183</td>
+<td>J721E_DEV_MCASP9</td>
+</tr>
+<tr>
+<td>184</td>
+<td>J721E_DEV_MCASP10</td>
+</tr>
+<tr>
+<td>185</td>
+<td>J721E_DEV_MCASP11</td>
+</tr>
+<tr>
+<td>186</td>
+<td>J721E_DEV_MLB0</td>
+</tr>
+<tr>
+<td>187</td>
+<td>J721E_DEV_I2C0</td>
+</tr>
+<tr>
+<td>188</td>
+<td>J721E_DEV_I2C1</td>
+</tr>
+<tr>
+<td>189</td>
+<td>J721E_DEV_I2C2</td>
+</tr>
+<tr>
+<td>190</td>
+<td>J721E_DEV_I2C3</td>
+</tr>
+<tr>
+<td>191</td>
+<td>J721E_DEV_I2C4</td>
+</tr>
+<tr>
+<td>192</td>
+<td>J721E_DEV_I2C5</td>
+</tr>
+<tr>
+<td>193</td>
+<td>J721E_DEV_I2C6</td>
+</tr>
+<tr>
+<td>194</td>
+<td>J721E_DEV_MCU_I2C0</td>
+</tr>
+<tr>
+<td>195</td>
+<td>J721E_DEV_MCU_I2C1</td>
+</tr>
+<tr>
+<td>197</td>
+<td>J721E_DEV_WKUP_I2C0</td>
+</tr>
+<tr>
+<td>199</td>
+<td>J721E_DEV_NAVSS0</td>
+</tr>
+<tr>
+<td>201</td>
+<td>J721E_DEV_NAVSS0_CPTS_0</td>
+</tr>
+<tr>
+<td>202</td>
+<td>J721E_DEV_A72SS0_CORE0</td>
+</tr>
+<tr>
+<td>203</td>
+<td>J721E_DEV_A72SS0_CORE1</td>
+</tr>
+<tr>
+<td>206</td>
+<td>J721E_DEV_NAVSS0_DTI_0</td>
+</tr>
+<tr>
+<td>207</td>
+<td>J721E_DEV_NAVSS0_MODSS_INTAGGR_0</td>
+</tr>
+<tr>
+<td>208</td>
+<td>J721E_DEV_NAVSS0_MODSS_INTAGGR_1</td>
+</tr>
+<tr>
+<td>209</td>
+<td>J721E_DEV_NAVSS0_UDMASS_INTAGGR_0</td>
+</tr>
+<tr>
+<td>210</td>
+<td>J721E_DEV_NAVSS0_PROXY_0</td>
+</tr>
+<tr>
+<td>211</td>
+<td>J721E_DEV_NAVSS0_RINGACC_0</td>
+</tr>
+<tr>
+<td>212</td>
+<td>J721E_DEV_NAVSS0_UDMAP_0</td>
+</tr>
+<tr>
+<td>213</td>
+<td>J721E_DEV_NAVSS0_INTR_ROUTER_0</td>
+</tr>
+<tr>
+<td>214</td>
+<td>J721E_DEV_NAVSS0_MAILBOX_0</td>
+</tr>
+<tr>
+<td>215</td>
+<td>J721E_DEV_NAVSS0_MAILBOX_1</td>
+</tr>
+<tr>
+<td>216</td>
+<td>J721E_DEV_NAVSS0_MAILBOX_2</td>
+</tr>
+<tr>
+<td>217</td>
+<td>J721E_DEV_NAVSS0_MAILBOX_3</td>
+</tr>
+<tr>
+<td>218</td>
+<td>J721E_DEV_NAVSS0_MAILBOX_4</td>
+</tr>
+<tr>
+<td>219</td>
+<td>J721E_DEV_NAVSS0_MAILBOX_5</td>
+</tr>
+<tr>
+<td>220</td>
+<td>J721E_DEV_NAVSS0_MAILBOX_6</td>
+</tr>
+<tr>
+<td>221</td>
+<td>J721E_DEV_NAVSS0_MAILBOX_7</td>
+</tr>
+<tr>
+<td>222</td>
+<td>J721E_DEV_NAVSS0_MAILBOX_8</td>
+</tr>
+<tr>
+<td>223</td>
+<td>J721E_DEV_NAVSS0_MAILBOX_9</td>
+</tr>
+<tr>
+<td>224</td>
+<td>J721E_DEV_NAVSS0_MAILBOX_10</td>
+</tr>
+<tr>
+<td>225</td>
+<td>J721E_DEV_NAVSS0_MAILBOX_11</td>
+</tr>
+<tr>
+<td>226</td>
+<td>J721E_DEV_NAVSS0_SPINLOCK_0</td>
+</tr>
+<tr>
+<td>227</td>
+<td>J721E_DEV_NAVSS0_MCRC_0</td>
+</tr>
+<tr>
+<td>228</td>
+<td>J721E_DEV_NAVSS0_TBU_0</td>
+</tr>
+<tr>
+<td>229</td>
+<td>J721E_DEV_NAVSS0_TCU_0</td>
+</tr>
+<tr>
+<td>230</td>
+<td>J721E_DEV_NAVSS0_TIMERMGR_0</td>
+</tr>
+<tr>
+<td>231</td>
+<td>J721E_DEV_NAVSS0_TIMERMGR_1</td>
+</tr>
+<tr>
+<td>232</td>
+<td>J721E_DEV_MCU_NAVSS0</td>
+</tr>
+<tr>
+<td>233</td>
+<td>J721E_DEV_MCU_NAVSS0_UDMASS_INTA_0</td>
+</tr>
+<tr>
+<td>234</td>
+<td>J721E_DEV_MCU_NAVSS0_PROXY0</td>
+</tr>
+<tr>
+<td>235</td>
+<td>J721E_DEV_MCU_NAVSS0_RINGACC0</td>
+</tr>
+<tr>
+<td>236</td>
+<td>J721E_DEV_MCU_NAVSS0_UDMAP_0</td>
+</tr>
+<tr>
+<td>237</td>
+<td>J721E_DEV_MCU_NAVSS0_INTR_0</td>
+</tr>
+<tr>
+<td>238</td>
+<td>J721E_DEV_MCU_NAVSS0_MCRC_0</td>
+</tr>
+<tr>
+<td>239</td>
+<td>J721E_DEV_PCIE0</td>
+</tr>
+<tr>
+<td>240</td>
+<td>J721E_DEV_PCIE1</td>
+</tr>
+<tr>
+<td>241</td>
+<td>J721E_DEV_PCIE2</td>
+</tr>
+<tr>
+<td>242</td>
+<td>J721E_DEV_PCIE3</td>
+</tr>
+<tr>
+<td>243</td>
+<td>J721E_DEV_R5FSS0</td>
+</tr>
+<tr>
+<td>244</td>
+<td>J721E_DEV_R5FSS1</td>
+</tr>
+<tr>
+<td>245</td>
+<td>J721E_DEV_R5FSS0_CORE0</td>
+</tr>
+<tr>
+<td>246</td>
+<td>J721E_DEV_R5FSS0_CORE1</td>
+</tr>
+<tr>
+<td>247</td>
+<td>J721E_DEV_R5FSS1_CORE0</td>
+</tr>
+<tr>
+<td>248</td>
+<td>J721E_DEV_R5FSS1_CORE1</td>
+</tr>
+<tr>
+<td>249</td>
+<td>J721E_DEV_MCU_R5FSS0</td>
+</tr>
+<tr>
+<td>250</td>
+<td>J721E_DEV_MCU_R5FSS0_CORE0</td>
+</tr>
+<tr>
+<td>251</td>
+<td>J721E_DEV_MCU_R5FSS0_CORE1</td>
+</tr>
+<tr>
+<td>252</td>
+<td>J721E_DEV_RTI0</td>
+</tr>
+<tr>
+<td>253</td>
+<td>J721E_DEV_RTI1</td>
+</tr>
+<tr>
+<td>254</td>
+<td>J721E_DEV_RTI24</td>
+</tr>
+<tr>
+<td>255</td>
+<td>J721E_DEV_RTI25</td>
+</tr>
+<tr>
+<td>256</td>
+<td>J721E_DEV_RTI16</td>
+</tr>
+<tr>
+<td>257</td>
+<td>J721E_DEV_RTI15</td>
+</tr>
+<tr>
+<td>258</td>
+<td>J721E_DEV_RTI28</td>
+</tr>
+<tr>
+<td>259</td>
+<td>J721E_DEV_RTI29</td>
+</tr>
+<tr>
+<td>260</td>
+<td>J721E_DEV_RTI30</td>
+</tr>
+<tr>
+<td>261</td>
+<td>J721E_DEV_RTI31</td>
+</tr>
+<tr>
+<td>262</td>
+<td>J721E_DEV_MCU_RTI0</td>
+</tr>
+<tr>
+<td>263</td>
+<td>J721E_DEV_MCU_RTI1</td>
+</tr>
+<tr>
+<td>264</td>
+<td>J721E_DEV_SA2_UL0</td>
+</tr>
+<tr>
+<td>265</td>
+<td>J721E_DEV_MCU_SA2_UL0</td>
+</tr>
+<tr>
+<td>266</td>
+<td>J721E_DEV_MCSPI0</td>
+</tr>
+<tr>
+<td>267</td>
+<td>J721E_DEV_MCSPI1</td>
+</tr>
+<tr>
+<td>268</td>
+<td>J721E_DEV_MCSPI2</td>
+</tr>
+<tr>
+<td>269</td>
+<td>J721E_DEV_MCSPI3</td>
+</tr>
+<tr>
+<td>270</td>
+<td>J721E_DEV_MCSPI4</td>
+</tr>
+<tr>
+<td>271</td>
+<td>J721E_DEV_MCSPI5</td>
+</tr>
+<tr>
+<td>272</td>
+<td>J721E_DEV_MCSPI6</td>
+</tr>
+<tr>
+<td>273</td>
+<td>J721E_DEV_MCSPI7</td>
+</tr>
+<tr>
+<td>274</td>
+<td>J721E_DEV_MCU_MCSPI0</td>
+</tr>
+<tr>
+<td>275</td>
+<td>J721E_DEV_MCU_MCSPI1</td>
+</tr>
+<tr>
+<td>276</td>
+<td>J721E_DEV_MCU_MCSPI2</td>
+</tr>
+<tr>
+<td>277</td>
+<td>J721E_DEV_UFS0</td>
+</tr>
+<tr>
+<td>278</td>
+<td>J721E_DEV_UART1</td>
+</tr>
+<tr>
+<td>279</td>
+<td>J721E_DEV_UART2</td>
+</tr>
+<tr>
+<td>280</td>
+<td>J721E_DEV_UART3</td>
+</tr>
+<tr>
+<td>281</td>
+<td>J721E_DEV_UART4</td>
+</tr>
+<tr>
+<td>282</td>
+<td>J721E_DEV_UART5</td>
+</tr>
+<tr>
+<td>283</td>
+<td>J721E_DEV_UART6</td>
+</tr>
+<tr>
+<td>284</td>
+<td>J721E_DEV_UART7</td>
+</tr>
+<tr>
+<td>285</td>
+<td>J721E_DEV_UART8</td>
+</tr>
+<tr>
+<td>286</td>
+<td>J721E_DEV_UART9</td>
+</tr>
+<tr>
+<td>287</td>
+<td>J721E_DEV_WKUP_UART0</td>
+</tr>
+<tr>
+<td>288</td>
+<td>J721E_DEV_USB0</td>
+</tr>
+<tr>
+<td>289</td>
+<td>J721E_DEV_USB1</td>
+</tr>
+<tr>
+<td>290</td>
+<td>J721E_DEV_VPAC0</td>
+</tr>
+<tr>
+<td>291</td>
+<td>J721E_DEV_VPFE0</td>
+</tr>
+<tr>
+<td>292</td>
+<td>J721E_DEV_SERDES_16G0</td>
+</tr>
+<tr>
+<td>293</td>
+<td>J721E_DEV_SERDES_16G1</td>
+</tr>
+<tr>
+<td>294</td>
+<td>J721E_DEV_SERDES_16G2</td>
+</tr>
+<tr>
+<td>295</td>
+<td>J721E_DEV_SERDES_16G3</td>
+</tr>
+<tr>
+<td>296</td>
+<td>J721E_DEV_DPHY_TX0</td>
+</tr>
+<tr>
+<td>297</td>
+<td>J721E_DEV_SERDES_10G0</td>
+</tr>
+<tr>
+<td>298</td>
+<td>J721E_DEV_WKUPMCU2MAIN_VD</td>
+</tr>
+<tr>
+<td>299</td>
+<td>J721E_DEV_NAVSS0_MODSS</td>
+</tr>
+<tr>
+<td>300</td>
+<td>J721E_DEV_NAVSS0_UDMASS</td>
+</tr>
+<tr>
+<td>301</td>
+<td>J721E_DEV_NAVSS0_VIRTSS</td>
+</tr>
+<tr>
+<td>302</td>
+<td>J721E_DEV_MCU_NAVSS0_MODSS</td>
+</tr>
+<tr>
+<td>303</td>
+<td>J721E_DEV_MCU_NAVSS0_UDMASS</td>
+</tr>
+<tr>
+<td>304</td>
+<td>J721E_DEV_DEBUGSS_WRAP0</td>
+</tr>
+<tr>
+<td>305</td>
+<td>J721E_DEV_DMPAC0_SDE_0</td>
+</tr>
+<tr>
+<td>306</td>
+<td>J721E_DEV_GPU0_DFT_PBIST_0</td>
+</tr>
+<tr>
+<td>307</td>
+<td>J721E_DEV_C66SS0_PBIST0</td>
+</tr>
+<tr>
+<td>308</td>
+<td>J721E_DEV_C66SS1_PBIST0</td>
+</tr>
+<tr>
+<td>309</td>
+<td>J721E_DEV_PBIST0</td>
+</tr>
+<tr>
+<td>310</td>
+<td>J721E_DEV_PBIST1</td>
+</tr>
+<tr>
+<td>311</td>
+<td>J721E_DEV_PBIST2</td>
+</tr>
+<tr>
+<td>312</td>
+<td>J721E_DEV_PBIST3</td>
+</tr>
+<tr>
+<td>313</td>
+<td>J721E_DEV_PBIST4</td>
+</tr>
+<tr>
+<td>314</td>
+<td>J721E_DEV_PBIST5</td>
+</tr>
+<tr>
+<td>315</td>
+<td>J721E_DEV_PBIST6</td>
+</tr>
+<tr>
+<td>316</td>
+<td>J721E_DEV_PBIST7</td>
+</tr>
+<tr>
+<td>317</td>
+<td>J721E_DEV_PBIST9</td>
+</tr>
+<tr>
+<td>318</td>
+<td>J721E_DEV_PBIST10</td>
+</tr>
+<tr>
+<td>319</td>
+<td>J721E_DEV_MCU_PBIST0</td>
+</tr>
+<tr>
+<td>320</td>
+<td>J721E_DEV_MCU_PBIST1</td>
+</tr>
+<tr>
+<td>321</td>
+<td>J721E_DEV_C71X_0_PBIST_VD</td>
+</tr>
+</tbody></table>
+<h3 id="DMA-Device-IDs"><a href="#DMA-Device-IDs" class="headerlink" title="DMA Device IDs"></a>DMA Device IDs</h3><p>Some System Firmware TISCI message APIs require the DMA device ID be provided as part of the request. Based on <a href="devices.html">J721E_LEGACY Device IDs</a> these are the valid DMA device IDs.</p>
+<table>
+<thead>
+<tr>
+<th>DMA Device Name</th>
+<th>DMA Device ID</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>J721E_DEV_NAVSS0_UDMAP_0</td>
+<td>212</td>
+</tr>
+<tr>
+<td>J721E_DEV_MCU_NAVSS0_UDMAP_0</td>
+<td>236</td>
+</tr>
+</tbody></table>
+<h1 id="User-Guide"><a href="#User-Guide" class="headerlink" title="User Guide"></a>User Guide</h1><p><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/index.html#tisci-user-guide">TISCI User Guide — TISCI User Guide</a></p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/1_intro/index.html">Chapter 1: Introduction</a><ul>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/1_intro/TISCI.html">Introduction</a></li>
+</ul>
+</li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/2_tisci_msgs/index.html">Chapter 2: TISCI Message Documentation</a><ul>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/2_tisci_msgs/general/TISCI_header.html">Texas Instruments System Controller Interface (TISCI)</a></li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/2_tisci_msgs/index.html#general">General</a></li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/2_tisci_msgs/index.html#power-management-pm">Power Management (PM)</a></li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/2_tisci_msgs/index.html#resource-management-rm">Resource Management (RM)</a></li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/2_tisci_msgs/index.html#secure-management">Secure Management</a><ul>
+<li><strong><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/2_tisci_msgs/security/sec_cert_format.html">Security X509 Certificate Documentation</a></strong></li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/2_tisci_msgs/security/PROC_BOOT.html">Processor Boot Management TISCI Description</a></li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/2_tisci_msgs/security/firewall_api.html">Firewall TISCI Description</a></li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/2_tisci_msgs/security/sec_ap_data_transfer.html">Secure AP Command Interface</a></li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/2_tisci_msgs/security/runtime_debug.html">Runtime Debug TISCI Description</a></li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/2_tisci_msgs/security/extended_otp.html">Extended OTP TISCI Description</a></li>
+<li><strong><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/2_tisci_msgs/security/dkek_management.html">Derived KEK TISCI Description</a></strong></li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/2_tisci_msgs/security/security_handover.html">Security Handover Message Description</a></li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/2_tisci_msgs/security/keywriter.html">OTP Keywriter TISCI Description</a></li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/2_tisci_msgs/security/otp_revision.html">OTP Revision Read&#x2F;Write Message Description</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/3_boardcfg/index.html">Chapter 3: Board Configuration</a><ul>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/3_boardcfg/BOARDCFG.html">Board Configuration</a></li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/3_boardcfg/BOARDCFG_RM.html">Resource Management Board Configuration</a></li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/3_boardcfg/BOARDCFG_SEC.html">Security Board Configuration</a></li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/3_boardcfg/BOARDCFG_PM.html">Power Management Board Configuration</a></li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/3_boardcfg/BOARDCFG_COMBINED_IMG_FORMAT.html">Board Configuration with ROM Combined Image format</a></li>
+</ul>
+</li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/4_trace/index.html">Chapter 4: Interpreting Trace Data</a><ul>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/4_trace/trace.html">Trace Layer</a></li>
+</ul>
+</li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/5_soc_doc/index.html">Chapter 5: SoC Family Specific Documentation</a><ul>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/5_soc_doc/index.html#am65x-sr1">AM65x SR1</a></li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/5_soc_doc/index.html#am65x-sr2">AM65x SR2</a></li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/5_soc_doc/index.html#am64x">AM64x</a></li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/5_soc_doc/index.html#j721e">J721E</a></li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/5_soc_doc/index.html#j7200">J7200</a></li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/5_soc_doc/index.html#j721s2">J721S2</a></li>
+</ul>
+</li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/6_topic_user_guides/index.html">Chapter 6: Topic User Guides</a><ul>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/6_topic_user_guides/devgrp_usage.html">Device Group Primer</a></li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/6_topic_user_guides/domgrp_usage.html">Domain Group Primer</a></li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/6_topic_user_guides/secure_boot_signing.html">Signing binaries for Secure Boot on HS Devices</a></li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/6_topic_user_guides/hs_boardcfg_signing.html">Signing Board Configuration on HS devices</a></li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/6_topic_user_guides/extended_otp.html">Using Extended OTP on HS devices</a></li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/6_topic_user_guides/dkek_management.html">Using Derived KEK on HS devices</a></li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/6_topic_user_guides/firewall_faq.html">Firewall FAQ</a></li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/6_topic_user_guides/sa2ul_access.html">SA2UL Access Outside of SYSFW</a></li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/6_topic_user_guides/security_handover.html">Performing Security Handover</a></li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/6_topic_user_guides/secure_debug.html">Secure Debug User Guide</a></li>
+<li><strong><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/6_topic_user_guides/key_writer.html">Key Writer</a></strong></li>
+<li><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/6_topic_user_guides/otp_revision.html">Run time read&#x2F;write to KEYREV and SWREV</a></li>
+</ul>
+</li>
+</ul>
+<h2 id="introduction"><a href="#introduction" class="headerlink" title="introduction"></a>introduction</h2><ul>
+<li><p>Foundational device security in DMSC</p>
+<blockquote>
+<ul>
+<li>Secure boot with secure keys&#x2F;root-of-trust, Security configuration and Debug unlock</li>
+<li>RSA or ECC Root Keys, AES symmetric key</li>
+<li>Utilizes PKA, SHA2 and AES Crypto accelerators</li>
+<li>Basic security functionality to extend root of trust (optional)</li>
+<li>Authenticated Key ring to extend root-of-trust keys</li>
+<li>SYSFW and Bootloader Rollback protection via eFuse</li>
+<li>Device Unique Key &#x2F; Key Derivation to support 3P stacks</li>
+</ul>
+</blockquote>
+</li>
+</ul>
+<p><img src="https://software-dl.ti.com/tisci/esd/22_01_02/_images/softwareStack.png"></p>
+<p>Purpose of DMSC firmware change</p>
+<ul>
+<li>Secure HSM functions can run on a DMSC Security Island</li>
+<li>Free a main domain R5F for general customer use.</li>
+<li>Enables MCU Only mode with HSM functions on DMSC</li>
+<li>Lockstep Safety R5F runs safety critical PM &amp; RM functions.</li>
+</ul>
+<h2 id="sign-secure-boot"><a href="#sign-secure-boot" class="headerlink" title="sign secure boot"></a>sign secure boot</h2><p><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/6_topic_user_guides/secure_boot_signing.html#signing-an-unencrypted-binary-for-secure-boot">Signing an unencrypted binary for secure boot</a> ^unecrypted<br><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/6_topic_user_guides/hs_boardcfg_signing.html#signing-pm-rm-and-core-board-configurations">signing-pm-rm-and-core-board-configurations</a>^1b50a0</p>
+<p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220622154629.png"></p>
+<p><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/6_topic_user_guides/secure_boot_signing.html#signing-an-unencrypted-binary-for-secure-boot">Signing an unencrypted binary for secure boot</a> ^crypted<br><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/6_topic_user_guides/hs_boardcfg_signing.html#signing-security-board-configuration">signing-security-board-configuration</a></p>
+<p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220622154630.png"></p>
+<p><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/6_topic_user_guides/hs_boardcfg_signing.html#signing-procedure-for-optimized-boot-time">signing-procedure-for-optimized-boot-time</a> </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">This sequence is only applicable to am65x, am65x_sr2, and j721e devices. This format is deprecated for all other devices which support the [combined boot image format](https://software-dl.ti.com/tisci/esd/22_01_02/3_boardcfg/BOARDCFG_COMBINED_IMG_FORMAT.html).</span><br></pre></td></tr></table></figure>
+
+<p>Due to the asymmetric key verify operation when authenticating the signed board configuration, there is ~4 ms increase in boot time compared to using an unsigned board configuration. To reduce the boot time increase, System Firmware offers an alternative way of supplying signed board configuration. This approach has two key differences from the normal approach.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220622154631.png"></p>
+<ol>
+<li>Populate <code>pmBoardCfgHash</code> , <code>rmBoardCfgHash</code> and <code>boardCfgHash</code> with the SHA2-512 hashes of PM Board configuration, RM board configuration and the core board configuration blobs respectively.<div class="wy-table-responsive"><table border="1" class="docutils">
+<colgroup>
+<col width="13%">
+<col width="17%">
+<col width="18%">
+<col width="24%">
+<col width="28%">
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Device
+Type</th>
+<th class="head">Boardcfg
+signing
+required</th>
+<th class="head">Signing
+approach</th>
+<th class="head">TISCI message
+payload</th>
+<th class="head">Boardcfg extension
+in SYSFW Outer
+Certificate</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>GP</td>
+<td>No</td>
+<td>NA</td>
+<td>Raw boardcfg</td>
+<td>NA</td>
+</tr>
+<tr class="row-odd"><td>HS</td>
+<td>Yes</td>
+<td>Development</td>
+<td>Signed
+certificate +
+encrypted
+boardcfg</td>
+<td>Do not include</td>
+</tr>
+<tr class="row-even"><td>HS</td>
+<td>Yes</td>
+<td>Boot
+time
+optimized</td>
+<td>encrypted
+boardcfg</td>
+<td>Include</td>
+</tr>
+</tbody>
+</table></div>
+<div class="wy-table-responsive"><table border="1" class="docutils">
+<colgroup>
+<col width="13%">
+<col width="17%">
+<col width="18%">
+<col width="24%">
+<col width="28%">
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Device
+Type</th>
+<th class="head">Boardcfg
+signing
+required</th>
+<th class="head">Signing
+approach</th>
+<th class="head">TISCI message
+payload</th>
+<th class="head">Boardcfg extension
+in SYSFW Outer
+Certificate</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>GP</td>
+<td>No</td>
+<td>NA</td>
+<td>Raw boardcfg</td>
+<td>NA</td>
+</tr>
+<tr class="row-odd"><td>HS</td>
+<td>Yes</td>
+<td>Development</td>
+<td>Signed
+certificate +
+raw
+boardcfg</td>
+<td>Do not include</td>
+</tr>
+<tr class="row-even"><td>HS</td>
+<td>Yes</td>
+<td>Boot
+time
+optimized</td>
+<td>raw
+boardcfg</td>
+<td>Include</td>
+</tr>
+</tbody>
+</table></div></li>
+</ol>
+<h2 id="KEK-and-DKEY"><a href="#KEK-and-DKEY" class="headerlink" title="KEK and DKEY"></a>KEK and DKEY</h2><p><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/6_topic_user_guides/dkek_management.html#using-derived-kek-on-hs-devices">Using Derived KEK on HS devices — TISCI User Guide</a></p>
+<ul>
+<li>KEK is a randomly generated symmetric key</li>
+<li>KEK is made using NIST certified tester routine</li>
+<li><code>KEK is different for each device</code> and is not correlated in any ways with keys issued on others devices.</li>
+<li>KEK is not stored in any database or retained in any manufacturing tester</li>
+<li>KEK is burnt in TI factory.</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">KEK以硬件形式被送入DMSC内部的AES引擎。携带KEK的电子引信被标记为读和写保护。因此，KEK只能通过DMSC的AES引擎访问。每个设备的KEK都是不同的</span><br><span class="line">系统固件提供了API来获取`DKEK`的密钥，用于加密/解密，而不是将DMSC的AES引擎暴露给所有内核</span><br></pre></td></tr></table></figure>
+
+<p>密钥推导方法 <a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/6_topic_user_guides/dkek_management.html#key-derivation-method">key-derivation-method</a></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">DKEK的计算在每个设备上都是确定性的。对于一个给定的主机、标签和上下文，即使在同一设备上重启，导出的KEK也是一样的。</span><br><span class="line">在不同的设备上，对于相同的输入，衍生的KEK是不同的。这是由于在TI工厂中，每个设备都有一个随机的KEK被编入。</span><br></pre></td></tr></table></figure>
+
+<p><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/2_tisci_msgs/security/dkek_management.html#derived-kek-tisci-description">Derived KEK TISCI Description — TISCI User Guide</a></p>
+<p><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/2_tisci_msgs/security/dkek_management.html#tisci-msg-sa2ul-set-dkek-set-dkek">tisci-msg-sa2ul-set-dkek-set-dkek</a><br><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/2_tisci_msgs/security/dkek_management.html#tisci-msg-sa2ul-release-dkek-release-dkek">tisci-msg-sa2ul-release-dkek-release-dkek</a> erase key<br><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/2_tisci_msgs/security/dkek_management.html#tisci-msg-sa2ul-get-dkek-get-dkek">tisci-msg-sa2ul-get-dkek-get-dkek</a></p>
+<h3 id="如何使用DKEK-了解"><a href="#如何使用DKEK-了解" class="headerlink" title="如何使用DKEK (了解)"></a>如何使用DKEK (了解)</h3><p><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/6_topic_user_guides/dkek_management.html#using-derived-kek">using-derived-kek</a></p>
+<div class="section" id="comparing-the-two-approaches">
+<h3>Comparing the two approaches<a class="headerlink" href="#comparing-the-two-approaches" title="Permalink to this headline">¶</a></h3>
+<div class="wy-table-responsive"><table border="1" class="docutils" id="id1">
+<caption><span class="caption-number">Table 2 </span><span class="caption-text">Comparison</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Option 1</th>
+<th class="head">Option 2</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>DKEK programmed directly into SA2UL DKEK registers.</td>
+<td>DKEK is provided to host as a response to a TISCI message.</td>
+</tr>
+<tr class="row-odd"><td>No separate firewalling is required for DKEK.</td>
+<td>Host must firewall memory where it is storing DKEK.</td>
+</tr>
+<tr class="row-even"><td>DKEK can only be used through SA2UL. Host must set the <code class="docutils literal"><span class="pre">USE_DKEK</span></code>
+flag to true in the SA2UL security context. Key must not be populated
+in the SA2UL security context.</td>
+<td><p class="first">DKEK can be used in two ways</p>
+<ul class="last simple">
+<li>Through SA2UL - Host must program the key in its possession into
+the SA2UL security context.</li>
+<li>Using CPU - If hardware acceleration is not required,
+encryption/decryption can be performed using CPU and the DKEK
+in the possession of the host.</li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td>Only one host can use this approach at a time. There is only one set of
+SA2UL DKEK registers.
+Access to these registers for encryption/decryption is controlled by DKEK
+privid register.
+System Firmware programs the DKEK privid register with the privid of the host who
+has invoked the <a class="reference internal" href="../2_tisci_msgs/security/dkek_management.html#sec-api-sa2ul-set-dkek"><span class="std std-ref">TISCI_MSG_SA2UL_SET_DKEK</span></a>
+API.
+Only this host can use DKEK via the SA2UL DKEK registers until DKEK
+is released via <a class="reference internal" href="../2_tisci_msgs/security/dkek_management.html#sec-api-sa2ul-release-dkek"><span class="std std-ref">TISCI_MSG_SA2UL_RELEASE_DKEK</span></a></td>
+<td>Multiple hosts can use DKEK at the same time using this approach.
+Each host manages its own DKEK.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="../2_tisci_msgs/security/dkek_management.html#sec-api-sa2ul-set-dkek"><span class="std std-ref">TISCI_MSG_SA2UL_SET_DKEK</span></a> and
+<a class="reference internal" href="../2_tisci_msgs/security/dkek_management.html#sec-api-sa2ul-release-dkek"><span class="std std-ref">TISCI_MSG_SA2UL_RELEASE_DKEK</span></a>
+API are used in this approach.</td>
+<td><a class="reference internal" href="../2_tisci_msgs/security/dkek_management.html#sec-api-sa2ul-get-dkek"><span class="std std-ref">TISCI_MSG_SA2UL_GET_DKEK</span></a> is used
+in this approach.</td>
+</tr>
+</tbody>
+</table></div>
+<p>We recommend using Approach 1 wherever possible to maintain the secrecy of DKEK.</p>
+</div>
+
+<h2 id="OTP"><a href="#OTP" class="headerlink" title="OTP"></a>OTP</h2><p><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/6_topic_user_guides/extended_otp.html#using-extended-otp-on-hs-devices">Using Extended OTP on HS devices — TISCI User Guide</a></p>
+<p>K3 family of devices have <strong>a set of one-time programmable(OTP) efuses to carry root of trust keys and other information used during device boot. The purpose of these efuses is fixed.</strong> <em>K3 family of devices have another set of OTP efuses for general purpose use by the customer.</em> We refer to these efuses as extended OTP. In this document, we describe how the extended OTP can be accessed through TISCI API. This document must be read along side</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">两套OTP:</span><br><span class="line">1. device boot using otp</span><br><span class="line">2. *another set of OTP efuses for general purpose use by the customer.*</span><br><span class="line"></span><br><span class="line">本节只介绍了给客户用的otp</span><br><span class="line">The extended OTP area can have a maximum of 1024 bits</span><br></pre></td></tr></table></figure>
+<p>The hardware allows each individual OTP row (not MMR) to be locked to prevent modification. Once the OTP row is locked, any bit in the row can never be modified.</p>
+<h2 id="keyWriter"><a href="#keyWriter" class="headerlink" title="keyWriter"></a>keyWriter</h2><p><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/6_topic_user_guides/key_writer.html#high-security-hs-device-sub-types">high-security-hs-device-sub-types</a></p>
+<p><strong>HS-FS (High Security - Field Securable)</strong>: Device type before customer keys are programmed (the state in which the device leaves TI factory). In this state, device protects the ROM code, TI keys and certain security peripherals. HS-FS devices do not enforce secure boot process.</p>
+<p>System Firmware binary is signed by the TI Private key (TI MPK) [[#^1b50a0]]</p>
+<p><strong>HS-SE (High Security – Security Enforced)</strong>: Device type after customer keys are programmed. HS-SE devices enforce secure boot.</p>
+<ul>
+<li>System Firmware binary is encrypted by the TI Encryption key (TI MEK), and signed by the TI Private key (TI MPK). <em><code>Customer has to dual sign it with their private key (SMPK/BMPK)</code></em>. (Refer <a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/6_topic_user_guides/secure_boot_signing.html#pub-sign-encrypted-mek">Signing an encrypted binary for secure boot</a>)</li>
+</ul>
+<p><a target="_blank" rel="noopener" href="https://software-dl.ti.com/tisci/esd/22_01_02/6_topic_user_guides/key_writer.html#hs-fs-to-hs-se-conversion">hs-fs-to-hs-se-conversion</a></p>
+<p>In order to convert a HS-FS device to HS-SE device, one has to program the customer root key set (optionally backup key set) on the target device, using OTP Keywriter.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220622154708.png"></p>
+<p>The following figure illustrates the procedure to be followed to generate the required x509 certifcate for key writing.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220622154704.png"></p>
+<div class="wy-table-responsive"><table border="1" class="colwidths-given docutils" id="id1">
+<caption><span class="caption-number">Table 4 </span><span class="caption-text">Supported OTP keys</span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
+<colgroup>
+<col width="20%">
+<col width="35%">
+<col width="45%">
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Key</th>
+<th class="head">Description</th>
+<th class="head">Notes</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>BMEK</td>
+<td>Backup Manufacturer Encryption Key</td>
+<td>256-bit Customer encryption key for encrypted boot</td>
+</tr>
+<tr class="row-odd"><td>BMPKH</td>
+<td>Backup Manufacturer Public Key Hash</td>
+<td>BMPK is 4096-bit customer RSA signing key</td>
+</tr>
+<tr class="row-even"><td>EXTENDED OTP</td>
+<td>Extended OTP array</td>
+<td>1024 bit extended otp array</td>
+</tr>
+<tr class="row-odd"><td>KEYCNT</td>
+<td>Key count</td>
+<td>2 if BMPK, SMPK are used, 1 if SMPK is used, 0 if none</td>
+</tr>
+<tr class="row-even"><td>KEYREV</td>
+<td>Key revision</td>
+<td>Can have a maximum value = key count</td>
+</tr>
+<tr class="row-odd"><td>MEK Options</td>
+<td>SMEK/BMEK options</td>
+<td>(Reserved for future use) 5 bit value</td>
+</tr>
+<tr class="row-even"><td>MPK Options</td>
+<td>SMPK/BMPK options</td>
+<td>(Reserved for future use) 10 bit value (split into 2 parts)</td>
+</tr>
+<tr class="row-odd"><td>MSV</td>
+<td>Model specific value</td>
+<td>20 bit value with 12 bit BCH code</td>
+</tr>
+<tr class="row-even"><td>SMEK</td>
+<td>Secondary Manufacturer Encryption Key</td>
+<td>256-bit Customer encryption key for encrypted boot</td>
+</tr>
+<tr class="row-odd"><td>SMPKH</td>
+<td>Secondary Manufacturer Public Key Hash</td>
+<td>SMPK is 4096-bit customer RSA signing key</td>
+</tr>
+<tr class="row-even"><td>SWREV-BOARDCONFIG</td>
+<td>Secure Board Configuration software revision</td>
+<td>128 bit value (64 without double redundancy)</td>
+</tr>
+<tr class="row-odd"><td>SWREV-SBL</td>
+<td>SBL software revision</td>
+<td>96 bit value (48 without double redundancy)</td>
+</tr>
+<tr class="row-even"><td>SWREV-SYSFW</td>
+<td>Firmware software revision</td>
+<td>96 bit value (48 without double redundancy)</td>
+</tr>
+</tbody>
+</table></div>
+1.  OEM generates a random 256-bit number to be used as an AES encryption key for protecting the OTP extension data.
+2.  The AES-256 key from step 1 is used to encrypt all X509 extension fields, which require encryption protection.
+3.  The following X509 extensions are created, using the AES key encrypted with the TI FEK (public key):
+    -   Encrypting the AES-256 key with TI **FEK**
+    -   Signing the AES-256 key with the SMPK [[#^7ad323|SMPK]], and encrypting that with the TI FEK
+    -   (optionally, refer step 6) signing the AES-256 key with the BMPK [[#^edb701|BMPK]], and encrypting that with the TI FEK
+4.  All of the extensions from steps 1-3 are combined into a X.509 configuration which is used to generate and sign a certificate with the [[#^7ad323|SMPK]]. 
+
+<p>SMPK (Secondary Manufacturer Public Key)  ^7ad323</p>
+<p>BMPK ( Backup Manufacturer Public Key)   ^edb701</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/04/15/hxd_new/Rambus%20Security%20RT-6xx%20Root%20Policy/" rel="prev" title="">
+      <i class="fa fa-chevron-left"></i> 
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2024/04/15/hxd_new/%E5%AF%84%E5%AD%98%E5%99%A8%E6%89%8B%E5%86%8C/" rel="next" title="">
+       <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#main-domain"><span class="nav-number">1.</span> <span class="nav-text">main domain</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#wakeup-domain-DMSC"><span class="nav-number">2.</span> <span class="nav-text">wakeup domain DMSC</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#TIFS-world-%E5%AE%89%E5%85%A8%E9%80%9A%E4%BF%A1%E8%83%BD%E5%8A%9B"><span class="nav-number">2.1.</span> <span class="nav-text">TIFS world 安全通信能力</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#secure-Proxy-J7-%E6%8F%8F%E8%BF%B0"><span class="nav-number">2.1.1.</span> <span class="nav-text">secure Proxy J7 描述</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Secure-Proxy-thread-allocation-for-NAVSS0-SEC-PROXY-0"><span class="nav-number">2.1.1.1.</span> <span class="nav-text">Secure Proxy thread allocation for NAVSS0_SEC_PROXY_0</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Secure-Proxy-thread-allocation-for-MCU-NAVSS0-SEC-PROXY0"><span class="nav-number">2.1.1.2.</span> <span class="nav-text">Secure Proxy thread allocation for MCU_NAVSS0_SEC_PROXY0</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Secure-Proxy-thread-allocation-for-MCU-NAVSS0-SEC-PROXY0-1"><span class="nav-number">2.1.1.3.</span> <span class="nav-text">Secure Proxy thread allocation for MCU_NAVSS0_SEC_PROXY0</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#List-of-priv-ids"><span class="nav-number">2.1.2.</span> <span class="nav-text">List of priv-ids</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#J721E-Host-Descriptions"><span class="nav-number">2.1.3.</span> <span class="nav-text">J721E Host Descriptions</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Enumeration-of-Host-IDs"><span class="nav-number">2.1.3.1.</span> <span class="nav-text">Enumeration of Host IDs</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#J721E-Devices-Descriptions"><span class="nav-number">2.1.4.</span> <span class="nav-text">J721E Devices Descriptions</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Enumeration-of-Device-IDs"><span class="nav-number">2.1.4.1.</span> <span class="nav-text">Enumeration of Device IDs</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DMA-Device-IDs"><span class="nav-number">2.1.5.</span> <span class="nav-text">DMA Device IDs</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#User-Guide"><span class="nav-number">3.</span> <span class="nav-text">User Guide</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#introduction"><span class="nav-number">3.1.</span> <span class="nav-text">introduction</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#sign-secure-boot"><span class="nav-number">3.2.</span> <span class="nav-text">sign secure boot</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#KEK-and-DKEY"><span class="nav-number">3.3.</span> <span class="nav-text">KEK and DKEY</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8DKEK-%E4%BA%86%E8%A7%A3"><span class="nav-number">3.3.1.</span> <span class="nav-text">如何使用DKEK (了解)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#comparing-the-two-approaches"><span class="nav-number">3.3.2.</span> <span class="nav-text">Comparing the two approaches</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#OTP"><span class="nav-number">3.4.</span> <span class="nav-text">OTP</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#keyWriter"><span class="nav-number">3.5.</span> <span class="nav-text">keyWriter</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

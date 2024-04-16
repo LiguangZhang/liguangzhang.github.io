@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="android r base  信号相关流程梳理程序分为两种： 1.静态链接: 由链接器在链接时将库的内容添加到可执行程序中的做法，最大缺点是生成的可执行文件太大，需要更多的系统资源，在装入内存也会消耗更多的时间。 2.动态链接: 将独立的模块先编译成动态库，程序运行有需要它们时才加载，最大缺点是可执行程序依赖分别存储的库文件才能正确执行。 在Android中，大部分都是动态链接，而只有init">
+<meta property="og:type" content="article">
+<meta property="og:title" content="signal 相关整理">
+<meta property="og:url" content="https://liguangzhang.github.io/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/signal%20%E7%9B%B8%E5%85%B3/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="android r base  信号相关流程梳理程序分为两种： 1.静态链接: 由链接器在链接时将库的内容添加到可执行程序中的做法，最大缺点是生成的可执行文件太大，需要更多的系统资源，在装入内存也会消耗更多的时间。 2.动态链接: 将独立的模块先编译成动态库，程序运行有需要它们时才加载，最大缺点是可执行程序依赖分别存储的库文件才能正确执行。 在Android中，大部分都是动态链接，而只有init">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-07-18T10:15:54.000Z">
+<meta property="article:modified_time" content="2024-04-16T07:57:54.882Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="Android">
+<meta property="article:tag" content="signal">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/signal%20%E7%9B%B8%E5%85%B3/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>signal 相关整理 | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/signal%20%E7%9B%B8%E5%85%B3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          signal 相关整理
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-07-18 18:15:54" itemprop="dateCreated datePublished" datetime="2020-07-18T18:15:54+08:00">2020-07-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 15:57:54" itemprop="dateModified" datetime="2024-04-16T15:57:54+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/%E7%A8%B3%E5%AE%9A%E6%80%A7/" itemprop="url" rel="index"><span itemprop="name">稳定性</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>android r base</p>
+</blockquote>
+<h1 id="信号相关流程梳理"><a href="#信号相关流程梳理" class="headerlink" title="信号相关流程梳理"></a>信号相关流程梳理</h1><p>程序分为两种：<br> <strong>1.<code>静态链接</code>:</strong> 由链接器在链接时将库的内容添加到可执行程序中的做法，最大缺点是生成的可执行文件太大，需要更多的系统资源，在装入内存也会消耗更多的时间。<br> <strong>2.<code>动态链接</code>:</strong> 将独立的模块先编译成动态库，程序运行有需要它们时才加载，最大缺点是可执行程序依赖分别存储的库文件才能正确执行。<br> 在Android中，大部分都是动态链接，而只有init等少部分是静态链接，因此native程序也是动态链接程序，动态链接程序是需要链接器才能跑起来，<span style="color: green">liner</span>就是Android的链接器。<br> liner也是在程序的进程空间内，当内核将应用程序加载起来后，并不是先跑应用程序代码，而是先跑liner。<code>linker</code>负责将应用程序所需的库加载到进程空间内，之后才跑应用程序代码。</p>
+<p>绝大多数的native app都是以linker为入口(<span style="color: red">动态连接的程序</span>),在启动时先由汇编跳转到__link_init函数.</p>
+<p>[-&gt; arch&#x2F;arm64&#x2F;begin.S]</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">ENTRY(_start)</span><br><span class="line">  // Force unwinds to end in this function.</span><br><span class="line">  .cfi_undefined x30</span><br><span class="line"></span><br><span class="line">  mov x0, sp</span><br><span class="line">  bl __linker_init</span><br><span class="line"></span><br><span class="line">  /* linker init returns the _entry address in the main image */</span><br><span class="line">  br x0</span><br><span class="line">END(_start)</span><br></pre></td></tr></table></figure>
+
+<h2 id="到debuggerd-init的调用链"><a href="#到debuggerd-init的调用链" class="headerlink" title="到debuggerd_init的调用链"></a>到debuggerd_init的调用链</h2><figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">-- bl __linker_init</span><br><span class="line">| - extern &quot;C&quot; ElfW<span class="params">(Addr)</span> __linker_init<span class="params">(void* raw_args)</span> % bionic/linker/linker_main.cpp</span><br><span class="line">   \ - __linker_init_post_relocation(KernelArgumentBlock&amp; args, soinfo&amp; tmp_linker_so)</span><br><span class="line">         \ - return start_address = linker_main(args, exe_to_load); </span><br><span class="line">		 \ - ElfW(Addr) linker_main(KernelArgumentBlock&amp; args, const char* exe_to_load)</span><br><span class="line">			\ - linker_debuggerd_init(); <span class="comment">% Register the debuggerd signal handler. [ linker_debuggerd_android.cpp ]</span></span><br><span class="line">				\ - debuggerd_init(debuggerd_callbacks_t* callbacks) <span class="comment">%  [debuggerd/handler/debuggerd_handler.cpp ]</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">linker_debuggerd_init</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  <span class="type">debuggerd_callbacks_t</span> callbacks = &#123;</span><br><span class="line">    .get_abort_message = []() &#123;</span><br><span class="line">      <span class="keyword">return</span> __libc_shared_globals()-&gt;abort_msg;</span><br><span class="line">    &#125;,</span><br><span class="line">    .post_dump = &amp;notify_gdb_of_libraries,</span><br><span class="line">    .get_gwp_asan_state = []() &#123;</span><br><span class="line">      <span class="keyword">return</span> __libc_shared_globals()-&gt;gwp_asan_state;</span><br><span class="line">    &#125;,</span><br><span class="line">    .get_gwp_asan_metadata = []() &#123;</span><br><span class="line">      <span class="keyword">return</span> __libc_shared_globals()-&gt;gwp_asan_metadata;</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;;</span><br><span class="line">  <span class="built_in">debuggerd_init</span>(&amp;callbacks);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="debuggerd-init"><a href="#debuggerd-init" class="headerlink" title="debuggerd_init"></a>debuggerd_init</h2><p>所在库 &#x2F;home&#x2F;mi&#x2F;work_space&#x2F;miui-r-umi-dev&#x2F;system&#x2F;core&#x2F;debuggerd&#x2F;handler&#x2F;debuggerd_handler.cpp <code>libdebuggerd_handler_core</code></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">debuggerd_init</span><span class="params">(<span class="type">debuggerd_callbacks_t</span>* callbacks)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (callbacks) &#123;</span><br><span class="line">    g_callbacks = *callbacks;</span><br><span class="line">  &#125; </span><br><span class="line">  <span class="keyword">struct</span> <span class="title class_">sigaction</span> action;</span><br><span class="line">  <span class="built_in">memset</span>(&amp;action, <span class="number">0</span>, <span class="built_in">sizeof</span>(action));</span><br><span class="line">  <span class="built_in">sigfillset</span>(&amp;action.sa_mask);</span><br><span class="line">  <span class="number">2.</span> action.sa_sigaction = debuggerd_signal_handler;</span><br><span class="line">  action.sa_flags = SA_RESTART | SA_SIGINFO;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Use the alternate signal stack if available so we can catch stack overflows.</span></span><br><span class="line">  action.sa_flags |= SA_ONSTACK;</span><br><span class="line"><span class="number">1.</span>   <span class="built_in">debuggerd_register_handlers</span>(&amp;action);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="number">1.</span>-&gt; <span class="type">static</span> <span class="type">void</span> __attribute__((__unused__)) <span class="built_in">debuggerd_register_handlers</span>(<span class="keyword">struct</span> sigaction* action) &#123;</span><br><span class="line">  <span class="type">char</span> value[PROP_VALUE_MAX] = <span class="string">&quot;&quot;</span>;</span><br><span class="line">    <span class="comment">// 注意属性控制 signal的转发 (ro.debuggable=1 &amp;&amp; debug.debuggerd.disable=1) 时关掉, 不由linker进行监控 其他情况下开启监控</span></span><br><span class="line">  <span class="type">bool</span> enabled =</span><br><span class="line">      !(__system_property_get(<span class="string">&quot;ro.debuggable&quot;</span>, value) &gt; <span class="number">0</span> &amp;&amp; !<span class="built_in">strcmp</span>(value, <span class="string">&quot;1&quot;</span>) &amp;&amp;</span><br><span class="line">        __system_property_get(<span class="string">&quot;debug.debuggerd.disable&quot;</span>, value) &gt; <span class="number">0</span> &amp;&amp; !<span class="built_in">strcmp</span>(value, <span class="string">&quot;1&quot;</span>));</span><br><span class="line">  <span class="keyword">if</span> (enabled) &#123;</span><br><span class="line">    <span class="built_in">sigaction</span>(SIGABRT, action, <span class="literal">nullptr</span>);</span><br><span class="line">    <span class="built_in">sigaction</span>(SIGBUS, action, <span class="literal">nullptr</span>);</span><br><span class="line">    <span class="built_in">sigaction</span>(SIGFPE, action, <span class="literal">nullptr</span>);</span><br><span class="line">    <span class="built_in">sigaction</span>(SIGILL, action, <span class="literal">nullptr</span>);</span><br><span class="line">    <span class="built_in">sigaction</span>(SIGSEGV, action, <span class="literal">nullptr</span>);</span><br><span class="line">    <span class="built_in">sigaction</span>(SIGSTKFLT, action, <span class="literal">nullptr</span>);</span><br><span class="line">    <span class="built_in">sigaction</span>(SIGSYS, action, <span class="literal">nullptr</span>);</span><br><span class="line">    <span class="built_in">sigaction</span>(SIGTRAP, action, <span class="literal">nullptr</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// DEBUGGER_ACTION_DUMP_TOMBSTONE and DEBUGGER_ACTION_DUMP_BACKTRACE are both</span></span><br><span class="line">  <span class="comment">// triggered via BIONIC_SIGNAL_DEBUGGER</span></span><br><span class="line">  <span class="built_in">sigaction</span>(BIONIC_SIGNAL_DEBUGGER, action, <span class="literal">nullptr</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>信号的处理函数为 <code>debuggerd_signal_handler</code></p>
+<h3 id="debuggerd-signal-handler"><a href="#debuggerd-signal-handler" class="headerlink" title="debuggerd_signal_handler"></a>debuggerd_signal_handler</h3><p>连接到bionic上的native程序(C&#x2F;C++)出现异常时，kernel会发送相应的signal； 当进程捕获致命的signal，通知debuggerd调用ptrace来获取有价值的信息(发生crash之前)。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">static</span> <span class="type">void</span> <span class="title">debuggerd_signal_handler</span><span class="params">(<span class="type">int</span> signal_number, <span class="type">siginfo_t</span>* info, <span class="type">void</span>* context)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (signal_number == BIONIC_SIGNAL_DEBUGGER) &#123;</span><br><span class="line">    <span class="keyword">if</span> (info-&gt;si_code == SI_QUEUE &amp;&amp; info-&gt;si_pid == __getpid()) &#123;</span><br><span class="line">      <span class="comment">// Allow for the abort message to be explicitly specified via the sigqueue value.</span></span><br><span class="line">      <span class="comment">// Keep the bottom bit intact for representing whether we want a backtrace or a tombstone.</span></span><br><span class="line">      <span class="keyword">if</span> (si_val != kDebuggerdFallbackSivalUintptrRequestDump) &#123;</span><br><span class="line">        abort_message = <span class="built_in">reinterpret_cast</span>&lt;<span class="type">void</span>*&gt;(si_val &amp; ~<span class="number">1</span>);</span><br><span class="line">        info-&gt;si_ptr = <span class="built_in">reinterpret_cast</span>&lt;<span class="type">void</span>*&gt;(si_val &amp; <span class="number">1</span>);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="comment">//传入形参的callback的定义的字段</span></span><br><span class="line">    <span class="keyword">if</span> (g_callbacks.get_abort_message) &#123;</span><br><span class="line">      abort_message = g_callbacks.<span class="built_in">get_abort_message</span>();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (g_callbacks.get_gwp_asan_state) &#123;</span><br><span class="line">      gwp_asan_state = g_callbacks.<span class="built_in">get_gwp_asan_state</span>();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (g_callbacks.get_gwp_asan_metadata) &#123;</span><br><span class="line">      gwp_asan_metadata = g_callbacks.<span class="built_in">get_gwp_asan_metadata</span>();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">    </span><br><span class="line">  <span class="keyword">if</span> (si_val == kDebuggerdFallbackSivalUintptrRequestDump ||</span><br><span class="line">      <span class="built_in">prctl</span>(PR_GET_NO_NEW_PRIVS, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>) == <span class="number">1</span>) &#123;</span><br><span class="line">    <span class="comment">//   prctl(PR_GET_NO_NEW_PRIVS, 0, 0, 0, 0) == 1 条件生效</span></span><br><span class="line">    <span class="comment">//  A value of 1 indicates execve(2) will operate in the privilege-restricting mode described above</span></span><br><span class="line">    <span class="built_in">debuggerd_fallback_handler</span>(info, <span class="built_in">static_cast</span>&lt;<span class="type">ucontext_t</span>*&gt;(context), abort_message);      </span><br><span class="line">    <span class="built_in">resend_signal</span>(info);</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  &#125;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment"> * Writes a summary of the signal to the log file.  We do this so that, if</span></span><br><span class="line"><span class="comment"> * for some reason we&#x27;re not able to contact debuggerd, there is still some</span></span><br><span class="line"><span class="comment"> * indication of the failure in the log.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">    <span class="comment">// 防止无法连接debuggerd 时, 仍可以输出部分crash信息.</span></span><br><span class="line">  <span class="built_in">log_signal_summary</span>(info);</span><br><span class="line">    &#123;</span><br><span class="line">          <span class="built_in">async_safe_format_log</span>(ANDROID_LOG_FATAL, <span class="string">&quot;libc&quot;</span>,</span><br><span class="line">                        <span class="string">&quot;Fatal signal %d (%s), code %d (%s%s)%s in tid %d (%s), pid %d (%s)&quot;</span>,</span><br><span class="line">                        info-&gt;si_signo, <span class="built_in">get_signame</span>(info), info-&gt;si_code, <span class="built_in">get_sigcode</span>(info),</span><br><span class="line">                        sender_desc, addr_desc, __gettid(), thread_name, self_pid, main_thread_name);</span><br><span class="line">    &#125;</span><br><span class="line">    debugger_thread_info thread_info = &#123;</span><br><span class="line">        .crashing_tid = __gettid(),</span><br><span class="line">        .pseudothread_tid = <span class="number">-1</span>,</span><br><span class="line">        .siginfo = info,</span><br><span class="line">        .ucontext = context,</span><br><span class="line">        .abort_msg = <span class="built_in">reinterpret_cast</span>&lt;<span class="type">uintptr_t</span>&gt;(abort_message),</span><br><span class="line">        .fdsan_table = <span class="built_in">reinterpret_cast</span>&lt;<span class="type">uintptr_t</span>&gt;(<span class="built_in">android_fdsan_get_fd_table</span>()),</span><br><span class="line">        .gwp_asan_state = <span class="built_in">reinterpret_cast</span>&lt;<span class="type">uintptr_t</span>&gt;(gwp_asan_state),</span><br><span class="line">        .gwp_asan_metadata = <span class="built_in">reinterpret_cast</span>&lt;<span class="type">uintptr_t</span>&gt;(gwp_asan_metadata),</span><br><span class="line">  &#125;;</span><br><span class="line">  <span class="comment">// Set PR_SET_DUMPABLE to 1, so that crash_dump can ptrace us.</span></span><br><span class="line">    <span class="comment">// Set  the  state  of the &quot;dumpable&quot; flag, which determines whether core dumps are produced for the calling process upon</span></span><br><span class="line">         <span class="comment">//     delivery of a signal whose default behavior is to produce a core dump.</span></span><br><span class="line">  <span class="keyword">if</span> (<span class="built_in">prctl</span>(PR_SET_DUMPABLE, <span class="number">1</span>) != <span class="number">0</span>) &#123;</span><br><span class="line">     <span class="built_in">fatal_errno</span>(<span class="string">&quot;failed to set dumpable&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">    <span class="comment">// PR_SET_PTRACER_ANY，对于调用进程将有效禁用Yama引入的ptrace限制。</span></span><br><span class="line">  <span class="keyword">if</span> (<span class="built_in">prctl</span>(PR_SET_PTRACER, PR_SET_PTRACER_ANY) != <span class="number">0</span>) &#123;...&#125;</span><br><span class="line">  <span class="comment">// fork crash_dump 进程, 传入的是线程的信息</span></span><br><span class="line">  <span class="type">pid_t</span> child_pid =</span><br><span class="line">-&gt;    <span class="built_in">clone</span>(debuggerd_dispatch_pseudothread, pseudothread_stack,</span><br><span class="line">          CLONE_THREAD | CLONE_SIGHAND | CLONE_VM | CLONE_CHILD_SETTID | CLONE_CHILD_CLEARTID,</span><br><span class="line">          &amp;thread_info, <span class="literal">nullptr</span>, <span class="literal">nullptr</span>, &amp;thread_info.pseudothread_tid);</span><br><span class="line">  <span class="comment">// 重置为默认信号处理函数</span></span><br><span class="line">  <span class="keyword">if</span> (signal_number != DEBUGGER_SIGNAL) &#123;</span><br><span class="line">    <span class="built_in">signal</span>(signal_number, SIG_DFL);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (info-&gt;si_signo == BIONIC_SIGNAL_DEBUGGER) &#123;</span><br><span class="line">    <span class="comment">// If the signal is fatal, don&#x27;t unlock the mutex to prevent other crashing threads from</span></span><br><span class="line">    <span class="comment">// starting to dump right before our death.</span></span><br><span class="line">    <span class="built_in">pthread_mutex_unlock</span>(&amp;crash_mutex);</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment">// Resend the signal, so that either gdb or the parent&#x27;s waitpid sees it.</span></span><br><span class="line">    <span class="comment">// 重发信号, 可以让gdb strace等处理信号</span></span><br><span class="line">    <span class="built_in">resend_signal</span>(info);</span><br><span class="line">  &#125;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="debuggerd-dispatch-pseudothread"><a href="#debuggerd-dispatch-pseudothread" class="headerlink" title="debuggerd_dispatch_pseudothread"></a>debuggerd_dispatch_pseudothread</h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">static</span> <span class="type">int</span> <span class="title">debuggerd_dispatch_pseudothread</span><span class="params">(<span class="type">void</span>* arg)</span> </span>&#123; </span><br><span class="line">  <span class="comment">// 创建管道, 用于父子进程通信</span></span><br><span class="line">  unique_fd input_read, input_write;</span><br><span class="line">  unique_fd output_read, output_write;</span><br><span class="line">  <span class="keyword">if</span> (!<span class="built_in">Pipe</span>(&amp;input_read, &amp;input_write) != <span class="number">0</span> || !<span class="built_in">Pipe</span>(&amp;output_read, &amp;output_write)) &#123;</span><br><span class="line">    <span class="built_in">fatal_errno</span>(<span class="string">&quot;failed to create pipe&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">struct</span> <span class="title class_">iovec</span> iovs[] = &#123;</span><br><span class="line">      &#123;.iov_base = &amp;version, .iov_len = <span class="built_in">sizeof</span>(version)&#125;,</span><br><span class="line">      &#123;.iov_base = thread_info-&gt;siginfo, .iov_len = <span class="built_in">sizeof</span>(<span class="type">siginfo_t</span>)&#125;,</span><br><span class="line">      &#123;.iov_base = thread_info-&gt;ucontext, .iov_len = <span class="built_in">sizeof</span>(<span class="type">ucontext_t</span>)&#125;,</span><br><span class="line">      &#123;.iov_base = &amp;thread_info-&gt;abort_msg, .iov_len = <span class="built_in">sizeof</span>(<span class="type">uintptr_t</span>)&#125;,</span><br><span class="line">      &#123;.iov_base = &amp;thread_info-&gt;fdsan_table, .iov_len = <span class="built_in">sizeof</span>(<span class="type">uintptr_t</span>)&#125;,</span><br><span class="line">      &#123;.iov_base = &amp;thread_info-&gt;gwp_asan_state, .iov_len = <span class="built_in">sizeof</span>(<span class="type">uintptr_t</span>)&#125;,</span><br><span class="line">      &#123;.iov_base = &amp;thread_info-&gt;gwp_asan_metadata, .iov_len = <span class="built_in">sizeof</span>(<span class="type">uintptr_t</span>)&#125;,</span><br><span class="line">  &#125;;</span><br><span class="line">  <span class="type">ssize_t</span> rc = <span class="built_in">TEMP_FAILURE_RETRY</span>(<span class="built_in">writev</span>(output_write.<span class="built_in">get</span>(), iovs, <span class="built_in">arraysize</span>(iovs)));</span><br><span class="line">    <span class="comment">//  Don&#x27;t use fork(2) to avoid calling pthread_atfork handlers. 没有直接使用fork, 而是用的clone函数</span></span><br><span class="line">  <span class="type">pid_t</span> crash_dump_pid = __fork();</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">clone</span>(<span class="literal">nullptr</span>, <span class="literal">nullptr</span>, <span class="number">0</span>, <span class="literal">nullptr</span>);</span><br><span class="line">    &#125;</span><br><span class="line">   <span class="comment">// fork 失败</span></span><br><span class="line">  <span class="keyword">if</span> (crash_dump_pid == <span class="number">-1</span>) &#123;</span><br><span class="line">    <span class="built_in">async_safe_format_log</span>(ANDROID_LOG_FATAL, <span class="string">&quot;libc&quot;</span>,</span><br><span class="line">                          <span class="string">&quot;failed to fork in debuggerd signal handler: %s&quot;</span>, <span class="built_in">strerror</span>(errno));</span><br><span class="line">      <span class="comment">// It returns 0 in the child process and returns the PID of the child in the parent. 0是子进程 &gt;0是父进程</span></span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (crash_dump_pid == <span class="number">0</span>) &#123;</span><br><span class="line">      <span class="comment">// STDOUT_FILENO = input_write  STDIN_FILENO = output_read</span></span><br><span class="line">    <span class="built_in">TEMP_FAILURE_RETRY</span>(<span class="built_in">dup2</span>(input_write.<span class="built_in">get</span>(), STDOUT_FILENO));</span><br><span class="line">    <span class="built_in">TEMP_FAILURE_RETRY</span>(<span class="built_in">dup2</span>(output_read.<span class="built_in">get</span>(), STDIN_FILENO));</span><br><span class="line">      <span class="comment">// 替换为 crash_dump 本体执行, 输入变成output_read,输出变为 input_write, 注意前面的管道, output_write 是父进程用的, 対端即为 output_read, 下面注意input_read的处理</span></span><br><span class="line">    <span class="built_in">execle</span>(CRASH_DUMP_PATH, CRASH_DUMP_NAME, main_tid, pseudothread_tid, debuggerd_dump_type,</span><br><span class="line">           <span class="literal">nullptr</span>, <span class="literal">nullptr</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 父进程中, 读取子进程的 printf的log</span></span><br><span class="line">  rc = <span class="built_in">TEMP_FAILURE_RETRY</span>(<span class="built_in">read</span>(input_read.<span class="built_in">get</span>(), &amp;buf, <span class="built_in">sizeof</span>(buf)));</span><br><span class="line">    <span class="comment">// crash_dump is ptracing us, fork off a copy of our address space for it to use. ?</span></span><br><span class="line">  <span class="built_in">create_vm_process</span>();</span><br><span class="line">  <span class="comment">// 等待crash_dump结束</span></span><br><span class="line">  <span class="keyword">if</span> (<span class="built_in">TEMP_FAILURE_RETRY</span>(<span class="built_in">waitpid</span>(crash_dump_pid, &amp;status, <span class="number">0</span>)) == <span class="number">-1</span>) &#123;</span><br><span class="line">    <span class="built_in">async_safe_format_log</span>(ANDROID_LOG_FATAL, <span class="string">&quot;libc&quot;</span>, <span class="string">&quot;failed to wait for crash_dump helper: %s&quot;</span>,</span><br><span class="line">                          <span class="built_in">strerror</span>(errno));</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="built_in">WIFSTOPPED</span>(status) || <span class="built_in">WIFSIGNALED</span>(status)) &#123;</span><br><span class="line">    <span class="built_in">async_safe_format_log</span>(ANDROID_LOG_FATAL, <span class="string">&quot;libc&quot;</span>, <span class="string">&quot;crash_dump helper crashed or stopped&quot;</span>);</span><br><span class="line">  &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Android/" rel="tag"># Android</a>
+              <a href="/tags/signal/" rel="tag"># signal</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/arm64%20%E6%8C%87%E4%BB%A4debug/" rel="prev" title="arm gdb 调试">
+      <i class="fa fa-chevron-left"></i> arm gdb 调试
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/07/19/%E7%A8%B3%E5%AE%9A%E6%80%A7/jemalloc%E8%B0%83%E7%A0%94/" rel="next" title="jemalloc调研">
+      jemalloc调研 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BF%A1%E5%8F%B7%E7%9B%B8%E5%85%B3%E6%B5%81%E7%A8%8B%E6%A2%B3%E7%90%86"><span class="nav-number">1.</span> <span class="nav-text">信号相关流程梳理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%B0debuggerd-init%E7%9A%84%E8%B0%83%E7%94%A8%E9%93%BE"><span class="nav-number">1.1.</span> <span class="nav-text">到debuggerd_init的调用链</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#debuggerd-init"><span class="nav-number">1.2.</span> <span class="nav-text">debuggerd_init</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#debuggerd-signal-handler"><span class="nav-number">1.2.1.</span> <span class="nav-text">debuggerd_signal_handler</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#debuggerd-dispatch-pseudothread"><span class="nav-number">1.2.2.</span> <span class="nav-text">debuggerd_dispatch_pseudothread</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

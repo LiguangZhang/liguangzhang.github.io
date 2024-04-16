@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="工作量评估: 1. 需求实现变更评估1.1. 原android4.4平台ums功能实现： 首先对应切换usb模式为mass_storage的功能：上层setting中在usb连接界面中切换usb function，切换usb function为mass_storage后，由fw-usb层执行切换，设置usb的属性，init接收到属性变更后，触发usb driver切换usb工作方式变更到mass_">
+<meta property="og:type" content="article">
+<meta property="og:title" content="blog">
+<meta property="og:url" content="https://liguangzhang.github.io/2024/04/15/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/test/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="工作量评估: 1. 需求实现变更评估1.1. 原android4.4平台ums功能实现： 首先对应切换usb模式为mass_storage的功能：上层setting中在usb连接界面中切换usb function，切换usb function为mass_storage后，由fw-usb层执行切换，设置usb的属性，init接收到属性变更后，触发usb driver切换usb工作方式变更到mass_">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-04-15T09:59:59.487Z">
+<meta property="article:modified_time" content="2024-04-15T09:59:59.487Z">
+<meta property="article:author" content="liguang.zhang">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2024/04/15/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/test/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title> | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2024/04/15/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/test/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-04-15 17:59:59" itemprop="dateCreated datePublished" datetime="2024-04-15T17:59:59+08:00">2024-04-15</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>工作量评估:</p>
+<h2 id="1-需求实现变更评估"><a href="#1-需求实现变更评估" class="headerlink" title="1. 需求实现变更评估"></a>1. 需求实现变更评估</h2><h3 id="1-1-原android4-4平台ums功能实现："><a href="#1-1-原android4-4平台ums功能实现：" class="headerlink" title="1.1. 原android4.4平台ums功能实现："></a>1.1. 原android4.4平台ums功能实现：</h3><ol>
+<li>首先对应切换usb模式为mass_storage的功能：<br>上层setting中在usb连接界面中切换usb function，切换usb function为mass_storage后，由fw-usb层执行切换，设置usb的属性，init接收到属性变更后，触发usb driver切换usb工作方式变更到mass_storage</li>
+<li>usb 模式切换为mass_storage后, 需要将sd卡设备地址给到pc端.<br>fw-usb层收到mass_storage模式的CONFIGURED事件上报后, 发送广播,上层setting app接收到广播后, 向fw-MountService发送启用ums的工作. MountService查询需要设置为ums工作模式的存储卷, 将该存储卷卸载, 卸载动作是通过socket发送给native vold服务. 在将存储卷执行pc-share, 也是通过socket发送给vold, 由vold执行.最终将sd卡的设备地址写到usb driver提供好的share地址上. share成功后, fw-mountService接收回调状态, 然后设置卷的状态变更广播, fw-usb接收到状态广播后, 发送通知.</li>
+<li>对应关闭ums模式的工作<br>拔线或者在Setting中切换usb模式为其他, fw-usb层收到Disconneted事件后,发送广播,Setting接收到广播后,向fw-MountService发送关闭ums的工作. MountService查询处于shared状态的存储卷,通过socket向vold发送unshare命令, vold端执行unshare,清空usb driver的相对应路径, 再由MountService向vold发送mount命令, vold接收到后将存储卷挂载回手机上.</li>
+</ol>
+<h3 id="1-2-需求变更工作量评估"><a href="#1-2-需求变更工作量评估" class="headerlink" title="1.2. 需求变更工作量评估"></a>1.2. 需求变更工作量评估</h3><p>由于裁剪掉了fw&#x2F;app, 所以上述功能中的<code>fw-usb</code>&#x2F;<code>fw-MountService</code>&#x2F;<code>setting</code>的工作都不能work了, 需要将其中的工作转移到vold中实现. </p>
+<ol>
+<li>设置usb默认模式为mass_storage, adb. 并需要研发测试同事帮忙测下该模式的usb 连接稳定性.  1人&#x2F;天</li>
+<li>vold接收USB的uevent事件, 接收到事件后对sd卡的share&#x2F;unshare功能. 2人&#x2F;天</li>
+<li>公司内部严禁sd卡挂载到pc上使用, 因此需要向IT申请pc上sd卡挂载拷贝读写权限.   0.5人&#x2F;天</li>
+<li>稳定性测试，连续插拔线场景电脑重启休眠等场景对pc／手机端来回挂载的稳定性。并进行debug 调试.  3人&#x2F;天</li>
+<li>如果sd卡固化在机箱内部，不用考虑sd卡热插拔场景的适配。如果sd卡不是固化的，需要支持ums热插拔，2人&#x2F;天</li>
+<li>该项目要求连usb线即启用ums功能, 故需要将usb模式固定为mass_storage, 不可变更. 封死usb模式切换功能. 2人&#x2F;天</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/04/15/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/vx/" rel="prev" title="">
+      <i class="fa fa-chevron-left"></i> 
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2024/04/15/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/SignConfig%E6%9C%8D%E5%8A%A1/" rel="next" title="">
+       <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E9%9C%80%E6%B1%82%E5%AE%9E%E7%8E%B0%E5%8F%98%E6%9B%B4%E8%AF%84%E4%BC%B0"><span class="nav-number">1.</span> <span class="nav-text">1. 需求实现变更评估</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-%E5%8E%9Fandroid4-4%E5%B9%B3%E5%8F%B0ums%E5%8A%9F%E8%83%BD%E5%AE%9E%E7%8E%B0%EF%BC%9A"><span class="nav-number">1.1.</span> <span class="nav-text">1.1. 原android4.4平台ums功能实现：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-%E9%9C%80%E6%B1%82%E5%8F%98%E6%9B%B4%E5%B7%A5%E4%BD%9C%E9%87%8F%E8%AF%84%E4%BC%B0"><span class="nav-number">1.2.</span> <span class="nav-text">1.2. 需求变更工作量评估</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

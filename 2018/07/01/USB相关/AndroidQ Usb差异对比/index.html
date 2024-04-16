@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="1. Device变化1.1. adb重构将adb调试相关的类抽出到新包com.android.server.adb中.  包名变化com.android.server.usb -&gt;com.android.server.adb 目录文件变更 &#x2F;frameworks&#x2F;base&#x2F;services&#x2F;usb&#x2F;java&#x2F;com&#x2F;android&#x2F;server&#x2F;us">
+<meta property="og:type" content="article">
+<meta property="og:title" content="AndroidQ Usb差异对比">
+<meta property="og:url" content="https://liguangzhang.github.io/2018/07/01/USB%E7%9B%B8%E5%85%B3/AndroidQ%20Usb%E5%B7%AE%E5%BC%82%E5%AF%B9%E6%AF%94/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="1. Device变化1.1. adb重构将adb调试相关的类抽出到新包com.android.server.adb中.  包名变化com.android.server.usb -&gt;com.android.server.adb 目录文件变更 &#x2F;frameworks&#x2F;base&#x2F;services&#x2F;usb&#x2F;java&#x2F;com&#x2F;android&#x2F;server&#x2F;us">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2018-06-30T16:00:00.000Z">
+<meta property="article:modified_time" content="2024-04-16T07:49:28.741Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="Android">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2018/07/01/USB%E7%9B%B8%E5%85%B3/AndroidQ%20Usb%E5%B7%AE%E5%BC%82%E5%AF%B9%E6%AF%94/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>AndroidQ Usb差异对比 | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2018/07/01/USB%E7%9B%B8%E5%85%B3/AndroidQ%20Usb%E5%B7%AE%E5%BC%82%E5%AF%B9%E6%AF%94/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          AndroidQ Usb差异对比
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-07-01 00:00:00" itemprop="dateCreated datePublished" datetime="2018-07-01T00:00:00+08:00">2018-07-01</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 15:49:28" itemprop="dateModified" datetime="2024-04-16T15:49:28+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/USB/" itemprop="url" rel="index"><span itemprop="name">USB</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="1-Device变化"><a href="#1-Device变化" class="headerlink" title="1. Device变化"></a>1. Device变化</h1><h2 id="1-1-adb重构"><a href="#1-1-adb重构" class="headerlink" title="1.1. adb重构"></a>1.1. adb重构</h2><p>将adb调试相关的类抽出到新包<code>com.android.server.adb</code>中.</p>
+<ul>
+<li>包名变化<br><code>com.android.server.usb</code> -&gt;<code>com.android.server.adb</code></li>
+<li>目录文件变更</li>
+<li>&#x2F;frameworks&#x2F;base&#x2F;services&#x2F;<code>usb/java/com/android/server/usb</code>  -&gt;<br>&#x2F;frameworks&#x2F;base&#x2F;services&#x2F;<code>core/java/com/android/server/adb</code></li>
+</ul>
+<p>UsbDebuggingManager.java -&gt;AdbDebuggingManager.java<br>从UsbService中抽出AdbService.java</p>
+<p>原有的<code>UsbDebuggingManager</code>变为<code>AdbDebuggingManager</code><br>新增: <code>/frameworks/base/services/core/java/com/android/server/adb</code></p>
+<ol>
+<li>AdbService –和UsbService并列, 由SystemServer启动</li>
+<li>交互方式变更, 通过LocalService的AdbManagerInternal <code>registerTransport</code>注册adb监听.</li>
+<li>adbService中adb开关的变化通过contentProvider监听, 而其他服务通过registerTransport监听adbService中的adb开关变化回调.<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">LocalServices.getService(</span><br><span class="line">       AdbManagerInternal.class).registerTransport(<span class="keyword">new</span> <span class="title class_">AdbTransport</span>(<span class="built_in">this</span>));</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="1-2-新增adb权限"><a href="#1-2-新增adb权限" class="headerlink" title="1.2. 新增adb权限"></a>1.2. 新增adb权限</h2><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">permission</span> <span class="attr">android:name</span>=<span class="string">&quot;android.permission.MANAGE_DEBUGGING&quot;</span></span></span><br><span class="line"><span class="tag">      <span class="attr">android:protectionLevel</span>=<span class="string">&quot;signature|privileged&quot;</span> /&gt;</span></span><br><span class="line">  <span class="comment">&lt;!-- Permission to control Android Debug Bridge (ADB) --&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">uses-permission</span> <span class="attr">android:name</span>=<span class="string">&quot;android.permission.MANAGE_DEBUGGING&quot;</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+<p>allowDebugging denyDebugging clearDebuggingKeys方法中会鉴权, 还是UsbDeviceManager中操作.</p>
+<h2 id="1-3-port-重构"><a href="#1-3-port-重构" class="headerlink" title="1.3. port 重构"></a>1.3. port 重构</h2><p>Expose UsbPort and UsbPortStatus as system API</p>
+<blockquote>
+<p>This is needed by making the setup wizard use only system-api?  只有usb settings包用到了,没看到其他app使用.</p>
+</blockquote>
+<p>新增文件<br>core&#x2F;java&#x2F;android&#x2F;hardware&#x2F;usb&#x2F;ParcelableUsbPort.java</p>
+<h2 id="1-4-usb-gadget-hal方式切换usb-function避免reset"><a href="#1-4-usb-gadget-hal方式切换usb-function避免reset" class="headerlink" title="1.4. usb gadget hal方式切换usb function避免reset"></a>1.4. usb gadget hal方式切换usb function避免reset</h2><p>注册监听<code>android.hardware.usb.gadget@1.0::IUsbGadget</code>服务的通知, 该服务启动时会回调<code>onRegistration</code>方法.<br>服务启动后, 根据启动状态设置<code>preexisting</code>标记,  如果之前未启动过, 会重设usb默认function. 之前启动过, 则不设置.<br>避免因service重启导致的usb属性被reset</p>
+<blockquote>
+<p>This will overcome the occasional reset of the usb gadget hence the connection during phone bootup.</p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">GADGET_HAL_FQ_NAME</span> <span class="operator">=</span></span><br><span class="line">        <span class="string">&quot;android.hardware.usb.gadget@1.0::IUsbGadget&quot;</span>;</span><br><span class="line"><span class="type">boolean</span> <span class="variable">ret</span> <span class="operator">=</span> IServiceManager.getService()</span><br><span class="line">        .registerForNotifications(GADGET_HAL_FQ_NAME, <span class="string">&quot;&quot;</span>, serviceNotification);</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>平台并未采用usb gadget hal的方式. 采用的是传统的设置属性的方式</p>
+</blockquote>
+<h1 id="2-Host端变化"><a href="#2-Host端变化" class="headerlink" title="2. Host端变化"></a>2. Host端变化</h1><h2 id="2-1-usbDeviceAdded-变化"><a href="#2-1-usbDeviceAdded-变化" class="headerlink" title="2.1. usbDeviceAdded 变化"></a>2.1. usbDeviceAdded 变化</h2><p>usbDeviceAdded增加增加新的黑名单, 下面的设备插入后不会上报usbDeviceAdded广播(<code>ACTION_USB_DEVICE_ATTACHED</code>), 不会上报状态(进行弹框等).</p>
+<ul>
+<li>只上报一个接口</li>
+</ul>
+<ol>
+<li>对应未插入外设的空hub</li>
+<li>为鼠标HID设备</li>
+<li>键盘HID设备</li>
+</ol>
+<h2 id="2-2-UsbSettingsManager重构"><a href="#2-2-UsbSettingsManager重构" class="headerlink" title="2.2. UsbSettingsManager重构"></a>2.2. UsbSettingsManager重构</h2><p>USB permission and resolve activity refactor.<br>Pure refactor of USB code for simple Arc logic injection.</p>
+<p>从UsbProfileGroupSettingsManager.java中抽出services&#x2F;usb&#x2F;java&#x2F;com&#x2F;android&#x2F;server&#x2F;usb&#x2F;<code>UsbHandlerManager.java</code><br>专门负责resolve activity, 手机作为host使用时(通常是两台手机互联时),  解析弹出默认的activity行为.</p>
+<p>从UsbUserSettingsManager.java中抽出services&#x2F;usb&#x2F;java&#x2F;com&#x2F;android&#x2F;server&#x2F;usb&#x2F;<code>UsbPermissionManager.java</code>专门负责权限管理.<br>DevicePermission 和 AccessoryPermission(APP打开读取连接的device设备的权限和配件模式下打开配件的权限控制及授权框的管理等.)</p>
+<h2 id="2-3-Require-permission-to-read-USB-device’s-serial-number"><a href="#2-3-Require-permission-to-read-USB-device’s-serial-number" class="headerlink" title="2.3. Require permission to read USB device’s serial number"></a>2.3. Require permission to read USB device’s serial number</h2><p>新增文件</p>
+<ul>
+<li>core&#x2F;java&#x2F;android&#x2F;hardware&#x2F;usb&#x2F;IUsbSerialReader.aidl</li>
+<li>services&#x2F;usb&#x2F;java&#x2F;com&#x2F;android&#x2F;server&#x2F;usb&#x2F;UsbSerialReader.java</li>
+</ul>
+<p>对应连接的device设备或accessory(配件设备), 应用(<code>SDK&gt;=Q</code>)包读取设备的SerialNumber时会先进行鉴权(DevicePermission和AccessoryPermission), 鉴权失败会报异常.</p>
+<p>Serial number的来源:</p>
+<ul>
+<li>对应accessory(配件设备)<br>来自<code>/dev/usb_accessory</code>设备节点中读取的<code>ACCESSORY_GET_STRING_SERIAL</code>项</li>
+<li>对应Device设备<br>对device文件进行<code>usb_device_control_transfer</code>通信<code>USB_REQ_GET_DESCRIPTOR</code>读出的serial_number字段.</li>
+</ul>
+<p>app访问方式:<br>UsbDevice.getSerialNumber() –&gt; IUsbSerialReader.getSerial</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Android/" rel="tag"># Android</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/07/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%88%9D%E6%8E%A2/" rel="prev" title="文件系统初探">
+      <i class="fa fa-chevron-left"></i> 文件系统初探
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/07/02/USB%E7%9B%B8%E5%85%B3/Midi%E6%A1%86%E6%9E%B6/" rel="next" title="Midi框架.md">
+      Midi框架.md <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-Device%E5%8F%98%E5%8C%96"><span class="nav-number">1.</span> <span class="nav-text">1. Device变化</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-adb%E9%87%8D%E6%9E%84"><span class="nav-number">1.1.</span> <span class="nav-text">1.1. adb重构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-%E6%96%B0%E5%A2%9Eadb%E6%9D%83%E9%99%90"><span class="nav-number">1.2.</span> <span class="nav-text">1.2. 新增adb权限</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-port-%E9%87%8D%E6%9E%84"><span class="nav-number">1.3.</span> <span class="nav-text">1.3. port 重构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-4-usb-gadget-hal%E6%96%B9%E5%BC%8F%E5%88%87%E6%8D%A2usb-function%E9%81%BF%E5%85%8Dreset"><span class="nav-number">1.4.</span> <span class="nav-text">1.4. usb gadget hal方式切换usb function避免reset</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-Host%E7%AB%AF%E5%8F%98%E5%8C%96"><span class="nav-number">2.</span> <span class="nav-text">2. Host端变化</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-usbDeviceAdded-%E5%8F%98%E5%8C%96"><span class="nav-number">2.1.</span> <span class="nav-text">2.1. usbDeviceAdded 变化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-UsbSettingsManager%E9%87%8D%E6%9E%84"><span class="nav-number">2.2.</span> <span class="nav-text">2.2. UsbSettingsManager重构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-Require-permission-to-read-USB-device%E2%80%99s-serial-number"><span class="nav-number">2.3.</span> <span class="nav-text">2.3. Require permission to read USB device’s serial number</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

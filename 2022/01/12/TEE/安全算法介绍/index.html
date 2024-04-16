@@ -1,0 +1,1816 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="md5MD5消息摘要算法（英语：MD5 Message-Digest Algorithm），一种被广泛使用的密码散列函数，可以产生出一个128位（16个字符(BYTES)）的散列值（hash value） 1996年后被证实存在弱点，可以被加以破解，对于需要高度安全性的资料，专家一般建议改用其他算法，如SHA-2。2004年，证实MD5算法无法防止碰撞攻击，因此不适用于安全性认证，如SSL公开密钥">
+<meta property="og:type" content="article">
+<meta property="og:title" content="安全算法介绍">
+<meta property="og:url" content="https://liguangzhang.github.io/2022/01/12/TEE/%E5%AE%89%E5%85%A8%E7%AE%97%E6%B3%95%E4%BB%8B%E7%BB%8D/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="md5MD5消息摘要算法（英语：MD5 Message-Digest Algorithm），一种被广泛使用的密码散列函数，可以产生出一个128位（16个字符(BYTES)）的散列值（hash value） 1996年后被证实存在弱点，可以被加以破解，对于需要高度安全性的资料，专家一般建议改用其他算法，如SHA-2。2004年，证实MD5算法无法防止碰撞攻击，因此不适用于安全性认证，如SSL公开密钥">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://wikimedia.org/api/rest_v1/media/math/render/svg/16df430ed7a23df9b160a5bbd957f306a0c3baa7">
+<meta property="og:image" content="https://wikimedia.org/api/rest_v1/media/math/render/svg/a3bf477e7d06894ce882770e495df9105e9770e4">
+<meta property="og:image" content="https://wikimedia.org/api/rest_v1/media/math/render/svg/5ee197df10962cfbefa8b3b7bf0bf63115b2036d">
+<meta property="og:image" content="https://wikimedia.org/api/rest_v1/media/math/render/svg/6b28d7978cdde1a847d051b7c0eafacda0057ee2">
+<meta property="og:image" content="https://wikimedia.org/api/rest_v1/media/math/render/svg/9aeac5149ba7d39c70a5adf775f3ccf3c458c285">
+<meta property="og:image" content="https://wikimedia.org/api/rest_v1/media/math/render/svg/64d70a16d4bcc603931b3057902b2ca269793ce4">
+<meta property="og:image" content="https://wikimedia.org/api/rest_v1/media/math/render/svg/de3b0d4157865c219b2b6dd548b58d3d97aadf47">
+<meta property="og:image" content="https://wikimedia.org/api/rest_v1/media/math/render/svg/7c1c3912f0ad9cbfb4d13c9ada78ed6dab733c06">
+<meta property="og:image" content="https://wikimedia.org/api/rest_v1/media/math/render/svg/a3d2fbda9053b3a8d1b1f1f1c4e4c0d5f81b663e">
+<meta property="og:image" content="https://wikimedia.org/api/rest_v1/media/math/render/svg/c5f1dc362baad71ca8749f815c9f3a51f810d054">
+<meta property="og:image" content="https://wikimedia.org/api/rest_v1/media/math/render/svg/661d89787e958d98fb6da5c0c2185fc92a176514">
+<meta property="og:image" content="https://wikimedia.org/api/rest_v1/media/math/render/svg/bd8dba2898cd0de4ef69e454d9c8f45efdfcedb2">
+<meta property="og:image" content="https://wikimedia.org/api/rest_v1/media/math/render/svg/72b35fb643d7e3e0d7ec5e9bc9536e6a1fe141df">
+<meta property="og:image" content="https://wikimedia.org/api/rest_v1/media/math/render/svg/08ec731bacb2c8c8e8f8c2c8d71c33bddf97e7d5">
+<meta property="og:image" content="https://wikimedia.org/api/rest_v1/media/math/render/svg/495f98eb0abe80037a8bfb0b3dfb943df9e04495">
+<meta property="og:image" content="https://wikimedia.org/api/rest_v1/media/math/render/svg/a2e1edbd34bac4a025bb68adac8f20f58adb3fcf">
+<meta property="og:image" content="https://wikimedia.org/api/rest_v1/media/math/render/svg/2cb5588781e0cca1a9d48ea9b11a8ad7f31069fb">
+<meta property="og:image" content="https://wikimedia.org/api/rest_v1/media/math/render/svg/7923dab3807e2710107ed224fe788f2b7da70277">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420114834.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420114830.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420135413.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420135540.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420134942.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420134859.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420134813.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420140055.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420140114.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420140311.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420140524.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220424095043.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220424095026.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420140807.png">
+<meta property="og:image" content="https://liguangzhang.github.io/OTA%E7%9B%B8%E5%85%B3/%E5%8A%A0%E5%AF%86%E6%96%B9%E6%A1%88%E6%95%B4%E7%90%86.md#%5E61db89">
+<meta property="og:image" content="https://liguangzhang.github.io/OTA%E7%9B%B8%E5%85%B3/fbe%E4%B8%8E%E7%94%A8%E6%88%B7%E5%AE%89%E5%85%A8%E5%AF%86%E7%A0%81.md#%5Ea300bf">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420141006.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420114738.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420114747.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420114749.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420114752.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420114754.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420114802.png">
+<meta property="article:published_time" content="2022-01-12T10:15:54.000Z">
+<meta property="article:modified_time" content="2024-04-16T07:45:34.942Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="安全">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://wikimedia.org/api/rest_v1/media/math/render/svg/16df430ed7a23df9b160a5bbd957f306a0c3baa7">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2022/01/12/TEE/%E5%AE%89%E5%85%A8%E7%AE%97%E6%B3%95%E4%BB%8B%E7%BB%8D/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>安全算法介绍 | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2022/01/12/TEE/%E5%AE%89%E5%85%A8%E7%AE%97%E6%B3%95%E4%BB%8B%E7%BB%8D/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          安全算法介绍
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-01-12 18:15:54" itemprop="dateCreated datePublished" datetime="2022-01-12T18:15:54+08:00">2022-01-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 15:45:34" itemprop="dateModified" datetime="2024-04-16T15:45:34+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AE%89%E5%85%A8/" itemprop="url" rel="index"><span itemprop="name">安全</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AE%89%E5%85%A8/%E5%8A%A0%E5%AF%86/" itemprop="url" rel="index"><span itemprop="name">加密</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="md5"><a href="#md5" class="headerlink" title="md5"></a>md5</h1><p><strong>MD5消息摘要算法</strong>（英语：MD5 Message-Digest Algorithm），一种被广泛使用的<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E5%AF%86%E7%A2%BC%E9%9B%9C%E6%B9%8A%E5%87%BD%E6%95%B8" title="密码散列函数">密码散列函数</a>，可以产生出一个128位（16个字符(BYTES)）的散列值（hash value）</p>
+<p>1996年后被证实存在弱点，可以被加以<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E7%A0%B4%E8%A7%A3" title="破解">破解</a>，对于需要高度安全性的资料，专家一般建议改用其他算法，如<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/SHA-2" title="SHA-2">SHA-2</a>。2004年，证实MD5算法无法防止<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/w/index.php?title=%E7%A2%B0%E6%92%9E%E6%94%BB%E5%87%BB&action=edit&redlink=1">碰撞攻击</a>，因此不适用于安全性认证，如<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/SSL" title="SSL">SSL</a><a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E5%85%AC%E9%96%8B%E9%87%91%E9%91%B0%E8%AA%8D%E8%AD%89" title="公开密钥认证">公开密钥认证</a>或是<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%95%B8%E4%BD%8D%E7%B0%BD%E7%AB%A0" title="数字签名">数字签名</a>等用途。</p>
+<h2 id="缺陷"><a href="#缺陷" class="headerlink" title="缺陷"></a>缺陷</h2><p>2009年，<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E4%B8%AD%E5%9C%8B%E7%A7%91%E5%AD%B8%E9%99%A2" title="中国科学院">中国科学院</a>的谢涛和冯登国仅用了220.96的碰撞算法复杂度，破解了MD5的碰撞抵抗，该攻击在普通计算机上运行只需要数秒钟<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/MD5#cite_note-3">[3]</a>。2011年，<a target="_blank" rel="noopener" href="https://tools.ietf.org/html/rfc6151">RFC 6151</a> 禁止MD5用作<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E9%87%91%E9%91%B0%E9%9B%9C%E6%B9%8A%E8%A8%8A%E6%81%AF%E9%91%91%E5%88%A5%E7%A2%BC" title="密钥散列消息认证码">密钥散列消息认证码</a>。</p>
+<h1 id="sha"><a href="#sha" class="headerlink" title="sha"></a>sha</h1><ul>
+<li><p>**<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/SHA-0" title="SHA-0">SHA-0</a>**：1993年发布，当时称做安全散列标准（Secure Hash Standard），发布之后很快就被NSA撤回，是SHA-1的前身。</p>
+</li>
+<li><p>**<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/SHA-1" title="SHA-1">SHA-1</a>**：1995年发布，SHA-1在许多安全协议中广为使用，包括<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/TLS" title="TLS">TLS</a>、<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/GnuPG" title="GnuPG">GnuPG</a>、<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/Secure_Shell" title="Secure Shell">SSH</a>、<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/S/MIME" title="S/MIME">S&#x2F;MIME</a>和<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/IPsec" title="IPsec">IPsec</a>，是<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/MD5" title="MD5">MD5</a>的后继者。但SHA-1的安全性在2010年以后已经不被大多数的加密场景所接受。2017年荷兰密码学研究小组CWI和Google正式宣布攻破了SHA-1<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/SHA%E5%AE%B6%E6%97%8F#cite_note-1">[1]</a>。</p>
+</li>
+<li><p>**<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/SHA-2" title="SHA-2">SHA-2</a>**：2001年发布，包括SHA-224、SHA-256、SHA-384、SHA-512、SHA-512&#x2F;224、SHA-512&#x2F;256。SHA-2目前没有出现明显的弱点。虽然至今尚未出现对SHA-2有效的攻击，但它的算法跟SHA-1基本上仍然相似。</p>
+</li>
+<li><p>**<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/SHA-3" title="SHA-3">SHA-3</a>**：2015年正式发布，由于对MD5出现成功的破解，以及对SHA-0和SHA-1出现理论上破解的方法，<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E5%9C%8B%E5%AE%B6%E6%A8%99%E6%BA%96%E6%9A%A8%E6%8A%80%E8%A1%93%E7%A0%94%E7%A9%B6%E9%99%A2" title="国家标准暨技术研究院">NIST</a>感觉需要一个与之前算法不同的，可替换的加密散列算法，也就是现在的SHA-3。</p>
+</li>
+</ul>
+<h2 id="sha-家族函数对比"><a href="#sha-家族函数对比" class="headerlink" title="sha 家族函数对比"></a>sha 家族函数对比</h2><table class="wikitable" style="margin-top: 0px; width:100%">
+<caption>SHA函数对比
+</caption>
+<tbody><tr style="vertical-align:bottom;">
+<th colspan="2">算法和变体
+</th>
+<th>输出散列值长度<br>（bits）
+</th>
+<th>中继散列值长度<br>（bits）
+</th>
+<th>资料区块长度<br>（bits）
+</th>
+<th>最大输入消息长度<br>（bits）
+</th>
+<th>循环次数
+</th>
+<th>使用到的运算符
+</th>
+<th>碰撞攻击<br>（bits）
+</th>
+<th>性能示例<sup id="cite_ref-3" class="reference"><a href="#cite_note-3">[3]</a></sup><br>(<a href="/wiki/Mebibyte" title="Mebibyte">MiB</a>/s)
+</th></tr>
+<tr style="text-align:center;vertical-align:top;">
+<td colspan="2"><b><a href="/wiki/MD5" title="MD5">MD5</a></b>（作为参考）</td>
+<td>128</td>
+<td>128<br><span class="nowrap">(4 × 32)</span></td>
+<td>512</td>
+<td>无限<sup id="cite_ref-4" class="reference"><a href="#cite_note-4">[4]</a></sup></td>
+<td>64</td>
+<td>And, Xor, Rot, <span class="nowrap">Add (mod&nbsp;2<sup>32</sup>),</span> Or</td>
+<td class="table-no" style="text-align: center; background: rgb(255, 144, 144); --darkreader-inline-bgimage: initial; --darkreader-inline-bgcolor:#760000;" data-darkreader-inline-bgimage="" data-darkreader-inline-bgcolor="">≤18<br>（发现碰撞）</td>
+<td>335
+</td></tr>
+<tr style="text-align:center;vertical-align:top;">
+<td colspan="2"><b><span class="nowrap"><a href="/wiki/SHA-0" class="mw-redirect" title="SHA-0">SHA-0</a></span></b></td>
+<td>160</td>
+<td>160<br><span class="nowrap">(5 × 32)</span></td>
+<td>512</td>
+<td>2<sup>64</sup> − 1</td>
+<td>80</td>
+<td rowspan="2">And, Xor, Rot, <span class="nowrap">Add (mod&nbsp;2<sup>32</sup>),</span> Or</td>
+<td class="table-no" style="text-align: center; background: rgb(255, 144, 144); --darkreader-inline-bgimage: initial; --darkreader-inline-bgcolor:#760000;" data-darkreader-inline-bgimage="" data-darkreader-inline-bgcolor="">&lt;34<br>（发现碰撞）</td>
+<td>-
+</td></tr>
+<tr style="text-align:center;vertical-align:top;">
+<td colspan="2"><b><span class="nowrap"><a href="/wiki/SHA-1" title="SHA-1">SHA-1</a></span></b></td>
+<td>160</td>
+<td>160<br><span class="nowrap">(5 × 32)</span></td>
+<td>512</td>
+<td>2<sup>64</sup> − 1</td>
+<td>80</td>
+<td class="table-no" style="text-align: center; background: rgb(255, 144, 144); --darkreader-inline-bgimage: initial; --darkreader-inline-bgcolor:#760000;" data-darkreader-inline-bgimage="" data-darkreader-inline-bgcolor="">&lt;63<sup id="cite_ref-5" class="reference"><a href="#cite_note-5">[5]</a></sup><br>（发现碰撞<sup id="cite_ref-6" class="reference"><a href="#cite_note-6">[6]</a></sup>）</td>
+<td>192
+</td></tr>
+<tr style="text-align:center;vertical-align:top;">
+<td rowspan="2"><b><span class="nowrap"><a href="/wiki/SHA-2" title="SHA-2">SHA-2</a></span></b></td>
+<td><i>SHA-224</i><br><i>SHA-256</i></td>
+<td>224<br>256</td>
+<td>256<br><span class="nowrap">(8 × 32)</span></td>
+<td>512</td>
+<td>2<sup>64</sup> − 1</td>
+<td>64</td>
+<td>And, Xor, Rot, <span class="nowrap">Add (mod&nbsp;2<sup>32</sup>),</span> Or, Shr</td>
+<td style="background: rgb(153, 255, 153); color: black; vertical-align: middle; text-align: center; --darkreader-inline-bgimage: initial; --darkreader-inline-bgcolor:#1c7000; --darkreader-inline-color:#e8e6e3;" class="yes table-yes2" data-darkreader-inline-bgimage="" data-darkreader-inline-bgcolor="" data-darkreader-inline-color="">112 <br> 128</td>
+<td>139
+</td></tr>
+<tr style="text-align:center;vertical-align:top;">
+<td><i>SHA-384</i><br><i>SHA-512</i><br><i><span class="nowrap">SHA-512/224</span></i><br><i><span class="nowrap">SHA-512/256</span></i></td>
+<td>384<br>512<br>224 <br>256</td>
+<td>512<br><span class="nowrap">(8 × 64)</span></td>
+<td>1024</td>
+<td>2<sup>128</sup> − 1</td>
+<td>80</td>
+<td>And, Xor, Rot, <span class="nowrap">Add (mod&nbsp;2<sup>64</sup>),</span> Or, Shr</td>
+<td style="background: rgb(153, 255, 153); color: black; vertical-align: middle; text-align: center; --darkreader-inline-bgimage: initial; --darkreader-inline-bgcolor:#1c7000; --darkreader-inline-color:#e8e6e3;" class="yes table-yes2" data-darkreader-inline-bgimage="" data-darkreader-inline-bgcolor="" data-darkreader-inline-color="">192<br>256<br>112<br>128</td>
+<td>154
+</td></tr>
+<tr style="text-align:center;vertical-align:top;">
+<td rowspan="2"><b><span class="nowrap"><a href="/wiki/SHA-3" title="SHA-3">SHA-3</a></span></b></td>
+<td><i>SHA3-224</i><br><i>SHA3-256</i><br><i>SHA3-384</i><br><i>SHA3-512</i></td>
+<td>224<br>256<br>384<br>512</td>
+<td rowspan="2">1600<br><span class="nowrap">(5 × 5 × 64)</span></td>
+<td>1152<br>1088<br>832<br>576</td>
+<td rowspan="2">无限<sup id="cite_ref-7" class="reference"><a href="#cite_note-7">[7]</a></sup></td>
+<td rowspan="2">24<sup id="cite_ref-8" class="reference"><a href="#cite_note-8">[8]</a></sup></td>
+<td rowspan="2">And, Xor, Rot, Not</td>
+<td style="background: rgb(153, 255, 153); color: black; vertical-align: middle; text-align: center; --darkreader-inline-bgimage: initial; --darkreader-inline-bgcolor:#1c7000; --darkreader-inline-color:#e8e6e3;" class="yes table-yes2" data-darkreader-inline-bgimage="" data-darkreader-inline-bgcolor="" data-darkreader-inline-color="">112<br>128<br>192<br>256</td>
+<td>-
+</td></tr>
+<tr style="text-align:center;vertical-align:top;">
+<td><i>SHAKE128</i><br><i>SHAKE256</i></td>
+<td><span class="nowrap"><i>d</i> (arbitrary)</span><br><span class="nowrap"><i>d</i> (arbitrary)</span></td>
+<td>1344<br>1088</td>
+<td style="background: rgb(153, 255, 153); color: black; vertical-align: middle; text-align: center; --darkreader-inline-bgimage: initial; --darkreader-inline-bgcolor:#1c7000; --darkreader-inline-color:#e8e6e3;" class="yes table-yes2" data-darkreader-inline-bgimage="" data-darkreader-inline-bgcolor="" data-darkreader-inline-color="">min(<i>d</i>/2, 128)<br>min(<i>d</i>/2, 256)</td>
+<td>-
+</td></tr></tbody></table>
+
+<h1 id="CRC"><a href="#CRC" class="headerlink" title="CRC"></a>CRC</h1><p><strong>循环冗余校验</strong>（英语：<strong>Cyclic redundancy check</strong>，通称“<strong>CRC</strong>”）是一种根据网络数据包或<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E9%9B%BB%E8%85%A6%E6%AA%94%E6%A1%88" title="电脑文件">电脑文件</a>等数据产生简短固定位数校验码的一种<a target="_blank" rel="noopener" href="https://zh.wikipedia.org/wiki/%E6%95%A3%E5%88%97%E5%87%BD%E6%95%B8">散列函数</a>，主要用来检测或校验数据传输或者保存后可能出现的错误。</p>
+<h2 id="常用CRC（按照ITU-IEEE规范）"><a href="#常用CRC（按照ITU-IEEE规范）" class="headerlink" title="常用CRC（按照ITU-IEEE规范）"></a>常用CRC（按照ITU-IEEE规范）</h2><table class="wikitable">
+<tbody><tr>
+<th>名称</th>
+<th>多项式</th>
+<th>表示法：正常或者翻转
+</th></tr>
+<tr>
+<td>CRC-1</td>
+<td><span class="mwe-math-element"><span class="mwe-math-mathml-inline mwe-math-mathml-a11y" style="display: none;"><math xmlns="http://www.w3.org/1998/Math/MathML" alttext="{\displaystyle x+1}">
+  <semantics>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mstyle displaystyle="true" scriptlevel="0">
+        <mi>x</mi>
+        <mo>+</mo>
+        <mn>1</mn>
+      </mstyle>
+    </mrow>
+    <annotation encoding="application/x-tex">{\displaystyle x+1}</annotation>
+  </semantics>
+</math></span><img src="https://wikimedia.org/api/rest_v1/media/math/render/svg/16df430ed7a23df9b160a5bbd957f306a0c3baa7" class="mwe-math-fallback-image-inline" aria-hidden="true" style="vertical-align: -0.505ex; width:5.333ex; height:2.343ex;" alt="x+1"></span><br>（用途：硬件，也称为<a href="/wiki/%E5%A5%87%E5%81%B6%E6%A0%A1%E9%AA%8C%E4%BD%8D" title="奇偶校验位">奇偶校验位</a>）</td>
+<td>0x1 or 0x1 (0x1)
+</td></tr>
+<tr>
+<td>CRC-5-CCITT</td>
+<td><span class="mwe-math-element"><span class="mwe-math-mathml-inline mwe-math-mathml-a11y" style="display: none;"><math xmlns="http://www.w3.org/1998/Math/MathML" alttext="{\displaystyle x^{5}+x^{3}+x+1}">
+  <semantics>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mstyle displaystyle="true" scriptlevel="0">
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>5</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>3</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <mi>x</mi>
+        <mo>+</mo>
+        <mn>1</mn>
+      </mstyle>
+    </mrow>
+    <annotation encoding="application/x-tex">{\displaystyle x^{5}+x^{3}+x+1}</annotation>
+  </semantics>
+</math></span><img src="https://wikimedia.org/api/rest_v1/media/math/render/svg/a3bf477e7d06894ce882770e495df9105e9770e4" class="mwe-math-fallback-image-inline" aria-hidden="true" style="vertical-align: -0.505ex; width:15.781ex; height:2.843ex;" alt="x^{5}+x^{3}+x+1"></span>（<a href="/wiki/ITU" class="mw-redirect" title="ITU">ITU</a> G.704标准）</td>
+<td>0xB（0x??）
+</td></tr>
+<tr>
+<td>CRC-5-USB</td>
+<td><span class="mwe-math-element"><span class="mwe-math-mathml-inline mwe-math-mathml-a11y" style="display: none;"><math xmlns="http://www.w3.org/1998/Math/MathML" alttext="{\displaystyle x^{5}+x^{2}+1}">
+  <semantics>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mstyle displaystyle="true" scriptlevel="0">
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>5</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>2</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <mn>1</mn>
+      </mstyle>
+    </mrow>
+    <annotation encoding="application/x-tex">{\displaystyle x^{5}+x^{2}+1}</annotation>
+  </semantics>
+</math></span><img src="https://wikimedia.org/api/rest_v1/media/math/render/svg/5ee197df10962cfbefa8b3b7bf0bf63115b2036d" class="mwe-math-fallback-image-inline" aria-hidden="true" style="vertical-align: -0.505ex; width:11.611ex; height:2.843ex;" alt="x^{5}+x^{2}+1"></span>（用途：<a href="/wiki/USB" title="USB">USB</a>信令包）</td>
+<td>0x5 or 0x14 (0x9)
+</td></tr>
+<tr>
+<td>CRC-7</td>
+<td><span class="mwe-math-element"><span class="mwe-math-mathml-inline mwe-math-mathml-a11y" style="display: none;"><math xmlns="http://www.w3.org/1998/Math/MathML" alttext="{\displaystyle x^{7}+x^{3}+1}">
+  <semantics>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mstyle displaystyle="true" scriptlevel="0">
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>7</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>3</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <mn>1</mn>
+      </mstyle>
+    </mrow>
+    <annotation encoding="application/x-tex">{\displaystyle x^{7}+x^{3}+1}</annotation>
+  </semantics>
+</math></span><img src="https://wikimedia.org/api/rest_v1/media/math/render/svg/6b28d7978cdde1a847d051b7c0eafacda0057ee2" class="mwe-math-fallback-image-inline" aria-hidden="true" style="vertical-align: -0.505ex; width:11.611ex; height:2.843ex;" alt="x^{7}+x^{3}+1"></span>（用途：通信系统）</td>
+<td>0x9 or 0x48 (0x11)
+</td></tr>
+<tr>
+<td>CRC-8-ATM</td>
+<td><span class="mwe-math-element"><span class="mwe-math-mathml-inline mwe-math-mathml-a11y" style="display: none;"><math xmlns="http://www.w3.org/1998/Math/MathML" alttext="{\displaystyle x^{8}+x^{2}+x+1}">
+  <semantics>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mstyle displaystyle="true" scriptlevel="0">
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>8</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>2</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <mi>x</mi>
+        <mo>+</mo>
+        <mn>1</mn>
+      </mstyle>
+    </mrow>
+    <annotation encoding="application/x-tex">{\displaystyle x^{8}+x^{2}+x+1}</annotation>
+  </semantics>
+</math></span><img src="https://wikimedia.org/api/rest_v1/media/math/render/svg/9aeac5149ba7d39c70a5adf775f3ccf3c458c285" class="mwe-math-fallback-image-inline" aria-hidden="true" style="vertical-align: -0.505ex; width:15.781ex; height:2.843ex;" alt="x^{8}+x^{2}+x+1"></span>（用途：ATM HEC, PMBUS （参见SMBUS org<a rel="nofollow noopener" class="external autonumber" target="_blank" href="http://smbus.org/faq/crc8Applet.htm">[1]</a>））</td>
+<td>0x7或0xE0 (0xC1)
+</td></tr>
+<tr>
+<td>CRC-8-<a href="/wiki/CCITT" class="mw-redirect" title="CCITT">CCITT</a></td>
+<td><span class="mwe-math-element"><span class="mwe-math-mathml-inline mwe-math-mathml-a11y" style="display: none;"><math xmlns="http://www.w3.org/1998/Math/MathML" alttext="{\displaystyle x^{8}+x^{7}+x^{3}+x^{2}+1}">
+  <semantics>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mstyle displaystyle="true" scriptlevel="0">
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>8</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>7</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>3</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>2</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <mn>1</mn>
+      </mstyle>
+    </mrow>
+    <annotation encoding="application/x-tex">{\displaystyle x^{8}+x^{7}+x^{3}+x^{2}+1}</annotation>
+  </semantics>
+</math></span><img src="https://wikimedia.org/api/rest_v1/media/math/render/svg/64d70a16d4bcc603931b3057902b2ca269793ce4" class="mwe-math-fallback-image-inline" aria-hidden="true" style="vertical-align: -0.505ex; width:22.06ex; height:2.843ex;" alt="x^{8}+x^{7}+x^{3}+x^{2}+1"></span>（用途：<a href="/wiki/1-Wire" title="1-Wire">1-Wire</a> <a href="/wiki/%E7%B8%BD%E7%B7%9A" class="mw-redirect" title="总线">总线</a>）</td>
+<td>0x8D
+</td></tr>
+<tr>
+<td>CRC-8-<a href="/w/index.php?title=Dallas_Semiconductor&amp;action=edit&amp;redlink=1" class="new" title="Dallas Semiconductor（页面不存在）">Dallas</a>/<a href="/w/index.php?title=Maxim_IC&amp;action=edit&amp;redlink=1" class="new" title="Maxim IC（页面不存在）">Maxim</a></td>
+<td><span class="mwe-math-element"><span class="mwe-math-mathml-inline mwe-math-mathml-a11y" style="display: none;"><math xmlns="http://www.w3.org/1998/Math/MathML" alttext="{\displaystyle x^{8}+x^{5}+x^{4}+1}">
+  <semantics>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mstyle displaystyle="true" scriptlevel="0">
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>8</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>5</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>4</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <mn>1</mn>
+      </mstyle>
+    </mrow>
+    <annotation encoding="application/x-tex">{\displaystyle x^{8}+x^{5}+x^{4}+1}</annotation>
+  </semantics>
+</math></span><img src="https://wikimedia.org/api/rest_v1/media/math/render/svg/de3b0d4157865c219b2b6dd548b58d3d97aadf47" class="mwe-math-fallback-image-inline" aria-hidden="true" style="vertical-align: -0.505ex; width:16.835ex; height:2.843ex;" alt="x^{8}+x^{5}+x^{4}+1"></span>（用途：<a href="/wiki/1-Wire" title="1-Wire">1-Wire</a> <a href="/wiki/Bus" class="mw-disambig" title="Bus">bus</a>）</td>
+<td>0x31或0x8C
+</td></tr>
+<tr>
+<td>CRC-8</td>
+<td><span class="mwe-math-element"><span class="mwe-math-mathml-inline mwe-math-mathml-a11y" style="display: none;"><math xmlns="http://www.w3.org/1998/Math/MathML" alttext="{\displaystyle x^{8}+x^{7}+x^{6}+x^{4}+x^{2}+1}">
+  <semantics>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mstyle displaystyle="true" scriptlevel="0">
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>8</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>7</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>6</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>4</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>2</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <mn>1</mn>
+      </mstyle>
+    </mrow>
+    <annotation encoding="application/x-tex">{\displaystyle x^{8}+x^{7}+x^{6}+x^{4}+x^{2}+1}</annotation>
+  </semantics>
+</math></span><img src="https://wikimedia.org/api/rest_v1/media/math/render/svg/7c1c3912f0ad9cbfb4d13c9ada78ed6dab733c06" class="mwe-math-fallback-image-inline" aria-hidden="true" style="vertical-align: -0.505ex; width:27.284ex; height:2.843ex;" alt="x^{8}+x^{7}+x^{6}+x^{4}+x^{2}+1"></span></td>
+<td>0xD5（0x??）
+</td></tr>
+<tr>
+<td>CRC-10</td>
+<td><span class="mwe-math-element"><span class="mwe-math-mathml-inline mwe-math-mathml-a11y" style="display: none;"><math xmlns="http://www.w3.org/1998/Math/MathML" alttext="{\displaystyle x^{10}+x^{9}+x^{5}+x^{4}+x+1}">
+  <semantics>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mstyle displaystyle="true" scriptlevel="0">
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>10</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>9</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>5</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>4</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <mi>x</mi>
+        <mo>+</mo>
+        <mn>1</mn>
+      </mstyle>
+    </mrow>
+    <annotation encoding="application/x-tex">{\displaystyle x^{10}+x^{9}+x^{5}+x^{4}+x+1}</annotation>
+  </semantics>
+</math></span><img src="https://wikimedia.org/api/rest_v1/media/math/render/svg/a3d2fbda9053b3a8d1b1f1f1c4e4c0d5f81b663e" class="mwe-math-fallback-image-inline" aria-hidden="true" style="vertical-align: -0.505ex; width:27.052ex; height:2.843ex;" alt="{\displaystyle x^{10}+x^{9}+x^{5}+x^{4}+x+1}"></span></td>
+<td>0x233（0x????）
+</td></tr>
+<tr>
+<td>CRC-12</td>
+<td><span class="mwe-math-element"><span class="mwe-math-mathml-inline mwe-math-mathml-a11y" style="display: none;"><math xmlns="http://www.w3.org/1998/Math/MathML" alttext="{\displaystyle x^{12}+x^{11}+x^{3}+x^{2}+x+1}">
+  <semantics>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mstyle displaystyle="true" scriptlevel="0">
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>12</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>11</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>3</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>2</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <mi>x</mi>
+        <mo>+</mo>
+        <mn>1</mn>
+      </mstyle>
+    </mrow>
+    <annotation encoding="application/x-tex">{\displaystyle x^{12}+x^{11}+x^{3}+x^{2}+x+1}</annotation>
+  </semantics>
+</math></span><img src="https://wikimedia.org/api/rest_v1/media/math/render/svg/c5f1dc362baad71ca8749f815c9f3a51f810d054" class="mwe-math-fallback-image-inline" aria-hidden="true" style="vertical-align: -0.505ex; width:27.874ex; height:2.843ex;" alt="x^{12}+x^{11}+x^{3}+x^{2}+x+1"></span>（用途：通信系统）</td>
+<td>0x80F或0xF01 (0xE03)
+</td></tr>
+<tr>
+<td>CRC-16-Fletcher</td>
+<td>参见<a href="/w/index.php?title=Fletcher%27s_checksum&amp;action=edit&amp;redlink=1" class="new" title="Fletcher's checksum（页面不存在）">Fletcher's checksum</a></td>
+<td>用于<a href="/wiki/Adler-32" title="Adler-32">Adler-32</a> A &amp; B CRC
+</td></tr>
+<tr>
+<td>CRC-16-CCITT</td>
+<td><span class="mwe-math-element"><span class="mwe-math-mathml-inline mwe-math-mathml-a11y" style="display: none;"><math xmlns="http://www.w3.org/1998/Math/MathML" alttext="{\displaystyle x^{16}+x^{12}+x^{5}+1}">
+  <semantics>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mstyle displaystyle="true" scriptlevel="0">
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>16</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>12</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>5</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <mn>1</mn>
+      </mstyle>
+    </mrow>
+    <annotation encoding="application/x-tex">{\displaystyle x^{16}+x^{12}+x^{5}+1}</annotation>
+  </semantics>
+</math></span><img src="https://wikimedia.org/api/rest_v1/media/math/render/svg/661d89787e958d98fb6da5c0c2185fc92a176514" class="mwe-math-fallback-image-inline" aria-hidden="true" style="vertical-align: -0.505ex; width:18.479ex; height:2.843ex;" alt="{\displaystyle x^{16}+x^{12}+x^{5}+1}"></span>（<a href="/w/index.php?title=X25&amp;action=edit&amp;redlink=1" class="new" title="X25（页面不存在）">X25</a>, <a href="/w/index.php?title=V.41&amp;action=edit&amp;redlink=1" class="new" title="V.41（页面不存在）">V.41</a>, <a href="/wiki/Bluetooth" class="mw-redirect" title="Bluetooth">Bluetooth</a>, <a href="/wiki/PPP" class="mw-disambig" title="PPP">PPP</a>, <a href="/w/index.php?title=IrDA&amp;action=edit&amp;redlink=1" class="new" title="IrDA（页面不存在）">IrDA</a>）</td>
+<td>0x1021或0x8408 (0x0811)
+</td></tr>
+<tr>
+<td>CRC-16-<a href="/wiki/IBM" title="IBM">IBM</a></td>
+<td><span class="mwe-math-element"><span class="mwe-math-mathml-inline mwe-math-mathml-a11y" style="display: none;"><math xmlns="http://www.w3.org/1998/Math/MathML" alttext="{\displaystyle x^{16}+x^{15}+x^{2}+1}">
+  <semantics>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mstyle displaystyle="true" scriptlevel="0">
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>16</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>15</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>2</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <mn>1</mn>
+      </mstyle>
+    </mrow>
+    <annotation encoding="application/x-tex">{\displaystyle x^{16}+x^{15}+x^{2}+1}</annotation>
+  </semantics>
+</math></span><img src="https://wikimedia.org/api/rest_v1/media/math/render/svg/bd8dba2898cd0de4ef69e454d9c8f45efdfcedb2" class="mwe-math-fallback-image-inline" aria-hidden="true" style="vertical-align: -0.505ex; width:18.479ex; height:2.843ex;" alt="{\displaystyle x^{16}+x^{15}+x^{2}+1}"></span>（用途：<a href="/wiki/Modbus" title="Modbus">Modbus）</a></td>
+<td>0x8005或0xA001 (0x4003)
+</td></tr>
+<tr>
+<td>CRC-16-<a href="/wiki/BBS" title="BBS">BBS</a></td>
+<td><span class="mwe-math-element"><span class="mwe-math-mathml-inline mwe-math-mathml-a11y" style="display: none;"><math xmlns="http://www.w3.org/1998/Math/MathML" alttext="{\displaystyle x^{16}+x^{15}+x^{10}+x^{3}}">
+  <semantics>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mstyle displaystyle="true" scriptlevel="0">
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>16</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>15</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>10</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>3</mn>
+          </mrow>
+        </msup>
+      </mstyle>
+    </mrow>
+    <annotation encoding="application/x-tex">{\displaystyle x^{16}+x^{15}+x^{10}+x^{3}}</annotation>
+  </semantics>
+</math></span><img src="https://wikimedia.org/api/rest_v1/media/math/render/svg/72b35fb643d7e3e0d7ec5e9bc9536e6a1fe141df" class="mwe-math-fallback-image-inline" aria-hidden="true" style="vertical-align: -0.505ex; width:20.523ex; height:2.843ex;" alt="{\displaystyle x^{16}+x^{15}+x^{10}+x^{3}}"></span>（用途：<a href="/w/index.php?title=XMODEM&amp;action=edit&amp;redlink=1" class="new" title="XMODEM（页面不存在）">XMODEM</a>协议）</td>
+<td>0x8408（0x????）
+</td></tr>
+<tr>
+<td>CRC-32-Adler</td>
+<td>参见<a href="/wiki/Adler-32" title="Adler-32">Adler-32</a></td>
+<td>参见<a href="/wiki/Adler-32" title="Adler-32">Adler-32</a>
+</td></tr>
+<tr>
+<td>CRC-32-MPEG2</td>
+<td>参见<a href="/wiki/IEEE_802.3" class="mw-redirect" title="IEEE 802.3">IEEE 802.3</a></td>
+<td>参见<a href="/wiki/IEEE_802.3" class="mw-redirect" title="IEEE 802.3">IEEE 802.3</a>
+</td></tr>
+<tr>
+<td>CRC-32-<a href="/wiki/IEEE_802.3" class="mw-redirect" title="IEEE 802.3">IEEE 802.3</a></td>
+<td><span class="mwe-math-element"><span class="mwe-math-mathml-inline mwe-math-mathml-a11y" style="display: none;"><math xmlns="http://www.w3.org/1998/Math/MathML" alttext="{\displaystyle x^{32}+x^{26}+x^{23}+x^{22}+x^{16}+x^{12}+x^{11}+x^{10}+x^{8}+x^{7}+x^{5}+x^{4}+x^{2}+x+1}">
+  <semantics>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mstyle displaystyle="true" scriptlevel="0">
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>32</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>26</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>23</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>22</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>16</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>12</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>11</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>10</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>8</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>7</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>5</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>4</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>2</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <mi>x</mi>
+        <mo>+</mo>
+        <mn>1</mn>
+      </mstyle>
+    </mrow>
+    <annotation encoding="application/x-tex">{\displaystyle x^{32}+x^{26}+x^{23}+x^{22}+x^{16}+x^{12}+x^{11}+x^{10}+x^{8}+x^{7}+x^{5}+x^{4}+x^{2}+x+1}</annotation>
+  </semantics>
+</math></span><img src="https://wikimedia.org/api/rest_v1/media/math/render/svg/08ec731bacb2c8c8e8f8c2c8d71c33bddf97e7d5" class="mwe-math-fallback-image-inline" aria-hidden="true" style="vertical-align: -0.505ex; width:79.825ex; height:2.843ex;" alt="x^{32}+x^{26}+x^{23}+x^{22}+x^{16}+x^{12}+x^{11}+x^{10}+x^{8}+x^{7}+x^{5}+x^{4}+x^{2}+x+1"></span></td>
+<td>0x04C11DB7或0xEDB88320 (0xDB710641)
+</td></tr>
+<tr>
+<td>CRC-32C(Castagnoli)</td>
+<td><span class="mwe-math-element"><span class="mwe-math-mathml-inline mwe-math-mathml-a11y" style="display: none;"><math xmlns="http://www.w3.org/1998/Math/MathML" alttext="{\displaystyle x^{32}+x^{28}+x^{27}+x^{26}+x^{25}+x^{23}+x^{22}+x^{20}+x^{19}+x^{18}+x^{14}+x^{13}+x^{11}+x^{10}+x^{9}+x^{8}+x^{6}+1}">
+  <semantics>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mstyle displaystyle="true" scriptlevel="0">
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>32</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>28</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>27</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>26</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>25</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>23</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>22</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>20</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>19</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>18</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>14</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>13</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>11</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>10</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>9</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>8</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>6</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <mn>1</mn>
+      </mstyle>
+    </mrow>
+    <annotation encoding="application/x-tex">{\displaystyle x^{32}+x^{28}+x^{27}+x^{26}+x^{25}+x^{23}+x^{22}+x^{20}+x^{19}+x^{18}+x^{14}+x^{13}+x^{11}+x^{10}+x^{9}+x^{8}+x^{6}+1}</annotation>
+  </semantics>
+</math></span><img src="https://wikimedia.org/api/rest_v1/media/math/render/svg/495f98eb0abe80037a8bfb0b3dfb943df9e04495" class="mwe-math-fallback-image-inline" aria-hidden="true" style="vertical-align: -0.505ex; width:101.484ex; height:2.843ex;" alt="x^{32}+x^{28}+x^{27}+x^{26}+x^{25}+x^{23}+x^{22}+x^{20}+x^{19}+x^{18}+x^{14}+x^{13}+x^{11}+x^{10}+x^{9}+x^{8}+x^{6}+1"></span></td>
+<td>0x1EDC6F41或0x82F63B78 (0x05EC76F1)
+</td></tr>
+<tr>
+<td>CRC-64-ISO</td>
+<td><span class="mwe-math-element"><span class="mwe-math-mathml-inline mwe-math-mathml-a11y" style="display: none;"><math xmlns="http://www.w3.org/1998/Math/MathML" alttext="{\displaystyle x^{64}+x^{4}+x^{3}+x+1}">
+  <semantics>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mstyle displaystyle="true" scriptlevel="0">
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>64</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>4</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>3</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <mi>x</mi>
+        <mo>+</mo>
+        <mn>1</mn>
+      </mstyle>
+    </mrow>
+    <annotation encoding="application/x-tex">{\displaystyle x^{64}+x^{4}+x^{3}+x+1}</annotation>
+  </semantics>
+</math></span><img src="https://wikimedia.org/api/rest_v1/media/math/render/svg/a2e1edbd34bac4a025bb68adac8f20f58adb3fcf" class="mwe-math-fallback-image-inline" aria-hidden="true" style="vertical-align: -0.505ex; width:21.827ex; height:2.843ex;" alt="x^{64}+x^{4}+x^{3}+x+1"></span><br>（用途: ISO 3309）</td>
+<td>0x000000000000001B或0xD800000000000000 (0xB000000000000001)
+</td></tr>
+<tr>
+<td>CRC-64-<a href="/wiki/Ecma_International" class="mw-redirect" title="Ecma International">ECMA</a>-182</td>
+<td><span class="mwe-math-element"><span class="mwe-math-mathml-inline mwe-math-mathml-a11y" style="display: none;"><math xmlns="http://www.w3.org/1998/Math/MathML" alttext="{\displaystyle x^{64}+x^{62}+x^{57}+x^{55}+x^{54}+x^{53}+x^{52}+x^{47}+x^{46}+x^{45}+x^{40}+x^{39}+x^{38}+x^{37}+x^{35}+x^{33}+x^{32}}">
+  <semantics>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mstyle displaystyle="true" scriptlevel="0">
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>64</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>62</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>57</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>55</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>54</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>53</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>52</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>47</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>46</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>45</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>40</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>39</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>38</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>37</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>35</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>33</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>32</mn>
+          </mrow>
+        </msup>
+      </mstyle>
+    </mrow>
+    <annotation encoding="application/x-tex">{\displaystyle x^{64}+x^{62}+x^{57}+x^{55}+x^{54}+x^{53}+x^{52}+x^{47}+x^{46}+x^{45}+x^{40}+x^{39}+x^{38}+x^{37}+x^{35}+x^{33}+x^{32}}</annotation>
+  </semantics>
+</math></span><img src="https://wikimedia.org/api/rest_v1/media/math/render/svg/2cb5588781e0cca1a9d48ea9b11a8ad7f31069fb" class="mwe-math-fallback-image-inline" aria-hidden="true" style="vertical-align: -0.505ex; width:99.947ex; height:2.843ex;" alt="x^{64}+x^{62}+x^{57}+x^{55}+x^{54}+x^{53}+x^{52}+x^{47}+x^{46}+x^{45}+x^{40}+x^{39}+x^{38}+x^{37}+x^{35}+x^{33}+x^{32}"></span><br><span class="mwe-math-element"><span class="mwe-math-mathml-inline mwe-math-mathml-a11y" style="display: none;"><math xmlns="http://www.w3.org/1998/Math/MathML" alttext="{\displaystyle +x^{31}+x^{29}+x^{27}+x^{24}+x^{23}+x^{22}+x^{21}+x^{19}+x^{17}+x^{13}+x^{12}+x^{10}+x^{9}+x^{7}+x^{4}+x+1}">
+  <semantics>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mstyle displaystyle="true" scriptlevel="0">
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>31</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>29</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>27</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>24</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>23</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>22</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>21</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>19</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>17</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>13</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>12</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>10</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>9</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>7</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <msup>
+          <mi>x</mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mn>4</mn>
+          </mrow>
+        </msup>
+        <mo>+</mo>
+        <mi>x</mi>
+        <mo>+</mo>
+        <mn>1</mn>
+      </mstyle>
+    </mrow>
+    <annotation encoding="application/x-tex">{\displaystyle +x^{31}+x^{29}+x^{27}+x^{24}+x^{23}+x^{22}+x^{21}+x^{19}+x^{17}+x^{13}+x^{12}+x^{10}+x^{9}+x^{7}+x^{4}+x+1}</annotation>
+  </semantics>
+</math></span><img src="https://wikimedia.org/api/rest_v1/media/math/render/svg/7923dab3807e2710107ed224fe788f2b7da70277" class="mwe-math-fallback-image-inline" aria-hidden="true" style="vertical-align: -0.505ex; width:95.369ex; height:2.843ex;" alt="+x^{31}+x^{29}+x^{27}+x^{24}+x^{23}+x^{22}+x^{21}+x^{19}+x^{17}+x^{13}+x^{12}+x^{10}+x^{9}+x^{7}+x^{4}+x+1"></span><br>（参见<a rel="nofollow noopener" class="external text" target="_blank" href="http://www.ecma-international.org/publications/standards/Ecma-182.htm">ECMA-182</a> p.63）</td>
+<td>0x42F0E1EBA9EA3693或0xC96C5795D7870F42 (0x92D8AF2BAF0E1E85)
+</td></tr>
+<tr>
+<td>CRC-128</td>
+<td>IEEE-ITU标准。被<a href="/wiki/MD5" title="MD5">MD5</a> &amp; <a href="/wiki/SHA-1" title="SHA-1">SHA-1</a>取代</td>
+<td>
+</td></tr>
+<tr>
+<td>CRC-160</td>
+<td>IEEE-ITU标准。被<a href="/wiki/MD5" title="MD5">MD5</a> &amp; <a href="/wiki/SHA-1" title="SHA-1">SHA-1</a>取代</td>
+<td>
+</td></tr>
+</tbody></table>
+
+<p>常用的 CRC-16-IBM(crc16_sdlc), CRC-16-CCITT CRC-32-<a href="app://obsidian.md/wiki/IEEE_802.3" title="IEEE 802.3">IEEE 802.3</a>  CRC-32C(Castagnoli) </p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> CRC_MODE_16_CCITT   (0x0 &lt;&lt; CRCCTL_MODE_SHIFT)   <span class="comment">//0x1021</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> CRC_MODE_8_0x31     (0x1 &lt;&lt; CRCCTL_MODE_SHIFT)   <span class="comment">//0x0131</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> CRC_MODE_8_0x07     (0x2 &lt;&lt; CRCCTL_MODE_SHIFT)   <span class="comment">//0x0107</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> CRC_MODE_8_0x5D     (0x3 &lt;&lt; CRCCTL_MODE_SHIFT)   <span class="comment">//0x015D</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> CRC_MODE_16_SDLC    (0x4 &lt;&lt; CRCCTL_MODE_SHIFT)   <span class="comment">//0x8005</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> CRC_MODE_32         (0x5 &lt;&lt; CRCCTL_MODE_SHIFT)   <span class="comment">//0x04c11db7</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> CRC_MODE_32C        (0x6 &lt;&lt; CRCCTL_MODE_SHIFT)   <span class="comment">//0x1EDC6F41</span></span></span><br></pre></td></tr></table></figure>
+
+<h1 id="DES"><a href="#DES" class="headerlink" title="DES"></a>DES</h1><p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420114834.png"><br>图  <strong>4</strong> . <strong>5</strong>  表明了  <strong>DES</strong>  加密的整个机制。对于任意加密方案，总有两个输入：明文和密钥。  <strong>DES</strong>  的明文长为  <strong>64</strong>  位，密钥长为  <strong>56</strong>  位。从图中左半部分，可见明文的处理经过了三个阶段。首先，  <strong>64</strong>  位的明文经过初始置换  <strong>P</strong>  而被重新排列。然后进行  <strong>16</strong>  轮相同函数的作用，每轮作用都有置换和代替。最后一轮迭代的输出有  <strong>64</strong>  位，它是输入明文和密钥的函数。其左半部分和右半部分互换产生预输出。最后预输出再被与初始置换  <strong>P</strong>  互逆的置换  <strong>IP-1</strong>  作用产生  <strong>64</strong>  位的密文。除了初始和末尾的置换，  <strong>DES</strong>  的结构与图4.<strong>3</strong>  所示的Feistel 密码结构完全相同。图  <strong>4</strong>.<strong>5</strong>  的右半部分给出了使用  <strong>56</strong>  位密钥的过程。首先，密钥经过一个置换后，再经过循环左移和一个置换分别得到各轮的子密钥用于各轮的迭代。每轮的置换函数都一样，但是由于密钥的循环移位使得各轮子密钥互不相同。 <a href="bookxnotepro://opennote/?nb={865a2b49-4feb-44ff-93ee-307e2e2938f8}&book=ec3eb5ad87ae108342f6c41f336e5752&page=96&x=246&y=145&id=14">097</a></p>
+<p><strong>DES</strong>  在穷举攻击之下相对比较脆弱，一台  PC可以破坏  DES  的时间大约为一年，如果多台  <strong>PC</strong>  并行工作，时间将大大缩短。今天的超级计算机应该可以在一个小时内找到密钥。增大密钥大小是防止使用简单蛮力攻击的有效方法，  <strong>128</strong>  位或更大的位是有效的。即使设法加快了  <strong>1</strong>  万亿的攻击系统，使用  <strong>128</strong>  位密钥破解代码仍然需要  <strong>10</strong>  万年以上的时间才能攻破。 <a href="bookxnotepro://opennote/?nb={865a2b49-4feb-44ff-93ee-307e2e2938f8}&book=ec3eb5ad87ae108342f6c41f336e5752&page=99&x=250&y=281&id=36">100</a></p>
+<p>因此很多人在想办法用某种算法替代它。一种方案是设计全新的算法，如  <strong>AES</strong>  。还有一种方案，能够保护已有软件和硬件的投资，那就是用  <strong>DES</strong>  进行多次加密，且使用多个密钥。我们以这种替代方案的一个简单例子开始，再讨论已被广泛接受的三重DES(3DES)  算法。 <a href="bookxnotepro://opennote/?nb={865a2b49-4feb-44ff-93ee-307e2e2938f8}&book=ec3eb5ad87ae108342f6c41f336e5752&page=153&x=264&y=418&id=13">154</a></p>
+<h2 id="3DES"><a href="#3DES" class="headerlink" title="3DES"></a>3DES</h2><p>使用三个密钥的三重  DES <a href="bookxnotepro://opennote/?nb={865a2b49-4feb-44ff-93ee-307e2e2938f8}&book=ec3eb5ad87ae108342f6c41f336e5752&page=157&x=152&y=109&id=15">158</a><br><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420114830.png"><br>3DES 加密就是进行 3 次 DES 加密。DES 密钥长度为 56 位，所以 3DES 密钥长度为 56 * 3 &#x3D; 168 位。<br><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420135413.png"><br>3DES 有一个“奇怪”的地方，并不是用 DES 加密 3 次，而是加密-解密-加密，中间有一次解密的过程。IBM 公司之所以这么设计，目的是为了让三重 DES 能兼容普通的 DES。如果三重加密中密钥都完全相同，那么就退化成了普通的 DES 了。(加密一次解密一次就抵消了)所以也就具备了向下兼容性。</p>
+<ul>
+<li>如果 3 次都用相同的密钥，则退化成了 DES。</li>
+<li>如果第一次和第三次用相同的密钥，第二次用不同的密钥，这种三重 DES 称为 DES-EDE2 。EDE 是加密(Encryption) -&gt; 解密(Decryption) -&gt; 加密(Encryption) 的缩写。</li>
+<li>如果 3 次都用不同的密钥，则称 DES-EDE3。</li>
+</ul>
+<p>3DES 解密的过程和加密的过程正好相反，按照密钥的逆序解密。<br><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420135540.png"></p>
+<h3 id="缺点"><a href="#缺点" class="headerlink" title="缺点:"></a>缺点:</h3><p>3DES 由于处理速度不高，除了兼容之前的 DES 以外，目前基本不再使用它了。</p>
+<h1 id="AES"><a href="#AES" class="headerlink" title="AES"></a>AES</h1><p>AES (Advanced Encrytion Standard) 是取代前任标准 DES 而成为新标准的一种对称密码算法。<br><a target="_blank" rel="noopener" href="https://halfrost.com/symmetric_encryption/#toc-10">漫游对称加密算法 (halfrost.com)</a></p>
+<p>AES128, AES192，AES256</p>
+<h2 id="模式"><a href="#模式" class="headerlink" title="模式"></a>模式</h2><p>CBC ECB CFB OFB CTR CTS XTS CCM GCM</p>
+<h3 id="ECB"><a href="#ECB" class="headerlink" title="ECB"></a>ECB</h3><p>ECB 模式是分组模式里面最简单的，也是最没有安全性的。所以使用的人很少<br>ECB 模式全称“Electronic CodeBook”模式，在 ECB 模式中，将明文分组加密之后的结果直接就是密文分组，中间不做任何的变换。<br><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420134942.png"></p>
+<h3 id="CBC"><a href="#CBC" class="headerlink" title="CBC"></a>CBC</h3><p>CBC 模式的全称是 Cipher Block Chaining 模式，密文分组链接模式。名字中也展示它的实质，像链条一样相互链接在一起。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420134859.png"></p>
+<h3 id="CTS"><a href="#CTS" class="headerlink" title="CTS"></a>CTS</h3><p>CTS 模式(Cipher Text Stealing 模式)<br>在分组密码中，当明文长度不能被分组长度整除的时候，最后一个分组就需要进行填充，CTS 模式是使用最后一个分组的前一个密文分组数据来进行填充的，它通常和 ECB 模式以及 CBC 模式配合使用。根据最后一个分组的发送顺序不同，CTS 模式有几种不同的变体(CBC-CS1、CBC-CS2、CBC-CS3)，下面举一个 CBC-CS3 的例子</p>
+<p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420134813.png"></p>
+<h3 id="CFB"><a href="#CFB" class="headerlink" title="CFB"></a>CFB</h3><p>CFB 模式的全程是 Cipher FeedBack 模式(密文反馈模式)。在 CFB 模式中，前一个密文分组会被送到密码算法的输入端。所谓反馈，这里指的就是返回输入端的意思。<br><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420140055.png"><br>如果把 CBC 单个分组加密抽出来和 CFB 分组对比，如下：<br><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420140114.png"><br>从上图中我们可以看到，在 ECB 和 CBC 模式中，明文分组都是要通过加密算法处理的，但是 CFB 模式明文分组是没有经过加密算法直接加密的。CFB 模式中，明文和一串比特序列 XOR 以后就变成了密文分组。</p>
+<h4 id="CFB-与流密码"><a href="#CFB-与流密码" class="headerlink" title="CFB 与流密码"></a>CFB 与流密码</h4><p>CFB 整个过程很像一次性密码本，如果把明文分组前的加密部分全部都看成一个随机比特序列，那么就和一次性密码本的流程一样了。这个由算法生成的比特序列称为<strong>密钥流</strong>。在 CFB 模式中，密码算法就相当于用来生成密钥流的伪随机数生成器，初始化向量相当于是伪随机数生成器的种子。也因为它是伪随机数，所以 CFB 是不具备一次性密码本绝对无法被破译的性质的。所以说，<strong>CFB 是一种使用分组密码来实现流密码的方式之一</strong>。</p>
+<h3 id="OFB"><a href="#OFB" class="headerlink" title="OFB"></a>OFB</h3><p>OFB 模式的全程是 Output-FeedBack 模式(输出反馈模式)。在 OFB 模式中，密码算法的输出会反馈到密码算法的输入中。这里可以类比 CFB 模式。<br><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420140311.png"><br>OFB 也不直接对明文进行加密，也是通过利用明文和<code>一串比特序列</code>进行异或运算来得到密文。</p>
+<h4 id="OFB-与-CFB-对比"><a href="#OFB-与-CFB-对比" class="headerlink" title="OFB 与 CFB 对比"></a>OFB 与 CFB 对比</h4><p>OFB 模式和 CFB 模式的区别仅仅在于密码算法的输入。OFB 模式是密码算法的输入是前一个密码算法的输出，所以称为输出反馈模式。CFB 模式是把前一个，密文分组输入到密码算法中，所以称为输入反馈模式。<br><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420140524.png"><br>从上图中我们可以看到，CFB 模式加密的过程是无法跳过某个分组对后面的分组加密的。因为它需要按照顺序进行加密。密文分组会重新输入到加密算法中。</p>
+<p>而 OFB 模式就不同，加密算法和密文分组完全是分开的，也就是说只要生成好每次 XOR 运算所需的密钥流，就可以“跳跃”加密任意分组了。这个看来，生成密钥流的操作和进行 XOR 运算的操作是可以并行的。</p>
+<h3 id="CTR"><a href="#CTR" class="headerlink" title="CTR"></a>CTR</h3><p>CTR 模式的全程是 CounTeR 模式(计数器模式)。CTR 模式是一种通过将逐次累加的计数器进行加密来生成密钥流的流密码。<br>计数器每次都会生成不同的 nonce 来作为计数器的初始值。这样保证每次的值都不同。这种方法就是用分组密码来模拟生成随机的比特序列。<br><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220424095043.png"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220424095026.png"></p>
+<h4 id="OFB-与-CTR-对比"><a href="#OFB-与-CTR-对比" class="headerlink" title="OFB 与 CTR 对比"></a>OFB 与 CTR 对比</h4><p>CTR 模式和 OFB 模式都属于流密码。我们单独看两个加密过程，差异在输入到加密算法中的值不一样。CTR 模式输入的值是计数器累加的值，而 OFB 模式输入的值是上一次输出的值。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420140807.png"><br>CTR 模式加密和解密都用了完全相同的结构，这样对程序实现来说，方便很多。更进一步，由于 CTR 模式每个密钥有累加的关系，所以可以通过这个关系，对任意一个分组进行加密和解密。因为只要初始的密钥确定以后，后面的每个密钥都确定了。这样看来，CTR 也是支持并行计算的。</p>
+<h3 id="XTS"><a href="#XTS" class="headerlink" title="XTS"></a>XTS</h3><p>android文件加密的实现中使用了aes-256-xts模式:<br><img src="/../OTA%E7%9B%B8%E5%85%B3/%E5%8A%A0%E5%AF%86%E6%96%B9%E6%A1%88%E6%95%B4%E7%90%86.md#%5E61db89"></p>
+<p>用于面向分组的存储设备的  <strong>XTS-AES</strong>  模式 <a href="bookxnotepro://opennote/?nb={865a2b49-4feb-44ff-93ee-307e2e2938f8}&book=ec3eb5ad87ae108342f6c41f336e5752&page=166&x=186&y=71&id=28">167</a></p>
+<p>基于扇区的设备上的数据进行加密的方法 <a href="bookxnotepro://opennote/?nb={865a2b49-4feb-44ff-93ee-307e2e2938f8}&book=ec3eb5ad87ae108342f6c41f336e5752&page=166&x=129&y=136&id=29">167</a></p>
+<p>可以发现，如同  <strong>CTR</strong>  模式一样，  <strong>XTS-AES</strong>  模式适合并行执行。因为没有链接，多个分组可以同时加密或解密。与  <strong>CTR</strong>  不同的是，  <strong>XTS-AES</strong>  模式包含一个时变值（参数）以及一个计数器（参数  <strong>j)</strong>  。 <a href="bookxnotepro://opennote/?nb={865a2b49-4feb-44ff-93ee-307e2e2938f8}&book=ec3eb5ad87ae108342f6c41f336e5752&page=170&x=236&y=72&id=30">171</a></p>
+<p>本质上，参数  j  的功能类似  <strong>CTR</strong>  模式里的计数器，以保证一个数据单元内<strong>不同位置的相同明文分组加密为不同的密文分组</strong>。参数从数据单元的层面上说相当于时变值，以保证两个不同的数据 <a href="bookxnotepro://opennote/?nb={865a2b49-4feb-44ff-93ee-307e2e2938f8}&book=ec3eb5ad87ae108342f6c41f336e5752&page=167&x=260&y=669&id=31">168</a>单元内相同位置相同明文分组加密为不同的密文分组。更一般地，它可以保证<strong>位于不同位置的相同数据单元加密为不同的密文数据单元</strong>。 <a href="bookxnotepro://opennote/?nb={865a2b49-4feb-44ff-93ee-307e2e2938f8}&book=ec3eb5ad87ae108342f6c41f336e5752&page=168&x=233&y=64&id=32">169</a></p>
+<h5 id="XTS-与CBC"><a href="#XTS-与CBC" class="headerlink" title="XTS 与CBC"></a>XTS 与CBC</h5><p>XTS 相比 ECB CBC解决的两个问题是:</p>
+<ol>
+<li>相同的数据块得到的密文不可以相同</li>
+<li>不同数据块可以独立加密和解密</li>
+</ol>
+<h3 id="CCM-和-GCM"><a href="#CCM-和-GCM" class="headerlink" title="CCM 和 GCM"></a>CCM 和 GCM</h3><p>分组密码链-消息认证码  <strong>(CCM)</strong>  工作模式 <a href="bookxnotepro://opennote/?nb={865a2b49-4feb-44ff-93ee-307e2e2938f8}&book=ec3eb5ad87ae108342f6c41f336e5752&page=295&x=160&y=311&id=33">296</a><br>Galois&#x2F;计数器  <strong>(GCM)</strong>  工作模式由  <strong>NIST</strong>  作为  <strong>NIST SP800-38D</strong>  标准提出，基于并行化设计，因此可以提供高效的吞吐率和低成本、低延迟。其本质是消息在变型的  <strong>CTR</strong>  模式下加密，密文结果与密钥以及消息长度信息在  <strong>GF(2<sup>128</sup>)</strong>  域上相乘。该标准同时还制定了仅支持  <strong>MAC</strong>  的工作模式，即GMAC  。 <a href="bookxnotepro://opennote/?nb={865a2b49-4feb-44ff-93ee-307e2e2938f8}&book=ec3eb5ad87ae108342f6c41f336e5752&page=297&x=251&y=153&id=35">298</a></p>
+<p>认证加密：  <strong>CCM</strong>  和  GCM</p>
+<p>认证加密  <strong>(AE)</strong>  是指在通信中同时提供保密性和认证（完整性）的加密系统。许多应用和协议中都同时需要这两种形式的安全性保证，但这两类安全系统一直都分开设计，直到近几年才合并在一起考虑。 <a href="bookxnotepro://opennote/?nb={865a2b49-4feb-44ff-93ee-307e2e2938f8}&book=ec3eb5ad87ae108342f6c41f336e5752&page=294&x=240&y=603&id=3">295</a></p>
+<p>组成  <strong>CCM</strong>  的关键算法是  <strong>AES</strong>  加密算法  <strong>(参见第  6 章)、CTR  工作模式  (参见第  7  章)  和  CMAC认证算法  (参见  12</strong>  .  <strong>6</strong>  节)  ，在加密和  <strong>MAC</strong>  算法中共用一个密钥  <strong>K</strong>  .  <strong>CCM</strong>  加密过程的输入包括三部分：<br>(1)将要被认证和加密的数据，即明文消息  <strong>P</strong>  数据块。<br>(2)将要被认证但不需加密的相关数据  <strong>A</strong>  ,例如在协议进行时，协议头必须以明文传递，但需要认证保护。<br>(3)临时量  <strong>N</strong>  作为负载和相关数据的补充，对于每条消息在协议生命期内，  <strong>N</strong>  的取值唯一，这以防止重放攻击或其他相应的攻击。 <a href="bookxnotepro://opennote/?nb={865a2b49-4feb-44ff-93ee-307e2e2938f8}&book=ec3eb5ad87ae108342f6c41f336e5752&page=295&x=268&y=411&id=1">296</a></p>
+<p>CCM （counter with CBC-MAC)定义在分组长度为128位的加密算法中，如，AES 的分组长度为128。组成AES-CCM算法的关键组成是CTR工作模式以及CMAC认证算法。Wifi 的WPE协议中使用了AES-CCM。在HMAC中我们介绍CCM是属于一种E&amp;M（认证并且加密）</p>
+<p>GCM基于并行化设计，因此可以提供高效的吞吐率和低成本、低时延。本质是消息在变形的CTR模式下加密，密文结果与密钥以及消息长度在GF（2^128）域上相乘，计算流程如下所示。其输入输出和CCM基本一致。</p>
+<p>android 用户密码(锁屏密码) 导出为(data_ce)密码的过程使用了GCM模式<br><img src="/../OTA%E7%9B%B8%E5%85%B3/fbe%E4%B8%8E%E7%94%A8%E6%88%B7%E5%AE%89%E5%85%A8%E5%AF%86%E7%A0%81.md#%5Ea300bf"></p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420141006.png"></p>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th>名称</th>
+<th>特点</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ECB 模式</td>
+<td>Electronic Codebook</td>
+<td>运算快速，支持并行运算，需要填充</td>
+<td>不推荐使用</td>
+</tr>
+<tr>
+<td>CBC 模式</td>
+<td>Cipher Block Chaining</td>
+<td>支持并行运算，需要填充</td>
+<td>推荐使用</td>
+</tr>
+<tr>
+<td>CFB 模式</td>
+<td>Cipher Feedback</td>
+<td>支持并行运算，不需要填充</td>
+<td>不推荐使用</td>
+</tr>
+<tr>
+<td>OFB 模式</td>
+<td>Output Feedback</td>
+<td>迭代运算使用流密码模式，不需要填充</td>
+<td>不推荐使用</td>
+</tr>
+<tr>
+<td>CTR 模式</td>
+<td>Counter</td>
+<td>迭代运算使用流密码模式，支持并行运算，不需要填充</td>
+<td>推荐使用</td>
+</tr>
+<tr>
+<td>XTS 模式</td>
+<td>XEX-based tweaked-codebook</td>
+<td>不需要填充</td>
+<td>用于本地硬盘存储解决方案中</td>
+</tr>
+</tbody>
+</table>
+
+<h1 id="RC4-PRNG"><a href="#RC4-PRNG" class="headerlink" title="RC4 (PRNG)"></a>RC4 (PRNG)</h1><p>流密码 (PRNG)</p>
+<p>RC4是  <strong>Ron Rivest</strong>  为  <strong>RSA</strong>  公司在  <strong>1987</strong>  年设计的一种流密码。它是一个可变密钥长度、面向字节操作的流密码。该算法以随机置换作为基础。每输出一字节的结果仅需要  <strong>8~16</strong>  条机器操作指令，软件实现的该密码运行很快。  <strong>RC4</strong>  应用很广，例如，它用于作为  <strong>EEE802</strong>  .  <strong>11</strong>  无线局域网标准一部分的  <strong>WEP(Wired Equivalent Privacy)</strong>  协议和新的WiFi 受保护访问协议  <strong>(WPA)</strong>  中。作为可选，它也被用于  <strong>Secure Shell(SSH)</strong>  和  <strong>Kerberos</strong>  中。 <a href="bookxnotepro://opennote/?nb={865a2b49-4feb-44ff-93ee-307e2e2938f8}&book=ec3eb5ad87ae108342f6c41f336e5752&page=197&x=252&y=455&id=9">198</a></p>
+<p>RC4算法非常简单，易于描述：用  <strong>1~256</strong>  个字节  <strong>(8~2048</strong>  位)的可变长度密钥初始化一个256个字节的状态向量  <strong>S</strong>  ,  <strong>S</strong>  的元素记为  <strong>S[0]</strong>  ,  <strong>S[1]</strong>  ,…,  <strong>S[255]</strong>  ,从始至终置换后的  <strong>S</strong>  包含从  <strong>0~255</strong>  所有的  <strong>8</strong>  位数。对于加密和解密，字节  <strong>k</strong>  是从  <strong>S</strong>  的  <strong>255</strong>  个元素中按一种系统化的方式选出的一个元素生成的。每生成一个  <strong>k</strong>  值，S中的元素个体就被重新置换一次。 <a href="bookxnotepro://opennote/?nb={865a2b49-4feb-44ff-93ee-307e2e2938f8}&book=ec3eb5ad87ae108342f6c41f336e5752&page=197&x=261&y=559&id=8">198</a></p>
+<h1 id="TRNG"><a href="#TRNG" class="headerlink" title="TRNG"></a>TRNG</h1><p>真随机数发生器 <a href="bookxnotepro://opennote/?nb={865a2b49-4feb-44ff-93ee-307e2e2938f8}&book=ec3eb5ad87ae108342f6c41f336e5752&page=199&x=129&y=391&id=10">200</a></p>
+<p>真随机数发生器  <strong>(TRNG)</strong>  使用不可预测源来产生随机数。大多数是通过测量不可预测的自然过程来实现的，如电离辐射的脉冲检测、气体放电管、漏电电容等。  <strong>Intel</strong>  开发出一种芯片通过放大无驱动电阻的电压对热噪声进行采样。  <strong>LavaRnd</strong>  是一项开放的项目，目标是通过廉价的相机、开源的代码和廉价的硬件来产生真随机数。该系统使用密封的饱和式  <strong>CCD</strong>  作为混沌源来产生种子，然后用软件将种子加工成各种形式的真随机数。RFC4086__  列出了如下可能的随机源，这些都很容易用于计算机来产生真随机序列。</p>
+<ul>
+<li>声音&#x2F;图像输入许多计算机具有对现实世界模拟信号进行数据化的输入设备，这些信号有来自麦克风的声音或来自照相机的声像输入。如果声音数字化设备没有音源插入或者照相机没打开镜头盖那么来自这些设备的输入本质上是热噪声。如果系统具有足够的增益来检测任何信号，这种输入可以提供高质量的随机位。</li>
+<li>磁盘驱动由于紊乱的空气波动，磁盘驱动在转动时有很小的随机波动 。加上一个底层磁盘时间寻找仪器就能产生一系列包含随机性的度量值。这样的数据通常都是高度相关的，所以需要有效的处理过程。然而，十年前的实验就表明，做过处理后，即使是当时低速计算机上的低速磁盘驱动器也能容易地每分钟产生  <strong>100</strong>  位或更多优质的随机数据。 <a href="bookxnotepro://opennote/?nb={865a2b49-4feb-44ff-93ee-307e2e2938f8}&book=ec3eb5ad87ae108342f6c41f336e5752&page=199&x=268&y=557&id=11">200</a></li>
+</ul>
+<h2 id="PRNG-与-TRNG-比较"><a href="#PRNG-与-TRNG-比较" class="headerlink" title="PRNG 与 TRNG 比较"></a>PRNG 与 TRNG 比较</h2><p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420114738.png"></p>
+<p>表  <strong>8</strong>.<strong>5</strong>  总结了  <strong>PRNG</strong>  和  <strong>TRNG</strong>  的主要差异。  <strong>PRNG</strong>  很有效，意味着它们能在短时间内生成许多数字：  <strong>PRNG</strong>  是确定性的，意味着对于一个给定的数字序列若序列的开始点已知，一段时间后会再生。若你的应用程序需要很多数字，有效性是一个很好的特性：若你在后面的阶段会重复相同的数字序列，确定性是很易实现的。  <strong>PRNG</strong>  通常是周期性的，这意味着序列最终会复制它自己。<br>TRNG需要相当长时间生成数字，通常没有  <strong>PRNG</strong>  效率高。这在许多应用中会遇到困难。例如，银行或国家安全部门的密码系统每秒需要产生数百万的随机位。  <strong>TRNG</strong>  也没有确定性，意味着即使相同的序列出现若干次，一个给定的数字序列也不能复制。  <strong>TRNG</strong>  没有周期性。 <a href="bookxnotepro://opennote/?nb={865a2b49-4feb-44ff-93ee-307e2e2938f8}&book=ec3eb5ad87ae108342f6c41f336e5752&page=200&x=236&y=128&id=12">201</a></p>
+<h1 id="HMAC"><a href="#HMAC" class="headerlink" title="HMAC"></a>HMAC</h1><p>HMAC 算法除了需要信息摘要算法外，还需要一个密钥<br>目前主要集合了 MD 和 SHA 两大系列消息摘要算法。其中 MD 系列的算法有 HmacMD2、HmacMD4、HmacMD5 三种算法；SHA 系列的算法有 HmacSHA1、HmacSHA224、HmacSHA256、HmacSHA384、HmacSHA512 五种算法。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420114747.png"><br>HMAC  算法 <a href="bookxnotepro://opennote/?nb={865a2b49-4feb-44ff-93ee-307e2e2938f8}&book=ec3eb5ad87ae108342f6c41f336e5752&page=290&x=101&y=350&id=4">291</a><br>M为  <strong>HMAC</strong>  的消息输入 <a href="bookxnotepro://opennote/?nb={865a2b49-4feb-44ff-93ee-307e2e2938f8}&book=ec3eb5ad87ae108342f6c41f336e5752&page=290&x=98&y=417&id=6">291</a><br>K为密钥 <a href="bookxnotepro://opennote/?nb={865a2b49-4feb-44ff-93ee-307e2e2938f8}&book=ec3eb5ad87ae108342f6c41f336e5752&page=290&x=57&y=510&id=7">291</a></p>
+<h2 id="普通散列算法和-HMAC-算法的区别"><a href="#普通散列算法和-HMAC-算法的区别" class="headerlink" title="普通散列算法和 HMAC 算法的区别"></a>普通散列算法和 HMAC 算法的区别</h2><ul>
+<li>普通散列算法就是通过 hash 对要输出的数据进行摘要，接收到数据时，再同样对源数据进行散列，与给定的散列值比较，看收到的数据与计算的 hash 值是否一致就可以了。</li>
+<li>HMAC 算法就可以用一把发送方和接收方都有的密钥 key 进行计算，而没有这个密钥 key 的第三方是无法计算出正确的散列值的，这样就可以防止数据的来源方被篡改。</li>
+</ul>
+<h1 id="RSA"><a href="#RSA" class="headerlink" title="RSA"></a>RSA</h1><ul>
+<li>_p,q_：我们随机挑选的两个大质数； </li>
+<li>_N_：是由两个大质数_p_和_q_相乘得到的。_N &#x3D; p * q_；</li>
+<li>_r_：由欧拉函数得到的_n_的值，_n &#x3D; φ(N) &#x3D; φ(p)φ(q) &#x3D; (p-1)(q-1)_。</li>
+<li>_e_：随机选择和和r互质的数字，实际中通常选择 65537；</li>
+<li>_d_： d 是以欧拉定理为基础求得的 e 关于 n 的模反元素，_ed &#x3D; 1 (mod r)_；</li>
+</ul>
+<p>此时我们的 <em>(N , e)</em> 是公钥，*(N, d)* 为私钥，A会把公钥 <em>(N, e)</em> 传给B，然后将 <em>(N, d)</em> 自己藏起来。一对公钥和私钥就产生了</p>
+<p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420114749.png"></p>
+<h2 id="加密"><a href="#加密" class="headerlink" title="加密"></a>加密</h2><p><em>(N , e)</em> 是公钥，*(N, d)* 为私钥<br>B 持有公钥<br>B 对消息进行加密<br>C &#x3D; M<sup>e</sup> mod N       (M的e次方 mod N)</p>
+<h2 id="解密"><a href="#解密" class="headerlink" title="解密"></a>解密</h2><p>A 持有私钥 <em>(N, d)</em> , 对消息进行解密<br>M &#x3D; C<sup>d</sup> mod N      (C的d次方 mod N)</p>
+<p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420114752.png" alt="RSA 算法举例"></p>
+<p>图  <strong>9</strong>.<strong>6 RSA</strong>  算法举例 <a href="bookxnotepro://opennote/?nb={865a2b49-4feb-44ff-93ee-307e2e2938f8}&book=ec3eb5ad87ae108342f6c41f336e5752&page=218&x=231&y=596&id=25">219</a></p>
+<p>RSA算法使用乘方运算，明文以分组为单位进行加密，每个分组的二进制值均小于  N <a href="bookxnotepro://opennote/?nb={865a2b49-4feb-44ff-93ee-307e2e2938f8}&book=ec3eb5ad87ae108342f6c41f336e5752&page=217&x=240&y=164&id=21">218</a></p>
+<p>采用分组的方法对消息分成块, 挨个进行加密解密</p>
+<p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420114754.png"></p>
+<p>图  <strong>9</strong>.<strong>7 RSA</strong>  的加解密过程示例 <a href="bookxnotepro://opennote/?nb={865a2b49-4feb-44ff-93ee-307e2e2938f8}&book=ec3eb5ad87ae108342f6c41f336e5752&page=219&x=264&y=538&id=22">220</a></p>
+<p>模算术里的求幂运算在  <strong>RSA</strong>  中，加密和解密都需要计算某整数的模  <strong>n</strong>  整数次幂，如果先求出整数的幂，再对取模，那么中间结果会非常大。幸运的是，正如前面的例子所示，我们可利用模算术的下列性质来计算模幂运算： <a href="bookxnotepro://opennote/?nb={865a2b49-4feb-44ff-93ee-307e2e2938f8}&book=ec3eb5ad87ae108342f6c41f336e5752&page=219&x=252&y=636&id=26">220</a></p>
+<h2 id="签名"><a href="#签名" class="headerlink" title="签名"></a>签名</h2><ol>
+<li>A计算消息m的消息摘要,记为 <em>h(m)</em></li>
+<li>A使用私钥 <em>(n,d)</em> 对 <em>h(m)</em> 加密,生成签名s, s满足:<em>s&#x3D;(h(m))<sup>d</sup> mod n</em>;<br>由于A是用自己的私钥对消息摘要加密,所以只用使用s的公钥才能解密该消息摘要,这样A就不可否认自己发送了该消息给B</li>
+<li>A发送消息和签名 <em>(m,s)</em> 给B</li>
+</ol>
+<h2 id="验签"><a href="#验签" class="headerlink" title="验签"></a>验签</h2><ol>
+<li>B计算消息m的消息摘要(计算方式和A相同),记为 <em>h(m)</em></li>
+<li>B使用A的公钥 <em>(n,e)</em> 解密<em>s</em>,得到 <em>H(m)</em>, <em>H(m) &#x3D; s<sup>e </sup>mod n</em></li>
+<li>B比较<em>H(m)</em> 与 <em>h(m)</em>,相同才能证明验签成功</li>
+</ol>
+<h1 id="ECDSA-椭圆曲线"><a href="#ECDSA-椭圆曲线" class="headerlink" title="ECDSA 椭圆曲线"></a>ECDSA 椭圆曲线</h1><p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/103665076">ECC相关算法解析 - 知乎 (zhihu.com)</a></p>
+<p>q             一个素数<br>a  ,  b      Z<sub>q</sub>上的整数，通过等式  y2&#x3D;x<sup>3</sup>+ax+b  定义椭圆曲线<br>G            满足椭圆曲线等式的基点，表示为  G&#x3D;(x<sub>g</sub>  ,  y<sub>g</sub>)<br>n            点  <strong>G</strong>  的阶，即  <strong>n</strong>  是满足  nG&#x3D;0  的最小正整数。这也等于曲线上点的个数 <a href="bookxnotepro://opennote/?nb={865a2b49-4feb-44ff-93ee-307e2e2938f8}&book=ec3eb5ad87ae108342f6c41f336e5752&page=315&x=246&y=355&id=19">316</a></p>
+<h2 id="生成公钥-私钥"><a href="#生成公钥-私钥" class="headerlink" title="生成公钥 私钥"></a>生成公钥 私钥</h2><p>构造一条椭圆曲线<em>E</em>，在曲线上选择一点<em>G</em>作为生成元，并求<em>G</em>的阶为<em>n</em>，要求<em>n</em>必须为质数。<br>A选择一个<code>私钥</code><em>k</em> (<em>k</em> &lt; n),生成<code>公钥</code> <em>Q &#x3D; kG</em><br>公钥组(双方协同信息)  E Q G</p>
+<h2 id="加密-公钥加密"><a href="#加密-公钥加密" class="headerlink" title="加密 (公钥加密)"></a>加密 (公钥加密)</h2><p>明文编码为<em>M</em>，<em>M</em>为曲线上一点，并选择一个随机数<em>r</em>（<em>r &lt; n*, *n*为*G*的阶）<br>B计算点*C<sub>1</sub></em> 与 <em>C<sub>2</sub></em> 即两段密文</p>
+<ul>
+<li>C<sub>1</sub> &#x3D; M + rQ</li>
+<li>C<sub>2</sub> &#x3D; rG<br>B 把 <em>C<sub>1</sub>  C<sub>2</sub></em> 发给 A</li>
+</ul>
+<h2 id="私钥解密"><a href="#私钥解密" class="headerlink" title="私钥解密"></a>私钥解密</h2><p>为获得明文<em>M</em>, 只需 <em>C<sub>1</sub>-kC<sub>2</sub></em></p>
+<p>C<sub>1</sub> - k*C<sub>2</sub> &#x3D; M + rQ - krG &#x3D; M + rkG - krG &#x3D; M</p>
+<h2 id="签名-1"><a href="#签名-1" class="headerlink" title="签名"></a>签名</h2><ol>
+<li>选择一条椭圆曲线 Ep(a,b)，和基点 G；</li>
+<li>选择私有密钥 k（k&lt;n，n 为 G 的阶），利用基点 G 计算公开密钥 <code>Q=kG</code>；</li>
+<li>产生一个随机整数 r（r&lt;n），计算点 <code>R=rG</code>；</li>
+<li>密文为 message，计算 SHA1(message) 做为 hash；</li>
+<li>计算 <code>S≡r^-1  *(Hash + k * R.x)(mod n)</code>; 这里的 R.x 为 R 的横坐标</li>
+<li>(R.x, S) 做为签名值</li>
+</ol>
+<h2 id="验签-1"><a href="#验签-1" class="headerlink" title="验签"></a>验签</h2><ol>
+<li>接收方在收到消息 m 和签名值 (R.x, S) 后，进行以下运算</li>
+<li>计算明文 hash：<code>hash = SHA(m)</code></li>
+<li>计算 P 点：<code>P = S^-1 *(hash*G + R.x*Q)</code></li>
+<li>若 P 点的横坐标 P.x &#x3D;&#x3D; R.x, 则说明校验成功。</li>
+</ol>
+<h1 id="ECC-VS-RSA"><a href="#ECC-VS-RSA" class="headerlink" title="ECC VS  RSA"></a>ECC VS  RSA</h1><h2 id="优点："><a href="#优点：" class="headerlink" title="优点："></a>优点：</h2><ul>
+<li><p>安全性能更高</p>
+</li>
+<li><p>160位ECC与1024位RSA、DSA有相同的安全强度</p>
+</li>
+<li><p>处理速度更快</p>
+<ul>
+<li>在私钥的处理速度上，ECC远 比RSA、DSA快得多</li>
+</ul>
+</li>
+<li><p>带宽要求更低, 存储空间更小</p>
+<ul>
+<li>ECC的密钥尺寸和系统参数与RSA、DSA相比要小得多</li>
+</ul>
+</li>
+</ul>
+<h1 id="证书"><a href="#证书" class="headerlink" title="证书"></a>证书</h1><p>CA  用自己的私钥签署证书，如果用户知道相应的公钥，则用户就可以验证证书是  <strong>CA</strong>  签署的。 <a href="bookxnotepro://opennote/?nb={865a2b49-4feb-44ff-93ee-307e2e2938f8}&book=ec3eb5ad87ae108342f6c41f336e5752&page=338&x=243&y=244&id=16">339</a></p>
+<p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220420114802.png"></p>
+<p>获得一个用户证书  <strong>CA</strong>  生成的用户证书具有以下特点：</p>
+<ul>
+<li>任何可以访问  <strong>CA</strong>  公钥的用户均可获得证书中的用户公钥。</li>
+<li>只有  <strong>CA</strong>  可以修改证书。 <a href="bookxnotepro://opennote/?nb={865a2b49-4feb-44ff-93ee-307e2e2938f8}&book=ec3eb5ad87ae108342f6c41f336e5752&page=338&x=192&y=556&id=17">339</a></li>
+</ul>
+<p>如果所有用户都属于同一个  <strong>CA</strong>  ,则说明用户普遍信任  <strong>CA</strong>  ,所有用户的证书均被存放于同一个目录中，所有用户都可以进行存取。另外，用户也可以直接将其证书传给其他用户。一旦拥有了A的证书，  <strong>B</strong>  即可确信用  <strong>A</strong>  的公钥加密的消息是安全的、不可能被窃取，同时，用  <strong>A</strong>  的私钥签名的消息也不可能仿造。 <a href="bookxnotepro://opennote/?nb={865a2b49-4feb-44ff-93ee-307e2e2938f8}&book=ec3eb5ad87ae108342f6c41f336e5752&page=338&x=244&y=637&id=18">339</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%AE%89%E5%85%A8/" rel="tag"># 安全</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/10/11/hxd_new/%E5%AE%89%E5%85%A8%E9%9C%80%E6%B1%82/" rel="prev" title="安全需求">
+      <i class="fa fa-chevron-left"></i> 安全需求
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/02/12/TEE/%E5%A4%9Aroot%20key%E7%AE%A1%E7%90%86/" rel="next" title="多root key 管理">
+      多root key 管理 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#md5"><span class="nav-number">1.</span> <span class="nav-text">md5</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%BA%E9%99%B7"><span class="nav-number">1.1.</span> <span class="nav-text">缺陷</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#sha"><span class="nav-number">2.</span> <span class="nav-text">sha</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#sha-%E5%AE%B6%E6%97%8F%E5%87%BD%E6%95%B0%E5%AF%B9%E6%AF%94"><span class="nav-number">2.1.</span> <span class="nav-text">sha 家族函数对比</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#CRC"><span class="nav-number">3.</span> <span class="nav-text">CRC</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B8%B8%E7%94%A8CRC%EF%BC%88%E6%8C%89%E7%85%A7ITU-IEEE%E8%A7%84%E8%8C%83%EF%BC%89"><span class="nav-number">3.1.</span> <span class="nav-text">常用CRC（按照ITU-IEEE规范）</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#DES"><span class="nav-number">4.</span> <span class="nav-text">DES</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3DES"><span class="nav-number">4.1.</span> <span class="nav-text">3DES</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BC%BA%E7%82%B9"><span class="nav-number">4.1.1.</span> <span class="nav-text">缺点:</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#AES"><span class="nav-number">5.</span> <span class="nav-text">AES</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A8%A1%E5%BC%8F"><span class="nav-number">5.1.</span> <span class="nav-text">模式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ECB"><span class="nav-number">5.1.1.</span> <span class="nav-text">ECB</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CBC"><span class="nav-number">5.1.2.</span> <span class="nav-text">CBC</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CTS"><span class="nav-number">5.1.3.</span> <span class="nav-text">CTS</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CFB"><span class="nav-number">5.1.4.</span> <span class="nav-text">CFB</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#CFB-%E4%B8%8E%E6%B5%81%E5%AF%86%E7%A0%81"><span class="nav-number">5.1.4.1.</span> <span class="nav-text">CFB 与流密码</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#OFB"><span class="nav-number">5.1.5.</span> <span class="nav-text">OFB</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#OFB-%E4%B8%8E-CFB-%E5%AF%B9%E6%AF%94"><span class="nav-number">5.1.5.1.</span> <span class="nav-text">OFB 与 CFB 对比</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CTR"><span class="nav-number">5.1.6.</span> <span class="nav-text">CTR</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#OFB-%E4%B8%8E-CTR-%E5%AF%B9%E6%AF%94"><span class="nav-number">5.1.6.1.</span> <span class="nav-text">OFB 与 CTR 对比</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#XTS"><span class="nav-number">5.1.7.</span> <span class="nav-text">XTS</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#XTS-%E4%B8%8ECBC"><span class="nav-number">5.1.7.0.1.</span> <span class="nav-text">XTS 与CBC</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CCM-%E5%92%8C-GCM"><span class="nav-number">5.1.8.</span> <span class="nav-text">CCM 和 GCM</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93"><span class="nav-number">5.2.</span> <span class="nav-text">小结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#RC4-PRNG"><span class="nav-number">6.</span> <span class="nav-text">RC4 (PRNG)</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#TRNG"><span class="nav-number">7.</span> <span class="nav-text">TRNG</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#PRNG-%E4%B8%8E-TRNG-%E6%AF%94%E8%BE%83"><span class="nav-number">7.1.</span> <span class="nav-text">PRNG 与 TRNG 比较</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#HMAC"><span class="nav-number">8.</span> <span class="nav-text">HMAC</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%99%AE%E9%80%9A%E6%95%A3%E5%88%97%E7%AE%97%E6%B3%95%E5%92%8C-HMAC-%E7%AE%97%E6%B3%95%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-number">8.1.</span> <span class="nav-text">普通散列算法和 HMAC 算法的区别</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#RSA"><span class="nav-number">9.</span> <span class="nav-text">RSA</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%A0%E5%AF%86"><span class="nav-number">9.1.</span> <span class="nav-text">加密</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A7%A3%E5%AF%86"><span class="nav-number">9.2.</span> <span class="nav-text">解密</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AD%BE%E5%90%8D"><span class="nav-number">9.3.</span> <span class="nav-text">签名</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%AA%8C%E7%AD%BE"><span class="nav-number">9.4.</span> <span class="nav-text">验签</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ECDSA-%E6%A4%AD%E5%9C%86%E6%9B%B2%E7%BA%BF"><span class="nav-number">10.</span> <span class="nav-text">ECDSA 椭圆曲线</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%9F%E6%88%90%E5%85%AC%E9%92%A5-%E7%A7%81%E9%92%A5"><span class="nav-number">10.1.</span> <span class="nav-text">生成公钥 私钥</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%A0%E5%AF%86-%E5%85%AC%E9%92%A5%E5%8A%A0%E5%AF%86"><span class="nav-number">10.2.</span> <span class="nav-text">加密 (公钥加密)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A7%81%E9%92%A5%E8%A7%A3%E5%AF%86"><span class="nav-number">10.3.</span> <span class="nav-text">私钥解密</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AD%BE%E5%90%8D-1"><span class="nav-number">10.4.</span> <span class="nav-text">签名</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%AA%8C%E7%AD%BE-1"><span class="nav-number">10.5.</span> <span class="nav-text">验签</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#ECC-VS-RSA"><span class="nav-number">11.</span> <span class="nav-text">ECC VS  RSA</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BC%98%E7%82%B9%EF%BC%9A"><span class="nav-number">11.1.</span> <span class="nav-text">优点：</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%81%E4%B9%A6"><span class="nav-number">12.</span> <span class="nav-text">证书</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

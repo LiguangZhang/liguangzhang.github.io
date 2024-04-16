@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="1. 加密方案整理1.1. 简介Android上加密方案分为全磁盘加密(FDE)&#x2F;文件加密(FBE)&#x2F;元数据加密(METADATA)均是针对userdata分区进行加密, 与其他分区并无关系.本篇主要介绍下这三种加密方式硬件加密的实现框架 1.2. 判断机器采用何种加密方式最直观的方式是可以通过分区表fstab来区分未加密&#x2F;fde加密&#x2F;fbe加密&#x2F;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android 加密方案整理">
+<meta property="og:url" content="https://liguangzhang.github.io/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E5%8A%A0%E5%AF%86%E6%96%B9%E6%A1%88%E6%95%B4%E7%90%86/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="1. 加密方案整理1.1. 简介Android上加密方案分为全磁盘加密(FDE)&#x2F;文件加密(FBE)&#x2F;元数据加密(METADATA)均是针对userdata分区进行加密, 与其他分区并无关系.本篇主要介绍下这三种加密方式硬件加密的实现框架 1.2. 判断机器采用何种加密方式最直观的方式是可以通过分区表fstab来区分未加密&#x2F;fde加密&#x2F;fbe加密&#x2F;">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://liguangzhang.github.io/images/20191204223850725_1481056787.jpg">
+<meta property="og:image" content="http://www.sysnote.org/2015/08/06/linux-io-stack/io-stack.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/20191205212746016_750728522.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/20191205212906116_454506309.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/20191205213052693_1193147772.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/20191205213731280_1559005815.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/20191205214309678_1411751880.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/20191205214506707_1559031982.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/20191206200431808_1301015981.jpg">
+<meta property="og:image" content="https://liguangzhang.github.io/images/20191206203755941_65819257.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/20191206213558324_298683154.png">
+<meta property="article:published_time" content="2019-10-12T10:15:54.000Z">
+<meta property="article:modified_time" content="2024-04-16T07:09:26.745Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="Android">
+<meta property="article:tag" content="FBE">
+<meta property="article:tag" content="FDE">
+<meta property="article:tag" content="metadata">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://liguangzhang.github.io/images/20191204223850725_1481056787.jpg">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E5%8A%A0%E5%AF%86%E6%96%B9%E6%A1%88%E6%95%B4%E7%90%86/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Android 加密方案整理 | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E5%8A%A0%E5%AF%86%E6%96%B9%E6%A1%88%E6%95%B4%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Android 加密方案整理
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-10-12 18:15:54" itemprop="dateCreated datePublished" datetime="2019-10-12T18:15:54+08:00">2019-10-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 15:09:26" itemprop="dateModified" datetime="2024-04-16T15:09:26+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/%E5%8A%A0%E5%AF%86/" itemprop="url" rel="index"><span itemprop="name">加密</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="1-加密方案整理"><a href="#1-加密方案整理" class="headerlink" title="1. 加密方案整理"></a>1. 加密方案整理</h1><h2 id="1-1-简介"><a href="#1-1-简介" class="headerlink" title="1.1. 简介"></a>1.1. 简介</h2><p>Android上加密方案分为全磁盘加密(<code>FDE</code>)&#x2F;文件加密(<code>FBE</code>)&#x2F;元数据加密(<code>METADATA</code>)<br>均是针对userdata分区进行加密, 与其他分区并无关系.<br>本篇主要介绍下这三种加密方式硬件加密的实现框架</p>
+<h2 id="1-2-判断机器采用何种加密方式"><a href="#1-2-判断机器采用何种加密方式" class="headerlink" title="1.2. 判断机器采用何种加密方式"></a>1.2. 判断机器采用何种加密方式</h2><p>最直观的方式是可以通过分区表<code>fstab</code>来区分<br>未加密&#x2F;fde加密&#x2F;fbe加密&#x2F;metadata加密</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">/dev/block/bootdevice/by-name/userdata     /data           ext4    noatime,nosuid,nodev,barrier=1,data=ordered,noauto_da_alloc     wait,check,encryptable=footer</span><br><span class="line">/dev/block/bootdevice/by-name/userdata     /data           ext4    noatime,nosuid,nodev,barrier=1,noauto_da_alloc,discard latemount,wait,check,fileencryption=ice,wrappedkey,quota,reservedsize=128M</span><br><span class="line">/dev/block/bootdevice/by-name/userdata     /data           ext4    noatime,nosuid,nodev,barrier=1,noauto_da_alloc,discard latemount,wait,check,fileencryption=ice,wrappedkey,keydirectory=/metadata/vold/metadata_encryption,quota,reservedsize=128M</span><br></pre></td></tr></table></figure>
+
+<p>当前版本中最常见的是fbe加密的机型.</p>
+<p>代码中判断是否加密:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">StorageManager.isEncrypted()</span><br><span class="line">StorageManager.isFileEncryptedNativeOnly()</span><br><span class="line">StorageManager.isBlockEncrypted()</span><br></pre></td></tr></table></figure>
+
+<p>native 层多是通过FstabEntry来判断是何种加密方式</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">static</span> <span class="type">bool</span> <span class="title">should_use_metadata_encryption</span><span class="params">(<span class="type">const</span> FstabEntry&amp; entry)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> !entry.key_dir.<span class="built_in">empty</span>() &amp;&amp;</span><br><span class="line">           (entry.fs_mgr_flags.file_encryption || entry.fs_mgr_flags.force_fde_or_fbe);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>硬件加密的启用, 其中fbe机型和metadata机型是用<code>fileencryption=ice</code>控制的(限于高通产品), 而fbe和metadata加密方式的不同是看<code>keydirectory=</code>是否为空</p>
+<h2 id="1-3-硬件加密实现策略"><a href="#1-3-硬件加密实现策略" class="headerlink" title="1.3. 硬件加密实现策略"></a>1.3. 硬件加密实现策略</h2><p>首先跟着<code>fileencryption=ice</code>往下看</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">@startuml</span><br><span class="line">autoactivate on</span><br><span class="line">init-&gt;vold: initUser0</span><br><span class="line">vold-&gt;vold: fscrypt_init_user0</span><br><span class="line">vold-&gt;vold: fscrypt_prepare_user_storage</span><br><span class="line">vold-&gt;vold: get_data_file_encryption_modes(&amp;de_ref|&amp;ce_ref);</span><br><span class="line">note down: key_ref-&gt;contents_mode = entry-&gt;file_contents_mode;</span><br><span class="line">vold--&gt;init: return init_user0</span><br><span class="line">@enduml</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">@startuml</span><br><span class="line">autoactivate on</span><br><span class="line">StorageManagerService-&gt;vold: prepareUserStorage</span><br><span class="line">vold-&gt;vold: fscrypt_prepare_user_storage</span><br><span class="line">vold-&gt;vold: get_data_file_encryption_modes(&amp;de_ref|&amp;ce_ref);</span><br><span class="line">note right: key_ref-&gt;contents_mode = entry-&gt;file_contents_mode;</span><br><span class="line">vold--&gt;StorageManagerService: return prepareUserStorage</span><br><span class="line">@enduml</span><br></pre></td></tr></table></figure>
+
+<p>对于FBE方案来说, Android标准方案使用<code>ice</code>来控制是否是硬件加密</p>
+<p><a target="_blank" rel="noopener" href="https://source.android.com/security/encryption/file-based">文件加密 android developer</a><br><a target="_blank" rel="noopener" href="https://source.android.com/security/encryption/metadata">metadata加密 android developer</a></p>
+<blockquote>
+<p>为了支持当前的元数据加密，您的硬件必须支持使用内嵌加密引擎进行文件级加密。fstab.hardware 中的用户数据分区的 <code>fileencryption=ice</code> 指令指明了这一点。</p>
+</blockquote>
+<blockquote>
+<p>通过将 fileencryption&#x3D;contents_encryption_mode[:filenames_encryption_mode] 标记添加到 userdata 分区最后一列的 fstab 行中，可以启用 FBE。contents_encryption_mode 参数定义用于文件内容加密的算法，filenames_encryption_mode 参数定义用于文件名加密的算法。 contents_encryption_mode 只能是 aes-256-xts。 filenames_encryption_mode 有两个可能的值：aes-256-cts 和 aes-256-heh。如果未指定 filenames_encryption_mode，则使用 aes-256-cts 值。</p>
+</blockquote>
+<p>^61db89</p>
+<h2 id="1-4-硬件加密底层实现"><a href="#1-4-硬件加密底层实现" class="headerlink" title="1.4. 硬件加密底层实现"></a>1.4. 硬件加密底层实现</h2><h3 id="1-4-1-qcom实现"><a href="#1-4-1-qcom实现" class="headerlink" title="1.4.1. qcom实现"></a>1.4.1. qcom实现</h3><p>先看下metadata加密, metadata加密方案相对FBE来说, 在fbe的基础上又对文件系统的元数据进行了加密</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> DEFAULT_KEY_TARGET_TYPE <span class="string">&quot;default-key&quot;</span></span></span><br><span class="line"> <span class="keyword">if</span> (!<span class="built_in">read_key</span>(*data_rec, needs_encrypt, &amp;key)) <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"> <span class="keyword">if</span> (!<span class="built_in">get_number_of_sectors</span>(data_rec-&gt;blk_device, &amp;nr_sec)) <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    <span class="keyword">if</span> (!<span class="built_in">create_crypto_blk_dev</span>(kDmNameUserdata, nr_sec, DEFAULT_KEY_TARGET_TYPE,</span><br><span class="line">                               <span class="built_in">default_key_params</span>(blk_device, key), &amp;crypto_blkdev))</span><br></pre></td></tr></table></figure>
+
+<p>上述创建dm设备时, 传入的tgt-&gt;target_type是<code>default-key</code>, 对应于device-mapper框架来说, 最终找到的插件实现是<code>dm-default-key.c</code></p>
+<p>该层的代码在kernel md层<br>kernel&#x2F;msm-4.14&#x2F;drivers&#x2F;md&#x2F;dm-default-key.c</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">target_type</span> <span class="title">default_key_target</span> =</span> &#123;</span><br><span class="line">    .name   = <span class="string">&quot;default-key&quot;</span>,</span><br><span class="line">    .version = &#123;<span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>&#125;,</span><br><span class="line">    .module = THIS_MODULE,</span><br><span class="line">    .ctr    = default_key_ctr,</span><br><span class="line">    .dtr    = default_key_dtr,</span><br><span class="line">    .<span class="built_in">map</span>    = default_key_map,</span><br><span class="line">    .status = default_key_status,</span><br><span class="line">    .prepare_ioctl = default_key_prepare_ioctl,</span><br><span class="line">    .iterate_devices = default_key_iterate_devices,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>关于dm设备的转发, 这里不再详细分析. 感兴趣的可以再跟着流程看下.<br>这里重点说下map函数, 在设置好dm规则后, 用户空间命令通过ioctl调用table_load函数，该函数根据用户空间传来的参数构建指定mapped device的映射表和所映射的target device。该函数先构建相应的dm_table、dm_target结构，再调用dm-table.c中的dm_table_add_target(populate_table—&gt;dm_table_add_target)函数根据用户传入的参数初始化这些结构，并且根据参数所指定的target类型，调用相应的target类型的构建函数ctr在内存中构建target device对应的结构，然后再根据所建立的dm_target结构更新dm_table中维护的B树。上述过程完毕后，再将建立好的dm_table添加到mapped device的全局hash表对应的hash_cell结构中。</p>
+<p>设置io转发, 一个是通过dm create 时初始设置的<code>dm_wq_work</code>后台线程执行的</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">ioctl</span>(dm_fd.<span class="built_in">get</span>(), DM_DEV_CREATE, io)</span><br><span class="line">dev_create -&gt; <span class="built_in">dm_create</span>(minor, **result) -&gt; <span class="built_in">alloc_dev</span>(minor) -&gt;</span><br><span class="line"><span class="built_in">INIT_WORK</span>(&amp;md-&gt;work, dm_wq_work);</span><br></pre></td></tr></table></figure>
+
+<p>write_back时, 调用queue_io, 或dm设备处于suspend时</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">static</span> <span class="type">void</span> <span class="title">queue_io</span><span class="params">(<span class="keyword">struct</span> mapped_device *md, <span class="keyword">struct</span> bio *bio)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span> flags;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">spin_lock_irqsave</span>(&amp;md-&gt;deferred_lock, flags);</span><br><span class="line">    <span class="built_in">bio_list_add</span>(&amp;md-&gt;deferred, bio);</span><br><span class="line">    <span class="built_in">spin_unlock_irqrestore</span>(&amp;md-&gt;deferred_lock, flags);</span><br><span class="line">    <span class="built_in">queue_work</span>(md-&gt;wq, &amp;md-&gt;work);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>还有一条路径是通过 <code>dm_setup_md_queue</code></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">    <span class="keyword">case</span> DM_TYPE_BIO_BASED:</span><br><span class="line">    <span class="keyword">case</span> DM_TYPE_DAX_BIO_BASED:</span><br><span class="line">        <span class="built_in">dm_init_normal_md_queue</span>(md);</span><br><span class="line">        <span class="built_in">blk_queue_make_request</span>(md-&gt;queue, dm_make_request);</span><br><span class="line">dm_make_request-&gt; __dm_make_request(q, bio, __split_and_process_bio); -&gt; __send_empty_flush | __split_and_process_non_flush </span><br><span class="line">-&gt; __clone_and_map_data_bio | __send_duplicate_bios -&gt; __map_bio</span><br></pre></td></tr></table></figure>
+
+<p>其中 <code>__split_and_process_bio</code>可以了解一下</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// mapped_device指向 映射的dm设备, map为映射规则</span></span><br><span class="line"><span class="comment">// split a bio into clones and submit them to the targets</span></span><br><span class="line"><span class="type">static</span> <span class="type">blk_qc_t</span> __split_and_process_bio(<span class="keyword">struct</span> mapped_device *md,</span><br><span class="line">                    <span class="keyword">struct</span> dm_table *map, <span class="keyword">struct</span> bio *bio)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">clone_info</span> ci;</span><br><span class="line">    <span class="type">blk_qc_t</span> ret = BLK_QC_T_NONE;</span><br><span class="line">    <span class="type">int</span> error = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">blk_queue_split</span>(md-&gt;queue, &amp;bio);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">init_clone_info</span>(&amp;ci, md, map, bio);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (bio-&gt;bi_opf &amp; REQ_PREFLUSH) &#123;</span><br><span class="line">        ci.bio = &amp;ci.io-&gt;md-&gt;flush_bio;</span><br><span class="line">        ci.sector_count = <span class="number">0</span>;</span><br><span class="line">        error = __send_empty_flush(&amp;ci);</span><br><span class="line">        <span class="comment">/* dec_pending submits any data associated with flush */</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="built_in">bio_op</span>(bio) == REQ_OP_ZONE_RESET) &#123;</span><br><span class="line">        ci.bio = bio;</span><br><span class="line">        ci.sector_count = <span class="number">0</span>;</span><br><span class="line">        error = __split_and_process_non_flush(&amp;ci);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        ci.bio = bio;</span><br><span class="line">        ci.sector_count = <span class="built_in">bio_sectors</span>(bio);</span><br><span class="line">        <span class="keyword">while</span> (ci.sector_count &amp;&amp; !error) &#123;</span><br><span class="line">            error = __split_and_process_non_flush(&amp;ci);</span><br><span class="line">            <span class="keyword">if</span> (current-&gt;bio_list &amp;&amp; ci.sector_count &amp;&amp; !error) &#123;</span><br><span class="line">                <span class="keyword">struct</span> <span class="title class_">bio</span> *b = <span class="built_in">bio_split</span>(bio, <span class="built_in">bio_sectors</span>(bio) - ci.sector_count,</span><br><span class="line">                              GFP_NOIO, &amp;md-&gt;queue-&gt;bio_split);</span><br><span class="line">                ci.io-&gt;orig_bio = b;</span><br><span class="line">                <span class="built_in">bio_chain</span>(b, bio);</span><br><span class="line">                ret = <span class="built_in">generic_make_request</span>(bio);</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/* drop the extra reference count */</span></span><br><span class="line">    <span class="built_in">dec_pending</span>(ci.io, <span class="built_in">errno_to_blk_status</span>(error));</span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * Select the correct strategy for processing a non-flush bio.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> __split_and_process_non_flush(<span class="keyword">struct</span> clone_info *ci)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">bio</span> *bio = ci-&gt;bio;</span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">dm_target</span> *ti;</span><br><span class="line">    <span class="type">unsigned</span> len;</span><br><span class="line">    <span class="type">int</span> r;</span><br><span class="line"><span class="comment">// 找到target_device</span></span><br><span class="line">    ti = <span class="built_in">dm_table_find_target</span>(ci-&gt;map, ci-&gt;sector);</span><br><span class="line">    <span class="keyword">if</span> (!<span class="built_in">dm_target_is_valid</span>(ti))</span><br><span class="line">        <span class="keyword">return</span> -EIO;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">unlikely</span>(__process_abnormal_io(ci, ti, &amp;r)))</span><br><span class="line">        <span class="keyword">return</span> r;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">bio_op</span>(bio) == REQ_OP_ZONE_REPORT)</span><br><span class="line">        len = ci-&gt;sector_count;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        len = <span class="built_in">min_t</span>(<span class="type">sector_t</span>, <span class="built_in">max_io_len</span>(ci-&gt;sector, ti),</span><br><span class="line">                ci-&gt;sector_count);</span><br><span class="line"></span><br><span class="line">    r = __clone_and_map_data_bio(ci, ti, ci-&gt;sector, &amp;len);</span><br><span class="line">    <span class="keyword">if</span> (r &lt; <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">return</span> r;</span><br><span class="line"></span><br><span class="line">    ci-&gt;sector += len;</span><br><span class="line">    ci-&gt;sector_count -= len;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> __clone_and_map_data_bio(<span class="keyword">struct</span> clone_info *ci, <span class="keyword">struct</span> dm_target *ti,</span><br><span class="line">                    <span class="type">sector_t</span> sector, <span class="type">unsigned</span> *len)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">bio</span> *bio = ci-&gt;bio;</span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">dm_target_io</span> *tio;</span><br><span class="line">    <span class="type">int</span> r;</span><br><span class="line"></span><br><span class="line">    tio = <span class="built_in">alloc_tio</span>(ci, ti, <span class="number">0</span>, GFP_NOIO);</span><br><span class="line">    tio-&gt;len_ptr = len;</span><br><span class="line">    r = <span class="built_in">clone_bio</span>(tio, bio, sector, *len);</span><br><span class="line">    <span class="keyword">if</span> (r &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">free_tio</span>(tio);</span><br><span class="line">        <span class="keyword">return</span> r;</span><br><span class="line">    &#125;</span><br><span class="line">    (<span class="type">void</span>) __map_bio(tio);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">blk_qc_t</span> __map_bio(<span class="keyword">struct</span> dm_target_io *tio)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">int</span> r;</span><br><span class="line">    <span class="type">sector_t</span> sector;</span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">bio</span> *clone = &amp;tio-&gt;clone;</span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">dm_io</span> *io = tio-&gt;io;</span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">mapped_device</span> *md = io-&gt;md;</span><br><span class="line">    <span class="comment">// 取出上面封装的target_device的结构体</span></span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">dm_target</span> *ti = tio-&gt;ti;</span><br><span class="line">    <span class="type">blk_qc_t</span> ret = BLK_QC_T_NONE;</span><br><span class="line"></span><br><span class="line">    clone-&gt;bi_end_io = clone_endio;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * Map the clone.  If r == 0 we don&#x27;t need to do</span></span><br><span class="line"><span class="comment">     * anything, the target has assumed ownership of</span></span><br><span class="line"><span class="comment">     * this io.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="built_in">atomic_inc</span>(&amp;io-&gt;io_count);</span><br><span class="line">    sector = clone-&gt;bi_iter.bi_sector;</span><br><span class="line">    <span class="comment">// 调用插件的map函数. ti为dm_target, clone为复制的bio</span></span><br><span class="line">    r = ti-&gt;type-&gt;<span class="built_in">map</span>(ti, clone);</span><br><span class="line">    <span class="keyword">switch</span> (r) &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// map正常执行的话, 返回DM_MAPIO_REMAPPED</span></span><br><span class="line">    <span class="keyword">case</span> DM_MAPIO_REMAPPED:</span><br><span class="line">        <span class="comment">/* the bio has been remapped so dispatch it */</span></span><br><span class="line">        <span class="built_in">trace_block_bio_remap</span>(clone-&gt;bi_disk-&gt;queue, clone,</span><br><span class="line">                      <span class="built_in">bio_dev</span>(io-&gt;orig_bio), sector);</span><br><span class="line">        <span class="keyword">if</span> (md-&gt;type == DM_TYPE_NVME_BIO_BASED)</span><br><span class="line">            ret = <span class="built_in">direct_make_request</span>(clone);</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">            <span class="comment">// 往下层转发</span></span><br><span class="line">            ret = <span class="built_in">generic_make_request</span>(clone);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>由上述调用, 最终起到封装bio的目的. 复制了一份bio到clone中, 找到dm-target的type(插件), 用其注册的map函数封装clone, clone为指针, map函数会修改其值.</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ti封装的private为其初始化时填入的值</span></span><br><span class="line"><span class="comment">// Construct a default-key mapping: &lt;mode&gt; &lt;key&gt; &lt;dev_path&gt; &lt;start&gt;</span></span><br><span class="line"><span class="function"><span class="type">static</span> <span class="type">int</span> <span class="title">default_key_ctr</span><span class="params">(<span class="keyword">struct</span> dm_target *ti, <span class="type">unsigned</span> <span class="type">int</span> argc, <span class="type">char</span> **argv)</span> </span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    ti-&gt;<span class="keyword">private</span> = dkc;</span><br><span class="line">    <span class="built_in">hex2bin</span>(dkc-&gt;key.raw, argv[<span class="number">1</span>], key_size);</span><br><span class="line">    <span class="comment">// 根据传入的path 找到其 target_device, 就是往dkc的dev里填入 bdev, 最后ti-&gt;private准备完成</span></span><br><span class="line">    <span class="built_in">dm_get_device</span>(ti, argv[<span class="number">2</span>], <span class="built_in">dm_table_get_mode</span>(ti-&gt;table),</span><br><span class="line">                &amp;dkc-&gt;dev);</span><br><span class="line">    <span class="built_in">sscanf</span>(argv[<span class="number">3</span>], <span class="string">&quot;%llu%c&quot;</span>, &amp;tmp, &amp;dummy)</span><br><span class="line">    dkc-&gt;start = tmp;</span><br><span class="line">    <span class="comment">// 必须支持硬件加密?</span></span><br><span class="line">    <span class="keyword">if</span> (!<span class="built_in">blk_queue_inlinecrypt</span>(<span class="built_in">bdev_get_queue</span>(dkc-&gt;dev-&gt;bdev))) &#123;</span><br><span class="line">        ti-&gt;error = <span class="string">&quot;Device does not support inline encryption&quot;</span>;</span><br><span class="line">        err = -EINVAL;</span><br><span class="line">        <span class="keyword">goto</span> bad;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="type">static</span> <span class="type">int</span> <span class="title">default_key_map</span><span class="params">(<span class="keyword">struct</span> dm_target *ti, <span class="keyword">struct</span> bio *bio)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="type">const</span> <span class="keyword">struct</span> <span class="title class_">default_key_c</span> *dkc = ti-&gt;<span class="keyword">private</span>;</span><br><span class="line">    <span class="comment">// 设置clone的block_device(target_device), 最后通过generic_make_request 往下层转发</span></span><br><span class="line">    <span class="built_in">bio_set_dev</span>(bio, dkc-&gt;dev-&gt;bdev);</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">bio_sectors</span>(bio)) &#123;</span><br><span class="line">        <span class="comment">// bio来自于mapped_device需要根据映射关系转换成target_device的真实的扇区号</span></span><br><span class="line">        bio-&gt;bi_iter.bi_sector = dkc-&gt;start +</span><br><span class="line">            <span class="built_in">dm_target_offset</span>(ti, bio-&gt;bi_iter.bi_sector);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!bio-&gt;bi_crypt_key &amp;&amp; !bio-&gt;bi_crypt_skip)</span><br><span class="line">        <span class="comment">// 最重要的信息, 为bio带上了密钥信息</span></span><br><span class="line">        bio-&gt;bi_crypt_key = &amp;dkc-&gt;key;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> DM_MAPIO_REMAPPED;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可见metadata加密使用dm设备的目的, 就是为bio加上密钥信息, 那这个密钥信息是在哪里用的呢, 而且<code>dm-default-key.c</code>里的实现里明确提示了需要硬件支持.</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">static</span> <span class="type">int</span> <span class="title">default_key_iterate_devices</span><span class="params">(<span class="keyword">struct</span> dm_target *ti,</span></span></span><br><span class="line"><span class="params"><span class="function">                       iterate_devices_callout_fn fn,</span></span></span><br><span class="line"><span class="params"><span class="function">                       <span class="type">void</span> *data)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">default_key_c</span> *dkc = ti-&gt;<span class="keyword">private</span>;</span><br><span class="line">    <span class="comment">// fn为queue_supports_inline_encryption函数, 所以最终是通过找到target_device查看是否支持硬件加密</span></span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">fn</span>(ti, dkc-&gt;dev, dkc-&gt;start, ti-&gt;len, data);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="type">static</span> <span class="type">int</span> <span class="title">queue_supports_inline_encryption</span><span class="params">(<span class="keyword">struct</span> dm_target *ti,</span></span></span><br><span class="line"><span class="params"><span class="function">                        <span class="keyword">struct</span> dm_dev *dev,</span></span></span><br><span class="line"><span class="params"><span class="function">                        <span class="type">sector_t</span> start, <span class="type">sector_t</span> len,</span></span></span><br><span class="line"><span class="params"><span class="function">                        <span class="type">void</span> *data)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">request_queue</span> *q = <span class="built_in">bdev_get_queue</span>(dev-&gt;bdev);</span><br><span class="line">    <span class="keyword">return</span> q &amp;&amp; <span class="built_in">blk_queue_inlinecrypt</span>(q);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 是否支持硬件加密是在初始化时指定的, 绕到block层了  对应于emmc和ufs, 分别走的mmc framework和scsi架构</span></span><br><span class="line"><span class="comment">// mmc core的实现  是在mmc_blk_alloc_req时做的</span></span><br><span class="line">    <span class="keyword">if</span> (host-&gt;inlinecrypt_support)</span><br><span class="line">        <span class="built_in">queue_flag_set_unlocked</span>(QUEUE_FLAG_INLINECRYPT, mq-&gt;queue);</span><br><span class="line"><span class="comment">// scsi中的实现</span></span><br><span class="line">    <span class="keyword">if</span> (shost-&gt;inlinecrypt_support)</span><br><span class="line">        <span class="built_in">queue_flag_set_unlocked</span>(QUEUE_FLAG_INLINECRYPT, q);</span><br></pre></td></tr></table></figure>
+
+<p>所以上述硬件加密的信息应该是做在mmc框架层, 通过mmc框架与存储器件通信, 进行硬件加密</p>
+<h3 id="1-4-2-scsi架构探寻"><a href="#1-4-2-scsi架构探寻" class="headerlink" title="1.4.2. scsi架构探寻"></a>1.4.2. scsi架构探寻</h3><h4 id="1-4-2-1-软件架构"><a href="#1-4-2-1-软件架构" class="headerlink" title="1.4.2.1. 软件架构"></a>1.4.2.1. 软件架构</h4><p>Linux kernel的驱动框架有两个要点:</p>
+<ul>
+<li>抽象硬件（硬件架构是什么样子，驱动框架就应该是什么样子）。</li>
+<li>向“客户”提供使用该硬件的API（之前我们提到最多的客户是“用户空间的Application”，不过也有其它“客户”，例如内核空间的其它driver、其它framework）。</li>
+</ul>
+<p>先看kconfig</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line">config SCSI_UFSHCD</span><br><span class="line">    tristate <span class="string">&quot;Universal Flash Storage Controller Driver Core&quot;</span></span><br><span class="line">    depends on SCSI &amp;&amp; SCSI_DMA</span><br><span class="line">    select PM_DEVFREQ</span><br><span class="line">    select DEVFREQ_GOV_SIMPLE_ONDEMAND</span><br><span class="line">    select NLS</span><br><span class="line">    ---help---</span><br><span class="line">    This selects the support <span class="keyword">for</span> UFS devices in Linux, <span class="function">say Y <span class="keyword">and</span> make</span></span><br><span class="line"><span class="function">      sure that you know the name of your UFS host <span class="title">adapter</span> <span class="params">(the card</span></span></span><br><span class="line"><span class="params"><span class="function">      inside your computer that <span class="string">&quot;speaks&quot;</span> the UFS protocol, also</span></span></span><br><span class="line"><span class="params"><span class="function">      called UFS Host Controller)</span>, because you will be asked <span class="keyword">for</span> it.</span></span><br><span class="line"><span class="function">      The <span class="keyword">module</span> will be called ufshcd.</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">      To compile <span class="keyword">this</span> driver as a <span class="keyword">module</span>, choose M here <span class="keyword">and</span> read</span></span><br><span class="line"><span class="function">      &lt;file:Documentation/scsi/ufs.txt&gt;.</span></span><br><span class="line"><span class="function">      However, do not compile this as a module if your root file system</span></span><br><span class="line"><span class="function">      (the one containing the directory /) is located on a UFS device.</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">config SCSI_UFSHCD_PLATFORM</span></span><br><span class="line"><span class="function">    tristate <span class="string">&quot;Platform bus based UFS Controller support&quot;</span></span></span><br><span class="line"><span class="function">    depends on SCSI_UFSHCD</span></span><br><span class="line"><span class="function">    ---help---</span></span><br><span class="line"><span class="function">    This selects the UFS host controller support. Select this if</span></span><br><span class="line"><span class="function">    you have an UFS controller on Platform bus</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">config CRYPTO_DEV_QCOM_ICE</span></span><br><span class="line"><span class="function">    tristate <span class="string">&quot;Inline Crypto Module&quot;</span></span></span><br><span class="line"><span class="function">    default n</span></span><br><span class="line"><span class="function">    depends on BLK_DEV_DM</span></span><br><span class="line"><span class="function">    help</span></span><br><span class="line"><span class="function">      This driver supports Inline Crypto Engine for QTI chipsets, MSM8994</span></span><br><span class="line"><span class="function">      and later, to accelerate crypto operations for storage needs.</span></span><br><span class="line"><span class="function">      To compile this driver as a module, choose M here: the</span></span><br><span class="line"><span class="function">      module will be called ice.</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">config SCSI_UFS_QCOM</span></span><br><span class="line"><span class="function">    tristate <span class="string">&quot;QCOM specific hooks to UFS controller platform driver&quot;</span></span></span><br><span class="line"><span class="function">    depends on SCSI_UFSHCD_PLATFORM &amp;&amp; ARCH_QCOM</span></span><br><span class="line"><span class="function">    select PHY_QCOM_UFS</span></span><br><span class="line"><span class="function">    select EXTCON</span></span><br><span class="line"><span class="function">    select EXTCON_STORAGE_CD_GPIO</span></span><br><span class="line"><span class="function">    help</span></span><br><span class="line"><span class="function">      This selects the QCOM specific additions to UFSHCD platform driver.</span></span><br><span class="line"><span class="function">      UFS host on QCOM needs some vendor specific configuration before</span></span><br><span class="line"><span class="function">      accessing the hardware which includes PHY configuration and vendor</span></span><br><span class="line"><span class="function">      specific registers.</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">      Select this if you have UFS controller on QCOM chipset.</span></span><br><span class="line"><span class="function">      If unsure, say N.</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">config SCSI_UFS_QCOM_ICE</span></span><br><span class="line"><span class="function">    bool <span class="string">&quot;QCOM specific hooks to Inline Crypto Engine for UFS driver&quot;</span></span></span><br><span class="line"><span class="function">    depends on SCSI_UFS_QCOM &amp;&amp; CRYPTO_DEV_QCOM_ICE</span></span><br><span class="line"><span class="function">    help</span></span><br><span class="line"><span class="function">      This selects the QCOM specific additions to support Inline Crypto</span></span><br><span class="line"><span class="function">      Engine (ICE).</span></span><br><span class="line"><span class="function">      ICE accelerates the crypto operations and maintains the high UFS</span></span><br><span class="line"><span class="function">      performance.</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">      Select this if you have ICE supported for UFS on QCOM chipset.</span></span><br><span class="line"><span class="function">      If unsure, say N.</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">obj-<span class="variable">$(CONFIG_ARCH_QCOM)</span>            += pfe/</span><br><span class="line">obj-<span class="variable">$(CONFIG_SCSI_UFSHCD)</span> += ufshcd-core.o</span><br><span class="line">obj-<span class="variable">$(CONFIG_SCSI_UFSHCD_PLATFORM)</span> += ufshcd-pltfrm.o</span><br><span class="line">obj-<span class="variable">$(CONFIG_CRYPTO_DEV_QCOM_ICE)</span> += ice.o</span><br><span class="line">obj-<span class="variable">$(CONFIG_SCSI_UFS_QCOM_ICE)</span> += ufs-qcom-ice.o</span><br><span class="line">obj-<span class="variable">$(CONFIG_SCSI_UFS_QCOM)</span> += ufs-qcom.o</span><br></pre></td></tr></table></figure>
+
+<p>从上述的依赖条件看, 主要是涉及到<code>ufs-qcom.c</code> 和  <code>ufs-qcom-ice.c</code>文件的分析</p>
+<p>platform driver 是什么？<br>一个现实的Linux设备和驱动通常挂接在一种总线上，对于本身依附于PCI、USB、I2C、SPI等的设备而言，这自然不是问题，但是在<code>嵌入式系统</code>里面，SoC系统中<code>集成的独立的外设控制器</code>、挂接在<code>SoC内存空间的外设</code>等却不依附于此类总线。基于这个背景，Linux发明了一种虚拟的总线，称为platform总线，相应的设备称为platform device,驱动称为platform driver。<br><strong>注意</strong>platform device并不是和字符设备，块设备和网络设备并列的概念，而是实现它们的一种方式。通过这种方式实现的就称为platform device。</p>
+<p>platform 是一个虚拟的地址总线，相比 PCI、USB，它主要用于描述SOC上的片上资源。platform 所描述的资源有一个共同点：在CPU 的总线上直接取址。平台设备会分到一个名称（用在驱动绑定中）以及一系列诸如地址和中断请求号（IRQ）之类的资源。 ^39c29c</p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/yanhe156/article/details/79062868">platform_driver开发</a></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="keyword">struct</span> <span class="title class_">platform_driver</span> ufs_qcom_pltform = &#123;</span><br><span class="line">    .probe    = ufs_qcom_probe,</span><br><span class="line">    .remove    = ufs_qcom_remove,</span><br><span class="line">    .shutdown = ufshcd_pltfrm_shutdown,</span><br><span class="line">    .driver    = &#123;</span><br><span class="line">        .name    = <span class="string">&quot;ufshcd-qcom&quot;</span>,</span><br><span class="line">        .pm    = &amp;ufs_qcom_pm_ops,</span><br><span class="line">        <span class="comment">// 从设备数获取  &#123; .compatible = &quot;qcom,ufshc&quot;&#125;,</span></span><br><span class="line">        .of_match_table = <span class="built_in">of_match_ptr</span>(ufs_qcom_of_match),</span><br><span class="line">    &#125;,</span><br><span class="line">&#125;;</span><br><span class="line"><span class="built_in">module_platform_driver</span>(ufs_qcom_pltform);</span><br></pre></td></tr></table></figure>
+
+<p>platform device的.prob函数中执行的是大致为四步：</p>
+<ol>
+<li>申请设备号</li>
+<li>实体设备(如果是字符设备，就是cdev)初始化注册，添加填充好的file_operation</li>
+<li>从pdev读出硬件资源</li>
+<li>对硬件资源初始化，ioremap() ,request_irq()等操作</li>
+</ol>
+<p>platform device的.remove函数实现的是注销分配的各种资源。</p>
+<p>driver的绑定是通过driver core自动完成的，完成driver和device的匹配后以后会自动执行<code>probe()</code>函数，如果函数执行成功，则driver和device就绑定在一起了，drvier和device匹配的方法有3种： ^a36448</p>
+<ul>
+<li><p>当一个设备注册的时候，他会在总线上寻找匹配的driver，platform device一般在系统启动很早的时候就注册了</p>
+</li>
+<li><p>当一个驱动注册[platform_driver_register()]的时候，他会<code>遍历所有总线上的设备来寻找匹配</code>，在启动的过程驱动的注册一般比较晚，或者在模块载入的时候<br> ^2bbbb2</p>
+</li>
+<li><p>当一个驱动注册[platform_driver_probe()]的时候， 功能上和使用platform_driver_register()是一样的，唯一的区别是它不能被以后其他的device probe了，也就是说这个driver只能和一个device绑定。</p>
+<p>Platform device 和 Platform driver实际上是cpu总线可以直接寻址的设备和驱动，他们挂载在一个虚拟的总线platform_bus_type上，是一种bus-specific设备和驱动。与其他bus-specific驱动比如pci是一样的。他们都是将device和device_driver加了一个warpper产生，仔细看看platform_device就可以看到它必然包含一个device dev，而platform_driver也一样，它必然包含一个device_driver driver。<br>所有的设备通过bus_id挂在总线上，多个device可以共用一个driver，但是一个device不可以对应多个driver。驱动去注册时候会根据设备名寻找设备，没有设备会注册失败，注册的过程会通过probe来进行相应资源的申请，以及硬件的初始化，如果probe执行成功，则device和driver的绑定就成功了。设备注册的时候同样会在总线上寻找相应的驱动，如果找到他也会试图绑定，绑定的过程同样是执行probe。</p>
+</li>
+</ul>
+<p>这里先带着问题看一下注册的过程:  (前面说到metadata加密必须支持硬件加密才可以)</p>
+<p><code>shost-&gt;inlinecrypt_support</code>   这个赋值是哪来的呢?</p>
+<p>搜了下代码, 是在这里</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">static</span> <span class="type">int</span> <span class="title">ufs_qcom_init</span><span class="params">(<span class="keyword">struct</span> ufs_hba *hba)</span> </span>&#123;</span><br><span class="line"><span class="comment">// err为0, 即支持硬件加密</span></span><br><span class="line">    err = <span class="built_in">ufs_qcom_ice_get_dev</span>(host);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>顺着ufs_qcom_init的初始化过程, 看下ufs_hba来自哪里<br>ufs_qcom_probe -&gt; ufshcd_pltfrm_init(pdev, &amp;ufs_hba_qcom_variant) -&gt; ufshcd_alloc_host(dev, &amp;hba) -&gt; host &#x3D; scsi_host_alloc(&amp;ufshcd_driver_template, sizeof(struct ufs_hba));</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> <span class="title">ufshcd_alloc_host</span><span class="params">(<span class="keyword">struct</span> device *dev, <span class="keyword">struct</span> ufs_hba **hba_handle)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">Scsi_Host</span> *host;</span><br><span class="line">    <span class="keyword">struct</span> <span class="title class_">ufs_hba</span> *hba;</span><br><span class="line">    <span class="type">int</span> err = <span class="number">0</span>;</span><br><span class="line">    host = <span class="built_in">scsi_host_alloc</span>(&amp;ufshcd_driver_template,</span><br><span class="line">                <span class="built_in">sizeof</span>(<span class="keyword">struct</span> ufs_hba));</span><br><span class="line">    hba = <span class="built_in">shost_priv</span>(host);</span><br><span class="line">    hba-&gt;host = host;</span><br><span class="line">    hba-&gt;dev = dev;</span><br><span class="line">    *hba_handle = hba;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">INIT_LIST_HEAD</span>(&amp;hba-&gt;clk_list_head);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个调用直接跑到了scsi&#x2F;hosts.c中的<code>scsi_host_alloc</code>函数中. register a scsi host adapter instance. 这个函数的作用就是分配host端.<br>在scsi架构中,  系统初始化时会扫描platform总线，因此挂载其上的SCSI host adapter会被扫描到，并生成一个platform device。<br>扫描软件会为该platform device加载相应的驱动程序。加载SCSI host驱动时，其探测函数会初始化SCSI host，注册中断处理函数，最后调用scsi_scan_host函数扫描scsi host adapter所管理的所有scsi总线。<br>通常情况下，HBA驱动在系统中以模块形式加载。从而允许模块被卸载并重新加载，在该过程中SCSI扫描函数得以调用。通常，在卸载HBA驱动之前，SCSI设备的所有I&#x2F;O都应该停止，卸载文件系统，多路径服务应用也需停止。如果有代理或HBA应用帮助模块，也应当中止。<br>&#x2F;proc文件系统提供了可用SCSI设备的列表。如果系统中SCSI设备重新配置，那么所有这些改变通过echo &#x2F;proc接口反映到SCSI设备中。添加一个设备，主机，channel，target ID，以及磁盘设备的LUN编号会被添加到&#x2F;proc&#x2F;scsi&#x2F;，需指定scsi编号。</p>
+<p>可见这里是将host纳入了scsi架构中, 后续只要访问到对应的host adapter, 可以通过host adapter与其匹配的driver进行通信.</p>
+<p>这里列举一个加密过程的路径:<br>ufshcd_resume-&gt;ufshcd_reset_and_restore-&gt;ufshcd_detect_device-&gt;ufshcd_host_reset_and_restore-&gt;ufshcd_complete_requests-&gt;ufshcd_transfer_req_compl-&gt;__ufshcd_transfer_req_compl-&gt;ufshcd_vops_crypto_engine_cfg_end<br>ufshcd_pltfrm_init-&gt;ufshcd_init-&gt;INIT_DELAYED_WORK(&amp;hba-&gt;card_detect_work, ufshcd_card_detect_handler)-&gt;ufshcd_detect_device…</p>
+<p><img src="/images/20191204223850725_1481056787.jpg" alt="v2-33d57d1aac13ec6a4e7f917e0a47bb69_1200x500"><br><img src="http://www.sysnote.org/2015/08/06/linux-io-stack/io-stack.png" alt="&quot;linux storage stack&quot;的图片搜索结果"><br>从之前的调度上看, 下发bio经过了device_mapper层, 通用块层即block层进行io调度, 使用各类调度算法合并bio到rq中, 最后下发bio到达scsi层, 在这一层有<code>single-queue layer</code>和<code>multi-queue layer</code>的区分.<br>其中<code>single-queue layer</code>是使用的<code>scsi_request_fn</code>进行io下发的, 而支持<code>multi-queue layer</code>的则是通过<code>blk_mq_ops</code>结构实现了11个函数, 提供了支持超时，轮询完成，请求初始化的命令, 而io的下发是通过<code>queue_rq</code>函数执行.<br>而ufs是支持<code>multi-queue layer</code>的, 这里可以大致了解下<code>mq_ops</code>的结构的使用过程</p>
+<p><a target="_blank" rel="noopener" href="https://lwn.net/Articles/738449/">io流程</a></p>
+<p>对于多队列结果, rq需要提前分配, 可以看下scsi_alloc_sdev函数, 这里涉及到一个<code>Disk Array Controller</code>,  gdth看起来是负责这块的.</p>
+<blockquote>
+<p>A disk array controller is a device which manages the physical disk drives and presents them to the computer as logical units.</p>
+</blockquote>
+<p>The disk array controller is made of up 3 important parts which play a key role in the controllers functioning and also show us indicators of storage I&#x2F;O bottlenecks. These are:</p>
+<p>CPU that processes the data sent to the controller<br>I&#x2F;O port that includes:</p>
+<ul>
+<li>Back-end interface to establish communication with the storage disks</li>
+<li>Front-end interface to <em>communicate with a computer’s host adapter</em></li>
+<li>Software executed by the controller’s processor which also consumes the processor resources</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">gdth_open</span><span class="params">(<span class="keyword">struct</span> inode *inode, <span class="keyword">struct</span> file *filep)</span></span><br><span class="line">&#123;</span><br><span class="line">    gdth_ha_str *ha;</span><br><span class="line">    list_for_each_entry(ha, &amp;gdth_instances, <span class="built_in">list</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (!ha-&gt;sdev)</span><br><span class="line">            ha-&gt;sdev = scsi_get_host_dev(ha-&gt;shost);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>还有ufshcd_init过程,<br>ufshcd_pltfrm_init -&gt; ufshcd_init -&gt; async_schedule(ufshcd_async_scan, hba); -&gt; ufshcd_async_scan -&gt; ufshcd_probe_hba(hba); -&gt; scsi_scan_host(hba-&gt;host); -&gt; async_schedule(do_scan_async, data); -&gt; do_scsi_scan_host -&gt; scsi_scan_host_selected -&gt; scsi_scan_channel -&gt; __scsi_scan_target -&gt; scsi_probe_and_add_lun -&gt; sdev &#x3D; scsi_alloc_sdev(starget, lun, hostdata); -&gt; sdev-&gt;request_queue &#x3D; scsi_mq_alloc_queue(sdev); | sdev-&gt;request_queue &#x3D; scsi_old_alloc_queue(sdev);</p>
+<blockquote>
+<p>定义了 <code>CONFIG_SCSI_MQ_DEFAULT</code>才走多队列模式</p>
+</blockquote>
+<p>这里还是看单队列模式  sdev-&gt;request_queue &#x3D; scsi_old_alloc_queue(sdev);<br>scsi_old_alloc_queue中绑定了rq相关的处理函数.</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">q-&gt;request_fn = scsi_request_fn;</span><br></pre></td></tr></table></figure>
+
+<p>读取一个文件的时候，陷入系统调用，先检查数据是否在缓存中，如果没有则触发一次读盘操作，然后等待磁盘上的数据被更新到缓存中。</p>
+<p>读取磁盘过程：调用文件系统层的readpages函数，使用各种文件系统层的get_block函数获取磁盘物理地址，存放到<code>bh</code>里(即<code>buffer_head</code>)，使用<code>bh</code>构造<code>bio</code>，然后<code>提交bio</code>(一般使用<code>submit_bio</code>函数将数据bio提交到<code>io的块设备层</code>)。函数<code>generic_make_request</code>转发bio，generic_make_request是一个循环，通过<code>generic_make_request</code>提交请求给I&#x2F;O调度层，这个函数最后调用到<code>q-&gt;make_request_fn(q, bio)</code>，那么对于这个函数的调用就是I&#x2F;O调度层的入口点(ps: Generic_make_request的执行上下文可能有两种，一种是用户上下文，另一种为pdflush.)</p>
+<p>q-&gt;make_request_fn调用的是<code>blk_queue_bio</code>函数(早期版本是__make_request)，在blk_init_allocated_queue里注册。blk_queue_bio函数是Linux提供的块设备请求处理函数，实现IO Schedule。在该函数中试图将转发过来的bio merge到一个已经存在的request中，如果可以合并，那么将新的bio请求挂载到一个已经存在request中。如果不能合并，那么分配一个新的request，然后将bio添加到其中。</p>
+<p>blk_queue_bio里分为plug和unplug机制，在plug下就直接把request存到plug list(例如dio就是依赖于plug机制)。unplug下就直接调用queue的<code>request_fn</code>方法把request提交给磁盘驱动进行真正的处理了。当然，我们现在使用的是unplug机制。</p>
+<p>然后<code>q-&gt;request_fn</code>调用queue队列的request_fn方法<code>scsi_request_fn</code>函数(我们这里选择sda，sdb之类scsi设备)，<br>在scsi_request_fn函数中会扫描request队列，通过<code>blk_peek_request</code>(原先版本是：elv_next_request)函数从队列中获取一个request。在<code>blk_peek_request</code>函数中通过scsi总线层注册的q-&gt;prep_rq_fn（scsi层注册为<code>scsi_prep_fn``blk_queue_prep_rq(q, scsi_prep_fn);</code>）函数将具体的request转换成scsi驱动所能认识的<em>scsi command</em>。获取一个request之后，scsi_request_fn函数直接调用<code>scsi_dispatch_cmd</code>函数将scsi command发送给一个具体的scsi host。</p>
+<p>到这一步，在scsi_dispatch_cmd函数中，通过scsi host的接口方法<code>queuecommand</code>(<code>.queuecommand= ufshcd_queuecommand</code>,)将scsi command发送给scsi host。通常scsi host的queuecommand方法会将接收到的scsi command挂到自己维护的队列中，然后再启动DMA过程将scsi command中的<code>数据发送给具体的磁盘</code>。DMA完毕之后，DMA控制器中断CPU，告诉CPU DMA过程结束，并且在中断上下文中设置DMA结束的中断下半部。DMA中断服务程序返回之后触发软中断，执行SCSI中断下半部。</p>
+<p>在SCSi中断下半部中，调用scsi command结束的回调函数，这个函数往往为scsi_done，在scsi_done函数调用blk_complete_request函数结束请求request，每个请求维护了一个bio链，所以在结束请求过程中回调每个请求中的bio回调函数，结束具体的bio。Bio又有文件系统的buffer head生成，所以在结束bio时，回调buffer_head的回调处理函数bio-&gt;bi_end_io（注册为end_bio_bh_io_sync）。自此，由中断引发的一系列回调过程结束，总结一下回调过程如下：scsi_done-&gt;end_request-&gt;end_bio-&gt;end_bufferhead。</p>
+<p>那什么时候知道数据已经在缓存里了呢?<br>do_generic_file_read –&gt; PageUptodate(page)即检查PG_uptodate标志位。</p>
+<p>注意点是上述<code>queuecommand ufshcd_queuecommand</code>下发磁盘时, qcom的硬件加密流程正处于这个位置, 而scsi中断下半部中, 在scsi done前, 触发了<code>ufshcd_vops_crypto_engine_cfg_end</code><br>devm_request_irq(dev, irq, ufshcd_intr, IRQF_SHARED,<br>                dev_name(dev), hba)-&gt;ufshcd_intr-&gt;ufshcd_sl_intr-&gt;ufshcd_transfer_req_compl-&gt;__ufshcd_transfer_req_compl-&gt;ufshcd_vops_crypto_engine_cfg_end</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br></pre></td><td class="code"><pre><span class="line">err = ufshcd_vops_crypto_engine_cfg_start(hba, tag);</span><br><span class="line"><span class="type">static</span> <span class="keyword">inline</span> <span class="type">int</span> <span class="title function_">ufshcd_vops_crypto_engine_cfg_start</span><span class="params">(<span class="keyword">struct</span> ufs_hba *hba,</span></span><br><span class="line"><span class="params">                        <span class="type">unsigned</span> <span class="type">int</span> task_tag)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> (hba-&gt;var &amp;&amp; hba-&gt;var-&gt;crypto_vops &amp;&amp;</span><br><span class="line">        hba-&gt;var-&gt;crypto_vops-&gt;crypto_engine_cfg_start)</span><br><span class="line">        <span class="keyword">return</span> hba-&gt;var-&gt;crypto_vops-&gt;crypto_engine_cfg_start</span><br><span class="line">                (hba, task_tag);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line">qcom_host-&gt;ice.vops-&gt;config_start(qcom_host-&gt;ice.pdev, req, &amp;ice_set, <span class="literal">true</span>)</span><br><span class="line"><span class="comment">// qcom硬件加密的方案全在这个函数中</span></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">qcom_ice_config_start</span><span class="params">(<span class="keyword">struct</span> platform_device *pdev,</span></span><br><span class="line"><span class="params">        <span class="keyword">struct</span> request *req,</span></span><br><span class="line"><span class="params">        <span class="keyword">struct</span> ice_data_setting *setting, <span class="type">bool</span> async)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">ice_crypto_setting</span> <span class="title">pfk_crypto_data</span> =</span> &#123;<span class="number">0</span>&#125;;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">ice_crypto_setting</span> <span class="title">ice_data</span> =</span> &#123;<span class="number">0</span>&#125;;</span><br><span class="line">    <span class="type">int</span> ret = <span class="number">0</span>;</span><br><span class="line">    <span class="type">bool</span> is_pfe = <span class="literal">false</span>;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span> sec_end = <span class="number">0</span>;</span><br><span class="line">    <span class="type">sector_t</span> data_size;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">ice_device</span> *<span class="title">ice_dev</span>;</span></span><br><span class="line"></span><br><span class="line">    ice_dev = platform_get_drvdata(pdev);</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * It is not an error to have a request with no  bio</span></span><br><span class="line"><span class="comment">     * Such requests must bypass ICE. So first set bypass and then</span></span><br><span class="line"><span class="comment">     * return if bio is not available in request</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">if</span> (setting) &#123;</span><br><span class="line">        setting-&gt;encr_bypass = <span class="literal">true</span>;</span><br><span class="line">        setting-&gt;decr_bypass = <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 判断是否是pfe模式, fbe加密和metadata加密的实现都是pfe的.</span></span><br><span class="line">    ret = pfk_load_key_start(req-&gt;bio, ice_dev, &amp;pfk_crypto_data,</span><br><span class="line">            &amp;is_pfe, async);</span><br><span class="line">    <span class="keyword">if</span> (is_pfe) &#123;</span><br><span class="line">        <span class="keyword">if</span> (ret) &#123;</span><br><span class="line">            <span class="keyword">if</span> (ret != -EBUSY &amp;&amp; ret != -EAGAIN)</span><br><span class="line">                pr_err(<span class="string">&quot;%s error %d while configuring ice key for PFE\n&quot;</span>,</span><br><span class="line">                        __func__, ret);</span><br><span class="line">            <span class="keyword">return</span> ret;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> qti_ice_setting_config(req, ice_dev,</span><br><span class="line">                &amp;pfk_crypto_data, setting, ICE_CRYPTO_CXT_FBE);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 是否是fde模式且是userdata分区</span></span><br><span class="line">    <span class="keyword">if</span> (ice_fde_flag &amp;&amp; req-&gt;part &amp;&amp; req-&gt;part-&gt;info</span><br><span class="line">                &amp;&amp; req-&gt;part-&gt;info-&gt;volname[<span class="number">0</span>]) &#123;</span><br><span class="line">        <span class="keyword">if</span> (!<span class="built_in">strcmp</span>(req-&gt;part-&gt;info-&gt;volname, <span class="string">&quot;userdata&quot;</span>)) &#123;</span><br><span class="line">            sec_end = req-&gt;part-&gt;start_sect + req-&gt;part-&gt;nr_sects -</span><br><span class="line">                    QCOM_UD_FOOTER_SECS;</span><br><span class="line">            <span class="keyword">if</span> ((req-&gt;__sector &gt;= req-&gt;part-&gt;start_sect) &amp;&amp;</span><br><span class="line">                (req-&gt;__sector &lt; sec_end)) &#123;</span><br><span class="line">                data_size = req-&gt;__data_len /</span><br><span class="line">                        QCOM_SECT_LEN_IN_BYTE;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> ((req-&gt;__sector + data_size) &gt; sec_end)</span><br><span class="line">                    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">                <span class="keyword">else</span></span><br><span class="line">                    <span class="keyword">return</span> qti_ice_setting_config(req,</span><br><span class="line">                        ice_dev, &amp;ice_data, setting,</span><br><span class="line">                        ICE_CRYPTO_CXT_FDE);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">pfk_load_key_start</span><span class="params">(<span class="type">const</span> <span class="keyword">struct</span> bio *bio, <span class="keyword">struct</span> ice_device *ice_dev,</span></span><br><span class="line"><span class="params">        <span class="keyword">struct</span> ice_crypto_setting *ice_setting, <span class="type">bool</span> *is_pfe,</span></span><br><span class="line"><span class="params">        <span class="type">bool</span> async)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">int</span> ret = <span class="number">0</span>;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">pfk_key_info</span> <span class="title">key_info</span> =</span> &#123;<span class="literal">NULL</span>, <span class="literal">NULL</span>, <span class="number">0</span>, <span class="number">0</span>&#125;;</span><br><span class="line">    <span class="class"><span class="keyword">enum</span> <span class="title">ice_cryto_algo_mode</span> <span class="title">algo_mode</span> =</span> ICE_CRYPTO_ALGO_MODE_AES_XTS;</span><br><span class="line">    <span class="class"><span class="keyword">enum</span> <span class="title">ice_crpto_key_size</span> <span class="title">key_size_type</span> =</span> <span class="number">0</span>;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span> data_unit = <span class="number">1</span> &lt;&lt; ICE_CRYPTO_DATA_UNIT_512_B;</span><br><span class="line">    u32 key_index = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * only a few errors below can indicate that</span></span><br><span class="line"><span class="comment">     * this function was not invoked within PFE context,</span></span><br><span class="line"><span class="comment">     * otherwise we will consider it PFE</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="comment">// is_pfe默认为true</span></span><br><span class="line">    *is_pfe = <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!pfk_is_ready())</span><br><span class="line">        <span class="keyword">return</span> -ENODEV;</span><br><span class="line"></span><br><span class="line">   <span class="comment">// 从bio中获取key的信息</span></span><br><span class="line"></span><br><span class="line">    ret = pfk_get_key_for_bio(bio, &amp;key_info, &amp;algo_mode, is_pfe,</span><br><span class="line">                    &amp;data_unit);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ret != <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">return</span> ret;</span><br><span class="line"></span><br><span class="line">    ret = pfk_key_size_to_key_type(key_info.key_size, &amp;key_size_type);</span><br><span class="line">    <span class="keyword">if</span> (ret != <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">return</span> ret;</span><br><span class="line"></span><br><span class="line">    ret = pfk_kc_load_key_start(key_info.key, key_info.key_size,</span><br><span class="line">            key_info.salt, key_info.salt_size, &amp;key_index, async,</span><br><span class="line">            data_unit, ice_dev);</span><br><span class="line"></span><br><span class="line">    ice_setting-&gt;key_size = key_size_type;</span><br><span class="line">    ice_setting-&gt;algo_mode = algo_mode;</span><br><span class="line">    <span class="comment">/* hardcoded for now */</span></span><br><span class="line">    ice_setting-&gt;key_mode = ICE_CRYPTO_USE_LUT_SW_KEY;</span><br><span class="line">    ice_setting-&gt;key_index = key_index;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">pfk_get_key_for_bio</span><span class="params">(<span class="type">const</span> <span class="keyword">struct</span> bio *bio,</span></span><br><span class="line"><span class="params">        <span class="keyword">struct</span> pfk_key_info *key_info,</span></span><br><span class="line"><span class="params">        <span class="keyword">enum</span> ice_cryto_algo_mode *algo_mode,</span></span><br><span class="line"><span class="params">        <span class="type">bool</span> *is_pfe, <span class="type">unsigned</span> <span class="type">int</span> *data_unit)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">inode</span> *<span class="title">inode</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">enum</span> <span class="title">pfe_type</span> <span class="title">which_pfe</span>;</span></span><br><span class="line">    <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">blk_encryption_key</span> *<span class="title">key</span> =</span> <span class="literal">NULL</span>;</span><br><span class="line">    <span class="type">char</span> *s_type = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 从bio中获取inode信息</span></span><br><span class="line">    inode = pfk_bio_get_inode(bio);</span><br><span class="line">    which_pfe = pfk_get_pfe_type(inode);</span><br><span class="line">    <span class="comment">// 判断inode文件系统类型</span></span><br><span class="line">    s_type = (<span class="type">char</span> *)pfk_kc_get_storage_type();</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * Update dun based on storage type.</span></span><br><span class="line"><span class="comment">     * 512 byte dun - For ext4 emmc</span></span><br><span class="line"><span class="comment">     * 4K dun - For ext4 ufs, f2fs ufs and f2fs emmc</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (data_unit) &#123;</span><br><span class="line">        <span class="keyword">if</span> (!bio_dun(bio) &amp;&amp; !<span class="built_in">memcmp</span>(s_type, <span class="string">&quot;sdcc&quot;</span>, <span class="built_in">strlen</span>(<span class="string">&quot;sdcc&quot;</span>)))</span><br><span class="line">            *data_unit = <span class="number">1</span> &lt;&lt; ICE_CRYPTO_DATA_UNIT_512_B;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">            *data_unit = <span class="number">1</span> &lt;&lt; ICE_CRYPTO_DATA_UNIT_4_KB;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 对于metadata元数据信息来说, 并没有inode信息, 所以which_pfe是INVAILD_PFE.</span></span><br><span class="line">    <span class="keyword">if</span> (which_pfe != INVALID_PFE) &#123;</span><br><span class="line">        <span class="comment">/* Encrypted file; override -&gt;bi_crypt_key */</span></span><br><span class="line">        pr_debug(<span class="string">&quot;parsing inode %lu with PFE type %d\n&quot;</span>,</span><br><span class="line">             inode-&gt;i_ino, which_pfe);</span><br><span class="line">        <span class="keyword">return</span> (*(pfk_parse_inode_ftable[which_pfe]))</span><br><span class="line">                (bio, inode, key_info, algo_mode, is_pfe);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * bio is not for an encrypted file.  Use -&gt;bi_crypt_key if it was set.</span></span><br><span class="line"><span class="comment">     * Otherwise, don&#x27;t encrypt/decrypt the bio.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line"><span class="comment">// metadata加密继续走这里, 这个bio是dm-default-key转发过来的, 所以是带有bi_crypt_key信息的, 能找到key, is_pfe即为true</span></span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_DM_DEFAULT_KEY</span></span><br><span class="line">    key = bio-&gt;bi_crypt_key;</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line">    <span class="keyword">if</span> (!key) &#123;</span><br><span class="line">        *is_pfe = <span class="literal">false</span>;</span><br><span class="line">        <span class="keyword">return</span> -EINVAL;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    key_info-&gt;key = &amp;key-&gt;raw[<span class="number">0</span>];</span><br><span class="line">    key_info-&gt;key_size = PFK_SUPPORTED_KEY_SIZE;</span><br><span class="line">    key_info-&gt;salt = &amp;key-&gt;raw[PFK_SUPPORTED_KEY_SIZE];</span><br><span class="line">    key_info-&gt;salt_size = PFK_SUPPORTED_SALT_SIZE;</span><br><span class="line">    <span class="keyword">if</span> (algo_mode)</span><br><span class="line">        *algo_mode = ICE_CRYPTO_ALGO_MODE_AES_XTS;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="1-4-3-总结"><a href="#1-4-3-总结" class="headerlink" title="1.4.3. 总结"></a>1.4.3. 总结</h3><p>qcom的硬件加密方案是按照google 规范写的, 先在fstab的userdata的表里加入了fileencryption&#x3D;ice, 文件系统判断是硬件加密方案不再对page cache做额外的加解密处理.<br>而metadata加密方案通过dm-default-key的插件在文件系统层下为元数据的bio挂上了加密密钥信息,而非文件系统元数据对应的目录或文件的inode(以及data block)则使用ensure_policy时对目录层级采用的加密策略.<br>保证了me加密方案不会对元数据或文件inode单独的加密要求, 而在通用块层之下的scsi架构中插桩, 通用块层请求下来后, bio merge到requeset后, 对request下发到ufs device之前(queuecommand时)由scsi host adapter为request挂上了加密信息, 而加密信息来自于文件系统inode或元数据挂上的密钥信息. 保证了再下发到device后, 通过硬件器件对request进行加解密.</p>
+<p>Linux scsi设备读写流程：<br><a target="_blank" rel="noopener" href="http://blog.chinaunix.net/uid-29634482-id-5127267.html">http://blog.chinaunix.net/uid-29634482-id-5127267.html</a><br>块设备读写流程：<br><a target="_blank" rel="noopener" href="http://blog.chinaunix.net/uid-25052030-">http://blog.chinaunix.net/uid-25052030-</a> id-58337.html<br>usb驱动学习笔记：<br><a target="_blank" rel="noopener" href="http://blog.chinaunix.net/uid-25627207-id-3341609.html">http://blog.chinaunix.net/uid-25627207-id-3341609.html</a><br>plug&#x2F;unplug机制：<br><a target="_blank" rel="noopener" href="http://blog.chinaunix.net/xmlrpc.php?r=">http://blog.chinaunix.net/xmlrpc.php?r=</a> blog&#x2F;article&amp;uid&#x3D;14528823&amp;id&#x3D;4778396</p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/cherishui/p/3878678.html">Linux SCSI回调IO的分析</a></p>
+<p><img src="/images/20191205212746016_750728522.png" alt="scsi驱动"><br><img src="/images/20191205212906116_454506309.png" alt="scsi三层驱动模型"><br>在scsi middle level定义了scsi device的数据结构，用于描述一个scsi的具体功能单元，其在scsi host中通过channel、id、lun进行寻址。<br>　　在scsi host中可以存在多个channel，每个channel是一条完整的scsi总线，在scsi总线上可以连接多个scsi节点，每个节点采用id进行编号，编号的大小与具体的scsi specification相关，与总线层的驱动能力等因素相关。每个节点可以根据功能划分成多个lun，每个lun才是我们通常所说的scsi设备。<br>　　<img src="/images/20191205213052693_1193147772.png" alt="channel lun"><br>　　scsi host的语义很清晰，其描述了一个scsi总线控制器。在很多实际的系统中，scsi host为一块基于PCI总线的HBA或者为一个SCSI控制器芯片。每个scsi host可以存在多个channel，一个channel实际扩展了一条SCSI总线。每个channel可以连接多个scsi节点，具体连接的数量与scsi总线带载能力有关.<br>　　在scsi总线probe的过程中，scsi middle level会为每个lun抽象成scsi device，实现的核心函数为scsi_probe_and_add_lun()<br>　　scsi target对scsi总线上的scsi 节点进行了抽象。每个scsi target可能拥有多个lun，即多个scsi devie
+　　</p>
+<h4 id="1-4-3-1-low-level接口方法——scsi-host-template"><a href="#1-4-3-1-low-level接口方法——scsi-host-template" class="headerlink" title="1.4.3.1. low-level接口方法——scsi_host_template"></a>1.4.3.1. low-level接口方法——scsi_host_template</h4><p>　　scsi middle level通过scsi_host_template接口调用scsi host的具体方法。在scsi host driver向middle level注册host对象的同时需要注册scsi_host_template方法，该方法被注册到scsi host对象中。<br>　　scsi middle level层提供了scsi host扫描函数，在设备枚举过程中scsi host可以调用该函数对scsi总线适配器进行扫描，当然host驱动也可以调用更加底层的函数对scsi总线进行扫描。scsi_scsn_host函数实现流程如下：<br>　　<img src="/images/20191205213731280_1559005815.png" alt="扫描channel"></p>
+<p>scsi host作为 platform 设备会被platform总线驱动层扫描到，扫描到scsi host之后，操作系统开始加载scsi host的驱动，scsi host driver就是上面说所的low level driver。scsi host driver初始化scsi控制器， 分配硬件资源，注册中断服务。最后开始扫描通过scsi控制器扩展出来的下一级总线——scsi bus。<br>　　scsi bus的扫描通过scsi middle level提供的服务完成。scsi host driver可以调用scsi middle level提供的扫描算法完成scsi总线设备的扫描<br>在scsi总线扫描过程中用到了scsi middle level层的如下重要函数：<br>　　1、scsi_scan_host：对scsi host设备进行扫描。<br>       2、scsi_add_device：探测具体的device，并且将其加入系统。<br>　　3、scsi_probe_and_add_lun：探测具体指定的lun，并且将其加入系统。<br>　　4、scsi_probe_lun：采用INQUIRY命令对lun节点进行探测。<br>　　5、scsi_add_lun：加入lun节点并且初始化SCSI设备。<br>　　scsi总线scan过程中的函数调用情况如下图所示：<br>　　<img src="/images/20191205214309678_1411751880.png" alt="scsi扫描过程"></p>
+<h2 id="1-5-scsi设备读写过程"><a href="#1-5-scsi设备读写过程" class="headerlink" title="1.5. scsi设备读写过程"></a>1.5. scsi设备读写过程</h2><p>在此给出一个scsi设备的读写数据流程，通过该例子，读者可以方便查找Linux<br>源代码，并且能够理清繁杂的代码结构。假设读写的scsi设备为scsi disk设备，数据首先通过文件系统，进入到文件系统的Cache。文件系统的pdflush daemon会将Cache住的数据刷新到磁盘，其根据buffer head的内容构造bio，然后调用块设备接口（submit_bio）将请求发送给块设备层。bio在块设备层多次转发，最后被merge到块设备的请求队列中。请求可能会在请求队列滞留一段时间，然后在软中断或者用户上下文中调用request_fn去处理请求队列。在scsi middle level驱动层，块设备的请求被转换成scsi command，然后通过queuecommand函数接口将scsi command提交给scsi host，通常scsi host会发起DMA操作将数据传输给具体的设备。至此，数据从应用程序转移到了scsi设备，当然上述过程还没有涉及到回调过程，实际的回调会在中断上下文、软中断上下文中完成，在请求发送的每一层都保存了相应的回调上下文。整个数据流的过程中，涉及到的函数如下：<br><img src="/images/20191205214506707_1559031982.png" alt="读写过程"><br>对scsi总线层有个提纲挈领的效果。在分析scsi middle level的过程中，有如下几点感想：<br>　　1、  scsi驱动采用了规范的分层设计思想，其一共分为三层，分层之后使得设计分工更加明确，而且在逻辑上也更加清晰，设计工作也更加简单。<br>　　2、  scsi驱动中比较固定的层次为scsi middle level，该层可以称之为scsi通用中间层，或者为总线驱动层。该层向上和向下都需要提供接口，所以上层驱动开发时需要注册相关接口函数，下层驱动工作时也需要注册接口函数，只有这样中间层才可以很灵活的进行上下层数据传输。<br>　　scsi middle level主要实现了scsi总线扫描算法，scsi命令转换算法，scsi出错处理等机制，这些东西都是scsi的核心所在。</p>
+<h3 id="1-5-1-card层"><a href="#1-5-1-card层" class="headerlink" title="1.5.1. card层"></a>1.5.1. card层</h3><p>设备接口层:<br>     提供scsi设备的使用接口<br>     scsi&#x2F;sd.c:<br>        实现scsi硬盘接口，通过硬盘注册接口，将scsi硬盘注册到块设备系统，使得系统可以通过通用块设备接口来使用scsi硬盘，在scsi&#x2F;sd.c里面实现。</p>
+<p>scsi host driver在初始化时，会调用scsi_scan_host来扫描host。扫描整个host以为着扫描host所对应的channel,target和lun。因此，它分别调用scsi_scan_channel，__scsi_scan_target，scsi_probe_and_add_lun来每个target及其lun。其中，在scsi_probe_and_add_lun中会分配代表每个lun即scsi设备的scsi_device结构:<br> scsi_scan_host-&gt;do_scsi_scan_host-&gt;scsi_scan_host_selected-&gt;scsi_scan_channel-&gt;__scsi_scan_target-&gt;scsi_probe_and_add_lun:<br>sdev &#x3D; scsi_alloc_sdev(starget, lun, hostdata);<br>scsi_scan_host-&gt;do_scsi_scan_host-&gt;scsi_scan_host_selected-&gt;scsi_scan_channel-&gt;__scsi_scan_target-&gt;scsi_probe_and_add_lun-&gt;scsi_probe_lun</p>
+<p>分配好scsi_device结构以后，调用scsi_probe_lun来发送<code>INQUIRY</code>命令，探测制定的lun。scsi设备返回的<code>inquiry data</code>将保存在result参数中，以备scsi_add_lun使用。其中包括了设备的信息，包括设备的种类type等。<br>scsi_scan_host-&gt;do_scsi_scan_host-&gt;scsi_scan_host_selected-&gt;scsi_scan_channel-&gt;__scsi_scan_target-&gt;scsi_probe_and_add_lun-&gt;scsi_add_lun<br>如果scsi_probe_lun成功，则调用scsi_add_lun来添加lun。在scsi_add_lun中，先根据inquiry data来初始化scsi_device中的一些属性，包括其type属性（在这儿为TYPE_DISK）。<br>scsi_scan_host-&gt;do_scsi_scan_host-&gt;scsi_scan_host_selected-&gt;scsi_scan_channel-&gt;__scsi_scan_target-&gt;scsi_probe_and_add_lun-&gt;scsi_add_lun-&gt;<code>scsi_sysfs_add_sdev</code></p>
+<p>之后调用scsi_sysfs_add_sdev来添加scsi_device。这儿与device_driver的注册类似，调用device_attach来对扫描bus上所有的driver，调用这些driver的probe方法来探测自身的device。如果此时，sd没有初始话，即bus上没有相应的驱动，则不会调用probe方法。即不会生成lun对应的gend。并且，sd_probe中，会检测scsi_device的具体类型，只有自己支持的才回去探测。</p>
+<p>通过上述两个过程，device_driver和device联系在了一起。总之，对于每个lun的加入，sd_probe都会执行一次。只不过sd_probe的触发，要么是通过sd驱动<code>scsi_register_driver</code>，要么是通过LLD <code>scsi_scan_host</code>。<br>sd_probe调用栈（由scsi_scan_host触发）：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">0 sd_probe (dev=0xc714a4b0) at drivers/scsi/sd.c:1597</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">1 0xc018df10 <span class="keyword">in</span> driver_probe_device (drv=0xc0335df8, dev=0xc714a4b0) at drivers/base/dd.c:121</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">2 0xc018dfd8 <span class="keyword">in</span> __device_attach (drv=0xc714a4b0, data=0x0) at drivers/base/dd.c:207</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">3 0xc018d110 <span class="keyword">in</span> bus_for_each_drv (bus=, start=, data=0x0, fn=0xc018dfc8 &lt;__device_attach&gt;) at drivers/base/bus.c:349</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">4 0xc018e078 <span class="keyword">in</span> device_attach (dev=0x1) at drivers/base/dd.c:238</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">5 0xc018d070 <span class="keyword">in</span> bus_attach_device (dev=0xc714a4b0) at drivers/base/bus.c:492</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">6 0xc018be64 <span class="keyword">in</span> device_add (dev=0xc714a4b0) at drivers/base/core.c:781</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">7 0xc019fc84 <span class="keyword">in</span> scsi_sysfs_add_sdev (sdev=0xc714a400) at drivers/scsi/scsi_sysfs.c:783</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">8 0xc019d9b8 <span class="keyword">in</span> scsi_probe_and_add_lun (starget=0xc76d9000, lun=, bflagsp=, sdevp=0x0, rescan=0, hostdata=0x0) at drivers/scsi/scsi_scan.c:914</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">9 0xc019e088 <span class="keyword">in</span> __scsi_scan_target (parent=0xc715e8d8, channel=0, <span class="built_in">id</span>=0, lun=4294967295, rescan=0) at drivers/scsi/scsi_scan.c:1550</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">10 0xc019e538 <span class="keyword">in</span> scsi_scan_channel (shost=0xc715e800, channel=0, <span class="built_in">id</span>=0, lun=4294967295, rescan=0) at drivers/scsi/scsi_scan.c:1626</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">11 0xc019e608 <span class="keyword">in</span> scsi_scan_host_selected (shost=0xc714a4b0, channel=1, <span class="built_in">id</span>=1, lun=3222995532, rescan=0) at drivers/scsi/scsi_scan.c:1654</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">12 0xc019e6e8 <span class="keyword">in</span> do_scsi_scan_host (shost=0xc715e800) ---Type to <span class="built_in">continue</span>, or q to quit--- at drivers/scsi/scsi_scan.c:1786</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">13 0xc019eb50 <span class="keyword">in</span> scsi_scan_host (shost=0xc715e800) at drivers/scsi/scsi_scan.c:1813</span></span><br></pre></td></tr></table></figure>
+
+<p>UL初始化时准备device_driver结构，其中包括probe方法。而LLD（准确地说，应该是middle layer）准备device结构。二者都把其bus初始化为scsi_bus_type，并挂入该总线。之后，如果是UL初始化，则调用自身的probe方法，去探测bus上的所有device，从而把device_driver绑定倒device。而如果是LLD初始化，则调用bus上所有的device_driver的probe方法来探测自身的device。因此，无论是UL先初始化还是LLD先初始化，二者都能取得联系。</p>
+<p>这里推荐一个博客, 里面有关于scsi里许多流程的介绍<br><a target="_blank" rel="noopener" href="http://chinaunix.net/uid/709830/list/1.html?cid=36085">scsi介绍多篇</a></p>
+<h2 id="1-6-对总线的理解"><a href="#1-6-对总线的理解" class="headerlink" title="1.6. 对总线的理解"></a>1.6. 对总线的理解</h2><p><img src="/images/20191206200431808_1301015981.jpg" alt="pc桥"><br>所谓的桥，就是Bridge，桥接的意思。以前的老式电脑中，CPU是通过南桥和北桥连接其它设备的。其中北桥连接高速设备和南桥，南桥连接低速设备。<br>例如：<br>CPU——北桥——内存<br>CPU——北桥——显卡<br>CPU——北桥——南桥——硬盘<br>CPU——北桥——南桥——网卡<br>CPU——北桥——南桥——PS&#x2F;2键鼠<br>CPU——北桥——南桥——USB设备<br>Intel从SandyBridge开始，CPU整合内存控制器和PCI-E控制器、DMI通道，相当于是把原来北桥的功能集成在CPU内部了，北桥自然就消失了。南桥换了个称呼叫<code>IO Hub</code></p>
+<h3 id="1-6-1-ARM-SOC上-总线协议"><a href="#1-6-1-ARM-SOC上-总线协议" class="headerlink" title="1.6.1. ARM SOC上 总线协议"></a>1.6.1. ARM SOC上 总线协议</h3><p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/feipeng8848/p/8484367.html">AMBA总线</a></p>
+<p> AHB总线的强大之处在于它可以将微控制器（CPU）、高带宽的片上RAM、高带宽的外部存储器接口、DMA总线master、各种拥有AHB接口的控制器等等连接起来构成一个独立的完整的SOC系统，不仅如此，还可以通过<code>AHB-APB桥</code>来连接APB总线系统。AHB可以成为一个完整独立的SOC芯片的骨架。<br> <img src="/images/20191206203755941_65819257.png" alt="AMBA"></p>
+<p>AXI总线替代AHB APB总线<br><img src="/images/20191206213558324_298683154.png" alt="ufs 2.1"></p>
+<p>The IP for UFS 2.1 Host Controller allows for highlysecured applications by employing AES encryption. The data encryption and decryption is done seamlessly by the<br>controller as data is written to or read from the UFS 2.1 device.</p>
+<p>高通平台上UFS是通过<code>AXI/AHB总线</code>连接到cpu的.</p>
+<p>回到platform driver上, 看高通的实现, ufs driver是注册在platform总线上的, 这个platform总线和AHB&#x2F;AXI的关系应该怎样理解呢?</p>
+<p>这里引用一篇问答:</p>
+<p>链接：<a target="_blank" rel="noopener" href="https://www.zhihu.com/question/33414159/answer/56558491">https://www.zhihu.com/question/33414159/answer/56558491</a></p>
+<p>bus上有driver和device，一个driver可以对应多个device，一个device只能有一个driver。比如pcie是一种总线，intel的82574网卡是一种pcie设备，e1000e.c 是网卡驱动。因为操作系统要支持外设，必须先要知道当前计算机有哪些设备，以及这些设备的访问方式、访问地址、中断号、中断触发方式等。这些资源信息假如写死在driver代码里，普通用户就无法DIY PC了。比如把硬盘换一个sata口，显卡换一个pcie插槽，控制这些设备的地址和中断就变了，用户就得自己改改驱动代码编译一下，没法玩嘛。这样就需要把当前计算机有哪些设备，以及这些设备的访问方式、访问地址、中断号、中断触发方式等 这些资源信息单独剥离出来，封进一个一个xxxx_device这样的结构体里。这样xxx_driver也更容易实现 一次编写，管你x86、arm、powerpc 到处运行。运行时，每当注册一个新的xxx_device或者xxx_driver到一条xxx_bus上，linux就尝试在xxx_bus给这个新加入的xxx_device或者xxx_driver配对（probe），device和driver配对成功了，xxx_driver就能利用xxx_device的内容去控制xxx设备了。综上，bus， device 和driver是一个清晰的树状结构，一种好的设计。可以在&#x2F;sys&#x2F;bus目录下用ls 、tree命令列出来这个树。<br>终于能回到题目，platform 是一种虚拟的bus；而char driver 和 block driver，只是driver的细分。它们并不是并列的关系。那为什么要有platform 这条虚拟的总线呢？还是上面说的，操作系统要支持外设，必须先要知道当前计算机有哪些设备。要做到这一点，要么<code>硬件本身能自动探测出来当前bus上有哪些device</code>，要么就由程序员<code>事先把device资源信息写在代码或者dts这类配置文件里</code>。pci&#x2F;pcie 总线是x86架构的脊椎，且拥有探测pci&#x2F;pcie 设备的能力。PC上的usb总线控制器，对上是一个pcie设备，对下则是usb总线的控制器。等于<code>pcie总线下扩展出了新的usb总线</code>。usb总线也是有硬件探测能力的。个人电脑几乎所有重要的外设：硬盘、u盘、键盘、鼠标、声卡、显卡，都是pcie或者usb设备。再加上BIOS的帮助，普通pc的内核几乎不需要程序员手动注册一个设备信息，自己就能探测就出来当前计算机插了哪些设备。但是手机、平板等大量使用SOC的非X86架构计算机，它自己的usb控制器、i2c控制器、声卡控制器、lcd驱动器、存储控制器（一般是flash控制器，个别SOC也有sata控制器）等，都不再是X86架构下的pci设备了，<code>靠硬件自己是无法探测的</code>。此时就需要程序员自己手动写代码或者配置文件，来注册这些device的信息。假如是i2c 设备、spi设备，硬件也没有探测设备属性的能力，程序员手动注册device就注册了吧，起码知道是要注册到那条bus上去。。可偏偏<code>这些SOC外设并没有一个统一的总线名称</code>，ARM上叫<code>AHB、 APB</code> ，powerpc上叫CCB，甚至隔个几年又会发明新的叫法。platform 这条虚拟的bus，就是用来统一维护此类device的bus。</p>
+<p>linux上把这种SOC内部bus下的设备（不一定全都是子总线控制器如usb控制器、i2c控制器，也可以是音频、视频控制器这种设备控制器），都注册到platform这条虚拟bus上。<br>软件对于这种bus下的设备的访问倒很简单统一，按照芯片手册给的物理地址去访问即可。因为是SOC内部的设备，自然是SOC的厂家自己写这些设备的driver。这种driver一般注册到platform bus。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Android/" rel="tag"># Android</a>
+              <a href="/tags/FBE/" rel="tag"># FBE</a>
+              <a href="/tags/FDE/" rel="tag"># FDE</a>
+              <a href="/tags/metadata/" rel="tag"># metadata</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/10/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/%E5%BC%80%E6%9C%BAlog%E7%9B%B8%E5%85%B3/" rel="prev" title="小米开机log相关">
+      <i class="fa fa-chevron-left"></i> 小米开机log相关
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E8%AE%BE%E5%A4%87%E4%B8%8A%E9%94%81%E7%8A%B6%E6%80%81%E4%B8%8B1217%E6%97%A0%E6%B3%95%E5%B7%A5%E4%BD%9C%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90/" rel="next" title="设备bootloader上锁状态下1217无法工作问题分析">
+      设备bootloader上锁状态下1217无法工作问题分析 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E5%8A%A0%E5%AF%86%E6%96%B9%E6%A1%88%E6%95%B4%E7%90%86"><span class="nav-number">1.</span> <span class="nav-text">1. 加密方案整理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-%E7%AE%80%E4%BB%8B"><span class="nav-number">1.1.</span> <span class="nav-text">1.1. 简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-%E5%88%A4%E6%96%AD%E6%9C%BA%E5%99%A8%E9%87%87%E7%94%A8%E4%BD%95%E7%A7%8D%E5%8A%A0%E5%AF%86%E6%96%B9%E5%BC%8F"><span class="nav-number">1.2.</span> <span class="nav-text">1.2. 判断机器采用何种加密方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-%E7%A1%AC%E4%BB%B6%E5%8A%A0%E5%AF%86%E5%AE%9E%E7%8E%B0%E7%AD%96%E7%95%A5"><span class="nav-number">1.3.</span> <span class="nav-text">1.3. 硬件加密实现策略</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-4-%E7%A1%AC%E4%BB%B6%E5%8A%A0%E5%AF%86%E5%BA%95%E5%B1%82%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.4.</span> <span class="nav-text">1.4. 硬件加密底层实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-4-1-qcom%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.4.1.</span> <span class="nav-text">1.4.1. qcom实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-4-2-scsi%E6%9E%B6%E6%9E%84%E6%8E%A2%E5%AF%BB"><span class="nav-number">1.4.2.</span> <span class="nav-text">1.4.2. scsi架构探寻</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-4-2-1-%E8%BD%AF%E4%BB%B6%E6%9E%B6%E6%9E%84"><span class="nav-number">1.4.2.1.</span> <span class="nav-text">1.4.2.1. 软件架构</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-4-3-%E6%80%BB%E7%BB%93"><span class="nav-number">1.4.3.</span> <span class="nav-text">1.4.3. 总结</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-4-3-1-low-level%E6%8E%A5%E5%8F%A3%E6%96%B9%E6%B3%95%E2%80%94%E2%80%94scsi-host-template"><span class="nav-number">1.4.3.1.</span> <span class="nav-text">1.4.3.1. low-level接口方法——scsi_host_template</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-5-scsi%E8%AE%BE%E5%A4%87%E8%AF%BB%E5%86%99%E8%BF%87%E7%A8%8B"><span class="nav-number">1.5.</span> <span class="nav-text">1.5. scsi设备读写过程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-5-1-card%E5%B1%82"><span class="nav-number">1.5.1.</span> <span class="nav-text">1.5.1. card层</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-6-%E5%AF%B9%E6%80%BB%E7%BA%BF%E7%9A%84%E7%90%86%E8%A7%A3"><span class="nav-number">1.6.</span> <span class="nav-text">1.6. 对总线的理解</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-6-1-ARM-SOC%E4%B8%8A-%E6%80%BB%E7%BA%BF%E5%8D%8F%E8%AE%AE"><span class="nav-number">1.6.1.</span> <span class="nav-text">1.6.1. ARM SOC上 总线协议</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

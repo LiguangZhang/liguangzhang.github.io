@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="1. 开篇涉及的主要文件: com.android.server.print 系统打印服务,   打印服务是一种插件（ plug-in components），它能够通过一些标准协议和打印机通讯。这些服务像一座桥，处于系统和打印机之间。因此，打印机和打印协议的具体实现从系统中分离的，能够独立开发和更新。该处讲解的是和打印插件关联的系统服务. &#x2F;frameworks&#x2F;base&amp;#">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Print框架整理">
+<meta property="og:url" content="https://liguangzhang.github.io/2017/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/Print%E6%A1%86%E6%9E%B6%E6%95%B4%E7%90%86/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="1. 开篇涉及的主要文件: com.android.server.print 系统打印服务,   打印服务是一种插件（ plug-in components），它能够通过一些标准协议和打印机通讯。这些服务像一座桥，处于系统和打印机之间。因此，打印机和打印协议的具体实现从系统中分离的，能够独立开发和更新。该处讲解的是和打印插件关联的系统服务. &#x2F;frameworks&#x2F;base&amp;#">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2017-08-02T05:47:23.000Z">
+<meta property="article:modified_time" content="2024-04-15T09:59:59.483Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="Android">
+<meta property="article:tag" content="AndroidN">
+<meta property="article:tag" content="PrintManagerService">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2017/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/Print%E6%A1%86%E6%9E%B6%E6%95%B4%E7%90%86/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Print框架整理 | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2017/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/Print%E6%A1%86%E6%9E%B6%E6%95%B4%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Print框架整理
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-08-02 13:47:23" itemprop="dateCreated datePublished" datetime="2017-08-02T13:47:23+08:00">2017-08-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-15 17:59:59" itemprop="dateModified" datetime="2024-04-15T17:59:59+08:00">2024-04-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/PrintManagerService/" itemprop="url" rel="index"><span itemprop="name">PrintManagerService</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="1-开篇"><a href="#1-开篇" class="headerlink" title="1. 开篇"></a>1. 开篇</h1><p>涉及的主要文件:</p>
+<p><code>com.android.server.print</code></p>
+<p>系统打印服务,   打印服务是一种插件（ plug-in components），它能够通过一些标准协议和打印机通讯。这些服务像一座桥，处于系统和打印机之间。因此，打印机和打印协议的具体实现从系统中分离的，能够独立开发和更新。该处讲解的是和打印插件关联的系统服务.</p>
+<p>&#x2F;frameworks&#x2F;base&#x2F;services&#x2F;print&#x2F;java&#x2F;com&#x2F;android&#x2F;server&#x2F;print&#x2F;</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">/home/newdisk/local/SPREADTRUM/liguang.zhang/remote_disk/sp8.1_trunk/frameworks/base/services/print/java/com/android/server/print$ lltotal 220</span><br><span class="line">drwxr-xr-x 1 2516 2000  4096 Jun 25 14:20 ./</span><br><span class="line">drwxr-xr-x 1 2516 2000  4096 Nov  8  2017 ../</span><br><span class="line"><span class="comment"># PrintService插件管理类.</span></span><br><span class="line">-rw-r--r-- 1 2516 2000 41807 Jun 25 16:21 PrintManagerService.java</span><br><span class="line"><span class="comment"># 负责和PrintService插件进行bind, 以及插件的状态进行关联</span></span><br><span class="line">-rw-r--r-- 1 2516 2000 34039 Jun 25 14:20 RemotePrintService.java</span><br><span class="line"><span class="comment"># 推荐选择默认的打印插件</span></span><br><span class="line">-rw-r--r-- 1 2516 2000  8869 Jun 25 14:20 RemotePrintServiceRecommendationService.java</span><br><span class="line"><span class="comment"># 打印机后台处理程序,打印任务工作状态相关.</span></span><br><span class="line">-rw-r--r-- 1 2516 2000 34260 Nov  8  2017 RemotePrintSpooler.java</span><br><span class="line"><span class="comment"># 和用户安装的打印服务相关的管理,通过userState中转转发和PrintManagerService进行交互</span></span><br><span class="line">-rw-r--r-- 1 2516 2000 85628 Jun 25 15:47 UserState.java</span><br></pre></td></tr></table></figure>
+
+<h1 id="2-PrintManagerService初始化"><a href="#2-PrintManagerService初始化" class="headerlink" title="2. PrintManagerService初始化"></a>2. PrintManagerService初始化</h1><p>PrintManagerService(简写PMS) 初始化</p>
+<p>SystemServer中启动PMS</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">            <span class="keyword">if</span> (mPackageManager.hasSystemFeature(PackageManager.FEATURE_PRINTING)) &#123;</span><br><span class="line">                traceBeginAndSlog(<span class="string">&quot;StartPrintManager&quot;</span>);</span><br><span class="line">                mSystemServiceManager.startService(PRINT_MANAGER_SERVICE_CLASS);</span><br><span class="line">                traceEnd();</span><br><span class="line">            &#125;</span><br><span class="line"><span class="comment">// onStart注册&#x27;print&#x27;的服务</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onStart</span><span class="params">()</span> &#123;</span><br><span class="line">        publishBinderService(Context.PRINT_SERVICE, mPrintManagerImpl);</span><br><span class="line">    &#125;</span><br><span class="line"><span class="comment">// 监听DISABLED_PRINT_SERVICES 字段, 表示禁用的打印服务插件, 如果该字段变化,则需要重新更新UserState的关联的打印插件.</span></span><br><span class="line">            registerContentObservers();</span><br><span class="line"><span class="comment">// 监听PACKAGE ADD/REMOVE/MODIFY等的广播, 用来更新打印插件服务的状态</span></span><br><span class="line">            registerBroadcastReceivers();</span><br></pre></td></tr></table></figure>
+
+<p>跟User关联的userState实例通过getOrCreateUserStateLocked方法创建并保存到<br>PMS的mUserStates中(userid–UserState map)</p>
+<h1 id="3-UserState-初始化"><a href="#3-UserState-初始化" class="headerlink" title="3. UserState 初始化"></a>3. UserState 初始化</h1><ol>
+<li><p>关联 RemotePrintSpooler类. 该类主要是讲远程打印机的状态本地化, 实现监控remote print的状态.   (后台作业)</p>
+</li>
+<li><p>UserStateHandler, 用于处理</p>
+<p><code>PRINT_JOB_STATE_CHANGED</code>&#x2F;</p>
+<p> <code>PRINT_SERVICES_CHANGED</code>&#x2F;</p>
+<p><code>PRINT_SERVICES_RECOMMENDATIONS_UPDATED</code></p>
+<p><code>CHECK_CONFIG_CHANGED</code>事件.  主要为前三类.</p>
+</li>
+<li><p>读取已经为该用户安装的printService插件. 满足几个条件:</p>
+<p>manifest定义举例:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">        &lt;service</span><br><span class="line">            android:name=<span class="string">&quot;android.print.cts.services.FirstPrintService&quot;</span></span><br><span class="line"><span class="number">1.</span>            android:permission=<span class="string">&quot;android.permission.BIND_PRINT_SERVICE&quot;</span>&gt;</span><br><span class="line">            &lt;intent-filter&gt;</span><br><span class="line"><span class="number">2.</span>                &lt;action android:name=<span class="string">&quot;android.printservice.PrintService&quot;</span> /&gt;</span><br><span class="line">            &lt;/intent-filter&gt;</span><br><span class="line">            &lt;meta-data</span><br><span class="line"><span class="number">3.</span>               android:name=<span class="string">&quot;android.printservice&quot;</span></span><br><span class="line">               android:resource=<span class="string">&quot;@xml/printservice&quot;</span>&gt;</span><br><span class="line">            &lt;/meta-data&gt;</span><br><span class="line">        &lt;/service&gt;</span><br><span class="line">       <span class="comment">// printservice.xml 配置打印机的相关页面.</span></span><br><span class="line">       &lt;print-service xmlns:android=<span class="string">&quot;http://schemas.android.com/apk/res/android&quot;</span></span><br><span class="line">           <span class="comment">// settingsActivity在打印插件开启界面右上角的菜单里，用于配置插件</span></span><br><span class="line">     android:settingsActivity=<span class="string">&quot;android.print.cts.services.SettingsActivity&quot;</span></span><br><span class="line">         <span class="comment">// 在自定义的 addPrintersActivity 中，系统不会自动触发打印机寻找过程，需要自行处理</span></span><br><span class="line">     android:addPrintersActivity=<span class="string">&quot;android.print.cts.services.AddPrintersActivity&quot;</span></span><br><span class="line">         <span class="comment">//advancedPrintOptionsActivity则是在打印文件的界面上点击更多箭头里出现的MORE OPTIONS选项触发，这个activity用配置打印机的跟多信息。</span></span><br><span class="line">     android:advancedPrintOptionsActivity=<span class="string">&quot;android.print.cts.services.CustomPrintOptionsActivity&quot;</span>/&gt;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>store the disabled services, 保存到表中 Settings.Secure.ENABLED_PRINT_SERVICES, 处理mDisabledServices</p>
+</li>
+<li><p>onConfigurationChangedLocked根据mDisabledServices和mActiveServices添加或删除打印插件托管,并通过<code>MSG_DISPATCH_PRINT_SERVICES_CHANGED</code>回调IPrintServicesChangeListener的onPrintServicesChanged, 该listener通过*<code>addPrintServicesChangeListener</code>*进行注册的.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="title function_">UserState</span><span class="params">(Context context, <span class="type">int</span> userId, Object lock, <span class="type">boolean</span> lowPriority)</span> &#123;</span><br><span class="line">    <span class="comment">// 初始化RemotePrintSpooler, </span></span><br><span class="line">    mSpooler = <span class="keyword">new</span> <span class="title class_">RemotePrintSpooler</span>(context, userId, lowPriority, <span class="built_in">this</span>);</span><br><span class="line">    mHandler = <span class="keyword">new</span> <span class="title class_">UserStateHandler</span>(context.getMainLooper());</span><br><span class="line"></span><br><span class="line">    <span class="keyword">synchronized</span> (mLock) &#123;</span><br><span class="line">        readInstalledPrintServicesLocked();</span><br><span class="line">        upgradePersistentStateIfNeeded();</span><br><span class="line">        readDisabledPrintServicesLocked();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Some print services might have gotten installed before the User State came up</span></span><br><span class="line">    prunePrintServices();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">synchronized</span> (mLock) &#123;</span><br><span class="line">        onConfigurationChangedLocked();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+<p>需要重点看下onConfigurationChangedLocked函数的处理.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">onConfigurationChangedLocked</span><span class="params">()</span> &#123;</span><br><span class="line">    ArrayList&lt;ComponentName&gt; installedComponents = getInstalledComponents();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">final</span> <span class="type">int</span> <span class="variable">installedCount</span> <span class="operator">=</span> installedComponents.size();</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; installedCount; i++) &#123;</span><br><span class="line">        <span class="type">ComponentName</span> <span class="variable">serviceName</span> <span class="operator">=</span> installedComponents.get(i);</span><br><span class="line">       <span class="comment">// 1. 既没在mDisabledServices也没在mActiveServices中, 初始化RemotePrintService,并调用addServiceLocked函数</span></span><br><span class="line">        <span class="keyword">if</span> (!mDisabledServices.contains(serviceName)) &#123;</span><br><span class="line">            <span class="keyword">if</span> (!mActiveServices.containsKey(serviceName)) &#123;</span><br><span class="line">                <span class="type">RemotePrintService</span> <span class="variable">service</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">RemotePrintService</span>(</span><br><span class="line">                        mContext, serviceName, mUserId, mSpooler, <span class="built_in">this</span>);</span><br><span class="line">                addServiceLocked(service);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// 2. 在mDisabledServices中,调用removeServiceLocked</span></span><br><span class="line">            <span class="type">RemotePrintService</span> <span class="variable">service</span> <span class="operator">=</span> mActiveServices.remove(serviceName);</span><br><span class="line">            <span class="keyword">if</span> (service != <span class="literal">null</span>) &#123;</span><br><span class="line">                removeServiceLocked(service);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Iterator&lt;Map.Entry&lt;ComponentName, RemotePrintService&gt;&gt; iterator =</span><br><span class="line">            mActiveServices.entrySet().iterator();</span><br><span class="line">    <span class="keyword">while</span> (iterator.hasNext()) &#123;</span><br><span class="line">        Map.Entry&lt;ComponentName, RemotePrintService&gt; entry = iterator.next();</span><br><span class="line">        <span class="type">ComponentName</span> <span class="variable">serviceName</span> <span class="operator">=</span> entry.getKey();</span><br><span class="line">        <span class="type">RemotePrintService</span> <span class="variable">service</span> <span class="operator">=</span> entry.getValue();</span><br><span class="line">        <span class="comment">//3. 删除没有安装的过期的RemotePrintService实例</span></span><br><span class="line">        <span class="keyword">if</span> (!installedComponents.contains(serviceName)) &#123;</span><br><span class="line">            removeServiceLocked(service);</span><br><span class="line">            iterator.remove();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//4. 回调 IPrintServicesChangeListener的 onPrintServicesChanged</span></span><br><span class="line">    <span class="comment">// listener是通过addPrintServicesChangeListener添加的.</span></span><br><span class="line">    onPrintServicesChanged();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="number">1.0</span> RemotePrintService的初始化</span><br><span class="line">+ mCallbacks = callbacks;   <span class="comment">// RemotePrintService的callback成员为UserState</span></span><br><span class="line">+ serviceName</span><br><span class="line">+ userid</span><br><span class="line">+ spooler   <span class="comment">// 关联UserState的spooler.</span></span><br><span class="line">+ mPrintService<span class="comment">// 关联到打印插件</span></span><br><span class="line"><span class="number">1.1</span>. 将该printService插件加到mActiveServices中</span><br><span class="line"><span class="number">1.2</span>. 回调mPrinterDiscoverySession <span class="title function_">onServiceAddedLocked</span><span class="params">(RemotePrintService)</span>方法</span><br><span class="line"><span class="comment">// PrinterDiscoverySessionMediator为UserState的内部类, 主要作用是跟RemotePrintService以及Session状态关联,通过SessionHandler控制RemotePrintService. SessionHandler--&gt;RemotePrintService.Handler--&gt;bind printService--&gt;PrintService插件todo task.</span></span><br><span class="line"><span class="keyword">private</span> PrinterDiscoverySessionMediator mPrinterDiscoverySession;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onServiceAddedLocked</span><span class="params">(RemotePrintService service)</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (mIsDestroyed) &#123;</span><br><span class="line">                Log.w(LOG_TAG, <span class="string">&quot;Not updating added service - session destroyed&quot;</span>);</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// Tell the service to create a session.</span></span><br><span class="line">            <span class="number">1.2</span><span class="number">.1</span> MSG_CREATE_PRINTER_DISCOVERY_SESSION 建立一个session</span><br><span class="line">            mSessionHandler.obtainMessage(</span><br><span class="line">                    SessionHandler.MSG_CREATE_PRINTER_DISCOVERY_SESSION,</span><br><span class="line">                    service).sendToTarget();</span><br><span class="line">            <span class="number">1.2</span><span class="number">.2</span> 通过session查找打印机</span><br><span class="line">            <span class="comment">// Start printer discovery if necessary.</span></span><br><span class="line">            <span class="keyword">if</span> (!mStartedPrinterDiscoveryTokens.isEmpty()) &#123;</span><br><span class="line">                mSessionHandler.obtainMessage(</span><br><span class="line">                        SessionHandler.MSG_START_PRINTER_DISCOVERY,</span><br><span class="line">                        service).sendToTarget();</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// Start tracking printers if necessary</span></span><br><span class="line">            <span class="number">1.2</span><span class="number">.3</span> 根据RemotePrintService 绑定的打印插件, 与搜索到的打印机, 打印机属于该打印插件时,启动tracking.</span><br><span class="line">            <span class="keyword">final</span> <span class="type">int</span> <span class="variable">trackedPrinterCount</span> <span class="operator">=</span> mStateTrackedPrinters.size();</span><br><span class="line">            <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; trackedPrinterCount; i++) &#123;</span><br><span class="line">                <span class="type">PrinterId</span> <span class="variable">printerId</span> <span class="operator">=</span> mStateTrackedPrinters.get(i);</span><br><span class="line">                <span class="keyword">if</span> (printerId.getServiceName().equals(service.getComponentName())) &#123;</span><br><span class="line">                    <span class="type">SomeArgs</span> <span class="variable">args</span> <span class="operator">=</span> SomeArgs.obtain();</span><br><span class="line">                    args.arg1 = service;</span><br><span class="line">                    args.arg2 = printerId;</span><br><span class="line">                    mSessionHandler.obtainMessage(SessionHandler</span><br><span class="line">                            .MSG_START_PRINTER_STATE_TRACKING, args)</span><br><span class="line">                            .sendToTarget();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"><span class="number">2.</span> removeServiceLocked</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">removeServiceLocked</span><span class="params">(RemotePrintService service)</span> &#123;</span><br><span class="line">        <span class="comment">// Fail all print jobs.</span></span><br><span class="line"><span class="number">2.1</span>        failActivePrintJobsForService(service.getComponentName());</span><br><span class="line">        <span class="comment">// If discovery is in progress, tear down the service.</span></span><br><span class="line">        <span class="keyword">if</span> (mPrinterDiscoverySession != <span class="literal">null</span>) &#123;</span><br><span class="line"><span class="number">2.2</span>            mPrinterDiscoverySession.onServiceRemovedLocked(service);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// Otherwise, just destroy it.</span></span><br><span class="line">            service.destroy();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"><span class="number">2.1</span> <span class="comment">// Fail all print jobs.</span></span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">failScheduledPrintJobsForServiceInternal</span><span class="params">(ComponentName serviceName)</span> &#123;</span><br><span class="line">       <span class="comment">// 根据打印插件名查找所有进行着的后台作业</span></span><br><span class="line">        List&lt;PrintJobInfo&gt; printJobs = mSpooler.getPrintJobInfos(serviceName,</span><br><span class="line">                PrintJobInfo.STATE_ANY_SCHEDULED, PrintManager.APP_ID_ANY);</span><br><span class="line">        <span class="keyword">if</span> (printJobs == <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">final</span> <span class="type">int</span> <span class="variable">printJobCount</span> <span class="operator">=</span> printJobs.size();</span><br><span class="line">            <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; printJobCount; i++) &#123;</span><br><span class="line">                <span class="type">PrintJobInfo</span> <span class="variable">printJob</span> <span class="operator">=</span> printJobs.get(i);</span><br><span class="line">                <span class="comment">// 全部设为FAILED state.</span></span><br><span class="line">                mSpooler.setPrintJobState(printJob.getId(), PrintJobInfo.STATE_FAILED,</span><br><span class="line">                        mContext.getString(R.string.reason_service_unavailable));</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            Binder.restoreCallingIdentity(identity);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  <span class="number">2.2</span>. <span class="comment">// If discovery is in progress, tear down the service.</span></span><br><span class="line">      <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onServiceRemovedLocked</span><span class="params">(RemotePrintService service)</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (mIsDestroyed) &#123;</span><br><span class="line">                Log.w(LOG_TAG, <span class="string">&quot;Not updating removed service - session destroyed&quot;</span>);</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// Remove the reported and tracked printers for that service.</span></span><br><span class="line">            <span class="comment">// 删除为该打印插件服务搜索到的打印机或正在跟踪的打印机</span></span><br><span class="line">            <span class="type">ComponentName</span> <span class="variable">serviceName</span> <span class="operator">=</span> service.getComponentName();</span><br><span class="line">            <span class="comment">// mPrinters.remove(removedPrinterIds.get(i)); </span></span><br><span class="line">            <span class="comment">// 从mPrinter中删除. 并通知给通过addObserverLocked添加的observer删除了这些打印机.</span></span><br><span class="line">            <span class="comment">//  handlePrintersRemoved(observer, removedPrinterIds); 回调 observer.onPrintersRemoved(new ParceledListSlice&lt;PrinterId&gt;(printerIds))方法            </span></span><br><span class="line">            removePrintersForServiceLocked(serviceName);</span><br><span class="line"> <span class="number">2.2</span><span class="number">.1</span>           <span class="comment">// 最后进到RemotePrintService的destroy流程</span></span><br><span class="line">            service.destroy();</span><br><span class="line">        &#125;</span><br><span class="line"> <span class="number">2.2</span><span class="number">.1</span> <span class="comment">//service.destroy(); --&gt; RMS.handleDestroy</span></span><br><span class="line">         <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">handleDestroy</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="comment">// Stop tracking printers.</span></span><br><span class="line">        <span class="comment">// 回调打印插件的stopPrinterStateTracking方法.</span></span><br><span class="line">        <span class="comment">// tracking 是持续跟踪打印机最新状态的机制.</span></span><br><span class="line">        stopTrackingAllPrinters();</span><br><span class="line">        <span class="comment">// Stop printer discovery.</span></span><br><span class="line">        <span class="keyword">if</span> (mDiscoveryPriorityList != <span class="literal">null</span>) &#123;</span><br><span class="line">            handleStopPrinterDiscovery();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// Destroy the discovery session.</span></span><br><span class="line">        <span class="keyword">if</span> (mHasPrinterDiscoverySession) &#123;</span><br><span class="line">            <span class="comment">// 回调 mPrintService.stopPrinterDiscovery();方法. 停止该打印插件搜索打印机的过程.</span></span><br><span class="line">            handleDestroyPrinterDiscoverySession();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Unbind. RMS unbind 该打印插件.</span></span><br><span class="line">        ensureUnbound();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Done</span></span><br><span class="line">        mDestroyed = <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="3-1-小节"><a href="#3-1-小节" class="headerlink" title="3.1. 小节"></a>3.1. 小节</h2><p>该处主要涉及UserState的初始化. UserState是一个很重要的桥梁,关联到</p>
+<ul>
+<li><p>RemotePrintService   </p>
+<p>每个RMS实例绑定到一个打印插件. UserState通过<code>mActiveServices</code>保存了激活状态的RMS.通过mDisabledServices保存了弃用的RMS. RMS是以其绑定的打印插件compnent名为标志的. 当打印插件卸载时, 对应的RMS也要销毁. 当打印插件处于关闭状态时, RMS为Disable状态. 通过UserState的SessionHandler嫁接到RMS的handler中,并通过RMS的mPrintService控制打印插件进行真正的任务处理.</p>
+</li>
+<li><p><code>IPrinterDiscoveryObserver</code> (通过addObserverLocked添加)</p>
+<p>该observer监听打印机的搜索过程, 这个地方主要关联到</p>
+<p><a target="_blank" rel="noopener" href="http://10.0.1.79:8081/xref/sprdroid8.1_trunk_18b_rls1/frameworks/">frameworks</a>&#x2F;<a target="_blank" rel="noopener" href="http://10.0.1.79:8081/xref/sprdroid8.1_trunk_18b_rls1/frameworks/base/">base</a>&#x2F;<a target="_blank" rel="noopener" href="http://10.0.1.79:8081/xref/sprdroid8.1_trunk_18b_rls1/frameworks/base/core/">core</a>&#x2F;<a target="_blank" rel="noopener" href="http://10.0.1.79:8081/xref/sprdroid8.1_trunk_18b_rls1/frameworks/base/core/java/">java</a>&#x2F;<a target="_blank" rel="noopener" href="http://10.0.1.79:8081/xref/sprdroid8.1_trunk_18b_rls1/frameworks/base/core/java/android/">android</a>&#x2F;<a target="_blank" rel="noopener" href="http://10.0.1.79:8081/xref/sprdroid8.1_trunk_18b_rls1/frameworks/base/core/java/android/print/">print</a>&#x2F;<a target="_blank" rel="noopener" href="http://10.0.1.79:8081/xref/sprdroid8.1_trunk_18b_rls1/frameworks/base/core/java/android/print/PrinterDiscoverySession.java">PrinterDiscoverySession.java</a></p>
+<p>该类作为客户端,提供了setOnPrintersChangeListener方法, 通过observer的中转, 将打印机的状态变化可以通知到外部的app.</p>
+<p>ex: Settings app</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (mDiscoverySession == <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="type">PrintManager</span> <span class="variable">printManager</span> <span class="operator">=</span> (PrintManager) getContext()</span><br><span class="line">            .getSystemService(Context.PRINT_SERVICE);</span><br><span class="line">    <span class="comment">//SPRD 742355 main thread block by binder caused anr</span></span><br><span class="line">    <span class="keyword">new</span> <span class="title class_">AsyncTask</span>&lt;Void, Void, Void&gt;() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="keyword">protected</span> Void <span class="title function_">doInBackground</span><span class="params">(Void... params)</span> &#123;</span><br><span class="line">            mDiscoverySession = printManager.createPrinterDiscoverySession();</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">onPostExecute</span><span class="params">(Void result)</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (mDiscoverySession == <span class="literal">null</span>) &#123;</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            mDiscoverySession.setOnPrintersChangeListener(<span class="keyword">new</span> <span class="title class_">OnPrintersChangeListener</span>() &#123;</span><br><span class="line">                <span class="meta">@Override</span></span><br><span class="line">                <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onPrintersChanged</span><span class="params">()</span> &#123;</span><br><span class="line">                    deliverResult(<span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;PrinterInfo&gt;(</span><br><span class="line">                        mDiscoverySession.getPrinters()));</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">            mDiscoverySession.startPrinterDiscovery(<span class="literal">null</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;.execute();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><code>IPrintServicesChangeListener</code>(通过addPrintServicesChangeListener添加)通过PrintManager中转,提供给外部app使用. 通知RMS状态的变更. 外部可以通过mPrintManager.getPrintServices拿到打印插件.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ENABLED_SERVICES | DISABLED_SERVICES | ALL_SERVICES</span></span><br><span class="line">List&lt;PrintServiceInfo&gt; infos = mPrintManager.getPrintServices(</span><br><span class="line">        PrintManager.ENABLED_SERVICES);</span><br><span class="line">addPrintServicesChangeListener</span><br><span class="line">mPrintManager.addPrintServicesChangeListener(<span class="built_in">this</span>, <span class="literal">null</span>);</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>RemotePrintSpooler</p>
+<p>bind到后台作业服务, “com.android.printspooler”</p>
+<p>源码中默认为PrintSpooler <a target="_blank" rel="noopener" href="http://10.0.1.79:8081/xref/sprdroid8.1_trunk_18b_rls1/frameworks/base/packages/PrintSpooler/">frameworks&#x2F;base&#x2F;packages&#x2F;PrintSpooler&#x2F;</a></p>
+<p>通过setClientLocked设置PrintSpoolerClient为PrintSpooler的client.</p>
+<p>PrintSpoolerClient 类通过callbacks 实际传导到userState类中, userState再根据消息类别转发到不同的地方进行处理.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">String</span> <span class="variable">PRINT_SPOOLER_PACKAGE_NAME</span> <span class="operator">=</span> <span class="string">&quot;com.android.printspooler&quot;</span>;</span><br><span class="line">mIntent.setComponent(<span class="keyword">new</span> <span class="title class_">ComponentName</span>(PrintManager.PRINT_SPOOLER_PACKAGE_NAME,</span><br><span class="line">        PrintManager.PRINT_SPOOLER_PACKAGE_NAME + <span class="string">&quot;.model.PrintSpoolerService&quot;</span>));</span><br></pre></td></tr></table></figure>
+
+<p>以restartPrintJob为例. 说明下调用流程. (app调用PrintManager的接口)</p>
+<p>PrintManager –&gt; PrintManagerService –&gt; <code>UserState</code> – &gt; RemotePrintSpooler –&gt; RPS.SetPrintJobStateCaller–&gt; <code>PrintSpooler.PrintSpoolerService</code> – setPrintJobState  –&gt;  PrintSpooler.PrintSpoolerService – sendOnPrintJobQueued –&gt; mClient.onPrintJobQueued(printJob);</p>
+<p>回调过程:  </p>
+<p><code>PrintSpoolerClient</code>.onPrintJobQueued –&gt; <code>UserState</code>–onPrintJobQueued–&gt; RemotePrintService.onPrintJobQueued–&gt; <code>打印插件服务</code>– onPrintJobQueued</p>
+<p>可见有最终任务的还是要通过打印插件服务传递给打印机.</p>
+</li>
+</ul>
+<h1 id="4-系统内建打印插件服务"><a href="#4-系统内建打印插件服务" class="headerlink" title="4. 系统内建打印插件服务"></a>4. 系统内建打印插件服务</h1><p>BuiltInPrintService</p>
+<p><a target="_blank" rel="noopener" href="http://10.0.1.79:8081/source/xref/sprdroid8.1_trunk_18b_rls1/packages/">packages</a>&#x2F;<a target="_blank" rel="noopener" href="http://10.0.1.79:8081/source/xref/sprdroid8.1_trunk_18b_rls1/packages/services/">services</a>&#x2F;<a target="_blank" rel="noopener" href="http://10.0.1.79:8081/source/xref/sprdroid8.1_trunk_18b_rls1/packages/services/BuiltInPrintService/">BuiltInPrintService</a>&#x2F;</p>
+<h2 id="4-1-Manifest-解释"><a href="#4-1-Manifest-解释" class="headerlink" title="4.1. Manifest 解释"></a>4.1. Manifest 解释</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;service android:name=<span class="string">&quot;com.android.bips.BuiltInPrintService&quot;</span></span><br><span class="line">&lt;service android:name=<span class="string">&quot;com.android.bips.render.PdfRenderService&quot;</span></span><br><span class="line">android:name=<span class="string">&quot;com.android.bips.ui.AddPrintersActivity&quot;</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">print-service</span></span></span><br><span class="line"><span class="tag">    <span class="attr">xmlns:android</span>=<span class="string">&quot;http://schemas.android.com/apk/res/android&quot;</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:addPrintersActivity</span>=<span class="string">&quot;com.android.bips.ui.AddPrintersActivity&quot;</span></span></span><br><span class="line"><span class="tag">/&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>服务插件需要继承 PrintService</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">BuiltInPrintService</span> <span class="keyword">extends</span> <span class="title class_">PrintService</span> &#123;</span><br></pre></td></tr></table></figure>
+
+<p>继承的方法:</p>
+<ul>
+<li>onCreatePrinterDiscoverySession</li>
+<li>onRequestCancelPrintJob(PrintJob printJob)</li>
+<li>onPrintJobQueued(PrintJob printJob)</li>
+</ul>
+<h2 id="4-2-PrintService-基类"><a href="#4-2-PrintService-基类" class="headerlink" title="4.2. PrintService 基类"></a>4.2. PrintService 基类</h2><p>PrintService是RemotePrintService bind的基类, RMS中保存的mPrintService指向该类</p>
+<p>成员:</p>
+<ul>
+<li><p>mClient</p>
+<p>指向RemotePrintService的内部类RemotePrintServiceClient.</p>
+<p>该变量被传到PrintJob的mPrintServiceClient中.</p>
+</li>
+<li><p>mDiscoverySession</p>
+<p>通过子类实现的onCreatePrinterDiscoverySession的方法创建.</p>
+<p>为PrinterDiscoverySession对象. 需要打印服务插件继承该类.提供打印插件内打印机搜索跟踪打印机状态等的功能.</p>
+</li>
+</ul>
+<h2 id="4-3-PrinterDiscoverySession基类"><a href="#4-3-PrinterDiscoverySession基类" class="headerlink" title="4.3. PrinterDiscoverySession基类"></a>4.3. PrinterDiscoverySession基类</h2><p>服务插件的Session类需要继承PrinterDiscoverySession</p>
+<p>需继承的方法:</p>
+<ul>
+<li><p>onStartPrinterDiscovery(@NonNull List<PrinterId> priorityList)</p>
+</li>
+<li><p>onStopPrinterDiscovery()</p>
+</li>
+<li><p>onValidatePrinters(@NonNull List<PrinterId> printerIds)</p>
+</li>
+<li><p>onStartPrinterStateTracking(@NonNull PrinterId printerId)</p>
+</li>
+<li><p>onRequestCustomPrinterIcon</p>
+</li>
+<li><p>onStopPrinterStateTracking</p>
+</li>
+<li><p>onDestroy</p>
+</li>
+</ul>
+<h1 id="5-Ui-显示"><a href="#5-Ui-显示" class="headerlink" title="5. Ui 显示"></a>5. Ui 显示</h1><p>系统中内置的加载printer的显示为Settings进程.</p>
+<p><a target="_blank" rel="noopener" href="http://10.0.1.79:8081/xref/sprdroid8.1_trunk_18b_rls1/packages/">packages</a>&#x2F;<a target="_blank" rel="noopener" href="http://10.0.1.79:8081/xref/sprdroid8.1_trunk_18b_rls1/packages/apps/">apps</a>&#x2F;<a target="_blank" rel="noopener" href="http://10.0.1.79:8081/xref/sprdroid8.1_trunk_18b_rls1/packages/apps/Settings/">Settings</a>&#x2F;<a target="_blank" rel="noopener" href="http://10.0.1.79:8081/xref/sprdroid8.1_trunk_18b_rls1/packages/apps/Settings/src/">src</a>&#x2F;<a target="_blank" rel="noopener" href="http://10.0.1.79:8081/xref/sprdroid8.1_trunk_18b_rls1/packages/apps/Settings/src/com/">com</a>&#x2F;<a target="_blank" rel="noopener" href="http://10.0.1.79:8081/xref/sprdroid8.1_trunk_18b_rls1/packages/apps/Settings/src/com/android/">android</a>&#x2F;<a target="_blank" rel="noopener" href="http://10.0.1.79:8081/xref/sprdroid8.1_trunk_18b_rls1/packages/apps/Settings/src/com/android/settings/">settings</a>&#x2F;<a target="_blank" rel="noopener" href="http://10.0.1.79:8081/xref/sprdroid8.1_trunk_18b_rls1/packages/apps/Settings/src/com/android/settings/print/">print</a>&#x2F;</p>
+<p><a target="_blank" rel="noopener" href="http://10.0.1.79:8081/xref/sprdroid8.1_trunk_18b_rls1/packages/apps/Settings/src/com/android/settings/print/PrintServiceSettingsFragment.java">PrintServiceSettingsFragment.java</a> </p>
+<p>涉及到LOADER的使用:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">   <span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">PrintServiceSettingsFragment</span> <span class="keyword">extends</span> <span class="title class_">SettingsPreferenceFragment</span></span><br><span class="line">        <span class="keyword">implements</span> <span class="title class_">SwitchBar</span>.OnSwitchChangeListener,</span><br><span class="line">        LoaderManager.LoaderCallbacks&lt;List&lt;PrintServiceInfo&gt;&gt; &#123;</span><br><span class="line">            </span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">PrintersAdapter</span> <span class="keyword">extends</span> <span class="title class_">BaseAdapter</span></span><br><span class="line">            <span class="keyword">implements</span> <span class="title class_">LoaderManager</span>.LoaderCallbacks&lt;List&lt;PrinterInfo&gt;&gt;, Filterable &#123;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="5-1-Loader"><a href="#5-1-Loader" class="headerlink" title="5.1. Loader"></a>5.1. Loader</h2><p>Loader在执行了startLoading()方法后，会进入started状态，LoaderManager会在合适的时机执行Loader.startLoading()方法，概括来说，当我们执行LoadManager.initLoader()时，如果Loader不存在，内部会执行LoadCallbacks的onCreateLoader()方法创建Loader，并让新创建的Loader执行startLoading()方法。</p>
+<p>具体执行过程如下：<br>LoaderManager.initLoader() -&gt;<br>LoaderManager.createAndInstallLoader() -&gt;<br>LoaderManager.createLoader() -&gt;<br><code>LoaderCallbacks.onCreateLoader()</code> -&gt;<br>得到loader之后创建LoaderInfo -&gt;<br>LoaderManager.installLoader() -&gt;<br>将其放入LoaderManager内部维护的mLoaders数组中 -&gt;<br>LoaderInfo.start() -&gt;<br>Loader处于started状态 -&gt;<br><code>Loader.startLoading() -&gt;Loader.onStartLoading()</code></p>
+<h2 id="5-2-LoaderManager-LoaderCallbacks"><a href="#5-2-LoaderManager-LoaderCallbacks" class="headerlink" title="5.2. LoaderManager.LoaderCallbacks"></a>5.2. LoaderManager.LoaderCallbacks</h2><p>LoaderManager.LoaderCallbacks是LoaderManager中的内部接口，客户端与Loader的通信完全是事件机制，即客户端需要实现LoaderCallbacks中的各种回调方法，以响应Loader &amp; LoaderManager触发的各种事件。客户端在调用LoaderManager的<code>initLoader</code>()或<code>restartLoader</code>()方法时，就需要客户端向这两个方法中传入一个LoaderCallbacks的实例。LoaderCallbacks有三个回调方法需要实现：onCreateLoader()、onLoadFinished()以及onLoaderReset()。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">PrintServiceSettingsFragment</span> <span class="keyword">extends</span> <span class="title class_">SettingsPreferenceFragment</span></span><br><span class="line">        <span class="keyword">implements</span> <span class="title class_">SwitchBar</span>.OnSwitchChangeListener,</span><br><span class="line">        LoaderManager.LoaderCallbacks&lt;List&lt;PrintServiceInfo&gt;&gt; &#123;</span><br><span class="line"><span class="comment">// this 是 PrintServiceSettingsFragment</span></span><br><span class="line">getLoaderManager().initLoader(LOADER_ID_PRINT_SERVICE_LOADER, <span class="literal">null</span>, <span class="built_in">this</span>);</span><br><span class="line">       <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> Loader&lt;List&lt;PrintServiceInfo&gt;&gt; <span class="title function_">onCreateLoader</span><span class="params">(<span class="type">int</span> id, Bundle args)</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">PrintServicesLoader</span>(</span><br><span class="line">                (PrintManager) getContext().getSystemService(Context.PRINT_SERVICE), getContext(),</span><br><span class="line">                PrintManager.ALL_SERVICES);</span><br><span class="line">    &#125;         </span><br><span class="line">            </span><br><span class="line">            </span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">class</span> <span class="title class_">PrintersAdapter</span> <span class="keyword">extends</span> <span class="title class_">BaseAdapter</span></span><br><span class="line">            <span class="keyword">implements</span> <span class="title class_">LoaderManager</span>.LoaderCallbacks&lt;List&lt;PrinterInfo&gt;&gt;, Filterable &#123;</span><br><span class="line"><span class="comment">// this 是PrintAdapter</span></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">enable</span><span class="params">()</span> &#123;</span><br><span class="line">            getLoaderManager().initLoader(LOADER_ID_PRINTERS_LOADER, <span class="literal">null</span>, <span class="built_in">this</span>);</span><br><span class="line">        &#125;</span><br><span class="line">   </span><br><span class="line">                <span class="meta">@Override</span></span><br><span class="line">        <span class="keyword">public</span> Loader&lt;List&lt;PrinterInfo&gt;&gt; <span class="title function_">onCreateLoader</span><span class="params">(<span class="type">int</span> id, Bundle args)</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (id == LOADER_ID_PRINTERS_LOADER) &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">PrintersLoader</span>(getContext());</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="5-3-onCreateLoader"><a href="#5-3-onCreateLoader" class="headerlink" title="5.3. onCreateLoader"></a>5.3. onCreateLoader</h2><p>onCreateLoader：我们要在onCreateLoader()方法内返回一个Loader的实例对象。很多情况下，我们需要查询ContentProvider里面的内容，那么我们就需要在onCreateLoader中返回一个CursorLoader的实例，CursorLoader继承自Loader。</p>
+<p>如果CursorLoader不能满足我们的需求，我们可以自己编写自己的Loader然后在此onCreateLoader方法中返回。</p>
+<p>此处是自己构造的loader  </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">PrintServicesLoader</span> <span class="keyword">extends</span> <span class="title class_">Loader</span>&lt;List&lt;PrintServiceInfo&gt;&gt;</span><br></pre></td></tr></table></figure>
+
+<p>此处返回的是Loader&lt;List<PrintServiceInfo>&gt;, 是PrintServicesLoader对象.</p>
+<p>PrintServiceInfo是关联到安装的打印插件服务的. PrintServiceInfo中保存了打印服务插件的从PackageManager拿到的resolveInfo信息(queryIntentServicesAsUser返回的结果)和前面介绍的settingsActivityName&#x2F;addPrintersActivityName&#x2F;advancedPrintOptionsActivityName</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//readInstalledPrintServicesLocked方法中添加的PrintServiceInfo</span></span><br><span class="line">tempPrintServices.add(PrintServiceInfo.create(mContext, installedService));</span><br><span class="line">mInstalledServices.addAll(tempPrintServices);</span><br><span class="line"><span class="comment">//通过PrintManager getPrintServices拿到的就是mInstalledServices集合</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="title function_">PrintServicesLoader</span><span class="params">(<span class="meta">@NonNull</span> PrintManager printManager, <span class="meta">@NonNull</span> Context context,</span></span><br><span class="line"><span class="params">        <span class="type">int</span> selectionFlags)</span> &#123;</span><br><span class="line">    <span class="built_in">super</span>(Preconditions.checkNotNull(context));</span><br><span class="line">    mHandler = <span class="keyword">new</span> <span class="title class_">MyHandler</span>();</span><br><span class="line">    mPrintManager = Preconditions.checkNotNull(printManager);</span><br><span class="line">    mSelectionFlags = Preconditions.checkFlagsArgument(selectionFlags,</span><br><span class="line">            PrintManager.ALL_SERVICES);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>onForceLoad</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">onForceLoad</span><span class="params">()</span> &#123;</span><br><span class="line">    queueNewResult();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Read the print services and queue it to be delivered on the main thread.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">queueNewResult</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="type">Message</span> <span class="variable">m</span> <span class="operator">=</span> mHandler.obtainMessage(<span class="number">0</span>);</span><br><span class="line"><span class="number">1.</span>    <span class="comment">// 此处就是调用mPrintManager.getPrintServices(PrintManager.ALL_SERVICES);拿到所有安装的打印插件</span></span><br><span class="line">    m.obj = mPrintManager.getPrintServices(mSelectionFlags);</span><br><span class="line">    mHandler.sendMessage(m);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">class</span> <span class="title class_">MyHandler</span> <span class="keyword">extends</span> <span class="title class_">Handler</span> &#123;</span><br><span class="line">        <span class="comment">/**</span></span><br><span class="line"><span class="comment">         * Create a new handler on the main thread.</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="keyword">public</span> <span class="title function_">MyHandler</span><span class="params">()</span> &#123;</span><br><span class="line">            <span class="built_in">super</span>(getContext().getMainLooper());</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">handleMessage</span><span class="params">(Message msg)</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (isStarted()) &#123;</span><br><span class="line"><span class="number">2.</span> 通知loader更新,回调LoadCallbacks.onLoadFinished()</span><br><span class="line">               deliverResult((List&lt;PrintServiceInfo&gt;) msg.obj);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>在回调onPrintServiceChanged时也进行更新</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">mListener = <span class="keyword">new</span> <span class="title class_">PrintManager</span>.PrintServicesChangeListener() &#123;</span><br><span class="line">    <span class="meta">@Override</span> <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onPrintServicesChanged</span><span class="params">()</span> &#123;</span><br><span class="line">        queueNewResult();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">mPrintManager.addPrintServicesChangeListener(mListener, <span class="literal">null</span>);</span><br></pre></td></tr></table></figure>
+
+<p>我们可以在onStartLoading()中写我们的逻辑，在started状态下，Loader应该监控数据源的变化，并将新数据发送给客户端，具体来说就是当监控到新数据后，调用Loader.deliverResult()方法，触发LoadCallbacks.onLoadFinished()回调的执行，从而客户端可以从该回调中轻松获取数据。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onLoadFinished</span><span class="params">(Loader&lt;List&lt;PrintServiceInfo&gt;&gt; loader,</span></span><br><span class="line"><span class="params">        List&lt;PrintServiceInfo&gt; services)</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> (services != <span class="literal">null</span>) &#123;</span><br><span class="line">            <span class="keyword">final</span> <span class="type">int</span> <span class="variable">numServices</span> <span class="operator">=</span> services.size();</span><br><span class="line">            <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; numServices; i++) &#123;</span><br><span class="line">                <span class="keyword">if</span> (services.get(i).getComponentName().equals(mComponentName)) &#123;</span><br><span class="line">                    service = services.get(i);</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    <span class="comment">// enable状态是根据是否在mActiveServices中</span></span><br><span class="line">    <span class="comment">// installedService.setIsEnabled(mActiveServices.containsKey(componentName));</span></span><br><span class="line">   <span class="number">1.</span>     mServiceEnabled = service.isEnabled();</span><br><span class="line">   <span class="number">2.</span> ...<span class="comment">//获取当前service的mSettingsIntent和mAddPrintersIntent对应打印插件的settingsActivityName/addPrintersActivityName</span></span><br><span class="line">   <span class="number">3.</span>     updateUiForServiceState()</span><br><span class="line">       </span><br><span class="line">   <span class="number">3.</span> <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">updateUiForServiceState</span><span class="params">()</span> &#123;</span><br><span class="line">       <span class="comment">// 根据mServiceEnabled控制按钮的开关</span></span><br><span class="line">        <span class="keyword">if</span> (mServiceEnabled) &#123;</span><br><span class="line">            mSwitchBar.setCheckedInternal(<span class="literal">true</span>);</span><br><span class="line">            mPrintersAdapter.enable();</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            mSwitchBar.setCheckedInternal(<span class="literal">false</span>);</span><br><span class="line">            mPrintersAdapter.disable();</span><br><span class="line">        &#125;</span><br><span class="line">        getActivity().invalidateOptionsMenu();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="number">3.1</span> mPrintersAdapter.enable();</span><br><span class="line">            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">enable</span><span class="params">()</span> &#123;</span><br><span class="line">            getLoaderManager().initLoader(LOADER_ID_PRINTERS_LOADER, <span class="literal">null</span>, <span class="built_in">this</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    </span><br></pre></td></tr></table></figure>
+
+<p>在最后调用了PrintAdapter的initLoader方法, 该方法会触发onCreateLoader的回调.PrintAdapter对应的Loader为PrintersLoader类.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> Loader&lt;List&lt;PrinterInfo&gt;&gt; <span class="title function_">onCreateLoader</span><span class="params">(<span class="type">int</span> id, Bundle args)</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (id == LOADER_ID_PRINTERS_LOADER) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">PrintersLoader</span>(getContext());</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>PrintersLoader重写了Loader中的onStartLoading()方法，以下是PrintersLoader在执行到onStartLoading()之后的逻辑，从中我们可以看出PrintLoader如何实现异步加载打印机数据。</p>
+<p>在onForceLoad中执行了AsyncTask启动startPrinterDiscovery进行搜索搜索打印插件关联的打印机, 在搜索到打印机后,由callback机制, 回调注册的OnPrintersChangeListener的onPrintersChanged方法, 通过deliverResult触发LoaderCallbacks的onLoadFinished方法, 再通过notifyDataSetChanged方法使得视图更新.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">onStartLoading</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (DEBUG) &#123;</span><br><span class="line">        Log.i(LOG_TAG, <span class="string">&quot;onStartLoading()&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// The contract is that if we already have a valid,</span></span><br><span class="line">    <span class="comment">// result the we have to deliver it immediately.</span></span><br><span class="line">    <span class="keyword">if</span> (!mPrinters.isEmpty()) &#123;</span><br><span class="line">        <span class="comment">//触发PrintAdapter的onLoadFinished回调</span></span><br><span class="line">    <span class="number">2.</span>    deliverResult(<span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;PrinterInfo&gt;(mPrinters.values()));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// We want to start discovery at this point.</span></span><br><span class="line">    <span class="number">1.</span> onForceLoad();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="number">1.</span> <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">onForceLoad</span><span class="params">()</span> &#123;</span><br><span class="line">    loadInternal();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">loadInternal</span><span class="params">()</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (mDiscoverySession == <span class="literal">null</span>) &#123;</span><br><span class="line">                <span class="type">PrintManager</span> <span class="variable">printManager</span> <span class="operator">=</span> (PrintManager) getContext()</span><br><span class="line">                        .getSystemService(Context.PRINT_SERVICE);</span><br><span class="line">                <span class="comment">//SPRD 742355 main thread block by binder caused anr</span></span><br><span class="line">                <span class="keyword">new</span> <span class="title class_">AsyncTask</span>&lt;Void, Void, Void&gt;() &#123;</span><br><span class="line">                    <span class="meta">@Override</span></span><br><span class="line">                    <span class="keyword">protected</span> Void <span class="title function_">doInBackground</span><span class="params">(Void... params)</span> &#123;</span><br><span class="line">                        <span class="comment">//启动搜索打印机的服务 对应BuiltInPrintService 为 LocalDiscoverySession.</span></span><br><span class="line">                        <span class="comment">// 这个地方是通过PrintManager--&gt;PrintManagerService--&gt;UserState--&gt;UserState.PrinterDiscoverySessionMediator--&gt;(通过mActiveServices遍历到所有激活的)RemotePrintService--&gt;打印插件的session.</span></span><br><span class="line">                        mDiscoverySession = printManager.createPrinterDiscoverySession();</span><br><span class="line">                        <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="meta">@Override</span></span><br><span class="line">                    <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">onPostExecute</span><span class="params">(Void result)</span> &#123;</span><br><span class="line">                        <span class="comment">// 搜索到打印机后触发的回调</span></span><br><span class="line">                        mDiscoverySession.setOnPrintersChangeListener(<span class="keyword">new</span> <span class="title class_">OnPrintersChangeListener</span>() &#123;</span><br><span class="line">                            <span class="meta">@Override</span></span><br><span class="line">                            <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onPrintersChanged</span><span class="params">()</span> &#123;</span><br><span class="line">                               <span class="comment">// 触发PrintAdapter onLoadFinished回调</span></span><br><span class="line">                                deliverResult(<span class="keyword">new</span> <span class="title class_">ArrayList</span>&lt;PrinterInfo&gt;(</span><br><span class="line">                                    mDiscoverySession.getPrinters()));</span><br><span class="line">                            &#125;</span><br><span class="line">                        &#125;);</span><br><span class="line">                        <span class="comment">//开始搜索打印插件关联的打印机,也是最终传到打印插件的Session</span></span><br><span class="line">                        mDiscoverySession.startPrinterDiscovery(<span class="literal">null</span>);</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                &#125;.execute();</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line">            </span><br><span class="line">   <span class="number">2.</span>         <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onLoadFinished</span><span class="params">(Loader&lt;List&lt;PrinterInfo&gt;&gt; loader,</span></span><br><span class="line"><span class="params">                List&lt;PrinterInfo&gt; printers)</span> &#123;</span><br><span class="line">            <span class="keyword">synchronized</span> (mLock) &#123;</span><br><span class="line">                mPrinters.clear();</span><br><span class="line">                <span class="keyword">final</span> <span class="type">int</span> <span class="variable">printerCount</span> <span class="operator">=</span> printers.size();</span><br><span class="line">                <span class="keyword">for</span> (<span class="type">int</span> <span class="variable">i</span> <span class="operator">=</span> <span class="number">0</span>; i &lt; printerCount; i++) &#123;</span><br><span class="line">                    <span class="type">PrinterInfo</span> <span class="variable">printer</span> <span class="operator">=</span> printers.get(i);</span><br><span class="line">                    <span class="comment">//只更新当前插件的</span></span><br><span class="line">                    <span class="keyword">if</span> (printer.getId().getServiceName().equals(mComponentName)) &#123;</span><br><span class="line">                        mPrinters.add(printer);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                mFilteredPrinters.clear();</span><br><span class="line">                mFilteredPrinters.addAll(mPrinters);</span><br><span class="line">                <span class="keyword">if</span> (!TextUtils.isEmpty(mLastSearchString)) &#123;</span><br><span class="line">                    getFilter().filter(mLastSearchString);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">       <span class="comment">// 触发PrintAdapter的getView方法回调,根据更新的mPrinters列表更新视图.</span></span><br><span class="line">            notifyDataSetChanged();</span><br><span class="line">        &#125;    </span><br></pre></td></tr></table></figure>
+<h2 id="5-4-destroyLoader"><a href="#5-4-destroyLoader" class="headerlink" title="5.4. destroyLoader"></a>5.4. destroyLoader</h2><p>在由PrintServiceLoader注册的addPrintServicesChangeListener回调流程中,在检测到PrintService change时, 最终触发下面的流程.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">   <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">updateUiForServiceState</span><span class="params">()</span> &#123;</span><br><span class="line">       <span class="keyword">if</span> (mServiceEnabled) &#123;</span><br><span class="line">           mSwitchBar.setCheckedInternal(<span class="literal">true</span>);</span><br><span class="line">           mPrintersAdapter.enable();</span><br><span class="line">       &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">           <span class="comment">// 对应该控件绑定的service关闭了</span></span><br><span class="line">           mSwitchBar.setCheckedInternal(<span class="literal">false</span>);            </span><br><span class="line">           <span class="number">1.</span> mPrintersAdapter.disable();</span><br><span class="line">       &#125;</span><br><span class="line">       getActivity().invalidateOptionsMenu();</span><br><span class="line">   &#125;</span><br><span class="line"><span class="number">1.</span>       <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">disable</span><span class="params">()</span> &#123;</span><br><span class="line">           getLoaderManager().destroyLoader(LOADER_ID_PRINTERS_LOADER);</span><br><span class="line">           mPrinters.clear();</span><br><span class="line">       &#125;</span><br></pre></td></tr></table></figure>
+
+<p>LoaderManager.destroy() –&gt;</p>
+<p><code>LoaderCallbacks</code>.onLoaderReset() –&gt;</p>
+<p>Loader.reset() –&gt;</p>
+<p>PrintLoader.onReset()–&gt;</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//回调PrintAdapter的onLoaderReset, 更新视图,去除显示的打印机.</span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onLoaderReset</span><span class="params">(Loader&lt;List&lt;PrinterInfo&gt;&gt; loader)</span> &#123;</span><br><span class="line">    <span class="keyword">synchronized</span> (mLock) &#123;</span><br><span class="line">        mPrinters.clear();</span><br><span class="line">        mFilteredPrinters.clear();</span><br><span class="line">        mLastSearchString = <span class="literal">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    notifyDataSetInvalidated();</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 回调PrintLoader的onReset</span></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">onReset</span><span class="params">()</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (DEBUG) &#123;</span><br><span class="line">                Log.i(LOG_TAG, <span class="string">&quot;onReset()&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line"><span class="number">1.</span>          onStopLoading();</span><br><span class="line">            mPrinters.clear();</span><br><span class="line">            <span class="keyword">if</span> (mDiscoverySession != <span class="literal">null</span>) &#123;</span><br><span class="line"> <span class="number">2.</span>             mDiscoverySession.destroy();</span><br><span class="line">                mDiscoverySession = <span class="literal">null</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"><span class="number">1.</span>      <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">onStopLoading</span><span class="params">()</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (DEBUG) &#123;</span><br><span class="line">                Log.i(LOG_TAG, <span class="string">&quot;onStopLoading()&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            onCancelLoad();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">protected</span> <span class="type">boolean</span> <span class="title function_">onCancelLoad</span><span class="params">()</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (DEBUG) &#123;</span><br><span class="line">                Log.i(LOG_TAG, <span class="string">&quot;onCancelLoad()&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> cancelInternal();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">private</span> <span class="type">boolean</span> <span class="title function_">cancelInternal</span><span class="params">()</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (mDiscoverySession != <span class="literal">null</span></span><br><span class="line">                    &amp;&amp; mDiscoverySession.isPrinterDiscoveryStarted()) &#123;</span><br><span class="line">                <span class="comment">// 停止搜索, 注意这个地方是停止所有active 打印service绑定session的搜索.</span></span><br><span class="line"><span class="number">1.1</span>                mDiscoverySession.stopPrinterDiscovery();</span><br><span class="line">                <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+
+
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Android/" rel="tag"># Android</a>
+              <a href="/tags/AndroidN/" rel="tag"># AndroidN</a>
+              <a href="/tags/PrintManagerService/" rel="tag"># PrintManagerService</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2017/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E9%80%9A%E8%BF%87adb%20install%20%E5%AE%89%E8%A3%85apk/" rel="prev" title="通过adb install 安装apk">
+      <i class="fa fa-chevron-left"></i> 通过adb install 安装apk
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2017/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E6%96%87%E4%BB%B6%E5%8A%A0%E5%AF%86/" rel="next" title="文件加密FBE&DirectBoot模式调研">
+      文件加密FBE&DirectBoot模式调研 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E5%BC%80%E7%AF%87"><span class="nav-number">1.</span> <span class="nav-text">1. 开篇</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-PrintManagerService%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-number">2.</span> <span class="nav-text">2. PrintManagerService初始化</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-UserState-%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="nav-number">3.</span> <span class="nav-text">3. UserState 初始化</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-%E5%B0%8F%E8%8A%82"><span class="nav-number">3.1.</span> <span class="nav-text">3.1. 小节</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-%E7%B3%BB%E7%BB%9F%E5%86%85%E5%BB%BA%E6%89%93%E5%8D%B0%E6%8F%92%E4%BB%B6%E6%9C%8D%E5%8A%A1"><span class="nav-number">4.</span> <span class="nav-text">4. 系统内建打印插件服务</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-Manifest-%E8%A7%A3%E9%87%8A"><span class="nav-number">4.1.</span> <span class="nav-text">4.1. Manifest 解释</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-PrintService-%E5%9F%BA%E7%B1%BB"><span class="nav-number">4.2.</span> <span class="nav-text">4.2. PrintService 基类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-3-PrinterDiscoverySession%E5%9F%BA%E7%B1%BB"><span class="nav-number">4.3.</span> <span class="nav-text">4.3. PrinterDiscoverySession基类</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-Ui-%E6%98%BE%E7%A4%BA"><span class="nav-number">5.</span> <span class="nav-text">5. Ui 显示</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#5-1-Loader"><span class="nav-number">5.1.</span> <span class="nav-text">5.1. Loader</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-2-LoaderManager-LoaderCallbacks"><span class="nav-number">5.2.</span> <span class="nav-text">5.2. LoaderManager.LoaderCallbacks</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-3-onCreateLoader"><span class="nav-number">5.3.</span> <span class="nav-text">5.3. onCreateLoader</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-4-destroyLoader"><span class="nav-number">5.4.</span> <span class="nav-text">5.4. destroyLoader</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

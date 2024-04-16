@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="多个信任根：允许具有不同访问权限的多个实体共享芯片，同时每个实体都有自己的 “虚拟 “安全核心和私有安全域。 分层安全：加强对加密模块和其他安全资源的访问。确保关键密钥只能通过硬件获得，不能通过软件访问。 隔离操作：在远离通用处理的专用安全执行域中执行广泛的安全功能 目的性强：从根本上为安全而设计。具有最先进的防篡改和安全技术，包括抵抗侧信道和故障注入攻击。 Sharing a Root of T">
+<meta property="og:type" content="article">
+<meta property="og:title" content="多root key 管理">
+<meta property="og:url" content="https://liguangzhang.github.io/2022/02/12/TEE/%E5%A4%9Aroot%20key%E7%AE%A1%E7%90%86/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="多个信任根：允许具有不同访问权限的多个实体共享芯片，同时每个实体都有自己的 “虚拟 “安全核心和私有安全域。 分层安全：加强对加密模块和其他安全资源的访问。确保关键密钥只能通过硬件获得，不能通过软件访问。 隔离操作：在远离通用处理的专用安全执行域中执行广泛的安全功能 目的性强：从根本上为安全而设计。具有最先进的防篡改和安全技术，包括抵抗侧信道和故障注入攻击。 Sharing a Root of T">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220511145341.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220511145342.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220511145343.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220511151943.jpg">
+<meta property="article:published_time" content="2022-02-12T10:15:54.000Z">
+<meta property="article:modified_time" content="2024-04-16T07:45:28.674Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="efuse">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220511145341.png">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2022/02/12/TEE/%E5%A4%9Aroot%20key%E7%AE%A1%E7%90%86/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>多root key 管理 | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2022/02/12/TEE/%E5%A4%9Aroot%20key%E7%AE%A1%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          多root key 管理
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-02-12 18:15:54" itemprop="dateCreated datePublished" datetime="2022-02-12T18:15:54+08:00">2022-02-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 15:45:28" itemprop="dateModified" datetime="2024-04-16T15:45:28+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AE%89%E5%85%A8/" itemprop="url" rel="index"><span itemprop="name">安全</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>多个信任根：允许具有不同访问权限的多个实体共享芯片，同时每个实体都有自己的 “虚拟 “安全核心和私有安全域。</p>
+<p>分层安全：加强对加密模块和其他安全资源的访问。确保关键密钥只能通过硬件获得，不能通过软件访问。</p>
+<p>隔离操作：在远离通用处理的专用安全执行域中执行广泛的安全功能</p>
+<p>目的性强：从根本上为安全而设计。具有最先进的防篡改和安全技术，包括抵抗侧信道和故障注入攻击。</p>
+<h3 id="Sharing-a-Root-of-Trust-is-Potentially-Risky"><a href="#Sharing-a-Root-of-Trust-is-Potentially-Risky" class="headerlink" title="Sharing a Root of Trust is Potentially Risky"></a>Sharing a Root of Trust is Potentially Risky</h3><p>一旦进入安全域，一个应用程序被认为是安全的。但如果一个应用程序实际上是恶意的呢？- 该应用程序可能会感染其他人，窃取信息，并将敏感信息暴露给恶意的一方<br>在一个单一的信任根内，一方的恶意程序可以访问另一方的敏感信息</p>
+<h2 id="multi-roots-of-trust"><a href="#multi-roots-of-trust" class="headerlink" title="multi roots of trust"></a>multi roots of trust</h2><p>Multiple Roots of Trust <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=40&x=200&y=48&id=4">041</a></p>
+<p>相比之下，多个root key可允许不同的实体，如芯片供应商、OEM和服务提供商在同一芯片中拥有自己的 “虚拟 “安全核心，但每个都有一个私有安全域。<br>每个实体都拥有其签名的应用程序集。当处理器切换应用程序时，所有的上下文都会从处理器中刷新。默认情况下，没有数据、密钥或其他信息持续存在，确保实体之间不共享上下文<br>密钥被分配给每个根，允许应用程序在每个根中以不同的方式进行签名。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220511145341.png"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220511145342.png"></p>
+<ul>
+<li>一个主根设置每个（子）信任根的权限和特权 </li>
+<li>每个实体及其安全进程&#x2F;应用程序都被分配到自己的专用信任根 </li>
+<li>当一个应用程序被加载到安全处理器时，根被识别，硬件被配置为该根</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220511145343.png"></p>
+<p>初始时, 芯片制造方被分配了master root, 拥有完全的权限<br>master root 可以授权其他实体创建其他的master root, 也可以限制只有一个master root<br>为什么允许创建其他的master root ?  通常芯片由芯片方给到oem后, oem 也想拿到所有设备的所有权限.<br>master root 也可以授权其他的master root 有擦除它的权限, 所以芯片给到oem后, oem可以创建master root, 然后把芯片的master root禁用</p>
+<ul>
+<li>硬件信任根可以设计成只有授权的软件才能在信任根上运行。</li>
+<li>在一个有多个根的信任根中，每个根都可以与用于签名（授权）软件的密钥相关联。</li>
+<li>当一个签名的应用程序运行时，它继承了它所关联的根的权限和密钥</li>
+<li>由一个根签署的软件不能访问与另一个根相关的数据和密钥</li>
+<li>尽管应用程序是软件，但对硬件、权限和钥匙的访问权的执行都可以在硬件中执行。</li>
+</ul>
+<p>与一个根相关的基础钥匙可以用一个钥匙派生函数来派生新的钥匙。这意味着一个钥匙可以变成许多钥匙, 这些钥匙可以用于非常多的不同的安全操作 </p>
+<ul>
+<li>每一组钥匙对每个根来说都是唯一的</li>
+<li>一个根没有办法访问另一个根的钥匙，这是硬件强制执行的 </li>
+<li>钥匙是即时派生的，所以它们只在使用时存在，在不使用时清空</li>
+</ul>
+<h2 id="例子-汽车芯片"><a href="#例子-汽车芯片" class="headerlink" title="例子 汽车芯片"></a>例子 汽车芯片</h2><ul>
+<li>芯片制造商需要主根用于制造、测试和调试 </li>
+<li>一级供应商为OEM（汽车制造商）创建模块。一级供应商需要编写软件，测试和调试芯片和模块；在大多数情况下，将抹去芯片主根，并为OEM创建新的主根</li>
+<li>OEM需要使用信任根的所有功能，以及为服务中心和其他方创建新的根。OEM在许多情况下会抹去1级主根，以便OEM可以控制信任根的所有使用</li>
+<li>服务中心获得有限的权限；例如，没有OEM的授权，不能安装新固件</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220511151943.jpg"></p>
+<p>The Personalization Root key pair may be owned by </p>
+<ul>
+<li>the SoC designer or </li>
+<li>the manufacturing personalization provider</li>
+</ul>
+<p>每层的公钥私钥被每个实体持有, 每个实体的安全应用应当被其持有的私钥签名<br>每一个根都可以被抹去（禁用） </p>
+<ul>
+<li>Personalization Root key 可以通过OTP中的一个位来禁用</li>
+<li>Personalization Root key 在某个量产的阶段后会被禁用</li>
+<li>禁用某个 root key 的安全应用需要有禁用这个key的权限</li>
+<li>每个实体的安全应用也能禁用自己的root key(被授予了相应权限时).</li>
+</ul>
+<h3 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h3><p>Secure Application Management &amp; the Secure Boot Use Case <a href="bookxnotepro://opennote/?nb={af27f419-aaf4-494d-b2a4-9f05f129b37d}&book=3f4f03b2bf8e973c33f1d9a004beb8bb&page=50&x=486&y=48&id=5">051</a></p>
+<p>For the secure boot use case Secure Application Dev1:</p>
+<ul>
+<li>Dev1 Root 可以被用作secure boot流程, secureboot 流程可以视作 dev1 root的安全应用</li>
+<li>Dev1 Root 有一组资源, secureboot 流程中需要访问这些资源, 且有权限访问这些资源.  </li>
+<li>Dev1 Root 下的安全应用不能访问 Dev2 root1 或 root2 的资源, 除非被授予了相应的权限.</li>
+</ul>
+<p>secure boot 流程做完后, Dev1 root 的安全应用就不再需要了</p>
+<p>Dev2 root1 可以为boot 起来的系统(OS)提供后续的密码学的服务<br>Dev2 root2 的安全应用 可以访问独立或共享的资源:</p>
+<ul>
+<li>root2 后可能会有很多并列的服务, 通过权限授权可以访问一组共享的资源</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/efuse/" rel="tag"># efuse</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/01/12/TEE/%E5%AE%89%E5%85%A8%E7%AE%97%E6%B3%95%E4%BB%8B%E7%BB%8D/" rel="prev" title="安全算法介绍">
+      <i class="fa fa-chevron-left"></i> 安全算法介绍
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/03/25/hxd_new/kernel%E4%B8%AD%E6%96%AD%E7%9B%B8%E5%85%B3/" rel="next" title="linux 中断相关">
+      linux 中断相关 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Sharing-a-Root-of-Trust-is-Potentially-Risky"><span class="nav-number">1.</span> <span class="nav-text">Sharing a Root of Trust is Potentially Risky</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#multi-roots-of-trust"><span class="nav-number"></span> <span class="nav-text">multi roots of trust</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BE%8B%E5%AD%90-%E6%B1%BD%E8%BD%A6%E8%8A%AF%E7%89%87"><span class="nav-number"></span> <span class="nav-text">例子 汽车芯片</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BE%8B%E5%AD%90"><span class="nav-number">1.</span> <span class="nav-text">例子</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

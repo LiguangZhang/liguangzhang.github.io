@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="mips CACHE  Perform Cache Operation 893  LL  Load Linked Word 901  PREF  Prefetch 903  SC  Store Conditional Word 906  SYNC  Synchronize Shared Memory 908  TLBWR  Write Random TLB Entry 912  TLBR TLBW">
+<meta property="og:type" content="article">
+<meta property="og:title" content="blog">
+<meta property="og:url" content="https://liguangzhang.github.io/2024/04/15/hxd_new/hxd1901_evb/mips%20%E5%A4%A7%E6%A0%B8%E6%89%8B%E5%86%8C/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="mips CACHE  Perform Cache Operation 893  LL  Load Linked Word 901  PREF  Prefetch 903  SC  Store Conditional Word 906  SYNC  Synchronize Shared Memory 908  TLBWR  Write Random TLB Entry 912  TLBR TLBW">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-04-15T09:59:59.775Z">
+<meta property="article:modified_time" content="2024-04-15T09:59:59.775Z">
+<meta property="article:author" content="liguang.zhang">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2024/04/15/hxd_new/hxd1901_evb/mips%20%E5%A4%A7%E6%A0%B8%E6%89%8B%E5%86%8C/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title> | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2024/04/15/hxd_new/hxd1901_evb/mips%20%E5%A4%A7%E6%A0%B8%E6%89%8B%E5%86%8C/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-04-15 17:59:59" itemprop="dateCreated datePublished" datetime="2024-04-15T17:59:59+08:00">2024-04-15</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="mips"><a href="#mips" class="headerlink" title="mips"></a>mips</h1><ul>
+<li><h6 id="CACHE"><a href="#CACHE" class="headerlink" title="CACHE"></a>CACHE</h6></li>
+</ul>
+<p>Perform Cache Operation <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=892&x=119&y=48&id=1244">893</a></p>
+<ul>
+<li><h6 id="LL"><a href="#LL" class="headerlink" title="LL"></a>LL</h6></li>
+</ul>
+<p>Load Linked Word <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=900&x=104&y=48&id=1367">901</a></p>
+<ul>
+<li><h6 id="PREF"><a href="#PREF" class="headerlink" title="PREF"></a>PREF</h6></li>
+</ul>
+<p>Prefetch <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=902&x=81&y=48&id=1391">903</a></p>
+<ul>
+<li><h6 id="SC"><a href="#SC" class="headerlink" title="SC"></a>SC</h6></li>
+</ul>
+<p>Store Conditional Word <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=905&x=115&y=48&id=1369">906</a></p>
+<ul>
+<li><h6 id="SYNC"><a href="#SYNC" class="headerlink" title="SYNC"></a>SYNC</h6></li>
+</ul>
+<p>Synchronize Shared Memory <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=907&x=125&y=48&id=1392">908</a></p>
+<ul>
+<li><h6 id="TLBWR"><a href="#TLBWR" class="headerlink" title="TLBWR"></a>TLBWR</h6></li>
+</ul>
+<p>Write Random TLB Entry <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=911&x=120&y=48&id=1393">912</a></p>
+<ul>
+<li><h6 id="TLBR"><a href="#TLBR" class="headerlink" title="TLBR"></a>TLBR</h6></li>
+<li><h6 id="TLBWI"><a href="#TLBWI" class="headerlink" title="TLBWI"></a>TLBWI</h6></li>
+<li><h6 id="TLBINV"><a href="#TLBINV" class="headerlink" title="TLBINV"></a>TLBINV</h6></li>
+<li><h6 id="TLBINVF"><a href="#TLBINVF" class="headerlink" title="TLBINVF"></a>TLBINVF</h6></li>
+<li><h6 id="WAIT"><a href="#WAIT" class="headerlink" title="WAIT"></a>WAIT</h6></li>
+<li><h6 id="SAVE"><a href="#SAVE" class="headerlink" title="SAVE"></a>SAVE</h6></li>
+<li><h6 id="RESTORE"><a href="#RESTORE" class="headerlink" title="RESTORE"></a>RESTORE</h6></li>
+<li><h6 id="2-2-6-6-Level-1-Data-Cache-Data-Low-—-DDataLo-CP0-Register-28-Select-3"><a href="#2-2-6-6-Level-1-Data-Cache-Data-Low-—-DDataLo-CP0-Register-28-Select-3" class="headerlink" title="2.2.6.6 Level 1 Data Cache Data Low — DDataLo (CP0 Register 28, Select 3)"></a>2.2.6.6 Level 1 Data Cache Data Low — DDataLo (CP0 Register 28, Select 3)</h6></li>
+<li><blockquote>
+<p>Level 2&#x2F;3 Cache Tag Low — L23TagLo (CP0 Register 28, Select 4) <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=114&x=271&y=370&id=1239">P114</a></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>Note that the interAptiv CPU does not implement the L23TagHi register <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=114&x=324&y=412&id=1249">P114</a></p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li><blockquote>
+<p>Level 2&#x2F;3 Cache Data Low — L23DataLo <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=115&x=211&y=472&id=1240">P115</a></p>
+</blockquote>
+</li>
+<li><blockquote>
+<p>L2 cache bypass. Setting this bit disables or bypasses the L2 cache. The L2 cache receives the value of this bit from core 0. Setting this bit forces hardware to drive a series of internal handshake signals between the core to the CM, placing the L2 cache into bypass mode.When this bit is set through a write operation, a subsequent read of this bit will not indicate a logic 1 until the L2 has asserted its internal handshake signal, indi-cating that it has been bypassed. Note that the L2 Bypass is a feature available on the MIPS L2 cache controller, and may not be available with non-MIPS L2 cache implementations. <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=68&x=276&y=162&id=1241">P68</a></p>
+</blockquote>
+<p>禁用L2</p>
+<hr>
+</li>
+<li><blockquote>
+<p>Device Configuration — Config (CP0 Register 16, Select 0) <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=62&x=255&y=368&id=1384">P62</a></p>
+</blockquote>
+</li>
+<li><blockquote>
+<p>Device Configuration 1 — Config1 (CP0 Register 16, Select 1) <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=64&x=262&y=577&id=1383">P64</a></p>
+</blockquote>
+</li>
+<li><blockquote>
+<p>![image](mips 大核手册&#x2F;ec4453617bb78e93bd05739357a78a70.png) <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=67&x=269&y=346&id=1243">P67</a></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>0x4: 32 byte line size0x5: 64 byte line size <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=69&x=170&y=202&id=1250">P69</a></p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li><h6 id="Perform-Cache-Operation"><a href="#Perform-Cache-Operation" class="headerlink" title="Perform Cache Operation"></a>Perform Cache Operation</h6><blockquote>
+<p>Perform Cache Operation <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=892&x=119&y=48&id=1244">P892</a></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>Encoding of Bits [20:18] of the CACHE Instruction, ErrCtl[WST, SPR, ITC] Cleared <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=893&x=328&y=475&id=1248">P893</a></p>
+</blockquote>
+</li>
+<li><blockquote>
+<p>ErrCtl[WST] Set, <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=896&x=389&y=119&id=1245">P896</a></p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li><blockquote>
+<p>ErrCtl (CP0 Register 26, Select 0) <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=116&x=200&y=398&id=1246">P116</a></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>However, when the PCO bit is set, the CACHE Index Store Data instruction will write the value in the PCI field to the precode bits in the data array. <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=116&x=321&y=616&id=1247">P116</a></p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li><blockquote>
+<p>Below is an inline assembly macro of the sync instruction. It is used in the C example code to force the order of a cached write-back and an uncached write. <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=835&x=318&y=117&id=1254">P835</a></p>
+</blockquote>
+</li>
+<li><blockquote>
+<p>Self-modifying Code <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=835&x=170&y=315&id=1256">P835</a></p>
+</blockquote>
+</li>
+<li><blockquote>
+<p>Copy Memory Power Down Sequence Into Cache <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=375&x=233&y=179&id=1258">P375</a></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>This is done since the memory (e.g. DRAM) is about to be put in low power mode and thus become inaccessible to the core. <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=375&x=322&y=209&id=1257">P375</a></p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li><blockquote>
+<p>Flush Dirty Lines in L1 Data Cache <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=373&x=199&y=627&id=1261">P373</a></p>
+</blockquote>
+</li>
+<li><blockquote>
+<p>Performance Monitoring Registers <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=146&x=203&y=417&id=1272">P146</a></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>Data cache accesses <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=148&x=188&y=601&id=1273">P148</a></p>
+</blockquote>
+</li>
+<li><blockquote>
+<p>L2 cache misses <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=149&x=188&y=253&id=1390">P149</a></p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li><blockquote>
+<p>Status (CP0 Register 12, Select 0) <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=77&x=202&y=595&id=1281">P77</a></p>
+</blockquote>
+</li>
+<li><blockquote>
+<p>Cause (CP0 Register 13, Select 0) <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=100&x=196&y=208&id=1282">P100</a> ^7a2f66</p>
+</blockquote>
+<ul>
+<li><h6 id="exception"><a href="#exception" class="headerlink" title="exception"></a>exception</h6><blockquote>
+<p>Table 2.35 Exception Code Values in ExcCode Field of Cause Register <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=102&x=303&y=576&id=1386">P102</a></p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li><blockquote>
+<p>Exception Base Address — EBase (CP0 Register 15, Select 1) <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=76&x=263&y=318&id=1385">P76</a></p>
+</blockquote>
+</li>
+<li><blockquote>
+<p>GIC Programming <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=469&x=140&y=76&id=1360">P469</a></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>Global Interrupt Map to Pin Registers <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=509&x=210&y=328&id=1328">P509</a></p>
+</blockquote>
+<ul>
+<li><blockquote>
+<p>Mapping of External Interrupts <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=471&x=326&y=321&id=1387">P471</a></p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li><blockquote>
+<p>Global Interrupt Map to VPE Registers <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=511&x=213&y=75&id=1327">P511</a></p>
+</blockquote>
+</li>
+<li><blockquote>
+<p>Figure 9.2 Masking and Mapping of Interrupts in the GIC <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=474&x=306&y=75&id=1326">P474</a></p>
+</blockquote>
+</li>
+<li><blockquote>
+<p>Table 9.6 Selecting Interrupt Polarity, Edge Sensitivity, and Triggering <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=470&x=305&y=157&id=1299">P470</a></p>
+</blockquote>
+</li>
+<li><blockquote>
+<p>Inter-processor Interrupts <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=474&x=178&y=563&id=1357">P474</a></p>
+</blockquote>
+</li>
+<li><blockquote>
+<p>Local Interrupt Routing <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=485&x=171&y=99&id=1354">P485</a></p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li><blockquote>
+<p>LL&#x2F;SC <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=810&x=129&y=329&id=1363">P810</a></p>
+</blockquote>
+</li>
+<li><h6 id="LL-1"><a href="#LL-1" class="headerlink" title="LL"></a>LL</h6><blockquote>
+<p>Load Linked Word <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=900&x=104&y=48&id=1367">P900</a></p>
+</blockquote>
+</li>
+<li><h6 id="SC-1"><a href="#SC-1" class="headerlink" title="SC"></a>SC</h6><blockquote>
+<p>Store Conditional Word <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=905&x=115&y=48&id=1369">P905</a></p>
+</blockquote>
+</li>
+<li><blockquote>
+<p>Cacheability Attributes <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=259&x=170&y=75&id=1382">P259</a></p>
+</blockquote>
+</li>
+<li><blockquote>
+<p>Exception Vectors <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=311&x=326&y=97&id=1388">P311</a></p>
+</blockquote>
+</li>
+<li><blockquote>
+<p>ITagLo Register Format <a href="bookxnotepro://opennote/?nb={67c054d6-0f10-436d-9515-d9c218c6e4f5}&book=67d4ce80e395b4ba105f47a5182e6f63&page=108&x=266&y=362&id=1389">P108</a></p>
+</blockquote>
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/04/15/hxd_new/hexdump%20%E6%A0%BC%E5%BC%8F%E5%8C%96%E8%BE%93%E5%87%BA/" rel="prev" title="">
+      <i class="fa fa-chevron-left"></i> 
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2024/04/15/hxd_new/hxd1901_evb/%E9%87%8D%E6%9E%84%E9%A1%B9%E7%9B%AECRU/" rel="next" title="">
+       <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#mips"><span class="nav-number">1.</span> <span class="nav-text">mips</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#CACHE"><span class="nav-number">1.0.0.0.0.1.</span> <span class="nav-text">CACHE</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#LL"><span class="nav-number">1.0.0.0.0.2.</span> <span class="nav-text">LL</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#PREF"><span class="nav-number">1.0.0.0.0.3.</span> <span class="nav-text">PREF</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#SC"><span class="nav-number">1.0.0.0.0.4.</span> <span class="nav-text">SC</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#SYNC"><span class="nav-number">1.0.0.0.0.5.</span> <span class="nav-text">SYNC</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#TLBWR"><span class="nav-number">1.0.0.0.0.6.</span> <span class="nav-text">TLBWR</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#TLBR"><span class="nav-number">1.0.0.0.0.7.</span> <span class="nav-text">TLBR</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#TLBWI"><span class="nav-number">1.0.0.0.0.8.</span> <span class="nav-text">TLBWI</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#TLBINV"><span class="nav-number">1.0.0.0.0.9.</span> <span class="nav-text">TLBINV</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#TLBINVF"><span class="nav-number">1.0.0.0.0.10.</span> <span class="nav-text">TLBINVF</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#WAIT"><span class="nav-number">1.0.0.0.0.11.</span> <span class="nav-text">WAIT</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#SAVE"><span class="nav-number">1.0.0.0.0.12.</span> <span class="nav-text">SAVE</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#RESTORE"><span class="nav-number">1.0.0.0.0.13.</span> <span class="nav-text">RESTORE</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#2-2-6-6-Level-1-Data-Cache-Data-Low-%E2%80%94-DDataLo-CP0-Register-28-Select-3"><span class="nav-number">1.0.0.0.0.14.</span> <span class="nav-text">2.2.6.6 Level 1 Data Cache Data Low — DDataLo (CP0 Register 28, Select 3)</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#Perform-Cache-Operation"><span class="nav-number">1.0.0.0.0.15.</span> <span class="nav-text">Perform Cache Operation</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#exception"><span class="nav-number">1.0.0.0.0.16.</span> <span class="nav-text">exception</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#LL-1"><span class="nav-number">1.0.0.0.0.17.</span> <span class="nav-text">LL</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#SC-1"><span class="nav-number">1.0.0.0.0.18.</span> <span class="nav-text">SC</span></a></li></ol></li></ol></li></ol></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

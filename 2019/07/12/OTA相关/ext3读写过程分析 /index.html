@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="1. Ext3文件系统读写过程分析1.1. Ext3文件读写流程概述 Ext3文件系统在进行读写操作的时候，首先需要open相应的文件，然后再进行读写操作。在open操作时，Linux kernel会创建一个file对象描述这个文件。File对象和文件的dentry和inode对象建立联系，并且将ext3的文件操作方法、映射处理方法（address space）注册到file对象中。  Ext3文">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OTA相关&#x2F;ext3读写过程分析 .md">
+<meta property="og:url" content="https://liguangzhang.github.io/2019/07/12/OTA%E7%9B%B8%E5%85%B3/ext3%E8%AF%BB%E5%86%99%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90%20/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="1. Ext3文件系统读写过程分析1.1. Ext3文件读写流程概述 Ext3文件系统在进行读写操作的时候，首先需要open相应的文件，然后再进行读写操作。在open操作时，Linux kernel会创建一个file对象描述这个文件。File对象和文件的dentry和inode对象建立联系，并且将ext3的文件操作方法、映射处理方法（address space）注册到file对象中。  Ext3文">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://s1.51cto.com/attachment/201301/003443623.jpg">
+<meta property="og:image" content="https://s1.51cto.com/attachment/201301/003523223.jpg">
+<meta property="article:published_time" content="2019-07-12T10:15:54.000Z">
+<meta property="article:modified_time" content="2024-04-16T07:17:29.167Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="ext4">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://s1.51cto.com/attachment/201301/003443623.jpg">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2019/07/12/OTA%E7%9B%B8%E5%85%B3/ext3%E8%AF%BB%E5%86%99%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90%20/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>OTA相关/ext3读写过程分析 .md | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/07/12/OTA%E7%9B%B8%E5%85%B3/ext3%E8%AF%BB%E5%86%99%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90%20/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          OTA相关/ext3读写过程分析 .md
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-07-12 18:15:54" itemprop="dateCreated datePublished" datetime="2019-07-12T18:15:54+08:00">2019-07-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 15:17:29" itemprop="dateModified" datetime="2024-04-16T15:17:29+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Filesystem/" itemprop="url" rel="index"><span itemprop="name">Filesystem</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="1-Ext3文件系统读写过程分析"><a href="#1-Ext3文件系统读写过程分析" class="headerlink" title="1. Ext3文件系统读写过程分析"></a>1. Ext3文件系统读写过程分析</h1><h2 id="1-1-Ext3文件读写流程概述"><a href="#1-1-Ext3文件读写流程概述" class="headerlink" title="1.1. Ext3文件读写流程概述"></a>1.1. Ext3文件读写流程概述</h2><p> Ext3文件系统在进行读写操作的时候，首先需要open相应的文件，然后再进行读写操作。在open操作时，Linux kernel会创建一个file对象描述这个文件。File对象和文件的dentry和inode对象建立联系，并且将ext3的文件操作方法、映射处理方法（address space）注册到file对象中。 </p>
+<p>Ext3文件读写过程会涉及到VFS层的<strong>page cache</strong>，并且通常的读写操作都会使用到这层page cache，目的是提高磁盘的IO性能。在Linux中后台会运行writeback线程定时同步pagecache和设备之间的数据。Page cache的方式虽然能够提高IO性能，但是也对数据的安全性带来了潜在影响。 </p>
+<p>本文的目的是分析ext3文件系统读写流程中的关键函数，对于page cache原理以及writeback机制将在后继文章中做深入分析。</p>
+<h2 id="1-2-关键数据结构"><a href="#1-2-关键数据结构" class="headerlink" title="1.2. 关键数据结构"></a>1.2. 关键数据结构</h2><p>File数据结构是Linux用来描述文件的关键数据结构，该对象在一个文件被进程打开的时候被创建。当一个文件被关闭的时候，file对象也会被立即销毁。file数据结构不会被作为元数据信息持久化保存至设备。该数据结构定义如下： </p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">file</span> &#123;</span>  </span><br><span class="line">    <span class="comment">/*  </span></span><br><span class="line"><span class="comment">     * fu_list becomes invalid after file_free is called and queued via  </span></span><br><span class="line"><span class="comment">     * fu_rcuhead for RCU freeing  </span></span><br><span class="line"><span class="comment">     */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">union</span> &#123;</span>  </span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>    <span class="title">fu_list</span>;</span>  </span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">rcu_head</span>     <span class="title">fu_rcuhead</span>;</span>  </span><br><span class="line">    &#125; f_u;  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">path</span>     <span class="title">f_path</span>;</span>     <span class="comment">/* 文件路径，包含文件dentry目录项和vfsmount信息 */</span>  </span><br><span class="line"><span class="meta">#<span class="keyword">define</span> f_dentry    f_path.dentry  </span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> f_vfsmnt    f_path.mnt  </span></span><br><span class="line">    <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">file_operations</span>    *<span class="title">f_op</span>;</span>  <span class="comment">/* 文件操作函数集 */</span>  </span><br><span class="line"> </span><br><span class="line">    <span class="comment">/*  </span></span><br><span class="line"><span class="comment">     * Protects f_ep_links, f_flags, f_pos vs i_size in lseek SEEK_CUR.  </span></span><br><span class="line"><span class="comment">     * Must not be taken from IRQ context.  </span></span><br><span class="line"><span class="comment">     */</span>  </span><br><span class="line">    <span class="type">spinlock_t</span>      f_lock;  </span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_SMP  </span></span><br><span class="line">    <span class="type">int</span>         f_sb_list_cpu;  </span><br><span class="line"><span class="meta">#<span class="keyword">endif</span>  </span></span><br><span class="line">    <span class="type">atomic_long_t</span>       f_count;  </span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span>        f_flags;  </span><br><span class="line">    <span class="type">fmode_t</span>         f_mode; <span class="comment">/* 文件操作模式 */</span>  </span><br><span class="line">    <span class="type">loff_t</span>          f_pos;  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">fown_struct</span>  <span class="title">f_owner</span>;</span>  </span><br><span class="line">    <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">cred</span>   *<span class="title">f_cred</span>;</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">file_ra_state</span>    <span class="title">f_ra</span>;</span>  </span><br><span class="line"> </span><br><span class="line">    u64         f_version;  </span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_SECURITY  </span></span><br><span class="line">    <span class="type">void</span>            *f_security;  </span><br><span class="line"><span class="meta">#<span class="keyword">endif</span>  </span></span><br><span class="line">    <span class="comment">/* needed for tty driver, and maybe others */</span>  </span><br><span class="line">    <span class="type">void</span>            *private_data;  </span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_EPOLL  </span></span><br><span class="line">    <span class="comment">/* Used by fs/eventpoll.c to link all the hooks to this file */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>    <span class="title">f_ep_links</span>;</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>    <span class="title">f_tfile_llink</span>;</span>  </span><br><span class="line"><span class="meta">#<span class="keyword">endif</span> <span class="comment">/* #ifdef CONFIG_EPOLL */</span>  </span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">address_space</span>    *<span class="title">f_mapping</span>;</span> <span class="comment">/* address space映射信息，指向inode中的i_mapping */</span>  </span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_DEBUG_WRITECOUNT  </span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span> f_mnt_write_state;  </span><br><span class="line"><span class="meta">#<span class="keyword">endif</span>  </span></span><br><span class="line">&#125;; </span><br></pre></td></tr></table></figure>
+
+<p>每个文件在内存中都会对应一个inode对象。在设备上也会保存每个文件的inode元数据信息，通过inode元数据信息可以找到该文件所占用的所有文件数据块（block）。VFS定义了一个通用的inode数据结构，同时ext3定义了ext3_inode元数据结构。在创建内存inode对象时，需要采用ext3_inode元数据信息初始化inode对象。Inode数据结构定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br></pre></td><td class="code"><pre><span class="line"> <span class="class"><span class="keyword">struct</span> <span class="title">inode</span> &#123;</span>  </span><br><span class="line">    <span class="type">umode_t</span>         i_mode;  </span><br><span class="line">    <span class="type">unsigned</span> <span class="type">short</span>      i_opflags;  </span><br><span class="line">    <span class="type">uid_t</span>           i_uid;  </span><br><span class="line">    <span class="type">gid_t</span>           i_gid;  </span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span>        i_flags;  </span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_FS_POSIX_ACL  </span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">posix_acl</span>    *<span class="title">i_acl</span>;</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">posix_acl</span>    *<span class="title">i_default_acl</span>;</span>  </span><br><span class="line"><span class="meta">#<span class="keyword">endif</span>  </span></span><br><span class="line"> </span><br><span class="line">    <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">inode_operations</span>   *<span class="title">i_op</span>;</span>  <span class="comment">/* inode操作函数集 */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">super_block</span>  *<span class="title">i_sb</span>;</span>      <span class="comment">/* 指向superblock */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">address_space</span>    *<span class="title">i_mapping</span>;</span> <span class="comment">/* 指向当前使用的页缓存的映射信息 */</span>  </span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_SECURITY  </span></span><br><span class="line">    <span class="type">void</span>            *i_security;  </span><br><span class="line"><span class="meta">#<span class="keyword">endif</span>  </span></span><br><span class="line"> </span><br><span class="line">    <span class="comment">/* Stat data, not accessed from path walking */</span>  </span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>       i_ino;  </span><br><span class="line">    <span class="comment">/*  </span></span><br><span class="line"><span class="comment">     * Filesystems may only read i_nlink directly.  They shall use the  </span></span><br><span class="line"><span class="comment">     * following functions for modification:  </span></span><br><span class="line"><span class="comment">     *  </span></span><br><span class="line"><span class="comment">     *    (set|clear|inc|drop)_nlink  </span></span><br><span class="line"><span class="comment">     *    inode_(inc|dec)_link_count  </span></span><br><span class="line"><span class="comment">     */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">union</span> &#123;</span>  </span><br><span class="line">        <span class="type">const</span> <span class="type">unsigned</span> <span class="type">int</span> i_nlink;  </span><br><span class="line">        <span class="type">unsigned</span> <span class="type">int</span> __i_nlink;  </span><br><span class="line">    &#125;;  </span><br><span class="line">    <span class="type">dev_t</span>           i_rdev;     <span class="comment">/* 设备号，major&amp;minor */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">timespec</span>     <span class="title">i_atime</span>;</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">timespec</span>     <span class="title">i_mtime</span>;</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">timespec</span>     <span class="title">i_ctime</span>;</span>  </span><br><span class="line">    <span class="type">spinlock_t</span>      i_lock; <span class="comment">/* i_blocks, i_bytes, maybe i_size */</span>  </span><br><span class="line">    <span class="type">unsigned</span> <span class="type">short</span>          i_bytes;  </span><br><span class="line">    <span class="type">blkcnt_t</span>        i_blocks;   <span class="comment">/* 文件块数量 */</span>  </span><br><span class="line">    <span class="type">loff_t</span>          i_size;  </span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> __NEED_I_SIZE_ORDERED  </span></span><br><span class="line">    <span class="type">seqcount_t</span>      i_size_seqcount;  </span><br><span class="line"><span class="meta">#<span class="keyword">endif</span>  </span></span><br><span class="line"> </span><br><span class="line">    <span class="comment">/* Misc */</span>  </span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>       i_state;  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">mutex</span>        <span class="title">i_mutex</span>;</span>  </span><br><span class="line"> </span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>       dirtied_when;   <span class="comment">/* jiffies of first dirtying */</span>  </span><br><span class="line"> </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">hlist_node</span>   <span class="title">i_hash</span>;</span> <span class="comment">/* 连接到inode Hash Table中 */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>    <span class="title">i_wb_list</span>;</span>  <span class="comment">/* backing dev IO list */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>    <span class="title">i_lru</span>;</span>      <span class="comment">/* inode LRU list */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>    <span class="title">i_sb_list</span>;</span>  </span><br><span class="line">    <span class="class"><span class="keyword">union</span> &#123;</span>  </span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>    <span class="title">i_dentry</span>;</span>  </span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">rcu_head</span>     <span class="title">i_rcu</span>;</span>  </span><br><span class="line">    &#125;;  </span><br><span class="line">    <span class="type">atomic_t</span>        i_count;  </span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span>        i_blkbits;  <span class="comment">/* 块大小，通常磁盘块大小为512字节，因此i_blkbits为9 */</span>  </span><br><span class="line">    u64         i_version;  </span><br><span class="line">    <span class="type">atomic_t</span>        i_dio_count;  </span><br><span class="line">    <span class="type">atomic_t</span>        i_writecount;  </span><br><span class="line">    <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">file_operations</span>    *<span class="title">i_fop</span>;</span> <span class="comment">/* former -&gt;i_op-&gt;default_file_ops，文件操作函数集 */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">file_lock</span>    *<span class="title">i_flock</span>;</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">address_space</span>    <span class="title">i_data</span>;</span> <span class="comment">/* 页高速缓存映射信息 */</span>  </span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_QUOTA  </span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">dquot</span>        *<span class="title">i_dquot</span>[<span class="title">MAXQUOTAS</span>];</span>  </span><br><span class="line"><span class="meta">#<span class="keyword">endif</span>  </span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>    <span class="title">i_devices</span>;</span>  </span><br><span class="line">    <span class="class"><span class="keyword">union</span> &#123;</span>  </span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">pipe_inode_info</span>  *<span class="title">i_pipe</span>;</span>        <span class="comment">/* 管道设备 */</span>  </span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">block_device</span> *<span class="title">i_bdev</span>;</span>    <span class="comment">/* block device块设备 */</span>  </span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">cdev</span>     *<span class="title">i_cdev</span>;</span>    <span class="comment">/* 字符设备 */</span>  </span><br><span class="line">    &#125;;  </span><br><span class="line"> </span><br><span class="line">    __u32           i_generation;  </span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_FSNOTIFY  </span></span><br><span class="line">    __u32           i_fsnotify_mask; <span class="comment">/* all events this inode cares about */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">hlist_head</span>   <span class="title">i_fsnotify_marks</span>;</span>  </span><br><span class="line"><span class="meta">#<span class="keyword">endif</span>  </span></span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_IMA  </span></span><br><span class="line">    <span class="type">atomic_t</span>        i_readcount; <span class="comment">/* struct files open RO */</span>  </span><br><span class="line"><span class="meta">#<span class="keyword">endif</span>  </span></span><br><span class="line">    <span class="type">void</span>            *i_private; <span class="comment">/* fs or device private pointer */</span>  </span><br><span class="line">&#125;; </span><br></pre></td></tr></table></figure>
+
+<p>##读过程源码分析</p>
+<p> Ext3文件系统读过程相对比较简单，函数调用关系如下图所示：</p>
+<p><a target="_blank" rel="noopener" href="https://s1.51cto.com/attachment/201301/003443623.jpg"><img src="https://s1.51cto.com/attachment/201301/003443623.jpg" alt="img"></a> </p>
+<p>读过程可以分为两大类：Direct_io方式和page_cache方式。对于Direct_io方式，首先通过filemap_write_and_wait_range函数将page cache中的数据与设备同步并且无效掉page cache中的内容，然后再通过ext3提供的direct_io方法从设备读取数据。</p>
+<p>另一种是直接从page cache中获取数据，通过do_generic_file_read函数实现该方式。该函数的主要流程说明如下：</p>
+<p>1，通过读地址从page cache的radix树中获取相应的page页。</p>
+<p>2，如果对应的page页不存在，那么需要创建一个page，然后再从设备读取相应的数据更新至page页。</p>
+<p>3，当page页准备完毕之后，从页中拷贝数据至用户空间，page_cache方式的读操作完成。</p>
+<p><strong>写过程源码分析</strong></p>
+<p>Ext3的写过程主要分为direct_io写过程和page cache写过程两大类，整个写过程的函数调用关系如下图所示：</p>
+<p><a target="_blank" rel="noopener" href="https://s1.51cto.com/attachment/201301/003523223.jpg"><img src="https://s1.51cto.com/attachment/201301/003523223.jpg" alt="img"></a> </p>
+<p>写操作的核心函数是__generic_file_aio_write，该函数实现如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ssize_t</span> __generic_file_aio_write(<span class="keyword">struct</span> kiocb *iocb, <span class="type">const</span> <span class="keyword">struct</span> iovec *iov,  </span><br><span class="line">                 <span class="type">unsigned</span> <span class="type">long</span> nr_segs, <span class="type">loff_t</span> *ppos)  </span><br><span class="line">&#123;  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">file</span> *<span class="title">file</span> =</span> iocb-&gt;ki_filp;  </span><br><span class="line">    <span class="comment">/* 获取address space映射信息 */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">address_space</span> * <span class="title">mapping</span> =</span> file-&gt;f_mapping;  </span><br><span class="line">    <span class="type">size_t</span> ocount;      <span class="comment">/* original count */</span>  </span><br><span class="line">    <span class="type">size_t</span> count;       <span class="comment">/* after file limit checks */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">inode</span>    *<span class="title">inode</span> =</span> mapping-&gt;host; <span class="comment">/* 获取文件inode索引节点 */</span>  </span><br><span class="line">    <span class="type">loff_t</span>      pos;  </span><br><span class="line">    <span class="type">ssize_t</span>     written;  </span><br><span class="line">    <span class="type">ssize_t</span>     err;  </span><br><span class="line"> </span><br><span class="line">    ocount = <span class="number">0</span>;  </span><br><span class="line">    <span class="comment">/* 检验数据区域是否存在问题，数据由iov数据结构管理 */</span>  </span><br><span class="line">    err = generic_segment_checks(iov, &amp;nr_segs, &amp;ocount, VERIFY_READ);  </span><br><span class="line">    <span class="keyword">if</span> (err)  </span><br><span class="line">        <span class="keyword">return</span> err;  </span><br><span class="line">    <span class="comment">/* ocount为可以写入的数据长度 */</span>  </span><br><span class="line">    count = ocount;  </span><br><span class="line">    pos = *ppos;  </span><br><span class="line"> </span><br><span class="line">    vfs_check_frozen(inode-&gt;i_sb, SB_FREEZE_WRITE);  </span><br><span class="line"> </span><br><span class="line">    <span class="comment">/* We can write back this queue in page reclaim */</span>  </span><br><span class="line">    current-&gt;backing_dev_info = mapping-&gt;backing_dev_info;  </span><br><span class="line">    written = <span class="number">0</span>;  </span><br><span class="line">    <span class="comment">/* 边界检查，需要判断写入数据是否超界、小文件边界检查以及设备是否是read-only。如果超界，那么降低写入数据长度 */</span>  </span><br><span class="line">    err = generic_write_checks(file, &amp;pos, &amp;count, S_ISBLK(inode-&gt;i_mode));  </span><br><span class="line">    <span class="keyword">if</span> (err)  </span><br><span class="line">        <span class="keyword">goto</span> out;  </span><br><span class="line">    <span class="comment">/* count为实际可以写入的数据长度，如果写入数据长度为0，直接结束 */</span>  </span><br><span class="line">    <span class="keyword">if</span> (count == <span class="number">0</span>)  </span><br><span class="line">        <span class="keyword">goto</span> out;  </span><br><span class="line"> </span><br><span class="line">    err = file_remove_suid(file);  </span><br><span class="line">    <span class="keyword">if</span> (err)  </span><br><span class="line">        <span class="keyword">goto</span> out;  </span><br><span class="line"> </span><br><span class="line">    file_update_time(file);  </span><br><span class="line"> </span><br><span class="line">    <span class="comment">/* coalesce the iovecs and go direct-to-BIO for O_DIRECT */</span>  </span><br><span class="line">    <span class="keyword">if</span> (unlikely(file-&gt;f_flags &amp; O_DIRECT)) &#123;  </span><br><span class="line">        <span class="comment">/* Direct IO操作模式，该模式会bypass Page Cache，直接将数据写入磁盘设备 */</span>  </span><br><span class="line">        <span class="type">loff_t</span> endbyte;  </span><br><span class="line">        <span class="type">ssize_t</span> written_buffered;  </span><br><span class="line">        <span class="comment">/* 将对应page cache无效掉，然后将数据直接写入磁盘 */</span>  </span><br><span class="line">        written = generic_file_direct_write(iocb, iov, &amp;nr_segs, pos,  </span><br><span class="line">                            ppos, count, ocount);  </span><br><span class="line">        <span class="keyword">if</span> (written &lt; <span class="number">0</span> || written == count)  </span><br><span class="line">            <span class="comment">/* 所有数据已经写入磁盘，正确返回 */</span>  </span><br><span class="line">            <span class="keyword">goto</span> out;  </span><br><span class="line">        <span class="comment">/*  </span></span><br><span class="line"><span class="comment">         * direct-io write to a hole: fall through to buffered I/O  </span></span><br><span class="line"><span class="comment">         * for completing the rest of the request.  </span></span><br><span class="line"><span class="comment">         */</span>  </span><br><span class="line">        pos += written;  </span><br><span class="line">        count -= written;  </span><br><span class="line">        <span class="comment">/* 有些请求由于没有和块大小（通常为512字节）对齐，那么将无法正确完成direct-io操作。在__blockdev_direct_IO 函数中会检查逻辑地址是否和块大小对齐，__blockdev_direct_IO无法处理不对齐的请求。另外，在ext3逻辑地址和物理块地址映射操作函数ext3_get_block返回失败时，无法完成buffer_head的映射，那么request请求也将无法得到正确处理。所有没有得到处理的请求通过 buffer写的方式得到处理。从这点来看，direct_io并没有完全bypass page cache，在有些情况下是一种写无效模式。generic_file_buffered_write函数完成buffer写，将数据直接写入page cache */</span>  </span><br><span class="line">        written_buffered = generic_file_buffered_write(iocb, iov,  </span><br><span class="line">                        nr_segs, pos, ppos, count,  </span><br><span class="line">                        written);  </span><br><span class="line">        <span class="comment">/*  </span></span><br><span class="line"><span class="comment">         * If generic_file_buffered_write() retuned a synchronous error  </span></span><br><span class="line"><span class="comment">         * then we want to return the number of bytes which were  </span></span><br><span class="line"><span class="comment">         * direct-written, or the error code if that was zero.  Note  </span></span><br><span class="line"><span class="comment">         * that this differs from normal direct-io semantics, which  </span></span><br><span class="line"><span class="comment">         * will return -EFOO even if some bytes were written.  </span></span><br><span class="line"><span class="comment">         */</span>  </span><br><span class="line">        <span class="keyword">if</span> (written_buffered &lt; <span class="number">0</span>) &#123;  </span><br><span class="line">            <span class="comment">/* 如果page cache写失败，那么返回写成功的数据长度 */</span>  </span><br><span class="line">            err = written_buffered;  </span><br><span class="line">            <span class="keyword">goto</span> out;  </span><br><span class="line">        &#125;  </span><br><span class="line"> </span><br><span class="line">        <span class="comment">/*  </span></span><br><span class="line"><span class="comment">         * We need to ensure that the page cache pages are written to  </span></span><br><span class="line"><span class="comment">         * disk and invalidated to preserve the expected O_DIRECT  </span></span><br><span class="line"><span class="comment">         * semantics.  </span></span><br><span class="line"><span class="comment">         */</span>  </span><br><span class="line">        endbyte = pos + written_buffered - written - <span class="number">1</span>;  </span><br><span class="line">        <span class="comment">/* 将page cache中的数据同步到磁盘 */</span>  </span><br><span class="line">        err = filemap_write_and_wait_range(file-&gt;f_mapping, pos, endbyte);  </span><br><span class="line">        <span class="keyword">if</span> (err == <span class="number">0</span>) &#123;  </span><br><span class="line">            written = written_buffered;  </span><br><span class="line">            <span class="comment">/* 将page cache无效掉，保证下次读操作从磁盘获取数据 */</span>  </span><br><span class="line">            invalidate_mapping_pages(mapping,  </span><br><span class="line">                         pos &gt;&gt; PAGE_CACHE_SHIFT,  </span><br><span class="line">                         endbyte &gt;&gt; PAGE_CACHE_SHIFT);  </span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;  </span><br><span class="line">            <span class="comment">/*  </span></span><br><span class="line"><span class="comment">             * We don&#x27;t know how much we wrote, so just return  </span></span><br><span class="line"><span class="comment">             * the number of bytes which were direct-written  </span></span><br><span class="line"><span class="comment">             */</span>  </span><br><span class="line">        &#125;  </span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;  </span><br><span class="line">        <span class="comment">/* 将数据写入page cache。绝大多数的ext3写操作都会采用page cache写方式，通过后台writeback线程将page cache同步到硬盘 */</span>  </span><br><span class="line">        written = generic_file_buffered_write(iocb, iov, nr_segs,  </span><br><span class="line">                pos, ppos, count, written);  </span><br><span class="line">    &#125;  </span><br><span class="line">out:  </span><br><span class="line">    current-&gt;backing_dev_info = <span class="literal">NULL</span>;  </span><br><span class="line">    <span class="keyword">return</span> written ? written : err;  </span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
+
+<p>从__generic_file_aio_write函数可以看出，ext3写操作主要分为两大类：一类为direct_io；另一类为buffer_io （page cache write）。Direct IO可以bypass page cache，直接将数据写入设备。下面首先分析一下direct_io的处理流程。</p>
+<p>如果操作地址对应的page页存在于page cache中，那么首先需要将这些page页中的数据同磁盘进行同步，然后将这些page缓存页无效掉，从而保证后继读操作能够从磁盘获取最新数据。在代码实现过程中，还需要考虑预读机制引入的page缓存页，所以在数据写入磁盘之后，需要再次查找page cache的radix树，保证写入的地址范围没有数据被缓存。</p>
+<p>Generic_file_direct_write是处理direct_io的主要函数，该函数的实现如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ssize_t</span>  </span><br><span class="line"><span class="title function_">generic_file_direct_write</span><span class="params">(<span class="keyword">struct</span> kiocb *iocb, <span class="type">const</span> <span class="keyword">struct</span> iovec *iov,  </span></span><br><span class="line"><span class="params">        <span class="type">unsigned</span> <span class="type">long</span> *nr_segs, <span class="type">loff_t</span> pos, <span class="type">loff_t</span> *ppos,  </span></span><br><span class="line"><span class="params">        <span class="type">size_t</span> count, <span class="type">size_t</span> ocount)</span>  </span><br><span class="line">&#123;  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">file</span> *<span class="title">file</span> =</span> iocb-&gt;ki_filp;  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">address_space</span> *<span class="title">mapping</span> =</span> file-&gt;f_mapping;  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">inode</span>    *<span class="title">inode</span> =</span> mapping-&gt;host;  </span><br><span class="line">    <span class="type">ssize_t</span>     written;  </span><br><span class="line">    <span class="type">size_t</span>      write_len;  </span><br><span class="line">    <span class="type">pgoff_t</span>     end;  </span><br><span class="line"> </span><br><span class="line">    <span class="keyword">if</span> (count != ocount)  </span><br><span class="line">        *nr_segs = iov_shorten((<span class="keyword">struct</span> iovec *)iov, *nr_segs, count);  </span><br><span class="line"> </span><br><span class="line">    write_len = iov_length(iov, *nr_segs);  </span><br><span class="line">    end = (pos + write_len - <span class="number">1</span>) &gt;&gt; PAGE_CACHE_SHIFT;  </span><br><span class="line">    <span class="comment">/* 将对应区域page cache中的新数据页刷新到设备，这个操作是同步的 */</span>  </span><br><span class="line">    written = filemap_write_and_wait_range(mapping, pos, pos + write_len - <span class="number">1</span>);  </span><br><span class="line">    <span class="keyword">if</span> (written)  </span><br><span class="line">        <span class="keyword">goto</span> out;  </span><br><span class="line"> </span><br><span class="line">    <span class="comment">/*  </span></span><br><span class="line"><span class="comment">     * After a write we want buffered reads to be sure to go to disk to get  </span></span><br><span class="line"><span class="comment">     * the new data.  We invalidate clean cached page from the region we&#x27;re  </span></span><br><span class="line"><span class="comment">     * about to write.  We do this *before* the write so that we can return  </span></span><br><span class="line"><span class="comment">     * without clobbering -EIOCBQUEUED from -&gt;direct_IO().  </span></span><br><span class="line"><span class="comment">     */</span>  </span><br><span class="line">    <span class="comment">/* 将page cache对应page 缓存无效掉，这样可以保证后继的读操作能从磁盘获取最新数据 */</span>  </span><br><span class="line">    <span class="keyword">if</span> (mapping-&gt;nrpages) &#123;  </span><br><span class="line">        <span class="comment">/* 无效对应的page缓存 */</span>  </span><br><span class="line">        written = invalidate_inode_pages2_range(mapping,  </span><br><span class="line">                    pos &gt;&gt; PAGE_CACHE_SHIFT, end);  </span><br><span class="line">        <span class="comment">/*  </span></span><br><span class="line"><span class="comment">         * If a page can not be invalidated, return 0 to fall back  </span></span><br><span class="line"><span class="comment">         * to buffered write.  </span></span><br><span class="line"><span class="comment">         */</span>  </span><br><span class="line">        <span class="keyword">if</span> (written) &#123;  </span><br><span class="line">            <span class="keyword">if</span> (written == -EBUSY)  </span><br><span class="line">                <span class="keyword">return</span> <span class="number">0</span>;  </span><br><span class="line">            <span class="keyword">goto</span> out;  </span><br><span class="line">        &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    <span class="comment">/* 调用ext3文件系统的direct io方法，将数据写入磁盘 */</span>  </span><br><span class="line">    written = mapping-&gt;a_ops-&gt;direct_IO(WRITE, iocb, iov, pos, *nr_segs);  </span><br><span class="line"> </span><br><span class="line">    <span class="comment">/*  </span></span><br><span class="line"><span class="comment">     * Finally, try again to invalidate clean pages which might have been  </span></span><br><span class="line"><span class="comment">     * cached by non-direct readahead, or faulted in by get_user_pages()  </span></span><br><span class="line"><span class="comment">     * if the source of the write was an mmap&#x27;ed region of the file  </span></span><br><span class="line"><span class="comment">     * we&#x27;re writing.  Either one is a pretty crazy thing to do,  </span></span><br><span class="line"><span class="comment">     * so we don&#x27;t support it 100%.  If this invalidation  </span></span><br><span class="line"><span class="comment">     * fails, tough, the write still worked...  </span></span><br><span class="line"><span class="comment">     */</span>  </span><br><span class="line">    <span class="comment">/* 再次无效掉由于预读操作导致的对应地址的page cache缓存页 */</span>  </span><br><span class="line">    <span class="keyword">if</span> (mapping-&gt;nrpages) &#123;  </span><br><span class="line">        invalidate_inode_pages2_range(mapping,  </span><br><span class="line">                          pos &gt;&gt; PAGE_CACHE_SHIFT, end);  </span><br><span class="line">    &#125;  </span><br><span class="line"> </span><br><span class="line">    <span class="keyword">if</span> (written &gt; <span class="number">0</span>) &#123;  </span><br><span class="line">        pos += written;  </span><br><span class="line">        <span class="keyword">if</span> (pos &gt; i_size_read(inode) &amp;&amp; !S_ISBLK(inode-&gt;i_mode)) &#123;  </span><br><span class="line">            i_size_write(inode, pos);  </span><br><span class="line">            mark_inode_dirty(inode);  </span><br><span class="line">        &#125;  </span><br><span class="line">        *ppos = pos;  </span><br><span class="line">    &#125;  </span><br><span class="line">out:  </span><br><span class="line">    <span class="keyword">return</span> written;  </span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
+
+<p>generic_file_direct_write函数中刷新page cache的函数调用关系描述如下：</p>
+<p>filemap_write_and_wait_range à__filemap_fdatawrite_rangeà do_writepages</p>
+<p>do_writepages函数的作用是将page页中的数据同步到设备，该函数实现如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">do_writepages</span><span class="params">(<span class="keyword">struct</span> address_space *mapping, <span class="keyword">struct</span> writeback_control *wbc)</span>  </span><br><span class="line">&#123;  </span><br><span class="line">    <span class="type">int</span> ret;  </span><br><span class="line"> </span><br><span class="line">    <span class="keyword">if</span> (wbc-&gt;nr_to_write &lt;= <span class="number">0</span>)  </span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;  </span><br><span class="line">    <span class="keyword">if</span> (mapping-&gt;a_ops-&gt;writepages)  </span><br><span class="line">        <span class="comment">/* 如果文件系统定义了writepages方法，调用该方法刷新page cache页 */</span>  </span><br><span class="line">        ret = mapping-&gt;a_ops-&gt;writepages(mapping, wbc);  </span><br><span class="line">    <span class="keyword">else</span>  </span><br><span class="line">        <span class="comment">/* ext3没有定义writepages方法，因此调用generic_writepages()函数将page cache中的脏页刷新到磁盘 */</span>  </span><br><span class="line">        ret = generic_writepages(mapping, wbc);  </span><br><span class="line">    <span class="keyword">return</span> ret;  </span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
+
+<p>从上述分析可以看出，direct_io需要块大小对齐，否则还会调用page cache的路径。为了提高I&#x2F;O性能，通常情况下ext3都会采用page cache异步写的方式。这也就是ext3的第二种写操作方式，该方式实现的关键函数是generic_file_buffered_write，其实现如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ssize_t</span>  </span><br><span class="line"><span class="title function_">generic_file_buffered_write</span><span class="params">(<span class="keyword">struct</span> kiocb *iocb, <span class="type">const</span> <span class="keyword">struct</span> iovec *iov,  </span></span><br><span class="line"><span class="params">        <span class="type">unsigned</span> <span class="type">long</span> nr_segs, <span class="type">loff_t</span> pos, <span class="type">loff_t</span> *ppos,  </span></span><br><span class="line"><span class="params">        <span class="type">size_t</span> count, <span class="type">ssize_t</span> written)</span>  </span><br><span class="line">&#123;  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">file</span> *<span class="title">file</span> =</span> iocb-&gt;ki_filp;  </span><br><span class="line">    <span class="type">ssize_t</span> status;  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">iov_iter</span> <span class="title">i</span>;</span>  </span><br><span class="line"> </span><br><span class="line">    iov_iter_init(&amp;i, iov, nr_segs, count, written);  </span><br><span class="line">    <span class="comment">/* 执行page cache写操作 */</span>  </span><br><span class="line">    status = generic_perform_write(file, &amp;i, pos);  </span><br><span class="line"> </span><br><span class="line">    <span class="keyword">if</span> (likely(status &gt;= <span class="number">0</span>)) &#123;  </span><br><span class="line">        written += status;  </span><br><span class="line">        *ppos = pos + status;  </span><br><span class="line">    &#125;  </span><br><span class="line">      </span><br><span class="line">    <span class="keyword">return</span> written ? written : status;  </span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
+
+<p>generic_file_buffered_write其实是对generic_perform_write函数的封装，generic_perform_write实现了page cache写的所有流程，该函数实现如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">ssize_t</span> <span class="title function_">generic_perform_write</span><span class="params">(<span class="keyword">struct</span> file *file,  </span></span><br><span class="line"><span class="params">                <span class="keyword">struct</span> iov_iter *i, <span class="type">loff_t</span> pos)</span>  </span><br><span class="line">&#123;  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">address_space</span> *<span class="title">mapping</span> =</span> file-&gt;f_mapping;  </span><br><span class="line">    <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">address_space_operations</span> *<span class="title">a_ops</span> =</span> mapping-&gt;a_ops;  <span class="comment">/* 映射处理函数集 */</span>  </span><br><span class="line">    <span class="type">long</span> status = <span class="number">0</span>;  </span><br><span class="line">    <span class="type">ssize_t</span> written = <span class="number">0</span>;  </span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span> flags = <span class="number">0</span>;  </span><br><span class="line"> </span><br><span class="line">    <span class="comment">/*  </span></span><br><span class="line"><span class="comment">     * Copies from kernel address space cannot fail (NFSD is a big user).  </span></span><br><span class="line"><span class="comment">     */</span>  </span><br><span class="line">    <span class="keyword">if</span> (segment_eq(get_fs(), KERNEL_DS))  </span><br><span class="line">        flags |= AOP_FLAG_UNINTERRUPTIBLE;  </span><br><span class="line"> </span><br><span class="line">    <span class="keyword">do</span> &#123;  </span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">page</span> *<span class="title">page</span>;</span>  </span><br><span class="line">        <span class="type">unsigned</span> <span class="type">long</span> offset;   <span class="comment">/* Offset into pagecache page */</span>  </span><br><span class="line">        <span class="type">unsigned</span> <span class="type">long</span> bytes;    <span class="comment">/* Bytes to write to page */</span>  </span><br><span class="line">        <span class="type">size_t</span> copied;      <span class="comment">/* Bytes copied from user */</span>  </span><br><span class="line">        <span class="type">void</span> *fsdata;  </span><br><span class="line"> </span><br><span class="line">        offset = (pos &amp; (PAGE_CACHE_SIZE - <span class="number">1</span>));  </span><br><span class="line">        bytes = <span class="type">min_t</span>(<span class="type">unsigned</span> <span class="type">long</span>, PAGE_CACHE_SIZE - offset,  </span><br><span class="line">                        iov_iter_count(i));  </span><br><span class="line"> </span><br><span class="line">again:  </span><br><span class="line">        <span class="comment">/*  </span></span><br><span class="line"><span class="comment">         * Bring in the user page that we will copy from _first_.  </span></span><br><span class="line"><span class="comment">         * Otherwise there&#x27;s a nasty deadlock on copying from the  </span></span><br><span class="line"><span class="comment">         * same page as we&#x27;re writing to, without it being marked  </span></span><br><span class="line"><span class="comment">         * up-to-date.  </span></span><br><span class="line"><span class="comment">         *  </span></span><br><span class="line"><span class="comment">         * Not only is this an optimisation, but it is also required  </span></span><br><span class="line"><span class="comment">         * to check that the address is actually valid, when atomic  </span></span><br><span class="line"><span class="comment">         * usercopies are used, below.  </span></span><br><span class="line"><span class="comment">         */</span>  </span><br><span class="line">        <span class="keyword">if</span> (unlikely(iov_iter_fault_in_readable(i, bytes))) &#123;  </span><br><span class="line">            status = -EFAULT;  </span><br><span class="line">            <span class="keyword">break</span>;  </span><br><span class="line">        &#125;  </span><br><span class="line">        <span class="comment">/* 调用ext3中的write_begin函数（inode.c中）ext3_write_begin， 如果写入的page页不存在，那么ext3_write_begin会创建一个Page页，然后从硬盘中读入相应的数据 */</span>  </span><br><span class="line">        status = a_ops-&gt;write_begin(file, mapping, pos, bytes, flags,  </span><br><span class="line">                        &amp;page, &amp;fsdata);  </span><br><span class="line">        <span class="keyword">if</span> (unlikely(status))  </span><br><span class="line">            <span class="keyword">break</span>;  </span><br><span class="line"> </span><br><span class="line">        <span class="keyword">if</span> (mapping_writably_mapped(mapping))  </span><br><span class="line">            flush_dcache_page(page);  </span><br><span class="line"> </span><br><span class="line">        pagefault_disable();  </span><br><span class="line">        <span class="comment">/* 将数据拷贝到page cache中 */</span>  </span><br><span class="line">        copied = iov_iter_copy_from_user_atomic(page, i, offset, bytes);  </span><br><span class="line">        pagefault_enable();  </span><br><span class="line">        flush_dcache_page(page);  </span><br><span class="line"> </span><br><span class="line">        mark_page_accessed(page);  </span><br><span class="line">        <span class="comment">/* 调用ext3的write_end函数（inode.c中），写完数据之后会将page页标识为dirty，后台writeback线程会将dirty page刷新到设备 */</span>  </span><br><span class="line">        status = a_ops-&gt;write_end(file, mapping, pos, bytes, copied,  </span><br><span class="line">                        page, fsdata);  </span><br><span class="line">        <span class="keyword">if</span> (unlikely(status &lt; <span class="number">0</span>))  </span><br><span class="line">            <span class="keyword">break</span>;  </span><br><span class="line">        copied = status;  </span><br><span class="line"> </span><br><span class="line">        cond_resched();  </span><br><span class="line"> </span><br><span class="line">        iov_iter_advance(i, copied);  </span><br><span class="line">        <span class="keyword">if</span> (unlikely(copied == <span class="number">0</span>)) &#123;  </span><br><span class="line">            <span class="comment">/*  </span></span><br><span class="line"><span class="comment">             * If we were unable to copy any data at all, we must  </span></span><br><span class="line"><span class="comment">             * fall back to a single segment length write.  </span></span><br><span class="line"><span class="comment">             *  </span></span><br><span class="line"><span class="comment">             * If we didn&#x27;t fallback here, we could livelock  </span></span><br><span class="line"><span class="comment">             * because not all segments in the iov can be copied at  </span></span><br><span class="line"><span class="comment">             * once without a pagefault.  </span></span><br><span class="line"><span class="comment">             */</span>  </span><br><span class="line">            bytes = <span class="type">min_t</span>(<span class="type">unsigned</span> <span class="type">long</span>, PAGE_CACHE_SIZE - offset,  </span><br><span class="line">                        iov_iter_single_seg_count(i));  </span><br><span class="line">            <span class="keyword">goto</span> again;  </span><br><span class="line">        &#125;  </span><br><span class="line">        pos += copied;  </span><br><span class="line">        written += copied;  </span><br><span class="line"> </span><br><span class="line">        balance_dirty_pages_ratelimited(mapping);  </span><br><span class="line">        <span class="keyword">if</span> (fatal_signal_pending(current)) &#123;  </span><br><span class="line">            status = -EINTR;  </span><br><span class="line">            <span class="keyword">break</span>;  </span><br><span class="line">        &#125;  </span><br><span class="line">    &#125; <span class="keyword">while</span> (iov_iter_count(i));  </span><br><span class="line"> </span><br><span class="line">    <span class="keyword">return</span> written ? written : status;  </span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/ext4/" rel="tag"># ext4</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/10/21/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/fingerprint%E6%96%B9%E6%A1%88/" rel="prev" title="fingerprint介绍">
+      <i class="fa fa-chevron-left"></i> fingerprint介绍
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/07/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/clion%20%E9%98%85%E8%AF%BB%E8%B0%83%E8%AF%95Android%20native%E6%BA%90%E7%A0%81/" rel="next" title="clion vscode 阅读Android native源码">
+      clion vscode 阅读Android native源码 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-Ext3%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E8%AF%BB%E5%86%99%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90"><span class="nav-number">1.</span> <span class="nav-text">1. Ext3文件系统读写过程分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-Ext3%E6%96%87%E4%BB%B6%E8%AF%BB%E5%86%99%E6%B5%81%E7%A8%8B%E6%A6%82%E8%BF%B0"><span class="nav-number">1.1.</span> <span class="nav-text">1.1. Ext3文件读写流程概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-%E5%85%B3%E9%94%AE%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="nav-number">1.2.</span> <span class="nav-text">1.2. 关键数据结构</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

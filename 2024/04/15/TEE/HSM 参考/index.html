@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="HSM 规范HSM是一种自主的硬件，可以用于车辆安全信息（比如密钥）的生成，存贮以及处理，且隔离外部恶意软件的攻击。 HSM可以用于构建，验证可靠的软件，以保护在软件加载并初次访问之前的安全启动。HSM包含有加密&#x2F;解密硬件加速功能，和软件解决方案相比（Cry）,能够有效降低CPU负载。 包含两个部分:  Security building blocks负责加密&#x2F;解密的硬件操作；">
+<meta property="og:type" content="article">
+<meta property="og:title" content="blog">
+<meta property="og:url" content="https://liguangzhang.github.io/2024/04/15/TEE/HSM%20%E5%8F%82%E8%80%83/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="HSM 规范HSM是一种自主的硬件，可以用于车辆安全信息（比如密钥）的生成，存贮以及处理，且隔离外部恶意软件的攻击。 HSM可以用于构建，验证可靠的软件，以保护在软件加载并初次访问之前的安全启动。HSM包含有加密&#x2F;解密硬件加速功能，和软件解决方案相比（Cry）,能够有效降低CPU负载。 包含两个部分:  Security building blocks负责加密&#x2F;解密的硬件操作；">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://pic4.zhimg.com/v2-cc6c609c713dab25d187489a6a436cdf_r.jpg">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220630170642.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220630170643.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220630170644.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220630170645.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220630170646.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220630170647.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220701152834.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220701152744.png">
+<meta property="og:image" content="http://mianbaoban-assets.oss-cn-shenzhen.aliyuncs.com/xinyu-images/MBXY-CR-6ea78751bdfd456cb790c01af5c1ae61.png">
+<meta property="article:published_time" content="2024-04-15T10:00:00.235Z">
+<meta property="article:modified_time" content="2024-04-15T10:00:00.235Z">
+<meta property="article:author" content="liguang.zhang">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://pic4.zhimg.com/v2-cc6c609c713dab25d187489a6a436cdf_r.jpg">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2024/04/15/TEE/HSM%20%E5%8F%82%E8%80%83/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title> | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2024/04/15/TEE/HSM%20%E5%8F%82%E8%80%83/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-04-15 18:00:00" itemprop="dateCreated datePublished" datetime="2024-04-15T18:00:00+08:00">2024-04-15</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="HSM-规范"><a href="#HSM-规范" class="headerlink" title="HSM 规范"></a>HSM 规范</h1><p>HSM是一种自主的硬件，可以用于车辆安全信息（比如密钥）的生成，存贮以及处理，且隔离外部恶意软件的攻击。</p>
+<p>HSM可以用于构建，验证可靠的软件，以保护在软件加载并初次访问之前的安全启动。HSM包含有加密&#x2F;解密硬件加速功能，和软件解决方案相比（Cry）,能够有效降低CPU负载。</p>
+<p>包含两个部分:</p>
+<ol>
+<li>Security building blocks负责加密&#x2F;解密的硬件操作；</li>
+<li>Logical building blocks负责与Application ECU交互数据以及软件的加密&#x2F;解密操作；</li>
+</ol>
+<h2 id="hsm-等级"><a href="#hsm-等级" class="headerlink" title="hsm 等级"></a>hsm 等级</h2><h3 id="full-hsm"><a href="#full-hsm" class="headerlink" title="full hsm"></a>full hsm</h3><p><img src="https://pic4.zhimg.com/v2-cc6c609c713dab25d187489a6a436cdf_r.jpg" alt="full hsm"><br><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220630170642.png"></p>
+<ul>
+<li>ECC-256：256位高速ECC椭圆加密算法引擎；</li>
+<li>Whirlpool: AES Hash算法；</li>
+<li>AES-128：标准AES加密&#x2F;解密算法；</li>
+<li>PRNG with TRNG seed：真伪随机数生成器；</li>
+</ul>
+<h3 id="Medium-hsm"><a href="#Medium-hsm" class="headerlink" title="Medium hsm"></a>Medium hsm</h3><p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220630170643.png"><br>无ECC和Hash引擎；和EVITA full一样，medium的安全区域，完全是和应用程序ECU隔离开的；</p>
+<h3 id="light-hsm"><a href="#light-hsm" class="headerlink" title="light hsm"></a>light hsm</h3><p>只有aes 对称加密的加速器</p>
+<p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220630170644.png"></p>
+<h2 id="HSM的功能"><a href="#HSM的功能" class="headerlink" title="HSM的功能"></a>HSM的功能</h2><ul>
+<li>对称密钥加密&#x2F;解密</li>
+<li>非对称密钥加密&#x2F;解密</li>
+<li>哈希值计算</li>
+<li>非对称签名的生成和验证</li>
+<li>对称验证</li>
+<li>随机数生成</li>
+<li>安全密钥存贮</li>
+<li>单调计数器</li>
+</ul>
+<h2 id="HSM的应用场景"><a href="#HSM的应用场景" class="headerlink" title="HSM的应用场景"></a>HSM的应用场景</h2><ul>
+<li>启动保护</li>
+<li>安全的板级通信</li>
+<li>安全的诊断锁</li>
+<li>安全的软件更新</li>
+<li>访问控制</li>
+</ul>
+<h1 id="autosar-CSM-调用链的要求"><a href="#autosar-CSM-调用链的要求" class="headerlink" title="autosar CSM 调用链的要求"></a>autosar CSM 调用链的要求</h1><p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220630170645.png"></p>
+<ol>
+<li>密钥存储, 密钥派生, 密钥权限管控</li>
+<li>autosar 调用链存在同步任务&#x2F;异步任务, 异步任务的实现需要hsm 硬件支持中断</li>
+</ol>
+<h1 id="防物理攻击-可选"><a href="#防物理攻击-可选" class="headerlink" title="防物理攻击(可选)"></a>防物理攻击(可选)</h1><h3 id="FIPS-140-2-标准安全等级"><a href="#FIPS-140-2-标准安全等级" class="headerlink" title="FIPS-140 2 标准安全等级"></a>FIPS-140 2 标准安全等级</h3><p><a target="_blank" rel="noopener" href="https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.140-2.pdf">NIST.FIPS.140-2.pdf</a></p>
+<p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220630170646.png"></p>
+<h3 id="国密标准安全等级"><a href="#国密标准安全等级" class="headerlink" title="国密标准安全等级"></a>国密标准安全等级</h3><p><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/guanzhi/GM-Standards/master/GMT%E6%AD%A3%E5%BC%8F%E6%A0%87%E5%87%86/GMT%200008-2012%20%E5%AE%89%E5%85%A8%E8%8A%AF%E7%89%87%E5%AF%86%E7%A0%81%E6%A3%80%E6%B5%8B%E5%87%86%E5%88%99.pdf">GMT 0008-2012 安全芯片密码检测准则.pdf</a></p>
+<p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220630170647.png"></p>
+<h1 id="场景示例"><a href="#场景示例" class="headerlink" title="场景示例"></a>场景示例</h1><p>ADS控制器状态采用类似机可以采用介于FIP140-2中2或3等级的加密模块HSM保证安全性，在AutoSAR中涉及到的资源及网络安全链路concept如下：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220701152834.png" alt="image-20220701152832558"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220701152744.png" alt="image-20220701152730165"></p>
+<blockquote>
+<p>ASIL 来自于 ISO26262 标准, ASIL D 为最高的安全等级 <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/zh-hans/ISO_26262">https://zh.wikipedia.org/zh-hans/ISO_26262</a></p>
+<p>CAL 安全等级来自于 ISO&#x2F;SAE 21434 标准, 网络安全保证级别（CAL） Cybersecurity Assurance Level  ，类似于 ISO 26262 中的 ASIL，用来控制网路安全措施的工作。和 ISO 26262 的ASIL不同，ISO&#x2F;SAE 21434不建议针对CAL有对应措施。CAL主要是产品开发人员评估用的定性分类  <a target="_blank" rel="noopener" href="https://zh.wikipedia.org/zh-hans/ISO/SAE_21434">https://zh.wikipedia.org/zh-hans/ISO/SAE_21434</a></p>
+</blockquote>
+<p>App1，App2及App3是ASILD的，同时均需要被网络安全机制保护。</p>
+<p>因制动踏板相关信号及HWP功能状态速度通常是10ms一次，因而用AES算法计算比较快，但ADS状态机可以是80ms FHTI，此时可以用保密性更强的RSA模型。</p>
+<p>因CSM&#x2F;CryIf&#x2F;Crypto Hardware称为Crypto Stack，此时从CSM的工作图，可以简要推导出如下与HSM相关的AutoSAR需求ASIL级别及CAL级别，并由此更加明确HSM的ASIL级别和等级：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Context</th>
+<th>ASIL</th>
+<th>CAL</th>
+<th>HSM functionality</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>RS_CRYPTO_02001</td>
+<td>The  Crypto Stack shall conceal symmetric keys from the users</td>
+<td>D（旧方案，如果新方案考虑座舱对人的监控则可降低到 B）</td>
+<td>CAL2</td>
+<td>D (Safety  functional)Key store  in HSM</td>
+</tr>
+<tr>
+<td>RS_CRYPTO_02002</td>
+<td>The  Crypto Stack shall conceal asymmetric private keys from the users</td>
+<td>D（旧方案，如果新方案考虑座舱对人的监控则可降低到 B）</td>
+<td>CAL2</td>
+<td>D (Safety  functional)</td>
+</tr>
+<tr>
+<td>RS_CRYPTO_02109</td>
+<td>The  Crypto Stack shall support interfaces for a unified Machine-wide storage and  retrieval of different crypto objects</td>
+<td>D</td>
+<td>CAL2</td>
+<td>D secure  storage and retrieval of different crypto objects (e.g. keys, certificates,  digests, etc.)</td>
+</tr>
+<tr>
+<td>RS_CRYPTO_02401</td>
+<td>The  Crypto Stack should support a joint usage ofmultiple  back-end cryptography providers including ones with non-extractable keys</td>
+<td>D</td>
+<td>CAL2</td>
+<td>D concept  of non-extractable keys (<strong>HSMs</strong>&#x2F;TPMs).</td>
+</tr>
+<tr>
+<td>SRS_CryptoStack_00101</td>
+<td>Asynchronous Job Processing</td>
+<td>Not D，normally</td>
+<td>CAL2</td>
+<td>B Different time countering <strong>Counter is must</strong></td>
+</tr>
+<tr>
+<td>SRS_CryptoStack_00008</td>
+<td>The Crypto Stack shall allow static  configuration of keys used for cryptographic jobs</td>
+<td>QM(D)</td>
+<td>CAL2</td>
+<td>Configuration FLASH&#x2F;RAM is requested</td>
+</tr>
+<tr>
+<td>SRS_CryptoStack_00010</td>
+<td>The Crypto Stack shall conceal symmetric  keys from the users of crypto services</td>
+<td>D</td>
+<td>CAL2</td>
+<td>D Keys residing in  the HSM</td>
+</tr>
+<tr>
+<td>SRS_CryptoStack_00011</td>
+<td>The Crypto Stack shall conceal asymmetric  private keys from the users of Crypto services</td>
+<td>D</td>
+<td>CAL2</td>
+<td>D Due to keys residing in the HSM</td>
+</tr>
+<tr>
+<td>SRS_CryptoStack_00098</td>
+<td>The Crypto Driver shall provide access to  all cryptographic algorithms supported by the hardware</td>
+<td>D</td>
+<td>CAL2</td>
+<td>D Primitives which  are supported by the HSM should be accessible through the Crypto Driver.</td>
+</tr>
+</tbody></table>
+<p>由上述需求的要求，我们得到了该ADS控制器对HSM的特性要求：</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>完整HSM</th>
+<th>CAL</th>
+<th>ASIL</th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>RAM</td>
+<td>x</td>
+<td>2</td>
+<td>B(粗略估计)</td>
+<td>SRS_CryptoStack_00008 SRS_CRYPTO_02109 SRS_CRYPTO_02001</td>
+</tr>
+<tr>
+<td>NVM</td>
+<td>x</td>
+<td>2</td>
+<td>D</td>
+<td>SRS_CryptoStack_00008 SRS_CryptoStack_00011 SRS_CryptoStack_00010 SRS_CRYPTO_02401 SRS_CRYPTO_02109 SRS_CRYPTO_02001</td>
+</tr>
+<tr>
+<td>对称加密引擎</td>
+<td>x</td>
+<td>2</td>
+<td>D</td>
+<td>RS_CRYPTO_02002</td>
+</tr>
+<tr>
+<td>非对称加密引擎</td>
+<td>x</td>
+<td>2</td>
+<td>D</td>
+<td>RS_CRYPTO_02002</td>
+</tr>
+<tr>
+<td>哈希引擎(生成MAC)</td>
+<td>x</td>
+<td>2</td>
+<td>D</td>
+<td>SRS_CryptoStack_00011 SRS_CryptoStack_00010</td>
+</tr>
+<tr>
+<td>计数</td>
+<td>x</td>
+<td>2</td>
+<td>B</td>
+<td>SRS_CryptoStack_00101</td>
+</tr>
+<tr>
+<td>随机数发生器</td>
+<td>x</td>
+<td>2</td>
+<td>D</td>
+<td>RS_CRYPTO_02401</td>
+</tr>
+<tr>
+<td>CPU安全防护</td>
+<td>x</td>
+<td>2</td>
+<td>D</td>
+<td>RS_CRYPTO_02002</td>
+</tr>
+<tr>
+<td>IO部件</td>
+<td>x</td>
+<td>2</td>
+<td>D</td>
+<td>SRS_CryptoStack_00098</td>
+</tr>
+</tbody></table>
+<p>如下是关于全套HSM上，每个子模块的ASIL级别</p>
+<p><img src="http://mianbaoban-assets.oss-cn-shenzhen.aliyuncs.com/xinyu-images/MBXY-CR-6ea78751bdfd456cb790c01af5c1ae61.png" alt="img"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/04/15/TEE/%E4%B8%89%E7%BA%A7%E8%AF%81%E4%B9%A6/" rel="prev" title="">
+      <i class="fa fa-chevron-left"></i> 
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2024/04/15/USB%E7%9B%B8%E5%85%B3/vx/" rel="next" title="">
+       <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#HSM-%E8%A7%84%E8%8C%83"><span class="nav-number">1.</span> <span class="nav-text">HSM 规范</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#hsm-%E7%AD%89%E7%BA%A7"><span class="nav-number">1.1.</span> <span class="nav-text">hsm 等级</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#full-hsm"><span class="nav-number">1.1.1.</span> <span class="nav-text">full hsm</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Medium-hsm"><span class="nav-number">1.1.2.</span> <span class="nav-text">Medium hsm</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#light-hsm"><span class="nav-number">1.1.3.</span> <span class="nav-text">light hsm</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HSM%E7%9A%84%E5%8A%9F%E8%83%BD"><span class="nav-number">1.2.</span> <span class="nav-text">HSM的功能</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HSM%E7%9A%84%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">1.3.</span> <span class="nav-text">HSM的应用场景</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#autosar-CSM-%E8%B0%83%E7%94%A8%E9%93%BE%E7%9A%84%E8%A6%81%E6%B1%82"><span class="nav-number">2.</span> <span class="nav-text">autosar CSM 调用链的要求</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%98%B2%E7%89%A9%E7%90%86%E6%94%BB%E5%87%BB-%E5%8F%AF%E9%80%89"><span class="nav-number">3.</span> <span class="nav-text">防物理攻击(可选)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#FIPS-140-2-%E6%A0%87%E5%87%86%E5%AE%89%E5%85%A8%E7%AD%89%E7%BA%A7"><span class="nav-number">3.0.1.</span> <span class="nav-text">FIPS-140 2 标准安全等级</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%BD%E5%AF%86%E6%A0%87%E5%87%86%E5%AE%89%E5%85%A8%E7%AD%89%E7%BA%A7"><span class="nav-number">3.0.2.</span> <span class="nav-text">国密标准安全等级</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9C%BA%E6%99%AF%E7%A4%BA%E4%BE%8B"><span class="nav-number">4.</span> <span class="nav-text">场景示例</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="1. Jni层简介1.1. Jni层的作用   Java层的函数可以调用Native层函数  Native层函数可以调用Java层函数  1.2. 实例分析以MediaScanner为例实例拆解JNI层基础用法 1.2.1. 库名相关JNI层对应的是libmedia_jni.so,  media_jni对应Jni库的名字，Android平台基本采用lib 模块名_jni.so的名字命名。 1234">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Jni 基础学习文档">
+<meta property="og:url" content="https://liguangzhang.github.io/2017/07/21/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/Jni%20%E5%9F%BA%E7%A1%80%E5%AD%A6%E4%B9%A0%E6%96%87%E6%A1%A3/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="1. Jni层简介1.1. Jni层的作用   Java层的函数可以调用Native层函数  Native层函数可以调用Java层函数  1.2. 实例分析以MediaScanner为例实例拆解JNI层基础用法 1.2.1. 库名相关JNI层对应的是libmedia_jni.so,  media_jni对应Jni库的名字，Android平台基本采用lib 模块名_jni.so的名字命名。 1234">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://liguangzhang.github.io/images/Picture2.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/Picture3.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/Picture4.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/Picture5.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/Picture6.png">
+<meta property="article:published_time" content="2017-07-21T13:03:40.000Z">
+<meta property="article:modified_time" content="2024-04-15T09:59:59.483Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="Android">
+<meta property="article:tag" content="Jni">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://liguangzhang.github.io/images/Picture2.png">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2017/07/21/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/Jni%20%E5%9F%BA%E7%A1%80%E5%AD%A6%E4%B9%A0%E6%96%87%E6%A1%A3/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Jni 基础学习文档 | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2017/07/21/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/Jni%20%E5%9F%BA%E7%A1%80%E5%AD%A6%E4%B9%A0%E6%96%87%E6%A1%A3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Jni 基础学习文档
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-07-21 21:03:40" itemprop="dateCreated datePublished" datetime="2017-07-21T21:03:40+08:00">2017-07-21</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-15 17:59:59" itemprop="dateModified" datetime="2024-04-15T17:59:59+08:00">2024-04-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Jni/" itemprop="url" rel="index"><span itemprop="name">Jni</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="1-Jni层简介"><a href="#1-Jni层简介" class="headerlink" title="1. Jni层简介"></a>1. Jni层简介</h1><h2 id="1-1-Jni层的作用"><a href="#1-1-Jni层的作用" class="headerlink" title="1.1. Jni层的作用"></a>1.1. Jni层的作用</h2><blockquote>
+<p>  Java层的函数可以调用Native层函数<br>  Native层函数可以调用Java层函数</p>
+</blockquote>
+<h2 id="1-2-实例分析"><a href="#1-2-实例分析" class="headerlink" title="1.2. 实例分析"></a>1.2. 实例分析</h2><p>以<code>MediaScanner</code>为例实例拆解<code>JNI</code>层基础用法</p>
+<h3 id="1-2-1-库名相关"><a href="#1-2-1-库名相关" class="headerlink" title="1.2.1. 库名相关"></a>1.2.1. 库名相关</h3><p>JNI层对应的是libmedia_jni.so,  media_jni对应Jni库的名字，<code>Android</code>平台基本采用<code>lib</code> <code>模块名_jni</code>.so的名字命名。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> &#123;</span><br><span class="line">        System.<span class="built_in">loadLibrary</span>(<span class="string">&quot;media_jni&quot;</span>);</span><br><span class="line">        <span class="built_in">native_init</span>();</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// Native函数声明，加native关键字， 实际功能由Jni层完成</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="type">static</span> native <span class="keyword">final</span> <span class="type">void</span> <span class="title">native_init</span><span class="params">()</span></span></span><br></pre></td></tr></table></figure>
+
+<p>要使用Jni层函数，必须先加载Jni库文件，只要调用Jni函数前加载即可。其次声明该Jni层函数。</p>
+<p>加载一般放在 <code>static</code>静态块里，这样类一经创建，就加载对应的Jni库。</p>
+<p>调用<code>System.loadLibrary</code>就可以，系统会根据平台扩展成对应的库文件名。</p>
+<h3 id="1-2-2-Jni层文件名一般与Java层文件是对应的"><a href="#1-2-2-Jni层文件名一般与Java层文件是对应的" class="headerlink" title="1.2.2. Jni层文件名一般与Java层文件是对应的"></a>1.2.2. Jni层文件名一般与Java层文件是对应的</h3><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">../java/android/media/MediaSanner.java</span><br><span class="line">../jni/android_media_MediaSanner.cpp</span><br></pre></td></tr></table></figure>
+
+<h3 id="1-2-3-注册Jni函数"><a href="#1-2-3-注册Jni函数" class="headerlink" title="1.2.3. 注册Jni函数"></a>1.2.3. 注册Jni函数</h3><blockquote>
+<p>如何能从库文件中找到对应的Jni层函数?<br>注册——将Java层的Native声明的函数与Jni层的实现函数关联起来</p>
+</blockquote>
+<h4 id="1-2-3-1-静态方法"><a href="#1-2-3-1-静态方法" class="headerlink" title="1.2.3.1. 静态方法"></a>1.2.3.1. 静态方法</h4><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">MediaSanner.java<span class="literal">--</span>&gt;MediaSanner .class</span><br><span class="line">Javah  .class     android_media_MediaSanner.h</span><br></pre></td></tr></table></figure>
+<p>保存Jni层函数的<code>函数指针</code>，并和<code>Java</code>层<code>native</code>函数建立关联，再调用<code>native</code>声明的函数时,直接调用相应的函数指针。</p>
+<h4 id="1-2-3-2-动态注册"><a href="#1-2-3-2-动态注册" class="headerlink" title="1.2.3.2. 动态注册"></a>1.2.3.2. <strong>动态注册</strong></h4><p>结构体保存关联信息</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Typedef <span class="keyword">struct</span> &#123;</span><br><span class="line"><span class="comment">// java层函数名字，如”native_init”,不用携带包的名称</span></span><br><span class="line">Const <span class="type">char</span>* name;</span><br><span class="line"><span class="comment">// Java层函数的签名信息，是代表参数类型和返回值的字符串</span></span><br><span class="line">Const <span class="type">char</span>* signature;</span><br><span class="line"><span class="comment">// 函数指针</span></span><br><span class="line">Void * fnPtr;</span><br><span class="line">&#125;JniNativeMethod;</span><br></pre></td></tr></table></figure>
+
+<p>如MediaScanner层的Jni函数保存在<code>gMethods</code>数组中，成员和Java层由native声明的函数一一对应。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> JNINativeMethod gMethods[] = &#123;</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="string">&quot;processDirectory&quot;</span>,</span><br><span class="line">        <span class="string">&quot;(Ljava/lang/String;Landroid/media/MediaScannerClient;)V&quot;</span>,</span><br><span class="line">        (<span class="type">void</span> *)android_media_MediaScanner_processDirectory</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="string">&quot;processFile&quot;</span>,</span><br><span class="line">        <span class="string">&quot;(Ljava/lang/String;Ljava/lang/String;Landroid/media/MediaScannerClient;)V&quot;</span>,</span><br><span class="line">        (<span class="type">void</span> *)android_media_MediaScanner_processFile</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="string">&quot;setLocale&quot;</span>,</span><br><span class="line">        <span class="string">&quot;(Ljava/lang/String;)V&quot;</span>,</span><br><span class="line">        (<span class="type">void</span> *)android_media_MediaScanner_setLocale</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="string">&quot;extractAlbumArt&quot;</span>,</span><br><span class="line">        <span class="string">&quot;(Ljava/io/FileDescriptor;)[B&quot;</span>,</span><br><span class="line">        (<span class="type">void</span> *)android_media_MediaScanner_extractAlbumArt</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="string">&quot;native_init&quot;</span>,</span><br><span class="line">        <span class="string">&quot;()V&quot;</span>,</span><br><span class="line">        (<span class="type">void</span> *)android_media_MediaScanner_native_init</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="string">&quot;native_setup&quot;</span>,</span><br><span class="line">        <span class="string">&quot;()V&quot;</span>,</span><br><span class="line">        (<span class="type">void</span> *)android_media_MediaScanner_native_setup</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="string">&quot;native_finalize&quot;</span>,</span><br><span class="line">        <span class="string">&quot;()V&quot;</span>,</span><br><span class="line">        (<span class="type">void</span> *)android_media_MediaScanner_native_finalize</span><br><span class="line">    &#125;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>注册<code>gMethods</code>数组：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> <span class="title">register_android_media_MediaScanner</span><span class="params">(JNIEnv *env)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> AndroidRuntime::<span class="built_in">registerNativeMethods</span>(env,</span><br><span class="line">                kClassMediaScanner, gMethods, <span class="built_in">NELEM</span>(gMethods));</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">AndroidRuntime::registerNativeMethods</span><span class="params">(JNIEnv* env,</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="type">const</span> <span class="type">char</span>* className, <span class="type">const</span> JNINativeMethod* gMethods, <span class="type">int</span> numMethods)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">jniRegisterNativeMethods</span>(env, className, gMethods, numMethods);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//  /libnativehelper/JNIHelp.cpp</span></span><br><span class="line"><span class="keyword">extern</span> <span class="string">&quot;C&quot;</span> <span class="function"><span class="type">int</span> <span class="title">jniRegisterNativeMethods</span><span class="params">(C_JNIEnv* env, <span class="type">const</span> <span class="type">char</span>* className,</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="type">const</span> JNINativeMethod* gMethods, <span class="type">int</span> numMethods)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    JNIEnv* e = <span class="built_in">reinterpret_cast</span>&lt;JNIEnv*&gt;(env);</span><br><span class="line">    <span class="built_in">ALOGV</span>(<span class="string">&quot;Registering %s&#x27;s %d native methods...&quot;</span>, className, numMethods);</span><br><span class="line">    <span class="function">scoped_local_ref&lt;jclass&gt; <span class="title">c</span><span class="params">(env, findClass(env, className))</span></span>;</span><br><span class="line">    <span class="keyword">if</span> (c.<span class="built_in">get</span>() == <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="type">char</span>* msg;</span><br><span class="line">        <span class="built_in">asprintf</span>(&amp;msg, <span class="string">&quot;Native registration unable to find class &#x27;%s&#x27;; aborting...&quot;</span>, className);</span><br><span class="line">        e-&gt;<span class="built_in">FatalError</span>(msg);</span><br><span class="line">    &#125;</span><br><span class="line">   <span class="comment">//调用JniEnv的RegisterNatives函数，注册关联起来。</span></span><br><span class="line">    <span class="keyword">if</span> ((*env)-&gt;<span class="built_in">RegisterNatives</span>(e, c.<span class="built_in">get</span>(), gMethods, numMethods) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="type">char</span>* msg;</span><br><span class="line">        <span class="built_in">asprintf</span>(&amp;msg, <span class="string">&quot;RegisterNatives failed for &#x27;%s&#x27;; aborting...&quot;</span>, className);</span><br><span class="line">        e-&gt;<span class="built_in">FatalError</span>(msg);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当Java层通过<code>System.LoadLibrary</code>加载Jni库文件后，需要动态注册Jni函数，库文件中有一个<code>JNI_OnLoad()</code>函数，加载时会执行该函数。如果需要动态注册，必须实现该函数。</p>
+<p><em><strong>android&#x2F;media&#x2F;MediaPlayer.cpp</strong></em></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 注册所有Media相关类的Jni函数</span></span><br><span class="line"><span class="function">jint <span class="title">JNI_OnLoad</span><span class="params">(JavaVM* vm, <span class="type">void</span>* <span class="comment">/* reserved */</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    JNIEnv* env = <span class="literal">NULL</span>;</span><br><span class="line">    jint result = <span class="number">-1</span>;</span><br><span class="line">    <span class="comment">// 第一个参数为JavaVM,虚拟机在Jni层的代表，每个JAVA进程只有一个这样的//JavaVM。</span></span><br><span class="line">    <span class="keyword">if</span> (vm-&gt;<span class="built_in">GetEnv</span>((<span class="type">void</span>**) &amp;env, JNI_VERSION_1_4) != JNI_OK) &#123;</span><br><span class="line">        <span class="built_in">ALOGE</span>(<span class="string">&quot;ERROR: GetEnv failed\n&quot;</span>);</span><br><span class="line">        <span class="keyword">goto</span> bail;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">assert</span>(env != <span class="literal">NULL</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">register_android_media_ImageReader</span>(env) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">ALOGE</span>(<span class="string">&quot;ERROR: ImageReader native registration failed&quot;</span>);</span><br><span class="line">        <span class="keyword">goto</span> bail;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">register_android_media_MediaPlayer</span>(env) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">ALOGE</span>(<span class="string">&quot;ERROR: MediaPlayer native registration failed\n&quot;</span>);</span><br><span class="line">        <span class="keyword">goto</span> bail;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">register_android_media_MediaRecorder</span>(env) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">ALOGE</span>(<span class="string">&quot;ERROR: MediaRecorder native registration failed\n&quot;</span>);</span><br><span class="line">        <span class="keyword">goto</span> bail;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">register_android_media_MediaScanner</span>(env) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">ALOGE</span>(<span class="string">&quot;ERROR: MediaScanner native registration failed\n&quot;</span>);</span><br><span class="line">        <span class="keyword">goto</span> bail;</span><br><span class="line">    &#125;</span><br><span class="line">.......</span><br><span class="line">   <span class="keyword">if</span> (<span class="built_in">register_android_media_MediaHTTPConnection</span>(env) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">ALOGE</span>(<span class="string">&quot;ERROR: MediaHTTPConnection native registration failed&quot;</span>);</span><br><span class="line">        <span class="keyword">goto</span> bail;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* success -- return valid version number */</span></span><br><span class="line">    result = JNI_VERSION_1_4;</span><br><span class="line"></span><br><span class="line">bail:</span><br><span class="line"><span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="1-2-3-3-数据类型转换"><a href="#1-2-3-3-数据类型转换" class="headerlink" title="1.2.3.3. 数据类型转换"></a>1.2.3.3. 数据类型转换</h4><p>Java数据分为<strong>基本</strong>数据类型和<strong>引用</strong>数据类型</p>
+<h5 id="1-2-3-3-1-基本数据类型转换"><a href="#1-2-3-3-1-基本数据类型转换" class="headerlink" title="1.2.3.3.1. 基本数据类型转换"></a>1.2.3.3.1. 基本数据类型转换</h5><p><img src="/images/Picture2.png" alt="Picture2"></p>
+<blockquote>
+<p>  注意字长</p>
+</blockquote>
+<h5 id="1-2-3-3-2-引用数据类型转换"><a href="#1-2-3-3-2-引用数据类型转换" class="headerlink" title="1.2.3.3.2. 引用数据类型转换"></a>1.2.3.3.2. 引用数据类型转换</h5><p><img src="/images/Picture3.png" alt="Picture3"></p>
+<blockquote>
+<p>  除了Java中基本数据类型的<code>数组</code>、<code>class</code>、<code>String</code>外，其他全用<code>jobject</code>表示，如Java中<code>MediaScannerClient</code> 类就用<code>jobject</code>表示，这就牵扯到如何用jobject操作类中的成员变量和成员函数的问题。</p>
+</blockquote>
+<h3 id="1-2-4-JNIEnv"><a href="#1-2-4-JNIEnv" class="headerlink" title="1.2.4. JNIEnv"></a>1.2.4. JNIEnv</h3><p><strong>JNIEnv</strong>代表一个<strong>线程相关</strong>的代表Jni环境的结构体，<code>JNIEnv</code>的结构如下:</p>
+<p><img src="/images/Picture4.png" alt="Picture4"></p>
+<p><strong>JNIEnv</strong>提供了一些系统函数，通过系统函数可以:</p>
+<ul>
+<li>调用Java函数</li>
+<li>操作jobject对象</li>
+</ul>
+<blockquote>
+<p>每个Java进程只有一个JavaVM,进程中的线程共享该JavaVM</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">jint <span class="title">JNI_OnLoad</span><span class="params">(JavaVM* vm, <span class="type">void</span>* <span class="comment">/* reserved */</span>)</span></span></span><br></pre></td></tr></table></figure>
+
+<p>JavaVM和JNIEnv有如下关系：</p>
+<ul>
+<li>调用<code>JavaVM</code>的<code>attachCurrentThread</code>函数，返回<code>JNIEnv</code>结构体，<code>Native</code>层可通过<code>JNIEnv</code>结构体<code>回调</code>Java层函数。</li>
+<li>后台进程退出前，调用<code>JavaVM</code>的<code>detachCurrentThread</code>函数，释放对应的线程资源。</li>
+</ul>
+<h4 id="1-2-4-1-通过JNIEnv操作jobject"><a href="#1-2-4-1-通过JNIEnv操作jobject" class="headerlink" title="1.2.4.1. 通过JNIEnv操作jobject"></a>1.2.4.1. 通过JNIEnv操作jobject</h4><p>即操作java 对象类的<code>成员函数</code>和<code>成员变量</code></p>
+<p><strong>jobject</strong>的**<code>jfieldID</code>和<code>jmethodID</code>**</p>
+<blockquote>
+<p>  取出<code>jfieldID</code>和<code>jmethodID</code></p>
+</blockquote>
+<p>JNIEnv的两个系统函数:</p>
+<p><img src="/images/Picture5.png" alt="Picture5"></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> native <span class="type">void</span> <span class="title">processDirectory</span><span class="params">(String path, MediaScannerClient client)</span></span>;</span><br><span class="line"><span class="built_in">android_media_MediaScanner_processDirectory</span>(</span><br><span class="line">        JNIEnv *env, jobject thiz, jstring path, jobject client)</span><br><span class="line">&#123;</span><br><span class="line">.........</span><br><span class="line">    MediaScanner *mp = <span class="built_in">getNativeScanner_l</span>(env, thiz);</span><br><span class="line">    <span class="type">const</span> <span class="type">char</span> *pathStr = env-&gt;<span class="built_in">GetStringUTFChars</span>(path, <span class="literal">NULL</span>);</span><br><span class="line">    <span class="function">MyMediaScannerClient <span class="title">myClient</span><span class="params">(env, client)</span></span>;</span><br><span class="line">    MediaScanResult result = mp-&gt;<span class="built_in">processDirectory</span>(pathStr, myClient);</span><br><span class="line">    env-&gt;<span class="built_in">ReleaseStringUTFChars</span>(path, pathStr);</span><br><span class="line">&#125; </span><br><span class="line"></span><br><span class="line"><span class="comment">// MyMediaScannerClient 构造函数</span></span><br><span class="line">    <span class="built_in">MyMediaScannerClient</span>(JNIEnv *env, jobject client)</span><br><span class="line">        :   <span class="built_in">mEnv</span>(env),</span><br><span class="line">            <span class="built_in">mClient</span>(env-&gt;<span class="built_in">NewGlobalRef</span>(client)),</span><br><span class="line">            <span class="built_in">mScanFileMethodID</span>(<span class="number">0</span>),</span><br><span class="line">            <span class="built_in">mHandleStringTagMethodID</span>(<span class="number">0</span>),</span><br><span class="line">            <span class="built_in">mSetMimeTypeMethodID</span>(<span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">         jclass mediaScannerClientInterface =</span><br><span class="line">         env-&gt;<span class="built_in">FindClass</span>(kClassMediaScannerClient);        </span><br><span class="line">         mScanFileMethodID = env-&gt;<span class="built_in">GetMethodID</span>(</span><br><span class="line">                                    mediaScannerClientInterface,</span><br><span class="line">                                    <span class="string">&quot;scanFile&quot;</span>,</span><br><span class="line">                                    <span class="string">&quot;(Ljava/lang/String;JJZZ)V&quot;</span>);</span><br><span class="line">         mHandleStringTagMethodID = env-&gt;<span class="built_in">GetMethodID</span>(</span><br><span class="line">                                    mediaScannerClientInterface,</span><br><span class="line">                                    <span class="string">&quot;handleStringTag&quot;</span>,</span><br><span class="line">                                    <span class="string">&quot;(Ljava/lang/String;Ljava/lang/String;)V&quot;</span>)；</span><br><span class="line">.........</span><br><span class="line">     &#125;</span><br></pre></td></tr></table></figure>
+
+<p>如上，取出<code>MethoidId</code>,保存为<code>MyMediaScannerClient</code>类的成员变量（提高运行效率），下一步就是如何使用这些<code>fieldID</code>和<code>methodID</code>。</p>
+<blockquote>
+<p>  使用<code>jfieldID</code>和<code>jmethodID</code></p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//通过JNIEnv，Native层回调Java层函数    </span></span><br><span class="line"><span class="function"><span class="keyword">virtual</span> <span class="type">status_t</span> <span class="title">scanFile</span><span class="params">(<span class="type">const</span> <span class="type">char</span>* path, <span class="type">long</span> <span class="type">long</span> lastModified,</span></span></span><br><span class="line"><span class="params"><span class="function">            <span class="type">long</span> <span class="type">long</span> fileSize, <span class="type">bool</span> isDirectory, <span class="type">bool</span> noMedia)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    jstring pathStr;</span><br><span class="line">        pathStr = mEnv-&gt;<span class="built_in">NewStringUTF</span>(path));</span><br><span class="line">        mEnv-&gt;<span class="built_in">CallVoidMethod</span>(mClient, mScanFileMethodID, pathStr, lastModified,</span><br><span class="line">                fileSize, isDirectory, noMedia);</span><br><span class="line">        mEnv-&gt;<span class="built_in">DeleteLocalRef</span>(pathStr);</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">checkAndClearExceptionFromCallback</span>(mEnv, <span class="string">&quot;scanFile&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>type</strong>对应返回值类型</p>
+<blockquote>
+<p>  调用非静态方法</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">NativeType Call&lt;type&gt;<span class="built_in">Method</span> (JNIEnv* env, jobject obj,  jmethodID methodID,...);</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>  调用静态方法</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">NativeType CallStatic&lt;type&gt;<span class="built_in">Method</span>(...);</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>  获取jobject对象的对应的成员变量值</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">NativeType Get&lt;type&gt;<span class="built_in">Field</span>(JNIEnv* env, jobject obj, jfieldID fieldID,...);</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>  设置jobject对象的对应的成员变量值</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">NativeType Set&lt;type&gt;<span class="built_in">Field</span>(JNIEnv* env, jobject obj, jfieldID fieldID,...);</span><br></pre></td></tr></table></figure>
+
+<p><img src="/images/Picture6.png" alt="Picture6"></p>
+<h3 id="1-2-5-jstring类型介绍"><a href="#1-2-5-jstring类型介绍" class="headerlink" title="1.2.5. jstring类型介绍"></a>1.2.5. <strong>jstring类型介绍</strong></h3><blockquote>
+<p>  JAVA中的String也是引用类。由于使用比较频繁，Jni创建了jstring类。</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 由Native本地字符串(char*)转换成jstring，得到Java 的String对象。</span></span><br><span class="line">JNIEnv::<span class="built_in">NewString</span>(...)      <span class="comment">//unicode</span></span><br><span class="line">JNIEnv::<span class="built_in">NewStringUTF</span>(...)  <span class="comment">//utf-8</span></span><br><span class="line"><span class="comment">// Java.String (jstring)转换为Native. String(const char*);</span></span><br><span class="line">JNIEnv::<span class="built_in">GetStringChars</span>(...)</span><br><span class="line">JNIEnv::<span class="built_in">GetStringUTFChars</span>(...);</span><br><span class="line"><span class="comment">//调用完成后，需要释放资源</span></span><br><span class="line">JNIEnv::<span class="built_in">ReleaseStringChars</span>(...)</span><br><span class="line">JNIEnv::<span class="built_in">ReleaseStringUTFChars</span>(...);</span><br></pre></td></tr></table></figure>
+
+<h3 id="1-2-6-Jni-类型签名"><a href="#1-2-6-Jni-类型签名" class="headerlink" title="1.2.6. Jni 类型签名"></a>1.2.6. <strong>Jni 类型签名</strong></h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">    <span class="function"><span class="type">void</span> <span class="title">processFile</span><span class="params">(String path,String mimetype)</span></span>;</span><br><span class="line">     ......</span><br><span class="line"><span class="string">&quot;processFile&quot;</span>,</span><br><span class="line">    <span class="string">&quot;(Ljava/lang/String;Ljava/lang/String;Landroid/media/MediaScannerClient;)V&quot;</span>,</span><br><span class="line">    (<span class="type">void</span> *)android_media_MediaScanner_processFile</span><br><span class="line">..........</span><br></pre></td></tr></table></figure>
+
+<p>Java支持函数重载，将参数信息和返回值信息写到签名信息里，便于查找到对应的函数.</p>
+<p>最左侧是参数名，在括号里面，括号外面的是返回值类型。</p>
+<ul>
+<li>V代表void， 当参数类型是引用类型时，格式为 ”L包名”, String 格式为”Ljava&#x2F;lang&#x2F;String”;</li>
+<li><strong>基本</strong>类型名字可以直接写。</li>
+<li>数组类型，后面回跟着” [” </li>
+<li><strong>引用</strong>类型最后跟 “ ;”.</li>
+</ul>
+<p>Java提供javap的工具帮助生成变量或函数的签名信息。</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Javap <span class="literal">-s</span> <span class="literal">-p</span> xxx.class</span><br></pre></td></tr></table></figure>
+
+<h3 id="1-2-7-垃圾回收"><a href="#1-2-7-垃圾回收" class="headerlink" title="1.2.7. 垃圾回收"></a>1.2.7. 垃圾回收</h3><p>Java中创建的对象由垃圾回收器释放回收内存。</p>
+<h4 id="1-2-7-1-Local-Reference"><a href="#1-2-7-1-Local-Reference" class="headerlink" title="1.2.7.1. Local Reference"></a>1.2.7.1. Local Reference</h4><blockquote>
+<p>  非全局引用</p>
+</blockquote>
+<p>Jni函数返回，对象可能被回收。</p>
+<p>需要及时回收该类型资源，不要忘记用<code>JNIEnv::DeleteLocalRef</code>函数回收该资源。</p>
+<h4 id="1-2-7-2-Global-Reference"><a href="#1-2-7-2-Global-Reference" class="headerlink" title="1.2.7.2. Global Reference"></a>1.2.7.2. Global Reference</h4><blockquote>
+<p>  全局引用</p>
+</blockquote>
+<p>不主动释放，永远不会被回收。</p>
+<p>在类构造函数中创建和释放该类型对象（类似<code>new</code>  <code>delete</code>的用法）</p>
+<h4 id="1-2-7-3-Weak-Global-Reference"><a href="#1-2-7-3-Weak-Global-Reference" class="headerlink" title="1.2.7.3. Weak Global Reference"></a>1.2.7.3. Weak Global Reference</h4><blockquote>
+<p>  弱全局引用</p>
+</blockquote>
+<p>可能在运行过程中被回收</p>
+<p><code>JNIEnv::isSameObject</code> 判断是否被回收</p>
+<h3 id="1-2-8-Jni中的异常处理"><a href="#1-2-8-Jni中的异常处理" class="headerlink" title="1.2.8. Jni中的异常处理"></a>1.2.8. Jni中的异常处理</h3><p>JNI中也有异常，但是与Java、C++不同，异常<em><strong>不会中断</strong></em>函数执行，一旦出现异常，只能释放资源，<code>return</code>。</p>
+<table>
+<thead>
+<tr>
+<th>关键字</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ExceptionOccured</td>
+<td>判断是否发生异常</td>
+</tr>
+<tr>
+<td>ExceptionClear</td>
+<td>清理当前JNI层发生的异常</td>
+</tr>
+<tr>
+<td>ThrowNew</td>
+<td>向Java层抛出异常</td>
+</tr>
+</tbody></table>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Android/" rel="tag"># Android</a>
+              <a href="/tags/Jni/" rel="tag"># Jni</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2017/07/20/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/AndroidQ%20%E5%AD%98%E5%82%A8sandbox/" rel="prev" title="Android storage sandbox">
+      <i class="fa fa-chevron-left"></i> Android storage sandbox
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2017/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/PackageManagerService%E5%90%AF%E5%8A%A8%E7%AF%87%E6%95%B4%E7%90%862/" rel="next" title="PackageManagerService启动篇整理2">
+      PackageManagerService启动篇整理2 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-Jni%E5%B1%82%E7%AE%80%E4%BB%8B"><span class="nav-number">1.</span> <span class="nav-text">1. Jni层简介</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-Jni%E5%B1%82%E7%9A%84%E4%BD%9C%E7%94%A8"><span class="nav-number">1.1.</span> <span class="nav-text">1.1. Jni层的作用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-%E5%AE%9E%E4%BE%8B%E5%88%86%E6%9E%90"><span class="nav-number">1.2.</span> <span class="nav-text">1.2. 实例分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-1-%E5%BA%93%E5%90%8D%E7%9B%B8%E5%85%B3"><span class="nav-number">1.2.1.</span> <span class="nav-text">1.2.1. 库名相关</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-2-Jni%E5%B1%82%E6%96%87%E4%BB%B6%E5%90%8D%E4%B8%80%E8%88%AC%E4%B8%8EJava%E5%B1%82%E6%96%87%E4%BB%B6%E6%98%AF%E5%AF%B9%E5%BA%94%E7%9A%84"><span class="nav-number">1.2.2.</span> <span class="nav-text">1.2.2. Jni层文件名一般与Java层文件是对应的</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-3-%E6%B3%A8%E5%86%8CJni%E5%87%BD%E6%95%B0"><span class="nav-number">1.2.3.</span> <span class="nav-text">1.2.3. 注册Jni函数</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-3-1-%E9%9D%99%E6%80%81%E6%96%B9%E6%B3%95"><span class="nav-number">1.2.3.1.</span> <span class="nav-text">1.2.3.1. 静态方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-3-2-%E5%8A%A8%E6%80%81%E6%B3%A8%E5%86%8C"><span class="nav-number">1.2.3.2.</span> <span class="nav-text">1.2.3.2. 动态注册</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-3-3-%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E8%BD%AC%E6%8D%A2"><span class="nav-number">1.2.3.3.</span> <span class="nav-text">1.2.3.3. 数据类型转换</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-2-3-3-1-%E5%9F%BA%E6%9C%AC%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E8%BD%AC%E6%8D%A2"><span class="nav-number">1.2.3.3.1.</span> <span class="nav-text">1.2.3.3.1. 基本数据类型转换</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#1-2-3-3-2-%E5%BC%95%E7%94%A8%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E8%BD%AC%E6%8D%A2"><span class="nav-number">1.2.3.3.2.</span> <span class="nav-text">1.2.3.3.2. 引用数据类型转换</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-4-JNIEnv"><span class="nav-number">1.2.4.</span> <span class="nav-text">1.2.4. JNIEnv</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-4-1-%E9%80%9A%E8%BF%87JNIEnv%E6%93%8D%E4%BD%9Cjobject"><span class="nav-number">1.2.4.1.</span> <span class="nav-text">1.2.4.1. 通过JNIEnv操作jobject</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-5-jstring%E7%B1%BB%E5%9E%8B%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.2.5.</span> <span class="nav-text">1.2.5. jstring类型介绍</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-6-Jni-%E7%B1%BB%E5%9E%8B%E7%AD%BE%E5%90%8D"><span class="nav-number">1.2.6.</span> <span class="nav-text">1.2.6. Jni 类型签名</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-7-%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6"><span class="nav-number">1.2.7.</span> <span class="nav-text">1.2.7. 垃圾回收</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-7-1-Local-Reference"><span class="nav-number">1.2.7.1.</span> <span class="nav-text">1.2.7.1. Local Reference</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-7-2-Global-Reference"><span class="nav-number">1.2.7.2.</span> <span class="nav-text">1.2.7.2. Global Reference</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-7-3-Weak-Global-Reference"><span class="nav-number">1.2.7.3.</span> <span class="nav-text">1.2.7.3. Weak Global Reference</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-8-Jni%E4%B8%AD%E7%9A%84%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86"><span class="nav-number">1.2.8.</span> <span class="nav-text">1.2.8. Jni中的异常处理</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

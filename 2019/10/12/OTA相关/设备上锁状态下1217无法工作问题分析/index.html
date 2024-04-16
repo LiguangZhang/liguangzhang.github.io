@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="设备bootloader上锁状态下1217无法工作问题分析背景前面讲到r上6月份升级基线后, 因KM TA date support的升级导致recovery下无法正常使用解密服务. 当时的方案是配置recovery vbmeta区域的 prop --prop com.android.build.boot.security_patch:2020-06-05从而在bootimg_hdr不支持识别da">
+<meta property="og:type" content="article">
+<meta property="og:title" content="设备bootloader上锁状态下1217无法工作问题分析">
+<meta property="og:url" content="https://liguangzhang.github.io/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E8%AE%BE%E5%A4%87%E4%B8%8A%E9%94%81%E7%8A%B6%E6%80%81%E4%B8%8B1217%E6%97%A0%E6%B3%95%E5%B7%A5%E4%BD%9C%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="设备bootloader上锁状态下1217无法工作问题分析背景前面讲到r上6月份升级基线后, 因KM TA date support的升级导致recovery下无法正常使用解密服务. 当时的方案是配置recovery vbmeta区域的 prop --prop com.android.build.boot.security_patch:2020-06-05从而在bootimg_hdr不支持识别da">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2019-10-12T10:15:54.000Z">
+<meta property="article:modified_time" content="2024-04-16T07:10:37.861Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="Android">
+<meta property="article:tag" content="FBE">
+<meta property="article:tag" content="1217">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E8%AE%BE%E5%A4%87%E4%B8%8A%E9%94%81%E7%8A%B6%E6%80%81%E4%B8%8B1217%E6%97%A0%E6%B3%95%E5%B7%A5%E4%BD%9C%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>设备bootloader上锁状态下1217无法工作问题分析 | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E8%AE%BE%E5%A4%87%E4%B8%8A%E9%94%81%E7%8A%B6%E6%80%81%E4%B8%8B1217%E6%97%A0%E6%B3%95%E5%B7%A5%E4%BD%9C%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          设备bootloader上锁状态下1217无法工作问题分析
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-10-12 18:15:54" itemprop="dateCreated datePublished" datetime="2019-10-12T18:15:54+08:00">2019-10-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 15:10:37" itemprop="dateModified" datetime="2024-04-16T15:10:37+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/%E5%8A%A0%E5%AF%86/" itemprop="url" rel="index"><span itemprop="name">加密</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="设备bootloader上锁状态下1217无法工作问题分析"><a href="#设备bootloader上锁状态下1217无法工作问题分析" class="headerlink" title="设备bootloader上锁状态下1217无法工作问题分析"></a>设备bootloader上锁状态下1217无法工作问题分析</h1><h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>前面讲到r上6月份升级基线后, 因KM TA date support的升级导致recovery下无法正常使用解密服务.</p>
+<p>当时的方案是配置recovery vbmeta区域的 prop <code>--prop com.android.build.boot.security_patch:2020-06-05</code><br>从而在bootimg_hdr不支持识别date 信息的情况下, 可以在reocovery模式下bootloader能够读到天的信息, 并传给KM TA.</p>
+<h2 id="新问题"><a href="#新问题" class="headerlink" title="新问题"></a>新问题</h2><p>最近测试在复测该问题时, 发现手机bootloader上锁状态下, 无法执行1217功能. 因此需要重新分析下这个问题的原因.</p>
+<h2 id="locked-状态下的调试"><a href="#locked-状态下的调试" class="headerlink" title="locked 状态下的调试"></a>locked 状态下的调试</h2><h3 id="debug-abl的方法"><a href="#debug-abl的方法" class="headerlink" title="debug abl的方法"></a>debug abl的方法</h3><h4 id="locked状态下的限制"><a href="#locked状态下的限制" class="headerlink" title="locked状态下的限制"></a>locked状态下的限制</h4><p>首先, 小米机器locked 状态有如下限制:</p>
+<ol>
+<li>不能使用fastboot烧录新的img, 即fastboot flash  &lt;partition.img&gt; 是不被允许的</li>
+<li>不能使用fastboot erase 分区, 像<code>fastboot erase misc</code> 无法执行</li>
+<li>locked状态切到unlocked状态, unlocked状态切到locked状态, 都会reboot 进recovery, 清除数据.</li>
+</ol>
+<p>上述限制或功能必须被禁用掉, 因为调试这个问题时, 本地打的调试(带logcat 和 adb shell)功能的在locked状态肯定会报<code>system has destroyed</code>, 其次经常需要debug abl, 烧分区的限制肯定要禁用掉, 不然每次烧录新的abl 都需要使用9008模式烧机, 非常麻烦. locked 切 unlocked状态, 或反之的情况清除数据的功能肯定要拿掉, 因为1217测的就是解主系统加密过的userdata分区, 如果在切换过程中把userdata擦了, 那就破坏了测试的前提. 第二条清misc也是必须的, 因为recovery如果无法正常启动, 出现<code>system has destroyed</code>, 可以通过清misc, 启动到主系统把recovery恢复回来.</p>
+<h4 id="change"><a href="#change" class="headerlink" title="change"></a>change</h4><p>去除locked状态下对fastboot flash &#x2F; fastboot erase 和 切换locked unlocked 对userdata数据的操作</p>
+<p><a target="_blank" rel="noopener" href="http://gerrit.bsp.xiaomi.srv/#/c/22341/">http://gerrit.bsp.xiaomi.srv/#/c/22341/</a></p>
+<h3 id="locked状态下让avb校验失败的recovery成功启动起来"><a href="#locked状态下让avb校验失败的recovery成功启动起来" class="headerlink" title="locked状态下让avb校验失败的recovery成功启动起来"></a>locked状态下让avb校验失败的recovery成功启动起来</h3><blockquote>
+<p>注意不能修改avb校验完的状态, 保持最小变量原则</p>
+</blockquote>
+<h4 id="change-1"><a href="#change-1" class="headerlink" title="change"></a>change</h4><p>即将导向<code>system has destroyed</code>的入口破坏掉</p>
+<p><a target="_blank" rel="noopener" href="http://gerrit.bsp.xiaomi.srv/22334">http://gerrit.bsp.xiaomi.srv/22334</a></p>
+<h4 id="本地recovery调试1217的方法"><a href="#本地recovery调试1217的方法" class="headerlink" title="本地recovery调试1217的方法"></a>本地recovery调试1217的方法</h4><p>本地编译userdebug版本的recovery即可.</p>
+<ol>
+<li>将上述change合入后, 编译abl, make aboot或者使用ninja, 注意最后abl一定要通过secureboot签名</li>
+<li>locked上锁状态可以先使用解锁工具解锁, 再通过fastboot flash abl abl.elf 烧录locked 状态修改过的abl, 然后再使用fastboot oem lock上锁.</li>
+<li>上锁完后, fastboot flash recovery 本地的recovery.img.</li>
+<li>fastboot reboot recovery</li>
+<li>使用下面的命令, 查看df -h的结果中是否有userdata, vold的输出的log是什么, 如果begin操作报错, 说明keymaster 返回了错误</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">adb root; adb shell mv /system/bin/recovery  /tmp/; adb shell touch /system/bin/recovery; adb shell /tmp/recovery --factory_test_reset&amp;; sleep 6; adb shell df -h; adb logcat -s vold;</span><br></pre></td></tr></table></figure>
+
+<h2 id="问题分析"><a href="#问题分析" class="headerlink" title="问题分析"></a>问题分析</h2><p>通过之前修改recovery 打包写入avb prop的方法已经可以使recovery在unlocked模式下1217正常工作. 而locked状态下却不行. 变量只有一个就是locked状态和unlocked状态.</p>
+<p>先根据log定位下初步原因, 测试开始提供的log中只有recovery打出的部分信息:</p>
+<p>recovery 重启, reason&#x3D; fs_mgr_mount_all</p>
+<p>根据串口log的信息, 首先可以判定是如下情形:</p>
+<ol>
+<li>主系统bcb (reason –factory_test_reset) -&gt;2.  recovery启动(模式为1217)-&gt; 3. recovery重启(模式变为fs_mgr_mount_all)</li>
+</ol>
+<p>在第2步1217的执行步骤中触发了 RebootRecovery(fs_mgr_mount_all)的命令, 查看代码, 最终定位到</p>
+<p><code>mount_all miui_factoryreset.fstab --late</code>时 init 在执行<code>vdc mountFstab /dev/block/bootdevice/by-name/userdata /data</code>失败后执行了上述命令, 所以需要进一步的log判断为什么这个vdc 的操作失败了.</p>
+<p>根据前面debug locked 状态下recovery的方法, 最终可以在locked状态下启动本地带调试版本的recovery</p>
+<p>得到的log如下:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">01-01 01:10:19.148   630   630 D vold    : metadata_key_dir/key: /metadata/vold/metadata_encryption/key</span><br><span class="line">01-01 01:10:19.149   630   630 I vold    : List of Keymaster HALs found:</span><br><span class="line">01-01 01:10:19.149   630   630 I vold    : Keymaster HAL #1: Keymaster HAL: 4 from QTI SecurityLevel: TRUSTED_ENVIRONMENT HAL: android.hardware.keymaster@4.1::IKeymasterDevice/default</span><br><span class="line">01-01 01:10:19.150   630   630 D vold    : Computing HMAC with params &#123; (seed: 54483455460602eb1254138a502eea6249c665fd8feebff883464d797d9f, nonce: 3f7f4c10a7eaf94e91f869e10f3f1ca1d576596d8291933b9c5305dfd90) &#125;</span><br><span class="line">01-01 01:10:19.150   630   630 D vold    : Computing HMAC for Keymaster HAL: 4 from QTI SecurityLevel: TRUSTED_ENVIRONMENT HAL: android.hardware.keymaster@4.1::IKeymasterDevice/default</span><br><span class="line">01-01 01:10:19.152   630   630 I vold    : Using Keymaster HAL: 4 from QTI for encryption.  Security level: TRUSTED_ENVIRONMENT, HAL: android.hardware.keymaster@4.1::IKeymasterDevice/default</span><br><span class="line">01-01 01:10:19.154   630   630 D vold    : Key exists, using: /metadata/vold/metadata_encryption/key</span><br><span class="line">01-01 01:10:19.156   630   630 I vold    : List of Keymaster HALs found:</span><br><span class="line">01-01 01:10:19.156   630   630 I vold    : Keymaster HAL #1: Keymaster HAL: 4 from QTI SecurityLevel: TRUSTED_ENVIRONMENT HAL: android.hardware.keymaster@4.1::IKeymasterDevice/default</span><br><span class="line">01-01 01:10:19.156   630   630 I vold    : Using Keymaster HAL: 4 from QTI for encryption.  Security level: TRUSTED_ENVIRONMENT, HAL: android.hardware.keymaster@4.1::IKeymasterDevice/default</span><br><span class="line">01-01 01:10:19.161   637   637 E KeyMasterHalDevice: Begin send cmd failed</span><br><span class="line">01-01 01:10:19.161   637   637 E KeyMasterHalDevice: ret: 0</span><br><span class="line">01-01 01:10:19.161   637   637 E KeyMasterHalDevice: resp-&gt;status: -33</span><br><span class="line">01-01 01:10:19.161   630   630 E vold    : begin failed, code -33</span><br><span class="line">01-01 01:10:19.148     0     0 D vdc     : Waited 0ms for vold</span><br><span class="line">01-01 01:10:19.161     0     0 E vdc     : Command: cryptfs mountFstab /dev/block/bootdevice/by-name/userdata /data Failed: Status(-8, EX_SERVICE_SPECIFIC): &#x27;0: &#x27;</span><br></pre></td></tr></table></figure>
+
+<p>keymaster返回-33的错误导致了这样的表现.</p>
+<p>根据之前对abl的分析, 这个大概率与abl传给KM TA的参数有关.</p>
+<p>搜索代码, 最终定位到</p>
+<p>1. </p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* Set Boot State */</span></span><br><span class="line">BootStateReq.CmdId = KEYMASTER_SET_BOOT_STATE;</span><br><span class="line">BootStateReq.Version = <span class="number">0</span>;</span><br><span class="line">BootStateReq.Size = <span class="keyword">sizeof</span> (BootStateReq.BootState);</span><br><span class="line">BootStateReq.Offset =</span><br><span class="line">    (UINT8 *)&amp;BootStateReq.BootState - (UINT8 *)&amp;BootStateReq;</span><br><span class="line">BootStateReq.BootState.Color = BootState-&gt;Color;</span><br><span class="line">BootStateReq.BootState.IsUnlocked = BootState-&gt;IsUnlocked;</span><br><span class="line">BootStateReq.BootState.SystemSecurityLevel = BootState-&gt;SystemSecurityLevel;</span><br><span class="line">BootStateReq.BootState.SystemVersion = BootState-&gt;SystemVersion;</span><br><span class="line">CopyMem (BootStateReq.BootState.PublicKey, BootStateDigest,</span><br><span class="line">         AVB_SHA256_DIGEST_SIZE);</span><br><span class="line"></span><br><span class="line">DEBUG ((EFI_D_ERROR, <span class="string">&quot;KeyMasterStartApp: bootstate digest: &quot;</span></span><br><span class="line">                       <span class="string">&quot;%s\n&quot;</span>, BootStateDigest));</span><br><span class="line"></span><br><span class="line">Status = Handle.QseeComProtocol-&gt;QseecomSendCmd (</span><br><span class="line">    Handle.QseeComProtocol, Handle.AppId, (UINT8 *)&amp;BootStateReq,</span><br><span class="line">    <span class="keyword">sizeof</span> (BootStateReq), (UINT8 *)&amp;BootStateRsp, <span class="keyword">sizeof</span> (BootStateRsp));</span><br></pre></td></tr></table></figure>
+
+<p>debug分析这一过程发现locked状态下, 只有color是orange时可以让recovery在调用keymaster begin解密经主系统加密的userdata时可以正常返回.</p>
+<p>而如果userdata没有通过主系统的加密, 即在recovery下先恢复出厂设置, 再对userdata加密时, color是green情况下, 也可以正常调用keymaster,没有返回错误, 而在recovery下加密userdata完成后, 再启动到主系统, 主系统会报fs_mgr_mount_all的错误.</p>
+<p>通过上述现象, 可以推测 加密userdata相当于上层keymaster初始化, 使用当时的环境去加密的数据, 而换了环境之后, 再去解密, 由于环境的变化, 导致keymaster无法校验成功, 所以begin返回了invalid blob(-33), 而这个<code>环境</code>是什么, 通过分析BootState的字段在recovery和主系统下的区别, 只有<code>BootStateDigest</code>是值得怀疑的.</p>
+<h2 id="BootStateDigest即UserData-PublicKey的分析"><a href="#BootStateDigest即UserData-PublicKey的分析" class="headerlink" title="BootStateDigest即UserData-&gt;PublicKey的分析"></a>BootStateDigest即UserData-&gt;PublicKey的分析</h2><p>上一步怀疑这个字段有问题后, 需要分析recovery模式和主系统下这个字段的数据来源.</p>
+<p>最终发现新基线升级后, recovery的avb校验模式变成了只校验recovery分区自己, 而主系统是校验 vbmeta boot dtbo vbmeta_system. 而主系统这个字段最终来自vbmeta分区的public key. 而recovery的这个字段并没有赋值.</p>
+<p>recovery模式:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> ( ( (!Info-&gt;MultiSlotBoot) ||</span><br><span class="line">         IsDynamicPartitionSupport ()) &amp;&amp;</span><br><span class="line">         (Info-&gt;BootIntoRecovery &amp;&amp;</span><br><span class="line">         !IsBuildUseRecoveryAsBoot ())) &#123;</span><br><span class="line">    <span class="comment">// 非ab机型</span></span><br><span class="line">  <span class="keyword">if</span> (!Info-&gt;MultiSlotBoot) &#123;</span><br><span class="line">      DEBUG ((EFI_D_ERROR, <span class="string">&quot;flag AVB_SLOT_VERIFY_FLAGS_NO_VBMETA_PARTITION\n&quot;</span>));</span><br><span class="line">      VerifyFlags = VerifyFlags | AVB_SLOT_VERIFY_FLAGS_NO_VBMETA_PARTITION;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 只加载recovery分区</span></span><br><span class="line">  AddRequestedPartition (RequestedPartitionAll, IMG_RECOVERY);</span><br><span class="line">  NumRequestedPartition += <span class="number">1</span>;</span><br><span class="line">  Result = avb_slot_verify (Ops, (CONST CHAR8 *CONST *)RequestedPartition,</span><br><span class="line">             SlotSuffix, VerifyFlags, VerityFlags, &amp;SlotData);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="问题解决"><a href="#问题解决" class="headerlink" title="问题解决"></a>问题解决</h2><p>上面怀疑recovery模式和主系统下abl传给KM TA的摘要是不同的, 那可以想到将vbmeta的public key 填充到 UserData-&gt;PublicKey, 下发给KM TA 是否可以解决locked状态下recovery无法使用keymaster解密经主系统加密的数据.</p>
+<p>方案如下:</p>
+<p><a target="_blank" rel="noopener" href="http://gerrit.bsp.xiaomi.srv/#/c/22338/">http://gerrit.bsp.xiaomi.srv/#/c/22338/</a></p>
+<p>只有非ab机型进入recovery情况下, 即<code>AVB_SLOT_VERIFY_FLAGS_NO_VBMETA_PARTITION</code> flag的作用范围内, 在avb verify完recovery分区后, 再avb verify下vbmeta分区, 目的是为了让其覆盖<code>ops-&gt;user_data</code>段, 而传进<code>load_and_verify_vbmeta</code>的参数需要重新设定, 因为原先的参数很多都是全局或影响avb verify recovery结果的指针, 我们这里只能覆盖<code>ops-&gt;user_data</code>段, 不能对其他段产生影响. 同时还需要对flag 重新置位, 绕开vbmeta相关的检查, 使得可以成功load vbmeta的public key, 并将其赋给<code>ops-&gt;user_data</code>段.</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">    BOOLEAN IsUserKey;</span><br><span class="line">    BOOLEAN IsMultiSlot;</span><br><span class="line">    UINTN PublicKeyLen;</span><br><span class="line">    CHAR8 PublicKey[MAX_USER_KEY_SIZE];</span><br><span class="line">&#125; AvbOpsUserData;</span><br></pre></td></tr></table></figure>
+
+<p>重新测试后, 上述patch有效, locked下recovery中可以正常进行1217功能.</p>
+<h3 id="验证"><a href="#验证" class="headerlink" title="验证"></a>验证</h3><ol>
+<li>locked状态下, 主系统开机后, 执行1217, 正常reboot到recovery中进行清数据的操作, 重启回主系统下, &#x2F;data&#x2F;miui&#x2F;app下内容保留</li>
+<li>locked状态下, fastboot flash 本地编的recovery, fastboot reboot recovery后, 应该报<code>system has destroyed</code></li>
+<li>unlocked 状态下, 无论是本地编的recovery还是线刷包版本的recovery, 都可以正常进行1217功能</li>
+</ol>
+<blockquote>
+<p>验证时, unlocked状态切换到locked状态, 或反之的情况, 切换过程中都需要进recovery wipe data, 擦完重新开机进主系统, 保证数据要重新经主系统初始化加密一次.</p>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Android/" rel="tag"># Android</a>
+              <a href="/tags/FBE/" rel="tag"># FBE</a>
+              <a href="/tags/1217/" rel="tag"># 1217</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E5%8A%A0%E5%AF%86%E6%96%B9%E6%A1%88%E6%95%B4%E7%90%86/" rel="prev" title="Android 加密方案整理">
+      <i class="fa fa-chevron-left"></i> Android 加密方案整理
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E6%9C%BA%E5%9E%8Bfastbootd%E4%BD%BF%E7%94%A8/" rel="next" title="vab机型fastbootd使用">
+      vab机型fastbootd使用 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AE%BE%E5%A4%87bootloader%E4%B8%8A%E9%94%81%E7%8A%B6%E6%80%81%E4%B8%8B1217%E6%97%A0%E6%B3%95%E5%B7%A5%E4%BD%9C%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90"><span class="nav-number">1.</span> <span class="nav-text">设备bootloader上锁状态下1217无法工作问题分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%83%8C%E6%99%AF"><span class="nav-number">1.1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%B0%E9%97%AE%E9%A2%98"><span class="nav-number">1.2.</span> <span class="nav-text">新问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#locked-%E7%8A%B6%E6%80%81%E4%B8%8B%E7%9A%84%E8%B0%83%E8%AF%95"><span class="nav-number">1.3.</span> <span class="nav-text">locked 状态下的调试</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#debug-abl%E7%9A%84%E6%96%B9%E6%B3%95"><span class="nav-number">1.3.1.</span> <span class="nav-text">debug abl的方法</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#locked%E7%8A%B6%E6%80%81%E4%B8%8B%E7%9A%84%E9%99%90%E5%88%B6"><span class="nav-number">1.3.1.1.</span> <span class="nav-text">locked状态下的限制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#change"><span class="nav-number">1.3.1.2.</span> <span class="nav-text">change</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#locked%E7%8A%B6%E6%80%81%E4%B8%8B%E8%AE%A9avb%E6%A0%A1%E9%AA%8C%E5%A4%B1%E8%B4%A5%E7%9A%84recovery%E6%88%90%E5%8A%9F%E5%90%AF%E5%8A%A8%E8%B5%B7%E6%9D%A5"><span class="nav-number">1.3.2.</span> <span class="nav-text">locked状态下让avb校验失败的recovery成功启动起来</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#change-1"><span class="nav-number">1.3.2.1.</span> <span class="nav-text">change</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9C%AC%E5%9C%B0recovery%E8%B0%83%E8%AF%951217%E7%9A%84%E6%96%B9%E6%B3%95"><span class="nav-number">1.3.2.2.</span> <span class="nav-text">本地recovery调试1217的方法</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90"><span class="nav-number">1.4.</span> <span class="nav-text">问题分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#BootStateDigest%E5%8D%B3UserData-PublicKey%E7%9A%84%E5%88%86%E6%9E%90"><span class="nav-number">1.5.</span> <span class="nav-text">BootStateDigest即UserData-&gt;PublicKey的分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%97%AE%E9%A2%98%E8%A7%A3%E5%86%B3"><span class="nav-number">1.6.</span> <span class="nav-text">问题解决</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%AA%8C%E8%AF%81"><span class="nav-number">1.6.1.</span> <span class="nav-text">验证</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

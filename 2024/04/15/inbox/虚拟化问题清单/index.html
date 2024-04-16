@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="虚拟化type2，asid 如何mapping，因为user app 一定有asid，user mode 下应该只需要一级映射？怎么处理 ， APP直接对应vmid？ARM的vmid如何定义    在虚拟机os中, user app 只需要对应asid, 虚拟机os 进程管理中需要asid 页表切换 tlb 刷新机制与asid 相关.vmid 是相对于 kvm (VMM) 来说的, 虚拟机的GP">
+<meta property="og:type" content="article">
+<meta property="og:title" content="blog">
+<meta property="og:url" content="https://liguangzhang.github.io/2024/04/15/inbox/%E8%99%9A%E6%8B%9F%E5%8C%96%E9%97%AE%E9%A2%98%E6%B8%85%E5%8D%95/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="虚拟化type2，asid 如何mapping，因为user app 一定有asid，user mode 下应该只需要一级映射？怎么处理 ， APP直接对应vmid？ARM的vmid如何定义    在虚拟机os中, user app 只需要对应asid, 虚拟机os 进程管理中需要asid 页表切换 tlb 刷新机制与asid 相关.vmid 是相对于 kvm (VMM) 来说的, 虚拟机的GP">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/zhangliguang1/tuchuang/raw/master/img/20221122122302.png">
+<meta property="article:published_time" content="2024-04-15T10:00:00.195Z">
+<meta property="article:modified_time" content="2024-04-15T10:00:00.195Z">
+<meta property="article:author" content="liguang.zhang">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/zhangliguang1/tuchuang/raw/master/img/20221122122302.png">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2024/04/15/inbox/%E8%99%9A%E6%8B%9F%E5%8C%96%E9%97%AE%E9%A2%98%E6%B8%85%E5%8D%95/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title> | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2024/04/15/inbox/%E8%99%9A%E6%8B%9F%E5%8C%96%E9%97%AE%E9%A2%98%E6%B8%85%E5%8D%95/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-04-15 18:00:00" itemprop="dateCreated datePublished" datetime="2024-04-15T18:00:00+08:00">2024-04-15</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <ol>
+<li>虚拟化type2，asid 如何mapping，因为user app 一定有asid，user mode 下应该只需要一级映射？怎么处理 ， APP直接对应vmid？<br>ARM的vmid如何定义</li>
+</ol>
+<p>  在虚拟机os中, user app 只需要对应asid, 虚拟机os 进程管理中需要asid 页表切换 tlb 刷新机制与asid 相关.<br>vmid 是相对于 kvm (VMM) 来说的, 虚拟机的GPA 转换为 HPA (host 物理地址), 这个过程也是有mmu参与的, 需要vmid 标识内存属于哪一个虚拟机os.<br>二级地址翻译 GPA-&gt;HPA 需要vmid的参与. 一级地址翻译 GVA-&gt;GPA 需要asid 参与.<br>vmid 在不同平台上概念都是一样的.</p>
+<p>  而对于iommu DMA remapping过程 , DMA的数据流需要经过iommu 翻译(相当于mmu的二级地址翻译在iommu 这里只有一次翻译的过程), 同时需要asid 和 vmid 参与. 因为只有一次翻译, 所以需要确定DMA的数据流是来自于虚拟机的哪个进程.</p>
+<ol start="2">
+<li><p>hgeip&#x2F;hgeie 这两个如何用？ 不是有授权，为啥还需要这个<br> 授权指的是什么?<br>  这两个作为 VMM 管理虚拟机的中断机制使用, 通过这两个寄存器可以让VMM 控制某个虚拟机是否能接收外部中断. 不建议VMM 直接控制虚拟机的 sip&#x2F;sie 寄存器, 会扰乱虚拟机os 运行的独立性(虚拟机的VS-mode下的csr虽然可以被HS-mode访问修改, 但是不建议这样做, 如果HS-mode kvm给它改了, guest os上的运行的软件并不会知道外部改了它的csr, 会有一致性问题).  参考问题6, 这两个csr 在kvm中暂时未用到</p>
+</li>
+<li><p>定义了Hypervisor的store load ？<br>这个是指什么? 如果是说的虚拟机os里的store, load, 这个如果GPA mmu 没有找到真实的HPA, 会触发 guest load&#x2F;store fault, 由 kvm(VMM) 接管, kvm 会分析该store&#x2F;load 指令, 读写的哪个地址, 目标寄存器是什么, kvm 处理把数据写入或者读取 或者转发给qemu 处理, 再回到虚拟机中. </p>
+</li>
+<li><p>qemu+kvm，其中qemu运行在那一层？ qemu+linux 运行在VS等级上<br>  qemu 运行在U-mode (也叫HU), linux kvm 运行在HS, 虚拟机的linux 运行在VS, 虚拟机的用户态运行在VU</p>
+</li>
+</ol>
+<p>  下图的用户态虚拟机进程在这里就是qemu 进程<br>  <img src="https://gitee.com/zhangliguang1/tuchuang/raw/master/img/20221122122302.png"></p>
+<ol start="5">
+<li><p>物理中断和虚拟中断，先发送物理中断，然后再配置对应的虚拟中断，有可能没有对应的虚拟中断，则需要hypervisor直接注入<br>分两层:<br>如果当前物理cpu 处在guest os 中, 一般是虚拟中断直接由虚拟cpu 接收<br>如果当前物理cpu 处在 host os 中, 则判断中断是否要发给虚拟cpu, qemu 需要模拟中断控制器发给kvm, kvm 通过hvip 注入中断给虚拟机, 会涉及到host os -&gt; guest os的上下文切换</p>
+</li>
+<li><p>hypervisor下有virtual interrupt pending(hvip), hypervisor interrupt pending(hip), hypervisor guest external intr (hgeip),<br>  guest external intr 是对virtual machine  （hip对应sip），hvip看起来时hypervisor要写一个虚拟中断</p>
+<p>是的, hvip 是向guest 注入虚拟中断用的, 目前kvm 中只看到用到了hvip, 其他几个暂未提及</p>
+</li>
+<li><p>一个physical的CPU上可以跑很多个虚拟机，每个虚拟机有很多guest os</p>
+</li>
+</ol>
+<p>  问题里的虚拟机是指kvm(VMM) 吗, 一个host os 上只有一个kvm 模块. 一个物理cpu上只能跑一个kvm(VMM). kvm 可以托管多个guest os (VM)<br>  一个物理cpu 只能绑定一个vcpu(只有一套vcpu csr) , 而vcpu 不同的ontext 可以对应不同的guest os.<br>物理cpu 上跑不同的guest os, 是分时的, 只要切换vcpu的 csr context 即可切换guest os.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/04/15/inbox/1/" rel="prev" title="">
+      <i class="fa fa-chevron-left"></i> 
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2024/04/15/inbox/%E8%99%9A%E6%8B%9F%E5%8C%96%E6%8B%9B%E8%81%98/" rel="next" title="">
+       <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

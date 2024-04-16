@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="test_page测试 2-stage translation 页表的 PTE的集合vs 为 vs-stage translation 的pteh  为 g-stage  translation 的pte 1234567struct &#123;    uint64_t vs;    uint64_t h;&#125; test_page_perm_table [] &#x3D; &#123;     #">
+<meta property="og:type" content="article">
+<meta property="og:title" content="riscv-hyp-test 测试框架">
+<meta property="og:url" content="https://liguangzhang.github.io/2023/06/11/hxd_new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv-hyp-test%20%E6%B5%8B%E8%AF%95%E6%A1%86%E6%9E%B6/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="test_page测试 2-stage translation 页表的 PTE的集合vs 为 vs-stage translation 的pteh  为 g-stage  translation 的pte 1234567struct &#123;    uint64_t vs;    uint64_t h;&#125; test_page_perm_table [] &#x3D; &#123;     #">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://liguangzhang.github.io/images/image-20211126175029553.png">
+<meta property="og:image" content="https://liguangzhang.github.io/attachments/sv39_pte.png">
+<meta property="article:published_time" content="2023-06-11T10:15:54.000Z">
+<meta property="article:modified_time" content="2024-04-16T06:10:49.898Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="riscv">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://liguangzhang.github.io/images/image-20211126175029553.png">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2023/06/11/hxd_new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv-hyp-test%20%E6%B5%8B%E8%AF%95%E6%A1%86%E6%9E%B6/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>riscv-hyp-test 测试框架 | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2023/06/11/hxd_new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv-hyp-test%20%E6%B5%8B%E8%AF%95%E6%A1%86%E6%9E%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          riscv-hyp-test 测试框架
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-06-11 18:15:54" itemprop="dateCreated datePublished" datetime="2023-06-11T18:15:54+08:00">2023-06-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 14:10:49" itemprop="dateModified" datetime="2024-04-16T14:10:49+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%99%9A%E6%8B%9F%E5%8C%96/" itemprop="url" rel="index"><span itemprop="name">虚拟化</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%99%9A%E6%8B%9F%E5%8C%96/RISCV/" itemprop="url" rel="index"><span itemprop="name">RISCV</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%99%9A%E6%8B%9F%E5%8C%96/RISCV/mmu/" itemprop="url" rel="index"><span itemprop="name">mmu</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%99%9A%E6%8B%9F%E5%8C%96/RISCV/mmu/%E6%B5%8B%E8%AF%95/" itemprop="url" rel="index"><span itemprop="name">测试</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="test-page"><a href="#test-page" class="headerlink" title="test_page"></a>test_page</h1><p>测试 2-stage translation 页表的 PTE的集合<br>vs 为 vs-stage translation 的pte<br>h  为 g-stage  translation 的pte</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">    <span class="type">uint64_t</span> vs;</span><br><span class="line">    <span class="type">uint64_t</span> h;</span><br><span class="line">&#125; test_page_perm_table [] = &#123;</span><br><span class="line">     <span class="meta"># index    -----------    vs  ---------------------- h ------#</span></span><br><span class="line">	[VSRWX_GRWX]      =   &#123;PTE_V | PTE_RWX,         PTE_V | PTE_RWX&#125;,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>页表属性按照PTE的 7:0 位设置相关的bit位</p>
+<p><img src="/images/image-20211126175029553.png" alt="image-20211126175029553"></p>
+<h1 id="hspt-init"><a href="#hspt-init" class="headerlink" title="hspt_init"></a>hspt_init</h1><p>测试框架执行 hspt_init 对2-stage 页表进行初始化<br>如 tinst_tests 测试项, 该测试集对指令进行测试</p>
+<figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">-+ tinst_tests</span><br><span class="line"> \ -+ hspt_init</span><br><span class="line">    \ -  addr = 0x00000000;</span><br><span class="line">    | -+ for<span class="params">(int i = <span class="number">0</span>; i &lt; <span class="number">4</span>; i++)</span></span><br><span class="line">       \ -  hspt[0][i] = PTE_V | PTE_AD | PTE_RWX | <span class="params">(addr &gt;&gt; <span class="number">2</span>)</span>;  &quot;设置第一级页表 pgd&quot;</span><br><span class="line">       | -  addr += PGSIZE &lt;&lt; <span class="params">(<span class="number">2</span> * <span class="number">9</span>)</span>   &quot;设置完后, hspt[0][0] -&gt; hspt[0][3] 为 0 0x4000000 0x80000000 0xc0000000 base 地址&quot;</span><br><span class="line">    | -  hspt[0][4] = PTE_V | <span class="params">(((uintptr_t)</span>&amp;hspt[1][0]) &gt;&gt; 2);   &quot;设置PPN 二级页表&quot;</span><br><span class="line">    | -  hspt[1][0] = PTE_V | <span class="params">(((uintptr_t)</span>&amp;hspt[2][0]) &gt;&gt; 2);   &quot;设置 PPN 三级页表&quot;</span><br><span class="line">    | -  addr = TEST_PPAGE_BASE; &quot;0x88000000&quot;</span><br><span class="line">    | -+ for<span class="params">(int i = <span class="number">0</span>; i &lt; TEST_PAGE_MAX; i++)</span>  &quot;TEST_PAGE_MAX = 512, 一共设置512个PTE&quot;</span><br><span class="line">       \ -+ hspt[2][i] = <span class="params">(addr &gt;&gt; <span class="number">2</span>)</span> | PTE_AD | test_page_perm_table[i].vs; </span><br><span class="line">							       <span class="string">&quot;设置PTE 物理地址为 0x88000000 - 0x881ff000 / 间隔 1page&quot;</span></span><br><span class="line">							       <span class="string">&quot;每个PTE 对应的测试集的权限不同, 取自 test_page_perm_table.vs 权限集&quot;</span></span><br><span class="line">       | -  addr += PAGE_SIZE;</span><br><span class="line">    | -  CSRW(satp, satp);   <span class="string">&quot;M-mode 或 Hs-mode 下设置satp 为 hspt 基地址即 hspt[0][0]的基址&quot;</span></span><br><span class="line"> | -  goto_priv(PRIV_HS); <span class="string">&quot;进入hs-mode&quot;</span></span><br><span class="line"> | -  uintptr_t vaddr_f = hs_page_base(VSI_GI); <span class="string">&quot;VSI_GI=100, vs_page_base 0x100000000 + 100* PGSIZE = 0x100064000&quot;</span></span><br><span class="line">                            <span class="string">&quot;访问不了, 应该报错&quot;</span></span><br><span class="line"> | -  TEST_SETUP_EXCEPT(); <span class="string">&quot;初始化 except 数据 为 0&quot;</span></span><br><span class="line"> | -  value = lb(vaddr_f); <span class="string">&quot;lb load vaddr_f 的数据&quot;</span></span><br><span class="line"> | -  TEST_ASSERT(excpt.cause == CAUSE_LPF) <span class="string">&quot;测试应该陷入 M-mode handler, 且mcause 应为 13 load page fault&quot;</span></span><br><span class="line">                                            <span class="string">&quot; 如果未触发异常, 或mcause 不对, case 报错&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>大概回顾下页表结构<br>可见这个是针对sv39 的页表<br>回顾下 sv39 页表的查表方法</p>
+<p>sv39 in RV64:</p>
+<p>当在 satp 寄存器中启用了分页时，<code>S 模式和 U 模式</code>中的<code>虚拟地址</code>会以从根部遍历页表的方式转换为物理地址。</p>
+<ul>
+<li>satp.PPN 给出了一级页表的基址, VA[38:30]给出了一级页号, 因此处理器会读取位于地址(satp.PPN × 4096 + VA[38:30] × 8)的页目录项</li>
+<li>该 PTE 包含二级页表的基址, VA[29:21]给出了二级页号, 因此处理器读取位于地址(PTE.PPN × 4096 + VA[29:21] × 8)的页目录项</li>
+<li>该 PTE 包含了三级页表的基址, VA[20:12] 给出了三级页号, 处理器读取位于地址(PTE.PPN × 4096 + VA[20:12] × 8)的页目录项</li>
+<li>该页表项的 PTE. PPN 就是物理地址对应的 PPN * 4096 + offset 得到物理地址</li>
+</ul>
+<p>PTE 的 [0-9] 位为权限位, [10-53] 的 44 位为 PPN.</p>
+<p>sv39 上. 虚拟地址范围 39 位, 0-38 位 , 物理地址范围 56位, 0-55 位 </p>
+<p>#页表</p>
+<p><img src="/attachments/sv39_pte.png"></p>
+<h1 id="hpt-init"><a href="#hpt-init" class="headerlink" title="hpt_init"></a>hpt_init</h1><p>此项为设置G-stage translation</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">hpt_init</span><span class="params">()</span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span>(<span class="type">int</span> i = <span class="number">0</span>; i &lt; <span class="number">2048</span>; i++)&#123;</span><br><span class="line">        hpt_root[i] = <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">uintptr_t</span> addr = <span class="number">0x0</span>;</span><br><span class="line">    <span class="keyword">for</span>(<span class="type">int</span> i = <span class="number">0</span>; i &lt; <span class="number">4</span>; i++)&#123;</span><br><span class="line">        <span class="comment">// 设置 hpt_root[0/1/2/3] 大页   addr 为 0x0 0x4000_0000 0x8000_0000 0x10000_0000 </span></span><br><span class="line">        hpt_root[i] = </span><br><span class="line">            PTE_V | PTE_U | PTE_AD | PTE_RWX | (addr &gt;&gt; <span class="number">2</span>);  </span><br><span class="line">        addr +=  SUPERPAGE_SIZE(<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 覆盖 hpt_root[2], 该页变为 页表项  指向 hpt[0][0]</span></span><br><span class="line">    hpt_root[MEM_BASE/SUPERPAGE_SIZE(<span class="number">0</span>)] =</span><br><span class="line">        PTE_V | (((<span class="type">uintptr_t</span>)&amp;hpt[<span class="number">0</span>][<span class="number">0</span>]) &gt;&gt; <span class="number">2</span>);</span><br><span class="line"></span><br><span class="line">    addr = MEM_BASE; <span class="comment">// (0x8000_0000)</span></span><br><span class="line">    <span class="keyword">for</span>(<span class="type">int</span> i = <span class="number">0</span>; i &lt; <span class="number">512</span>; i++) hpt[<span class="number">0</span>][i] = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span>(<span class="type">int</span> i = <span class="number">0</span>; i &lt; MEM_SIZE/SUPERPAGE_SIZE(<span class="number">1</span>)/<span class="number">2</span>; i++)&#123;   <span class="comment">// i &lt; 64</span></span><br><span class="line">        hpt[<span class="number">0</span>][i] = </span><br><span class="line">            PTE_V | PTE_U | PTE_AD | PTE_RWX | (addr &gt;&gt; <span class="number">2</span>);  <span class="comment">// 设置 2M的PTE 大页</span></span><br><span class="line">        addr +=  SUPERPAGE_SIZE(<span class="number">1</span>);   <span class="comment">//0x20_0000  //2M</span></span><br><span class="line">    &#125;    </span><br><span class="line">    <span class="comment">// 覆盖 hpt_root[4] 其变为页表项 2级页表, 指向 hpt[1][0] 3级页表</span></span><br><span class="line">    hpt_root[<span class="number">4</span>] =</span><br><span class="line">        PTE_V | (((<span class="type">uintptr_t</span>)&amp;hpt[<span class="number">1</span>][<span class="number">0</span>]) &gt;&gt; <span class="number">2</span>);</span><br><span class="line"></span><br><span class="line">    hpt_root[<span class="number">2047</span>] =</span><br><span class="line">        PTE_V | (((<span class="type">uintptr_t</span>)&amp;hpt[<span class="number">1</span>][<span class="number">0</span>]) &gt;&gt; <span class="number">2</span>);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// hpt[1][0] 的3级页表 指向 hpt[2][0] 的pte</span></span><br><span class="line">    hpt[<span class="number">1</span>][<span class="number">0</span>] = </span><br><span class="line">        PTE_V | (((<span class="type">uintptr_t</span>)&amp;hpt[<span class="number">2</span>][<span class="number">0</span>]) &gt;&gt; <span class="number">2</span>);</span><br><span class="line"></span><br><span class="line">    hpt[<span class="number">1</span>][<span class="number">511</span>] = </span><br><span class="line">        PTE_V | (((<span class="type">uintptr_t</span>)&amp;hpt[<span class="number">2</span>][<span class="number">0</span>]) &gt;&gt; <span class="number">2</span>);</span><br><span class="line"></span><br><span class="line">    addr = TEST_PPAGE_BASE; <span class="comment">//0x8800_0000 开始的物理地址</span></span><br><span class="line">    <span class="comment">// 设置hpt[2][0] 到 hpt[2][511] 的PTE, 映射的物理地址从0x8800_0000 开始</span></span><br><span class="line">    <span class="keyword">for</span>(<span class="type">int</span> i = <span class="number">0</span>; i &lt; TEST_PAGE_MAX; i++)&#123;</span><br><span class="line">        hpt[<span class="number">2</span>][i] = (addr &gt;&gt; <span class="number">2</span>) | PTE_AD |</span><br><span class="line">            test_page_perm_table[i].h;  </span><br><span class="line">        addr +=  PAGE_SIZE;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// hpt[1][1] 的3级页表 指向 hpt[3][0] 的pte</span></span><br><span class="line">    hpt[<span class="number">1</span>][<span class="number">1</span>] = </span><br><span class="line">        PTE_V | (((<span class="type">uintptr_t</span>)&amp;hpt[<span class="number">3</span>][<span class="number">0</span>]) &gt;&gt; <span class="number">2</span>);</span><br><span class="line">    addr = TEST_PPAGE_BASE; <span class="comment">//0x8800_0000 开始的物理地址</span></span><br><span class="line">    <span class="comment">// 设置hpt[3][0] 到 hpt[3][511] 的PTE, 映射的物理地址从0x8800_0000 开始</span></span><br><span class="line">    <span class="keyword">for</span>(<span class="type">int</span> i = <span class="number">0</span>; i &lt; <span class="number">512</span>; i++)&#123;</span><br><span class="line">        hpt[<span class="number">3</span>][i] = (addr &gt;&gt; <span class="number">2</span>) | </span><br><span class="line">            PTE_V | PTE_U | PTE_AD | PTE_RWX; </span><br><span class="line">        addr +=  PAGE_SIZE;</span><br><span class="line">    &#125;  </span><br><span class="line"></span><br><span class="line">    <span class="comment">// hpt_root[5] 为2级页表项, 指向 hpt[4][0] </span></span><br><span class="line">    hpt_root[<span class="number">5</span>] =</span><br><span class="line">        PTE_V | (((<span class="type">uintptr_t</span>)&amp;hpt[<span class="number">4</span>][<span class="number">0</span>]) &gt;&gt; <span class="number">2</span>);</span><br><span class="line">    addr = TEST_PPAGE_BASE; <span class="comment">// 0x8800_0000</span></span><br><span class="line">    <span class="comment">// hpt[4][0] - hpt[4][511] 为 大页 PTE, 每个PTE 覆盖 2M 范围 </span></span><br><span class="line">    <span class="keyword">for</span>(<span class="type">int</span> i = <span class="number">0</span>; i &lt; <span class="number">512</span>; i++)&#123;</span><br><span class="line">        hpt[<span class="number">4</span>][i] = (addr &gt;&gt; <span class="number">2</span>) |</span><br><span class="line">             PTE_V | PTE_U | PTE_AD | PTE_RWX;  </span><br><span class="line">        addr +=  SUPERPAGE_SIZE(<span class="number">1</span>); <span class="comment">// +2M</span></span><br><span class="line">    &#125;  </span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(curr_priv == PRIV_HS || curr_priv == PRIV_M)&#123;</span><br><span class="line">        <span class="type">uintptr_t</span> hsatp = (((<span class="type">uintptr_t</span>)hpt_root) &gt;&gt; <span class="number">12</span>) | (<span class="number">0x8</span>ULL &lt;&lt; <span class="number">60</span>);</span><br><span class="line">        CSRW(CSR_HGATP, hsatp);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        ERROR(<span class="string">&quot;trying to set hs hgatp from lower privilege&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>再来看下 vs-stage的页表创建过程:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">vspt_init</span><span class="params">()</span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="type">uintptr_t</span> addr;</span><br><span class="line"></span><br><span class="line">    addr = <span class="number">0x00000000</span>;</span><br><span class="line">    <span class="keyword">for</span>(<span class="type">int</span> i = <span class="number">0</span>; i &lt; <span class="number">4</span>; i++)&#123;</span><br><span class="line">        vspt[<span class="number">0</span>][i] = </span><br><span class="line">            PTE_V | PTE_AD | PTE_RWX | (addr &gt;&gt; <span class="number">2</span>);  </span><br><span class="line">        addr +=  SUPERPAGE_SIZE(<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    vspt[<span class="number">0</span>][MEM_BASE/SUPERPAGE_SIZE(<span class="number">0</span>)] =   <span class="comment">//vspt[0][2] 2级 -&gt; vspt[1][0] 3级</span></span><br><span class="line">        PTE_V | (((<span class="type">uintptr_t</span>)&amp;vspt[<span class="number">1</span>][<span class="number">0</span>]) &gt;&gt; <span class="number">2</span>);</span><br><span class="line"></span><br><span class="line">    addr = MEM_BASE;</span><br><span class="line">    <span class="keyword">for</span>(<span class="type">int</span> i = <span class="number">0</span>; i &lt; <span class="number">512</span>; i++) vspt[<span class="number">1</span>][i] = <span class="number">0</span>;</span><br><span class="line">    <span class="comment">// vspt[1][0] - vspt[1][63]  建立大页, 覆盖地址从 0x8000_0000 到 0x8000_0000 + 2M * 64 地址范围</span></span><br><span class="line">    <span class="keyword">for</span>(<span class="type">int</span> i = <span class="number">0</span>; i &lt;  MEM_SIZE/SUPERPAGE_SIZE(<span class="number">1</span>)/<span class="number">2</span>; i++)&#123;</span><br><span class="line">        vspt[<span class="number">1</span>][i] = </span><br><span class="line">           PTE_V | PTE_AD | PTE_RWX | (addr &gt;&gt; <span class="number">2</span>);  </span><br><span class="line">        addr +=  SUPERPAGE_SIZE(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// vspt[0][4] 2级 -&gt; vspt[2][0] 3级</span></span><br><span class="line">    vspt[<span class="number">0</span>][<span class="number">4</span>] =</span><br><span class="line">        PTE_V | (((<span class="type">uintptr_t</span>)&amp;vspt[<span class="number">2</span>][<span class="number">0</span>]) &gt;&gt; <span class="number">2</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// vspt[0][5] =</span></span><br><span class="line">    <span class="comment">//     PTE_V | PTE_U | PTE_AD | (((uintptr_t)&amp;vspt[2][0]) &gt;&gt; 2);</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// vspt[2][0] 3级页表 -&gt; vspt[3][0] PTE</span></span><br><span class="line">    vspt[<span class="number">2</span>][<span class="number">0</span>] = </span><br><span class="line">        PTE_V | (((<span class="type">uintptr_t</span>)&amp;vspt[<span class="number">3</span>][<span class="number">0</span>]) &gt;&gt; <span class="number">2</span>);</span><br><span class="line"></span><br><span class="line">    addr = TEST_VPAGE_BASE; <span class="comment">// 0x10000_0000   PTE </span></span><br><span class="line">    <span class="comment">// vspt[3][0] -&gt; vspt[3][511]  PTE GPA 地址范围 0x10000_0000 -- 0x10000_0000 + 2M</span></span><br><span class="line">    <span class="keyword">for</span>(<span class="type">int</span> i = <span class="number">0</span>; i &lt; TEST_PAGE_MAX; i++)&#123;</span><br><span class="line">        vspt[<span class="number">3</span>][i] = (addr &gt;&gt; <span class="number">2</span>) | PTE_AD |</span><br><span class="line">            test_page_perm_table[i].vs;  </span><br><span class="line">        addr +=  PAGE_SIZE;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// vspt[2][1] 3级 -&gt; vspt[4][0]</span></span><br><span class="line">    vspt[<span class="number">2</span>][<span class="number">1</span>] = </span><br><span class="line">        PTE_V | (((<span class="type">uintptr_t</span>)&amp;vspt[<span class="number">4</span>][<span class="number">0</span>]) &gt;&gt; <span class="number">2</span>);</span><br><span class="line"></span><br><span class="line">    addr = <span class="number">4</span> * SUPERPAGE_SIZE(<span class="number">0</span>) + SUPERPAGE_SIZE(<span class="number">1</span>); <span class="comment">// 0x10000_0000 + 2M</span></span><br><span class="line">    <span class="comment">// vspt[4][0] - vspt[4][511] PTE 地址范围   0x10000_0000 + 2M --  0x10000_0000 + 4M</span></span><br><span class="line">    <span class="keyword">for</span>(<span class="type">int</span> i = <span class="number">0</span>; i &lt; <span class="number">512</span>; i++)&#123;</span><br><span class="line">        vspt[<span class="number">4</span>][i] = (addr &gt;&gt; <span class="number">2</span>) | </span><br><span class="line">            PTE_V | PTE_AD | PTE_RWX; </span><br><span class="line">        addr +=  PAGE_SIZE;</span><br><span class="line">    &#125;  </span><br><span class="line"></span><br><span class="line">    <span class="comment">// vspt[0][5] 二级页表 -&gt; vspt[5][0] 三级页表</span></span><br><span class="line">    vspt[<span class="number">0</span>][<span class="number">5</span>] = </span><br><span class="line">        PTE_V | (((<span class="type">uintptr_t</span>)&amp;vspt[<span class="number">5</span>][<span class="number">0</span>]) &gt;&gt; <span class="number">2</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// vspt[5][0] - vspt[5][511] 为大页 PTE , 覆盖的地址范围为 0x14000_0000 - 0x14000_0000+ 2M*512</span></span><br><span class="line">    addr = <span class="number">5</span> * SUPERPAGE_SIZE(<span class="number">0</span>);  <span class="comment">// 0x14000_0000   5G</span></span><br><span class="line">    <span class="keyword">for</span>(<span class="type">int</span> i = <span class="number">0</span>; i &lt; <span class="number">512</span>; i++)&#123;</span><br><span class="line">        vspt[<span class="number">5</span>][i] = (addr &gt;&gt; <span class="number">2</span>) |</span><br><span class="line">             PTE_V | PTE_AD | PTE_RWX;  </span><br><span class="line">        addr +=  SUPERPAGE_SIZE(<span class="number">1</span>);</span><br><span class="line">    &#125;  </span><br><span class="line"></span><br><span class="line">    <span class="type">uintptr_t</span> satp = (((<span class="type">uintptr_t</span>)vspt) &gt;&gt; <span class="number">12</span>) | (<span class="number">0x8</span>ULL &lt;&lt; <span class="number">60</span>);</span><br><span class="line">    <span class="keyword">if</span>(curr_priv == PRIV_VS)&#123;</span><br><span class="line">        CSRW(satp, satp);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span>(curr_priv == PRIV_HS || curr_priv == PRIV_M)&#123;</span><br><span class="line">        CSRW(CSR_VSATP, satp);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        ERROR(<span class="string">&quot;&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">uintptr_t</span> addr1 = phys_page_base(SWITCH1); <span class="comment">// 0x8800_0000 + 108 * 4k</span></span><br><span class="line"><span class="type">uintptr_t</span> addr2 = phys_page_base(SWITCH2); <span class="comment">// 0x8800_0000 + 109 * 4k</span></span><br><span class="line"><span class="type">uintptr_t</span> vaddr1 = vs_page_base(SWITCH1); <span class="comment">// 0x10000_0000 + 108 * 4k</span></span><br><span class="line"><span class="type">uintptr_t</span> vaddr2 = vs_page_base(SWITCH2); <span class="comment">// 0x10000_0000 + 109 * 4k</span></span><br></pre></td></tr></table></figure>
+
+<p>先看 vs-stage 的翻译, 0x10000_0000 + 108 * 4k<br>首先 satp &#x3D; vsatp. PPN &#x3D; vspt &gt;&gt; 12, 对应sv39模式, </p>
+<ul>
+<li>va[38:30] (9位) 给出了一级页号偏移为 4, 在一级页表的物理页中找到二级页表的物理页号 <code>vspt[0][4]</code></li>
+<li>va[29:21] (9位)  给出了二级页号偏移为 0,  在二级页表的物理页中找到三级页表的物理页号 <code>vspt[2][0]</code></li>
+<li>va[20:12] (9位)  给出了三级页号偏移为 108, 在三级页表的物理页中找到要访问位置的物理页号 <code>vspt[3][108]</code></li>
+<li>物理页号对应的物理页基址（即物理页号左移12位）加上 offset 就是虚拟地址对应的物理地址<br>  <code>vspt[3][108].ppn &lt;&lt; 12 + 0 (offset) = 0x10000_0000 + 108*4k + 0</code></li>
+</ul>
+<p>所以 vs-stage 0x10000_0000 - 0x10000_0000 + 4M 的范围是直接映射的.</p>
+<p>再来看G-stage的翻译过程, GPA为 0x10000_0000 + 108 * 4k<br>对应于 sv39x4, hgatp.PPN 给出了一级页表首地址</p>
+<ul>
+<li>GPA[40:30] (11位) 给出了一级页号偏移为 4, 在一级页表的物理页中找到二级页表的物理页号 <code>hpt_root[4]</code></li>
+<li>GPA[29:21] (9位) 给出了二级页号偏移为 0,  在二级页表的物理页中找到三级页表的物理页号 <code>hpt[1][0]</code></li>
+<li>GPA[20:12] (9位) 给出了三级页号偏移为 108,  在三级页表的物理页中找到要访问位置的物理页号 <code>hpt[2][108]</code></li>
+<li>物理页号对应的物理页基址（即物理页号左移12位）加上 offset 就是虚拟地址对应的物理地址 , 对应的权限是 <code>test_page_perm_table[108].h=PTE_U | PTE_RWX</code><br>  <code>hpt[2][108].ppn &lt;&lt; 12 + 0 (offset) = 0x8800_0000 + 108*4k + 0</code></li>
+</ul>
+<p>翻译后, addr1 与 vaddr1 正好是对应的 HPA 与 GVA的映射关系</p>
+<p>再来看下 second_stage_only_translation 的测试项:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vs_page_base_limit(TOP) = <span class="number">0x1fffffff000</span>  <span class="string">&quot;即 0x20000_0000 前的最后一个 2M &quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>由于vstap 写了 0, guest os 未启用分页, 所以guest os 直接访问的就是GPA<br>对应于 sv39x4, hgatp.PPN 给出了一级页表首地址</p>
+<ul>
+<li>GPA[40:30] (11位) 给出了一级页号偏移为 2047 (11个1), 在一级页表的物理页中找到二级页表的物理页号 <code>hpt_root[2047]</code></li>
+<li>GPA[29:21] (9位) 给出了二级页号偏移为 511 (9个1),  在二级页表的物理页中找到三级页表的物理页号 <code>hpt[1][511]</code></li>
+<li>GPA[20:12] (9位) 给出了三级页号偏移为 511 (9个1),  在三级页表的物理页中找到要访问位置的物理页号 <code>hpt[2][511]</code></li>
+<li>物理页号对应的物理页基址（即物理页号左移12位）加上 offset 就是虚拟地址对应的物理地址 , 对应的权限是 <code>test_page_perm_table[511].h=PTE_U | PTE_RWX</code><br>  <code>hpt[2][511].ppn &lt;&lt; 12 + 0 (offset) = 0x8800_0000 + 511*4k + 0</code></li>
+</ul>
+<p>最后看下VS-mode下可以切换页表, 而页表都是落在原始地址范围 hpt 0x80020000 hspt 0x80032000 vspt 0x8002c000<br>先看下 vs-stage的转换 0x80020000</p>
+<p>首先 satp &#x3D; vsatp. PPN &#x3D; vspt &gt;&gt; 12, 对应sv39模式, </p>
+<ul>
+<li>va[38:30] (9位) 给出了一级页号偏移为 2, 在一级页表的物理页中找到二级页表的物理页号 <code>vspt[0][2]</code></li>
+<li>va[29:21] (9位)  给出了二级页号偏移为 0,  在二级页表的物理页中找到三级页表的物理页号 <code>vspt[1][0]</code>, 此处为大页, 所以页目录walk 终止.</li>
+<li>va[20:12] (9位) 和 va[11:10] 最终给出了页内偏移为 0x20000, 最终的GPA 地址为<br>  <code>vspt[1][0].ppn &lt;&lt; 12 &lt;&lt; 9 + 0x20000 = 0x8000_0000 + 0x20000</code></li>
+</ul>
+<p>同理GVA-GPA的映射关系为 0x80032000 -  0x80032000 0x8002c000 - 0x8002c000<br>所以 <code>0x8000_0000 - 0x8000_0000+64*0x200000  (0x8800_0000)</code> 范围是线性映射的, GVA等同于GPA</p>
+<p>再来看G-stage的转换 0x80020000</p>
+<p>对应于 sv39x4, hgatp.PPN 给出了一级页表首地址</p>
+<ul>
+<li>GPA[40:30] (11位) 给出了一级页号偏移为 2, 在一级页表的物理页中找到二级页表的物理页号 <code>hpt_root[2]</code></li>
+<li>GPA[29:21] (9位) 给出了二级页号偏移为 0,  在二级页表的物理页中找到三级页表的物理页号 <code>hpt[0][0]</code>, 此处为大页, 所以页目录walk 终止.</li>
+<li>GPA[20:12] (9位) 和 GPA[11:10] 最终给出了页内偏移为 0x20000, 最终的HPA 地址为<br>  <code>hpt[0][0].ppn &lt;&lt; 12 &lt;&lt; 9 + 0x20000 = 0x8000_0000 + 0x20000</code></li>
+</ul>
+<p>同理GPA-HPA的映射关系为 0x80032000 - 0x80032000 0x8002c000 - 0x8002c000<br>所以 <code>0x8000_0000 - 0x8000_0000+64*0x200000  (0x8800_0000)</code> 范围是线性映射的, GPA等同于HPA</p>
+<p>最终 VS-mode下可以切换 hs vs g-stage 的页表项, 页表项所处的地址范围 GVA 和 HPA 是线性映射的, GVA等同于 HPA.</p>
+<p>调研 qemu 和 spike 的代码, G-stage 的页表项必须带有 PTE_U 的 flag, G-stage 才能不导致 load&#x2F;write exception.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/riscv/" rel="tag"># riscv</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/06/11/hxd_new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/rvh%20h-extension%201.0%20&%20riscv%20%E7%A1%AC%E4%BB%B6%E8%99%9A%E6%8B%9F%E5%8C%96/" rel="prev" title="rvh h-extension 1.0 & riscv 硬件虚拟化">
+      <i class="fa fa-chevron-left"></i> rvh h-extension 1.0 & riscv 硬件虚拟化
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/07/11/hxd_new/riscv%E8%B0%83%E7%A0%94/riscv%20%E6%B5%8B%E8%AF%95/" rel="next" title="nuclei riscv isa 测试">
+      nuclei riscv isa 测试 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#test-page"><span class="nav-number">1.</span> <span class="nav-text">test_page</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#hspt-init"><span class="nav-number">2.</span> <span class="nav-text">hspt_init</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#hpt-init"><span class="nav-number">3.</span> <span class="nav-text">hpt_init</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

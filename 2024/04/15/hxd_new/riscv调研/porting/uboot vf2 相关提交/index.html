@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="basev2021.10-rc5 驱动相关 Reset:Starfive-jh7110: Add reset driver for JH7110 Support for reset controller on starfive JH7110 SoCs. commit: 56c86383dc88850ee2e5af197532939b861f573b    GPIO:Starfive-jh7110:">
+<meta property="og:type" content="article">
+<meta property="og:title" content="blog">
+<meta property="og:url" content="https://liguangzhang.github.io/2024/04/15/hxd_new/riscv%E8%B0%83%E7%A0%94/porting/uboot%20vf2%20%E7%9B%B8%E5%85%B3%E6%8F%90%E4%BA%A4/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="basev2021.10-rc5 驱动相关 Reset:Starfive-jh7110: Add reset driver for JH7110 Support for reset controller on starfive JH7110 SoCs. commit: 56c86383dc88850ee2e5af197532939b861f573b    GPIO:Starfive-jh7110:">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://liguangzhang.github.io/attachments/Pasted%20image%2020230130164141.png">
+<meta property="og:image" content="https://liguangzhang.github.io/attachments/Pasted%20image%2020230130163321.png">
+<meta property="article:published_time" content="2024-04-15T09:59:59.767Z">
+<meta property="article:modified_time" content="2024-04-15T09:59:59.767Z">
+<meta property="article:author" content="liguang.zhang">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://liguangzhang.github.io/attachments/Pasted%20image%2020230130164141.png">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2024/04/15/hxd_new/riscv%E8%B0%83%E7%A0%94/porting/uboot%20vf2%20%E7%9B%B8%E5%85%B3%E6%8F%90%E4%BA%A4/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title> | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2024/04/15/hxd_new/riscv%E8%B0%83%E7%A0%94/porting/uboot%20vf2%20%E7%9B%B8%E5%85%B3%E6%8F%90%E4%BA%A4/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-04-15 17:59:59" itemprop="dateCreated datePublished" datetime="2024-04-15T17:59:59+08:00">2024-04-15</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="base"><a href="#base" class="headerlink" title="base"></a>base</h1><p>v2021.10-rc5</p>
+<h1 id="驱动相关"><a href="#驱动相关" class="headerlink" title="驱动相关"></a>驱动相关</h1><ol>
+<li><p>Reset:Starfive-jh7110: Add reset driver for JH7110<br> Support for reset controller on starfive JH7110 SoCs.<br> commit: 56c86383dc88850ee2e5af197532939b861f573b  </p>
+</li>
+<li><p>GPIO:Starfive-jh7110: Add GPIO driver for JH7110<br> Support for GPIO controller on starfive JH7110 SoCs.<br> <strong>Commit:</strong> 53d9e9530ae20f804b7ca2766ab125b42ad5bdb3</p>
+</li>
+<li><p>misc:OTP:Starfive-jh7110: Add driver for the Starfive otp controller<br>Added a misc driver to handle OTP memory in Starfive SoCs.</p>
+</li>
+</ol>
+<blockquote>
+<p>没使用, 代码中用来读 eth0&#x2F;1 MAC地址的, 但是没有启动</p>
+</blockquote>
+<p><strong>Commit:</strong> 4187fa6a2db9f82613758004fdab2b83b1161973</p>
+<ol start="4">
+<li><p>clk:starfive-jh7110: Add clock driver for JH7110<br>Add a clock driver for StarFive JH7110 Soc platform.<br><strong>Commit:</strong> e9cef6c8ce31ff51099f23e2d628483cf762d728</p>
+</li>
+<li><p>reset:starfive: Adjust judgment conditions</p>
+</li>
+</ol>
+<p>The serial driver will call reset driver, udelay function will be called in reset driver,<br>but the timer is not init,so udelay function call will cases error.<br><strong>Commit:</strong> c7889a100782db20e85f99f6471881cc51120dbc</p>
+<ol start="6">
+<li>clk:starfive-jh7110: remove unused clk</li>
+</ol>
+<p>Remove unused clock in order to reduce code size.<br><strong>Commit:</strong> 90afdef187afbf0af192288118d0abf542bc6301</p>
+<ol start="7">
+<li>clk:starfive-jh7110: Adjust the dependency of CLK_JH7110 &amp; SPL_CLK_JH7110 macros</li>
+</ol>
+<p>Adjust the dependency from TARGET_STARFIVE_VISIONFIVE to STARFIVE_JH7110.<br><strong>Commit:</strong> 987a20bf9b0d146127559e0414c5d9607d41f601</p>
+<ol start="8">
+<li>clk:starfive-jh7110: Update pll0&#x2F;pll1&#x2F;pll2 clk</li>
+</ol>
+<p>Add JH7110_GMAC0_GTXC clk register and remove pll0&#x2F;pll1&#x2F;pll2 clk define<br>from clk-jh7110.c to jh7110_clk.dts<br><strong>Commit:</strong> 76c3fe38884eabb095547ea5fd633855f221a2c5</p>
+<ol start="9">
+<li>reset:starfive-jh7110: Adjust the dependency of RESET_JH7110 macro</li>
+</ol>
+<p>Adjust the dependency from TARGET_STARFIVE_VISIONFIVE to<br>STARFIVE_JH7110.<br><strong>Commit:</strong></p>
+<ol start="10">
+<li>GPIO:Starfive-jh7110: Add macro definition</li>
+</ol>
+<p>Add macro definition of GPIO<br><strong>Commit:</strong> cafd9e471a9e6d7dae0fc5549a94e11e2aea221b</p>
+<ol start="11">
+<li>clk:starfive-jh7110: add JH7110_GMAC1_GTXC clk</li>
+</ol>
+<p>Add JH7110_GMAC1_GTXC clk for GMAC1 on JH7110<br><strong>Commit:</strong> 3b92ff69270562b86fba4e3e7f78f05ddc279ced</p>
+<ol start="12">
+<li>clk:starfive-jh7110: Update pll0&#x2F;pll1&#x2F;pll2 clk</li>
+</ol>
+<p>Remove pll0&#x2F;pll1&#x2F;pll2 clk define from jh7110_clk.dts to clk-jh7110.c<br><strong>Commit:</strong> 0b2572d9978f265b51a218f334434ab9fde41552</p>
+<ol start="13">
+<li>serial: ns16550: support a list of clk</li>
+</ol>
+<p>Add a list of clk enable operation.<br><strong>Commit:</strong> 98ef3602a1850c79d509fab405a673bf089e114e</p>
+<ol start="14">
+<li>clk:riscv:starfive: update uart3-uart5 clks</li>
+</ol>
+<p>Update uart3-uart5 clks register info for StarFive JH7110 SoC.<br><strong>Commit:</strong> 4806c43e7adae907b72eaedeb635fa2c03eef196</p>
+<ol start="15">
+<li>clk:jh7110: pll0 dynamically gets the frequency</li>
+</ol>
+<p>pll0 dynamically gets the frequency.<br><strong>Commit:</strong> d21940b4fcb226f80cec587794be4ca9e8c66a3f</p>
+<ol start="16">
+<li>reset:starfive:jh7110: Delete redundant logic</li>
+</ol>
+<p>In the hardware design, the IPs RESET signal of jh7110 is divided into<br>two groups,one group is active high, and the other group is active low.<br><strong>Commit:</strong> b8c8323ddde327c1ca67c20cc179990d63b88212</p>
+<ol start="17">
+<li>ram:starfive: Make ddr driver support 2G size</li>
+</ol>
+<p>The ddr driver include two configs with 2G and 4G.Fist read the ddr size<br>config from the memory node in the dts,then match the right config and<br>do it.<br><strong>Commit:</strong> b04743f040068be9b010bdb7acce67454c7bf8de</p>
+<ol start="18">
+<li>ram: starfive: jh7110: Replace the configuration operation for pll1 clk</li>
+</ol>
+<p>Replace the configuration operation for pll1 clk with common api provide<br>by pll module.</p>
+<p><strong>Commit:</strong> 6c18803bcb898acd1f983315e9063209ba1d13e8</p>
+<ol start="19">
+<li>ram: starfive: Make DDR driver support 8G size</li>
+</ol>
+<p>This patch include four items:<br>    1.rename the driver compatible name.<br>    2.reset action with the common API.<br>    3.clean up code to make it is closer to readable.<br>    4.add configuration to support 8G size<br><strong>Commit:</strong> 10ee04a53553d97e698f36906844c243a1778b7f</p>
+<ol start="18">
+<li>clk:jh7110: update apb_bus clk relationship</li>
+</ol>
+<p>The previous definition of apb_bus clock relationship is incorrect,so<br>update it.<br><strong>Commit:</strong> 20f3a9aeb57d6237a1a19ae519e23f06d98f88ef</p>
+<ol start="19">
+<li>clk: starfive: jh7110: Modify the parameters of clk_register()</li>
+</ol>
+<p>Modify the parameters pass to clk_register() for pll0&#x2F;pll1&#x2F;pll2 clk.<br><strong>Commit:</strong> 0c1fefaf48d0f58453dedda58dcd6ac206d7970f</p>
+<ol start="20">
+<li>driver:qspi: Switch the QSPI parent clock to pll0</li>
+</ol>
+<p>Switch the QSPI parent clock to pll0 to improve the QSPI speed<br><strong>Commit:</strong> bf2eae30d4aa6312e5a8578b12e8c3aa66a93fb0</p>
+<ol start="21">
+<li>ram: starfive: remove fdtdec_setup_mem_size_base call</li>
+</ol>
+<p>Memory information has been obtained elsewhere, so remove<br>fdtdec_setup_mem_size_base call.<br><strong>Commit:</strong> d204f230ac075b82e4d59271369245b5c5e58ecf</p>
+<ol start="22">
+<li>pinctrl: starfive: Add StarFive JH7110 driver</li>
+</ol>
+<p>Add pinctrl driver for StarFive JH7110 SoC.<br><strong>Commit:</strong> b69d2e5f56d1a2debb625bca32ac55df20a746ac</p>
+<h1 id="arch"><a href="#arch" class="headerlink" title="arch"></a>arch</h1><ol>
+<li>riscv:soc:jh7110: Add support jh7110 soc.</li>
+</ol>
+<p>Add StarFive JH7110 soc to support RISC-V arch<br><strong>Commit:</strong> ef888a4df1dd200a95e8eb7aa90d0b08b89a1964</p>
+<ol start="2">
+<li>riscv:dts: add jh7110 support</li>
+</ol>
+<p>Add dts support for jh7110. The starfive visionfive support is based on<br>jh7110 soc.<br><strong>Commit:</strong> 632fd3126837ce40908de1b3c28d265e90367b71</p>
+<ol start="3">
+<li>riscv:starfive-jh7110: clear L2 LIM memory</li>
+</ol>
+<p>Clear L2 LIM memory on StarFive JH7110, avoid some unexpect exception.<br><strong>Commit:</strong> 00018eb98a12f2ebbbd25fcca0d1262939ebc769</p>
+<ol start="4">
+<li>arch: riscv: jh7110: add pll clk configuration for jh7110</li>
+</ol>
+<p>Add common interface to set and get pll clk information for jh7110 soc.<br><strong>Commit:</strong> 01bbc04d9d9c9e38e6dcc93b1e7dca57b5862c11</p>
+<ol start="5">
+<li>arch: riscv: jh7110: read ram size from eeprom</li>
+</ol>
+<p>Update memory size information, which read from eeprom.</p>
+<p>通过  read_eeprom 接口读到 ram size.<br><strong>Commit:</strong> eb119d1553cfbc3fbccba4b46bdfcd25a4abd54e</p>
+<ol start="6">
+<li>riscv:starfive:jh7110: change gmac0 tx delay to 0xa</li>
+</ol>
+<p>0xa will better match gmac0 tx in 1000M<br><strong>Commit:</strong> 3d3363de0dd7b10d32f579031bbcc046adf4e7eb</p>
+<h1 id="board"><a href="#board" class="headerlink" title="board"></a>board</h1><ol>
+<li>board:starfive: add starfive visionfive board support</li>
+</ol>
+<p>Add board support for StarFive VisionFive.<br><strong>Commit:</strong> d3c8386d64f99863213087335b14be84c378957d</p>
+<ol start="2">
+<li>config:starfive-jh7110: add config file for jh7110</li>
+</ol>
+<p>Add basic config option for StarFive VisionFive board.<br><strong>Commit:</strong> e143a581a3cbdefd16771e9cc17cbd103c392a95</p>
+<p>(x) 3. board:starfive: add rtc timer init  (没使用 starfive_visionfive.c)</p>
+<p>The rtc timer is used early in kernel, but the clk&amp;reset driver is not<br>ready,so some clk&amp;reset init is placed here.<br><strong>Commit:</strong> f95a5cec9fd49737ce570098be96d0c4d5c40ea8</p>
+<ol start="4">
+<li>board:starfive: add starfive evb board support</li>
+</ol>
+<p>Add board support for StarFive EVB.<br><strong>Commit:</strong> e81a6b4b7a58f56772b48db74ccadfc77a733fe1</p>
+<ol start="5">
+<li>board:starfive: add clk init</li>
+</ol>
+<p>Add clk init for ddr on JH7110 board<br><strong>Commit:</strong> 0eddcac0de54ba6d7b73f4cef8fffc9ce86582e0</p>
+<ol start="6">
+<li>config:starfive-jh7110: update starfive evb board default config</li>
+</ol>
+<p>Add DDR config to the default config for starfive evb board.<br><strong>Commit:</strong> 845221c93ff817e702beeb571946b988092591b3</p>
+<ol start="7">
+<li>board:starfive: Modify dynamic alloc memory start addr in SPL</li>
+</ol>
+<p>Modify the dynamic alloc memory start address from L2 LIM to DDR.<br><strong>Commit:</strong> 41f9b1fe8d38ff8ab4f4e44aa953125834f9b41c</p>
+<ol start="8">
+<li>board:starfive: enable prefetcher and add two macaddress configuration</li>
+</ol>
+<p>Add two macaddress for gmac0 and gmac1. Enable prefetcher for EVB board.<br><strong>Commit:</strong> fb8cb55de36782b2db2f85741758e67061d14355</p>
+<ol start="9">
+<li>config:starfive-jh7110: add MICREL phy config to defconfig</li>
+</ol>
+<p>Add MICREL phy config to defconfig for starfive EVB board.<br><strong>Commit:</strong> 8a8168dd0c8404a6c3d72a924b7b4195c1cde8fb</p>
+<ol start="10">
+<li>board:starfive:evb: modify the GPIO configuration for sd module</li>
+</ol>
+<p>Modify the GPIO configuration for sd&amp;emmc module, switch the clk of sd&amp;emmc<br>to high frequency<br><strong>Commit:</strong> 9ca1a627b4363ea3a08853cf1bbb821291ea0710</p>
+<ol start="11">
+<li>board:starfive:evb: update uart3-uart5 resets</li>
+</ol>
+<p>Add SPL_DM_RESET to defconfig, and update uart3-uart5 reset for StarFive<br>JH7110 SoC.</p>
+<p><strong>Commit:</strong> 61f294b11cd12981b93a3a2deb8036f705332ae2</p>
+<ol start="12">
+<li>config:starfive-jh7110: add sd card boot config</li>
+</ol>
+<p>Configure SD card boot parameters<br><strong>Commit:</strong> 810b30254ca077d2f83ade0e30c51f60e9751945</p>
+<ol start="13">
+<li>configs: starfive_evb_defconfig: Support saveenv</li>
+</ol>
+<p>Add saveenv config to Support saveenv</p>
+<ol start="14">
+<li>configs: starfive_visionfive2_defconfig: Support saveenv</li>
+</ol>
+<p>Add saveenv config to Support saveenv<br><strong>Commit:</strong> 6a74373a2368794cc52907ad9c77694cab6612be</p>
+<ol start="14">
+<li>configs: starfive: fix tftpboot file waite a long time for the first time</li>
+</ol>
+<p>ARP_TIMEOUT is too large, then will waite a long time for the first time<br>Set ARP_TIMEOUT to 500 refer to others<br>Set PHY_ANEG_TIMEOUT needs longer aneg time for the 2nd phy<br><strong>Commit:</strong> 5ae5eca975735a24fa04c00ec83f8cdbb408278e</p>
+<ol start="15">
+<li>board:starfive:evb: add jh7110_gmac_sel_tx_to_rgmii</li>
+</ol>
+<p>JH7110B needs switch gmac0&#x2F;1 tx to rgmii phy.<br><strong>Commit:</strong> bd7deb0588459f36cf774ed58a419a7efbc9d5e4</p>
+<ol start="16">
+<li>board:starfive:evb: add get_chip_type</li>
+</ol>
+<p>Read the chip model from the rgpio3 and setenv “chip_vision”<br><strong>Commit:</strong> 0dbe3fb0be546f2be7adaee6baf6d550fbba4e26</p>
+<ol start="17">
+<li>board:starfive:evb: Support using env to detect board version</li>
+</ol>
+<p>JH7110B need tx_inverted by YT8521 phy, you need to read the chip<br>version to determine whether to use it.<br><strong>Commit:</strong> ca91f535d48d02088ed4b5ad78eb343c0325b8c9</p>
+<ol start="18">
+<li><p>board: starfive: Support visionfive2<br><strong>Commit:</strong> ad9e1dc0ba91125117eb8d2a8474048c9632c530</p>
+</li>
+<li><p>board: starfive: visionfive: Add uart0 and jtag pinmux<br><strong>Commit:</strong> e67867c5f8062448479b6ae647aa6cfaab6134da</p>
+</li>
+<li><p>Support sd autoboot<br><strong>Commit:</strong> 59f872828b12d93b2636f2292bf0d7b2fa7088c5</p>
+</li>
+<li><p>board: starfive: Add i2c5 init for VisionFive2<br><strong>Commit:</strong> 642566351597bc9eca648de6ecdc6fed2a99e509</p>
+</li>
+<li><p>add ID_EEPROM supoort for VisionFive2<br><strong>Commit:</strong> 5f51c4024944bcd13211dd699cb89d3ea903e987</p>
+</li>
+<li><p>board: starfive: update gpio index base on visionfive2 A1.1</p>
+</li>
+</ol>
+<p>update sdio emmc uart0 gpio index base on visionfive2 new board A1.1<br><strong>Commit:</strong> ef6e2f4194fc6d4cdb90cde3d9aad0feaf85847c</p>
+<ol start="24">
+<li>config: jh7110: read uboot by partition</li>
+</ol>
+<p>uboot should be placed in partition-2<br><strong>Commit:</strong> a4c05f0a0f3f67aeefe8c853f329dcd1981d39ec</p>
+<ol start="25">
+<li>Support scan to boot from sd card or emmc</li>
+</ol>
+<p>Get bootmode, if bootmode is flash, then default boot from sd card.<br><strong>Commit:</strong> 62abf7817bc66ed679534d75d904b029713cade3</p>
+<ol start="26">
+<li><p>Support boot from grub<br><strong>Commit:</strong> d4566c2f24b4df5702bb1ddf22f7d4b122f31280</p>
+</li>
+<li><p>board: starfive: Support auto to init gmac base on eeprom data<br><strong>Commit:</strong> 7e0268be6a6cd721230ea549e20588999170e37b</p>
+</li>
+<li><p>board: starfive: Add interface to get data from eeprom<br><strong>Commit:</strong> a25a1eb135b59a0a9050156831dc2bb6f735f063</p>
+</li>
+<li><p>board: starfive: visionfive2: add memory_addr and memory_size environment variable</p>
+</li>
+</ol>
+<p>In order to compatible visionfive2 board with different version,so the<br>memory size information read from eeprom. and save to environment<br>variable. The value which saved in environment variable will be used<br>to update the memory node in dts.<br><strong>Commit:</strong> d4cfd564c23afae9efeb44a12d6a2be50b17d912</p>
+<ol start="30">
+<li>board:starfive:visionfive2: add jh7110_gmac_sel_tx_to_rgmii</li>
+</ol>
+<p>JH7110B needs switch gmac0&#x2F;1 tx to rgmii phy.<br><strong>Commit:</strong> d4b261737e038bdf1bd234c776b9d864fdff5ebe</p>
+<ol start="31">
+<li>board:starfive:visionfive2: add get_chip_type</li>
+</ol>
+<p>Read the chip model from the eerpom and setenv “chip_vision”<br><strong>Commit:</strong> 48c7e4f1d064eb4f7b9493eda70897778a4e115f</p>
+<ol start="32">
+<li>board:starfive:visionfive2: Modify jh7110_gmac_init</li>
+</ol>
+<p>JH7110B(chip_vision B) need switch gmac tx clk to rgmii phy.<br><strong>Commit:</strong> b249d3bac3ab7524e2c066afdf1fef59d63dad5b</p>
+<ol start="33">
+<li>board:starfive:visionfive2: setenv uboot_fdt_addr</li>
+</ol>
+<p>It is more convenient to dynamically modify uboot dts<br><strong>Commit:</strong> 2a54b81bcaf7486aa8f75c04b67fcd809ca3dfa2</p>
+<ol start="34">
+<li>board:starfive:visionfive2: Support using env to detect board version</li>
+</ol>
+<p>JH7110A do not need tx_inverted by YT8531 phy, you need to read the chip<br>version to determine whether to use it.<br><strong>Commit:</strong> d0df544ccec590d8c18ebb9e63a36066af878dd5</p>
+<ol start="35">
+<li>board:starfive:visionfive2: Adaptive mem size in linux.</li>
+</ol>
+<p>Visionfive2 has a 2&#x2F;4&#x2F;8G version. You need to read eeprom information in<br>uboot to obtain the size of mem, and modify the size of mem in linux<br>dts.<br><strong>Commit:</strong> bcebb15d3a72480fd3871d9c3c597a4f249332d5</p>
+<ol start="36">
+<li>riscv:starfive:jh7110: change gmac0 tx delay to 0x9 for 1.2A.</li>
+</ol>
+<p>0x9 will better match 1.2A gmac0 tx in 1000M<br><strong>Commit:</strong> 6c8ec6a1fc2f14b756fb586c44ac4d8928a6ae82</p>
+<ol start="37">
+<li><p>qspi: improve qspi speed<br><strong>Commit:</strong> c42307e5639f9a6e7be41b2c504a7a635666397a</p>
+</li>
+<li><p>efi_loader: Enable RISCV_EFI_BOOT_PROTOCOL support</p>
+</li>
+</ol>
+<p>This adds support for new RISCV_EFI_BOOT_PROTOCOL to<br>communicate the boot hart ID to bootloader&#x2F;kernel on RISC-V<br>UEFI platforms.<br><strong>Commit:</strong> d2dc8ab69ef123955443fe63a58484f63e2c2d8b</p>
+<ol start="39">
+<li>configs:Enable CONFIG_CMD_NVEDIT_EFI and CONFIG_CMD_EFIDEBUG</li>
+</ol>
+<p>Enable CONFIG_CMD_NVEDIT_EFI, CONFIG_CMD_EFIDEBUG, CONFIG_HEXDUMP and CONFIG_EFI_RISCV_BOOT_PROTOCOL.<br><strong>Commit:</strong> dd3d4040c3a8e6ddf9a7d288145aaa6819fd1672</p>
+<ol start="40">
+<li>borad:jh7110:vf2: Modify ramdisk_addr_r&#x2F;pxefile_addr_r&#x2F;scriptaddr</li>
+</ol>
+<p>The jh7110 ddr starts from 0x40000000. Using 0x80000000 may cause the<br>CMA space to fail<br><strong>Commit:</strong> bafe822cd4a4ffb82945e15a82a504010cb4c5af<br><strong>Commit:</strong> c6a5bf91e2caf9f463a92a9198d8240a55caf8e8</p>
+<ol start="41">
+<li>board:starfive:Add gpio init<br>board:starfive:Add gpio init</li>
+</ol>
+<p>Fixing don’t detect wm8960 occasionally<br>Set scl&#x2F;sda gpio output enable<br>Set drive strength to 12mA<br>Set gpio pull up<br><strong>Commit:</strong> 226b62f65ea56d7946864140582885f0a5027a07</p>
+<ol start="42">
+<li><p>board:starfive:Modify GPIO_SD_SHIFT to GPIO_DS_SHIFT<br>Modify GPIO_SD_SHIFT to GPIO_DS_SHIFT.<br>Fix jh7110_gpio_init function.<br><strong>Commit:</strong> fb41a409823d96ef4b7db791764ece91ec407f7c</p>
+</li>
+<li><p>dt-bindings: pinctrl: Add StarFive JH7110 pinctrl definitions</p>
+</li>
+</ol>
+<p>Add pinctrl definitions for StarFive JH7110 SoC.<br><strong>Commit:</strong> 1288948b5409bd39fc90a6ff33b9e965518a7838</p>
+<ol start="44">
+<li>configs: Enable STARFIVE_PINCTRL</li>
+</ol>
+<p>Enable STARFIVE_PINCTRL and PINCTRL_FULL<br><strong>Commit:</strong> ee772d8aea46ebd0501a1acf3650da4bb68a897b</p>
+<ol start="45">
+<li>board:starfive:Remove usb&#x2F;sdio0&#x2F;sdio1 gpio init</li>
+</ol>
+<p>Remove usb&#x2F;sdio0&#x2F;sdio1 gpio init.<br><strong>Commit:</strong> 4cc82557a555cc4b99d0d5322122f7af3d798e59</p>
+<ol start="46">
+<li>configs: visionfive2 Enable STARFIVE_PINCTRL</li>
+</ol>
+<p>visionfive2 Enable STARFIVE_PINCTRL and PINCTRL_FULL<br><strong>Commit:</strong> 155942dbba0aa27065a12f76d71852bb6ba03943</p>
+<ol start="47">
+<li>dts:starfive:Visionfive2 Add pinctrl config</li>
+</ol>
+<p>Add pinctrl config about sdio0&#x2F;sdio1&#x2F;uart0<br><strong>Commit:</strong> 95589281b9c98534c26e339f8780b739c38b0d63</p>
+<ol start="48">
+<li>board:starfive:jh7110: default cpufreq is 1000Mhz.</li>
+</ol>
+<p>The frequency of pll0 is set to 1000Mhz in the bootrom<br><strong>Commit:</strong> 9b71c6f5fa0d96680a3329e24afab8b09ad685fb</p>
+<ol start="49">
+<li>board:starfive:jh7110: Set the CPU default frequency to 1000MHz</li>
+</ol>
+<p>Set to 1000M to ensure the CPU can work normally under 0.8V&#96;<br>voltage<br><strong>Commit:</strong> 699c0a80340c59f6c68253966b0914cefd89baa2</p>
+<ol start="50">
+<li>board:starfive:visionfive2: configure vf2 for sysboot method</li>
+</ol>
+<p>Dynamically edit dtb to load correct hardware information and uses sysboot method to boot to distro<br><strong>Commit:</strong> dededaf458b8e38243ce8e8508d959621c56b985</p>
+<h1 id="net"><a href="#net" class="headerlink" title="net"></a>net</h1><ol>
+<li>net:phy: add 10&#x2F;100M register configuration</li>
+</ol>
+<p>Support 10&#x2F;100M configuration.<br><strong>Commit:</strong> dffb8ea8dd2860bb06e173e9f48f3f14b3b606f7</p>
+<ol start="2">
+<li>net: dwc_eth_qos:starfive: add jh7110 support</li>
+</ol>
+<p>Add new configuration for jh7110 soc platform.<br><strong>Commit:</strong> 461cd1afbed484002536e4f6cf985d47c33b09e8</p>
+<ol start="3">
+<li>net:phy:YUTAI: Add YT8511&#x2F;yt8521 phy driver</li>
+</ol>
+<p>This adds basic support for YUTAI YT8511&#x2F;YT8521 phy.<br><strong>Commit:</strong> 66ede3957c034d69fbbc24d22c19701c68b42cbf</p>
+<ol start="4">
+<li>net:phy:YUTAI: Add YT8511&#x2F;yt8521 phy init</li>
+</ol>
+<p>Add phy init for YUTAI YT8511&#x2F;YT8521.<br><strong>Commit:</strong> 17a76df9975a5cf1dfad3cd02c9fd7aa49471001</p>
+<ol start="5">
+<li>net:phy:YUTAI: Add delay chain</li>
+</ol>
+<p>Add tx&#x2F;rx delay chain for YUTAI 8521<br><strong>Commit:</strong> f785501c47181e5918e8464edfedfee3a1c43566</p>
+<ol start="6">
+<li>net: dwc_eth_qos:starfive: update clk init</li>
+</ol>
+<p>Modify the clk init code for StarFive JH7110 platform.<br><strong>Commit:</strong> db61964dc2ecbbc9fb7fb89f0eed597b4429c82f</p>
+<ol start="7">
+<li>net:dwc_eth_qos:starfive: remove phy-reset-gpio set</li>
+</ol>
+<p>Phy-reset-gpio set is unused in JH7110<br><strong>Commit:</strong> 87549bf09316b49ec19e7e9c289d6138deb3de1c</p>
+<ol start="8">
+<li>riscv:dts:starfive-jh7110: add ethernet-phy delay_chain config</li>
+</ol>
+<p>Add ethernet-phy delay_chain configuration for gmac1 on starfive EVB<br>board.</p>
+<p><strong>Commit:</strong> 6bf1de16aa64caef1f8fab2876fa83a6f12f0917</p>
+<ol start="9">
+<li>net:phy:YUTAI: change tx delay config</li>
+</ol>
+<p>Modify the tx delay configuration.<br><strong>Commit:</strong> b239f16521b95137a46d6bfb59d8214da3f0620b</p>
+<ol start="10">
+<li>net:phy:motorcomm: Support modifying RGMII_TX_CLK delay train from dts</li>
+</ol>
+<p>support use original or inverted RGMII_TX_CLK delay train.<br>10M&#x2F;100M&#x2F;1000M can be configured independently.<br><strong>Commit:</strong> fe0ba7e18ed6fddfa4fe22e93cb1827d7a73a7a7</p>
+<ol start="11">
+<li><p>net: phy: Support YT8531 Gigabit Ethernet<br><strong>Commit:</strong> b8632bd416725e28894ef5bb8b4ede92d4f5bfd4</p>
+</li>
+<li><p>net:stmmac:dwc-qos: add support for external rmii_rtx clocks</p>
+</li>
+</ol>
+<p>JH7110A use external rmii_rtx clk for tx clk on 100M&#x2F;10M mode.<br><strong>Commit:</strong> 1cbbd9f9decb9815b29a77e42db7a0792c239883</p>
+<h1 id="usb"><a href="#usb" class="headerlink" title="usb"></a>usb</h1><ol>
+<li>usb:cdns3:Add StarFive wrapper driver for CDNS USB3 controller</li>
+</ol>
+<p>Add driver to handle StarFive specific wrapper for Cadence USB3 controller<br>present on JH7110 SoC.<br><strong>Commit:</strong> 11477926e35cb478977edd67181f6b16ce5a1afc</p>
+<ol start="2">
+<li>board:starfive:evb: add usb init config</li>
+</ol>
+<p>Add usb init config for starfive EVB board. Default set to USB2.0<br><strong>Commit:</strong> 5531f12c6efc79817914bf96f5b755840402e8c7</p>
+<h1 id="dts"><a href="#dts" class="headerlink" title="dts"></a>dts</h1><ol>
+<li>riscv:dts: update clk&amp;reset properties</li>
+</ol>
+<p>Synchronize the kernel dts file<br><strong>Commit:</strong> a014f51a8627f564caaa57654a56919972851c90</p>
+<ol start="2">
+<li>riscv:dts: update clk&amp;reset properties</li>
+</ol>
+<p>Synchronize the kernel dts file<br><strong>Commit:</strong> becd46e20807c56a071be1eaab897bcaeb178c31</p>
+<ol start="3">
+<li>riscv:dts:starfive-jh7110: add ddr device node</li>
+</ol>
+<p>Add ddr device node for JH7110.<br><strong>Commit:</strong> 6f0b30d82cebe9457d42f442846b716fcca65beb</p>
+<ol start="4">
+<li>riscv:dts:starfive-jh7110: Modify sd node configuration</li>
+</ol>
+<p>Modify SD&amp;EMMC node configuration on Starfive EVB board.<br><strong>Commit:</strong> 967e3296edfa01d8109213f5dd89b7bc9e6c1801</p>
+<ol start="5">
+<li>riscv:dts:starfive-jh7110: modify Model and riscv,isa info</li>
+</ol>
+<p>Change Model to “StarFive JH7110 EVB”, and change riscv,isa to<br>“rv64imafdcbsux”<br><strong>Commit:</strong> 283a338dce45e9db43e9c7a40eaf56482f5d8d3a</p>
+<ol start="6">
+<li>riscv: dts: jh7110: Add reset property to DDR control node</li>
+</ol>
+<p>Add reset property configuration to DDR control device tree node.<br><strong>Commit:</strong> 7efb109f1dd2f9a34da35392338ba3290764ec5c</p>
+<ol start="7">
+<li>dts:starfive:jh7110: set gmac phy tx_inverted for JH7110A&#x2F;B.</li>
+</ol>
+<p>JH7110B requires tx_inverted_10&#x2F;100&#x2F;1000 configuration, and different<br>parameters<br>may be required in 10M&#x2F;100M&#x2F;1000M mode.  </p>
+<p>This parameter supports JH7110B+YT8531PHY by default. Other boards can<br>modify the parameters of the tx_inverted_10&#x2F;100&#x2F;1000 to obtain support.  </p>
+<p>If you do not configure tx_inverted_10&#x2F;100&#x2F;1000 in dts, the default is 0.<br><strong>Commit:</strong> 460fe5dd0b3a288eb58bee6874683288bef671ce</p>
+<ol start="8">
+<li>riscv:dts:starfive-visionfive2: Add ethernet-phy node to set delay_chain<br>configuration</li>
+</ol>
+<p>Add ethernet-phy subnode to gmac node, so the delay_chain configuration<br>is passed through the ethernet-phy node.<br><strong>Commit:</strong> c0f7ad1b409cbae54b2d0272d57e4ee55e9917ec</p>
+<ol start="9">
+<li>dts:starfive:jh7110: set gmac phy tx_inverted for JH7110B+YT8531PHY.</li>
+</ol>
+<p>JH7110B requires tx_inverted_10&#x2F;100&#x2F;1000 configuration, and different parameters<br>may be required in 10M&#x2F;100M&#x2F;1000M mode.</p>
+<p><strong>Commit:</strong> a953d55d4b0ad37af2b1f2e673813e08ec999df6</p>
+<ol start="10">
+<li>dts: pmic: add axp15060 pmic config in vf2 uboot dts</li>
+</ol>
+<p>add axp15060 pmic dts config for opensbi power managment<br>used.<br><strong>Commit:</strong> b50de2c0ae0c5e6e1e52853960d232005ddb17db</p>
+<ol start="11">
+<li>dts:starfive:Add pinctrl config</li>
+</ol>
+<p>Add pinctrl config about usb&#x2F;sdio0<br><strong>Commit:</strong> 68dc79062721456f05815278dd428c2355ebd132</p>
+<p>arch&#x2F;riscv&#x2F;dts&#x2F;jh7110-u-boot.dtsi<br>arch&#x2F;riscv&#x2F;dts&#x2F;jh7110.dtsi<br>arch&#x2F;riscv&#x2F;dts&#x2F;jh7110_clk.dtsi<br>arch&#x2F;riscv&#x2F;dts&#x2F;starfive_visionfive-u-boot.dtsi<br>arch&#x2F;riscv&#x2F;dts&#x2F;starfive_visionfive.dts</p>
+<h1 id="spl"><a href="#spl" class="headerlink" title="spl"></a>spl</h1><ol>
+<li>ram:starfive: add ddr driver</li>
+</ol>
+<p>Add driver for JH7110 to support ddr initialization in SPL.<br><strong>Commit:</strong> b8ceeb8238c4db755c2a3e5fe178568bd2d4c568</p>
+<ol>
+<li>SPL:riscv:starfive-jh7110: Adjust CPU working frequency</li>
+</ol>
+<p>Adjust CPU working frequency from 1G to 1.25G for starfive EVB board.<br><strong>Commit:</strong> c43d28132317bd745a485543569e80d4bcfee018</p>
+<ol start="2">
+<li>spl:gpio: Set GPIO domain0-3 voltage to 1.8V</li>
+</ol>
+<p>The default GPIO domian0-3 voltage is 3.3V, which is controlled by 4<br>bits. 0 means 3.3.V, 1 means 1.8V.<br><strong>Commit:</strong> fc05902d00e58c4c85a34d8ab44dc42eef51cdc6</p>
+<ol start="3">
+<li>spl: satrfive: bus_root switch to pll2.</li>
+</ol>
+<p>High-speed emmc&#x2F;sdio support<br><strong>Commit:</strong> 1f6321dbaf5951fd0ffce1bf320000c8be9280f6</p>
+<ol start="4">
+<li>SPL:starfive-jh7110: Modify the default division factor of sdcard clk</li>
+</ol>
+<p>Modify the default division factor of sdcard clk to 4.<br><strong>Commit:</strong> 16178e355d396994e63546d552a5c75e4aad71c0</p>
+<ol start="5">
+<li>SPL:reset:starfive-jh7110: support reset in SPL</li>
+</ol>
+<p>Update Kconfig to support reset in SPL for StarFive JH7110 SoC.<br><strong>Commit:</strong> abd35ca6d33fb5df1f413b5466b315a92fa36f4f</p>
+<ol start="6">
+<li>spl:starfive: remove function spl_cpu_fre_150&#x2F;125</li>
+</ol>
+<p>replace them with spl_cpu_set_rate.<br><strong>Commit:</strong> 90a8248c00836a25ddc3e3bca3a83f41f61a4cd3</p>
+<ol start="7">
+<li>spl:starfive: Add support for different CPU frequencies.</li>
+</ol>
+<p>The cpu uses 1.25G by default.<br><strong>Commit:</strong> 66107c3e05e8804971bd14c575a509dbd816ae37</p>
+<ol start="8">
+<li><p>spl:jh7110: Modify cpu frequency should be before switching pll<br><strong>Commit:</strong> 0fb1b1ba8184d410749a657c932a4bb7f107a8d2</p>
+</li>
+<li><p>spl: starfive: jh7110: switch pll2 to 1188M</p>
+</li>
+</ol>
+<p>Switch the pll2 clk to 1188M with the comm pll interface on JH7110.<br><strong>Commit:</strong> 47e689908a5cca249c036138cc0f4bde014576a2</p>
+<ol start="11">
+<li>spl:starfive:jh7110: Improved GMAC0&#x2F;1 TX I&#x2F;O PAD capability</li>
+</ol>
+<p>JH7110B requires a higher IOPAD capability in 1000M mode.<br><strong>Commit:</strong> 945a1c00275fa1e81678dfa54d430f0877cd8146</p>
+<ol start="12">
+<li>i2c: designware: support SYS_I2C_DW in SPL</li>
+</ol>
+<p>Add SYS_I2C_DW driver to support in SPL.<br><strong>Commit:</strong> a98d92b150695ab214bb119a9afc07d38d136a1f</p>
+<ol start="13">
+<li>SPL: starfive: jh7110: add i2c init in SPL</li>
+</ol>
+<p>Add basic init before used by other modules in SPL.<br><strong>Commit:</strong> 0cb0bb697c65553464dc1b20f656da56281942db</p>
+<ol start="14">
+<li>riscv: dts: starfive: add i2c5 node in SPL</li>
+</ol>
+<p>Add i2c5 device configuration　to device tree which used by SPL.<br><strong>Commit:</strong> 352b4397d389e41f1d170c43a9b9139a8fbb79f2</p>
+<ol start="15">
+<li>configs: starfive: visionfive2: enable i2c eeprom in SPL</li>
+</ol>
+<p>Enable I2C and EEPROM driver in SPL.</p>
+<p>drivers&#x2F;misc&#x2F;i2c_eeprom.c</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">eeprom@50 &#123;</span><br><span class="line">        compatible = &quot;atmel,24c04&quot;;</span><br><span class="line">        reg = &lt;0x50&gt;;</span><br><span class="line">        pagesize = &lt;0x10&gt;;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p><strong>Commit:</strong> e7083b7199dba53255c4b59ee55f767e071133af</p>
+<ol start="16">
+<li>spl:starfive:jh7110: Improved GMAC0 TX I&#x2F;O PAD capability</li>
+</ol>
+<p>JH7110B requires a higher IOPAD capability in 1000M mode.<br><strong>Commit:</strong> b949c9b66c4d453ed0d454c7b5ee5c0aea280c28<br><strong>Commit:</strong> 9b8509bfef25819f9be0015013370aec69f6ba5b</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br><span class="line">262</span><br><span class="line">263</span><br><span class="line">264</span><br><span class="line">265</span><br><span class="line">266</span><br><span class="line">267</span><br><span class="line">268</span><br><span class="line">269</span><br><span class="line">270</span><br><span class="line">271</span><br><span class="line">272</span><br><span class="line">273</span><br><span class="line">274</span><br><span class="line">275</span><br><span class="line">276</span><br><span class="line">277</span><br><span class="line">278</span><br><span class="line">279</span><br><span class="line">280</span><br><span class="line">281</span><br><span class="line">282</span><br><span class="line">283</span><br><span class="line">284</span><br><span class="line">285</span><br><span class="line">286</span><br><span class="line">287</span><br><span class="line">288</span><br><span class="line">289</span><br><span class="line">290</span><br><span class="line">291</span><br><span class="line">292</span><br><span class="line">293</span><br><span class="line">294</span><br><span class="line">295</span><br><span class="line">296</span><br><span class="line">297</span><br><span class="line">298</span><br><span class="line">299</span><br><span class="line">300</span><br><span class="line">301</span><br><span class="line">302</span><br><span class="line">303</span><br><span class="line">304</span><br><span class="line">305</span><br><span class="line">306</span><br><span class="line">307</span><br><span class="line">308</span><br><span class="line">309</span><br><span class="line">310</span><br><span class="line">311</span><br><span class="line">312</span><br><span class="line">313</span><br><span class="line">314</span><br><span class="line">315</span><br><span class="line">316</span><br><span class="line">317</span><br><span class="line">318</span><br><span class="line">319</span><br><span class="line">320</span><br><span class="line">321</span><br><span class="line">322</span><br><span class="line">323</span><br><span class="line">324</span><br><span class="line">325</span><br><span class="line">326</span><br><span class="line">327</span><br><span class="line">328</span><br><span class="line">329</span><br><span class="line">330</span><br><span class="line">331</span><br><span class="line">332</span><br><span class="line">333</span><br><span class="line">334</span><br><span class="line">335</span><br><span class="line">336</span><br><span class="line">337</span><br><span class="line">338</span><br><span class="line">339</span><br><span class="line">340</span><br><span class="line">341</span><br><span class="line">342</span><br><span class="line">343</span><br><span class="line">344</span><br><span class="line">345</span><br><span class="line">346</span><br><span class="line">347</span><br><span class="line">348</span><br></pre></td><td class="code"><pre><span class="line">/ &#123;</span><br><span class="line">        compatible = &quot;starfive,jh7110&quot;;</span><br><span class="line">        #address-cells = &lt;0x2&gt;;</span><br><span class="line">        #size-cells = &lt;0x2&gt;;</span><br><span class="line">        model = &quot;StarFive VisionFive V2&quot;;</span><br><span class="line"></span><br><span class="line">        osc &#123;</span><br><span class="line">                compatible = &quot;fixed-clock&quot;;</span><br><span class="line">                #clock-cells = &lt;0x0&gt;;</span><br><span class="line">                clock-frequency = &lt;0x16e3600&gt;;</span><br><span class="line">                phandle = &lt;0x8&gt;;</span><br><span class="line">        &#125;;</span><br><span class="line"></span><br><span class="line">        gmac1_rmii_refin &#123;</span><br><span class="line">                compatible = &quot;fixed-clock&quot;;</span><br><span class="line">                #clock-cells = &lt;0x0&gt;;</span><br><span class="line">                clock-frequency = &lt;0x2faf080&gt;;</span><br><span class="line">                phandle = &lt;0x9&gt;;</span><br><span class="line">        &#125;;</span><br><span class="line"></span><br><span class="line">        stg_apb &#123;</span><br><span class="line">                compatible = &quot;fixed-clock&quot;;</span><br><span class="line">                #clock-cells = &lt;0x0&gt;;</span><br><span class="line">                clock-frequency = &lt;0x30d4000&gt;;</span><br><span class="line">                phandle = &lt;0xa&gt;;</span><br><span class="line">        &#125;;</span><br><span class="line"></span><br><span class="line">        gmac0_rmii_refin &#123;</span><br><span class="line">                compatible = &quot;fixed-clock&quot;;</span><br><span class="line">                #clock-cells = &lt;0x0&gt;;</span><br><span class="line">                clock-frequency = &lt;0x2faf080&gt;;</span><br><span class="line">                phandle = &lt;0xb&gt;;</span><br><span class="line">        &#125;;</span><br><span class="line"></span><br><span class="line">        cpus &#123;</span><br><span class="line">                #address-cells = &lt;0x1&gt;;</span><br><span class="line">                #size-cells = &lt;0x0&gt;;</span><br><span class="line">                timebase-frequency = &lt;0x3d0900&gt;;</span><br><span class="line">                phandle = &lt;0x2c&gt;;</span><br><span class="line"></span><br><span class="line">                cpu@0 &#123;</span><br><span class="line">                        compatible = &quot;sifive,u74-mc&quot;, &quot;riscv&quot;;</span><br><span class="line">                        reg = &lt;0x0&gt;;</span><br><span class="line">                        d-cache-block-size = &lt;0x40&gt;;</span><br><span class="line">                        d-cache-sets = &lt;0x40&gt;;</span><br><span class="line">                        d-cache-size = &lt;0x2000&gt;;</span><br><span class="line">                        d-tlb-sets = &lt;0x1&gt;;</span><br><span class="line">                        d-tlb-size = &lt;0x28&gt;;</span><br><span class="line">                        device_type = &quot;cpu&quot;;</span><br><span class="line">                        i-cache-block-size = &lt;0x40&gt;;</span><br><span class="line">                        i-cache-sets = &lt;0x40&gt;;</span><br><span class="line">                        i-cache-size = &lt;0x4000&gt;;</span><br><span class="line">                        i-tlb-sets = &lt;0x1&gt;;</span><br><span class="line">                        i-tlb-size = &lt;0x28&gt;;</span><br><span class="line">                        mmu-type = &quot;riscv,sv39&quot;;</span><br><span class="line">                        next-level-cache = &lt;0x1&gt;;</span><br><span class="line">                        riscv,isa = &quot;rv64imacu&quot;;</span><br><span class="line">                        tlb-split;</span><br><span class="line">                        status = &quot;okay&quot;;</span><br><span class="line">                        phandle = &lt;0x2d&gt;;</span><br><span class="line"></span><br><span class="line">                        interrupt-controller &#123;</span><br><span class="line">                                #interrupt-cells = &lt;0x1&gt;;</span><br><span class="line">                                compatible = &quot;riscv,cpu-intc&quot;;</span><br><span class="line">                                interrupt-controller;</span><br><span class="line">                                phandle = &lt;0x3&gt;;</span><br><span class="line">                        &#125;;</span><br><span class="line">                &#125;;</span><br><span class="line"></span><br><span class="line">                cpu@1 &#123;</span><br><span class="line">                        compatible = &quot;sifive,u74-mc&quot;, &quot;riscv&quot;;</span><br><span class="line">                        reg = &lt;0x1&gt;;</span><br><span class="line">                        d-cache-block-size = &lt;0x40&gt;;</span><br><span class="line">                        d-cache-sets = &lt;0x40&gt;;</span><br><span class="line">                        d-cache-size = &lt;0x8000&gt;;</span><br><span class="line">                        d-tlb-sets = &lt;0x1&gt;;</span><br><span class="line">                        d-tlb-size = &lt;0x28&gt;;</span><br><span class="line">                        device_type = &quot;cpu&quot;;</span><br><span class="line">                        i-cache-block-size = &lt;0x40&gt;;</span><br><span class="line">                        i-cache-sets = &lt;0x40&gt;;</span><br><span class="line">                        i-cache-size = &lt;0x8000&gt;;</span><br><span class="line">                        i-tlb-sets = &lt;0x1&gt;;</span><br><span class="line">                        i-tlb-size = &lt;0x28&gt;;</span><br><span class="line">                        mmu-type = &quot;riscv,sv39&quot;;</span><br><span class="line">                        next-level-cache = &lt;0x1&gt;;</span><br><span class="line">                        riscv,isa = &quot;rv64imafdcbsux&quot;;</span><br><span class="line">                        tlb-split;</span><br><span class="line">                        status = &quot;okay&quot;;</span><br><span class="line">                        phandle = &lt;0x2e&gt;;</span><br><span class="line"></span><br><span class="line">                        interrupt-controller &#123;</span><br><span class="line">                                #interrupt-cells = &lt;0x1&gt;;</span><br><span class="line">                                compatible = &quot;riscv,cpu-intc&quot;;</span><br><span class="line">                                interrupt-controller;</span><br><span class="line">                                phandle = &lt;0x4&gt;;</span><br><span class="line">                        &#125;;</span><br><span class="line">                &#125;;</span><br><span class="line"></span><br><span class="line">                cpu@2 &#123;</span><br><span class="line">                        compatible = &quot;sifive,u74-mc&quot;, &quot;riscv&quot;;</span><br><span class="line">                        reg = &lt;0x2&gt;;</span><br><span class="line">                        d-cache-block-size = &lt;0x40&gt;;</span><br><span class="line">                        d-cache-sets = &lt;0x40&gt;;</span><br><span class="line">                        d-cache-size = &lt;0x8000&gt;;</span><br><span class="line">                        d-tlb-sets = &lt;0x1&gt;;</span><br><span class="line">                        d-tlb-size = &lt;0x28&gt;;</span><br><span class="line">                        device_type = &quot;cpu&quot;;</span><br><span class="line">                        i-cache-block-size = &lt;0x40&gt;;</span><br><span class="line">                        i-cache-sets = &lt;0x40&gt;;</span><br><span class="line">                        i-cache-size = &lt;0x8000&gt;;</span><br><span class="line">                        i-tlb-sets = &lt;0x1&gt;;</span><br><span class="line">                        i-tlb-size = &lt;0x28&gt;;</span><br><span class="line">                        mmu-type = &quot;riscv,sv39&quot;;</span><br><span class="line">                        next-level-cache = &lt;0x1&gt;;</span><br><span class="line">                        riscv,isa = &quot;rv64imafdcbsux&quot;;</span><br><span class="line">                        tlb-split;</span><br><span class="line">                        status = &quot;okay&quot;;</span><br><span class="line">                        phandle = &lt;0x2f&gt;;</span><br><span class="line"></span><br><span class="line">                        interrupt-controller &#123;</span><br><span class="line">                                #interrupt-cells = &lt;0x1&gt;;</span><br><span class="line">                                compatible = &quot;riscv,cpu-intc&quot;;</span><br><span class="line">                                interrupt-controller;</span><br><span class="line">                                phandle = &lt;0x5&gt;;</span><br><span class="line">                        &#125;;</span><br><span class="line">                &#125;;</span><br><span class="line"></span><br><span class="line">                cpu@3 &#123;</span><br><span class="line">                        compatible = &quot;sifive,u74-mc&quot;, &quot;riscv&quot;;</span><br><span class="line">                        reg = &lt;0x3&gt;;</span><br><span class="line">                        d-cache-block-size = &lt;0x40&gt;;</span><br><span class="line">                        d-cache-sets = &lt;0x40&gt;;</span><br><span class="line">                        d-cache-size = &lt;0x8000&gt;;</span><br><span class="line">                        d-tlb-sets = &lt;0x1&gt;;</span><br><span class="line">                        d-tlb-size = &lt;0x28&gt;;</span><br><span class="line">                        device_type = &quot;cpu&quot;;</span><br><span class="line">                        i-cache-block-size = &lt;0x40&gt;;</span><br><span class="line">                        i-cache-sets = &lt;0x40&gt;;</span><br><span class="line">                        i-cache-size = &lt;0x8000&gt;;</span><br><span class="line">                        i-tlb-sets = &lt;0x1&gt;;</span><br><span class="line">                        i-tlb-size = &lt;0x28&gt;;</span><br><span class="line">                        mmu-type = &quot;riscv,sv39&quot;;</span><br><span class="line">                        next-level-cache = &lt;0x1&gt;;</span><br><span class="line">                        riscv,isa = &quot;rv64imafdcbsux&quot;;</span><br><span class="line">                        tlb-split;</span><br><span class="line">                        status = &quot;okay&quot;;</span><br><span class="line">                        phandle = &lt;0x30&gt;;</span><br><span class="line"></span><br><span class="line">                        interrupt-controller &#123;</span><br><span class="line">                                #interrupt-cells = &lt;0x1&gt;;</span><br><span class="line">                                compatible = &quot;riscv,cpu-intc&quot;;</span><br><span class="line">                                interrupt-controller;</span><br><span class="line">                                phandle = &lt;0x6&gt;;</span><br><span class="line">                        &#125;;</span><br><span class="line">                &#125;;</span><br><span class="line"></span><br><span class="line">                cpu@4 &#123;</span><br><span class="line">                        compatible = &quot;sifive,u74-mc&quot;, &quot;riscv&quot;;</span><br><span class="line">                        reg = &lt;0x4&gt;;</span><br><span class="line">                        d-cache-block-size = &lt;0x40&gt;;</span><br><span class="line">                        d-cache-sets = &lt;0x40&gt;;</span><br><span class="line">                        d-cache-size = &lt;0x8000&gt;;</span><br><span class="line">                        d-tlb-sets = &lt;0x1&gt;;</span><br><span class="line">                        d-tlb-size = &lt;0x28&gt;;</span><br><span class="line">                        device_type = &quot;cpu&quot;;</span><br><span class="line">                        i-cache-block-size = &lt;0x40&gt;;</span><br><span class="line">                        i-cache-sets = &lt;0x40&gt;;</span><br><span class="line">                        i-cache-size = &lt;0x8000&gt;;</span><br><span class="line">                        i-tlb-sets = &lt;0x1&gt;;</span><br><span class="line">                        i-tlb-size = &lt;0x28&gt;;</span><br><span class="line">                        mmu-type = &quot;riscv,sv39&quot;;</span><br><span class="line">                        next-level-cache = &lt;0x1&gt;;</span><br><span class="line">                        riscv,isa = &quot;rv64imafdcbsux&quot;;</span><br><span class="line">                        tlb-split;</span><br><span class="line">                        status = &quot;okay&quot;;</span><br><span class="line">                        phandle = &lt;0x31&gt;;</span><br><span class="line"></span><br><span class="line">                        interrupt-controller &#123;</span><br><span class="line">                                #interrupt-cells = &lt;0x1&gt;;</span><br><span class="line">                                compatible = &quot;riscv,cpu-intc&quot;;</span><br><span class="line">                                interrupt-controller;</span><br><span class="line">                                phandle = &lt;0x7&gt;;</span><br><span class="line">                        &#125;;</span><br><span class="line">                &#125;;</span><br><span class="line">        &#125;;</span><br><span class="line"></span><br><span class="line">        soc &#123;</span><br><span class="line">                compatible = &quot;simple-bus&quot;;</span><br><span class="line">                #address-cells = &lt;0x2&gt;;</span><br><span class="line">                #size-cells = &lt;0x2&gt;;</span><br><span class="line">                #clock-cells = &lt;0x1&gt;;</span><br><span class="line">                ranges;</span><br><span class="line">                phandle = &lt;0x32&gt;;</span><br><span class="line"></span><br><span class="line">                clint@2000000 &#123;</span><br><span class="line">                        compatible = &quot;riscv,clint0&quot;;</span><br><span class="line">                        reg = &lt;0x0 0x2000000 0x0 0x10000&gt;;</span><br><span class="line">                        reg-names = &quot;control&quot;;</span><br><span class="line">                        interrupts-extended = &lt;0x3 0x3 0x3 0x7 0x4 0x3 0x4 0x7 0x5 0x3 0x5 0x7 0x6 0x3 0x6 0x7 0x7 0x3 0x7 0x7&gt;;</span><br><span class="line">                        #interrupt-cells = &lt;0x1&gt;;</span><br><span class="line">                        phandle = &lt;0x34&gt;;</span><br><span class="line">                &#125;;</span><br><span class="line"></span><br><span class="line">                clock-controller &#123;</span><br><span class="line">                        compatible = &quot;starfive,jh7110-clkgen&quot;;</span><br><span class="line">                        reg = &lt;0x0 0x13020000 0x0 0x10000 0x0 0x10230000 0x0 0x10000 0x0 0x17000000 0x0 0x10000&gt;;</span><br><span class="line">                        reg-names = &quot;sys&quot;, &quot;stg&quot;, &quot;aon&quot;;</span><br><span class="line">                        clocks = &lt;0x8 0x9 0xa 0xb&gt;;</span><br><span class="line">                        clock-names = &quot;osc&quot;, &quot;gmac1_rmii_refin&quot;, &quot;stg_apb&quot;, &quot;gmac0_rmii_refin&quot;;</span><br><span class="line">                        #clock-cells = &lt;0x1&gt;;</span><br><span class="line">                        status = &quot;okay&quot;;</span><br><span class="line">                        phandle = &lt;0xf&gt;;</span><br><span class="line">                &#125;;</span><br><span class="line"></span><br><span class="line">                spi@13010000 &#123;</span><br><span class="line">                        compatible = &quot;cdns,qspi-nor&quot;;</span><br><span class="line">                        #address-cells = &lt;0x1&gt;;</span><br><span class="line">                        #size-cells = &lt;0x0&gt;;</span><br><span class="line">                        reg = &lt;0x0 0x13010000 0x0 0x10000 0x0 0x21000000 0x0 0x400000&gt;;</span><br><span class="line">                        clocks = &lt;0xf 0x5a&gt;;</span><br><span class="line">                        clock-names = &quot;clk_ref&quot;;</span><br><span class="line">                        resets = &lt;0x10 0x3e 0x10 0x3d 0x10 0x3f&gt;;</span><br><span class="line">                        resets-names = &quot;rst_apb&quot;, &quot;rst_ahb&quot;, &quot;rst_ref&quot;;</span><br><span class="line">                        cdns,fifo-depth = &lt;0x100&gt;;</span><br><span class="line">                        cdns,fifo-width = &lt;0x4&gt;;</span><br><span class="line">                        spi-max-frequency = &lt;0xee6b280&gt;;</span><br><span class="line">                        status = &quot;okay&quot;;</span><br><span class="line">                        phandle = &lt;0x35&gt;;</span><br><span class="line"></span><br><span class="line">                        nor-flash@0 &#123;</span><br><span class="line">                                compatible = &quot;jedec,spi-nor&quot;;</span><br><span class="line">                                reg = &lt;0x0&gt;;</span><br><span class="line">                                spi-max-frequency = &lt;0x5f5e100&gt;;</span><br><span class="line">                                cdns,tshsl-ns = &lt;0x1&gt;;</span><br><span class="line">                                cdns,tsd2d-ns = &lt;0x1&gt;;</span><br><span class="line">                                cdns,tchsh-ns = &lt;0x1&gt;;</span><br><span class="line">                                cdns,tslch-ns = &lt;0x1&gt;;</span><br><span class="line">                                phandle = &lt;0x36&gt;;</span><br><span class="line">                        &#125;;</span><br><span class="line">                &#125;;</span><br><span class="line"></span><br><span class="line">                serial@10000000 &#123;</span><br><span class="line">                        compatible = &quot;snps,dw-apb-uart&quot;;</span><br><span class="line">                        reg = &lt;0x0 0x10000000 0x0 0x10000&gt;;</span><br><span class="line">                        reg-io-width = &lt;0x4&gt;;</span><br><span class="line">                        reg-shift = &lt;0x2&gt;;</span><br><span class="line">                        clocks = &lt;0xf 0x92 0xf 0x91&gt;;</span><br><span class="line">                        clock-names = &quot;baudclk&quot;, &quot;apb_pclk&quot;;</span><br><span class="line">                        resets = &lt;0x10 0x53 0x10 0x54&gt;;</span><br><span class="line">                        status = &quot;okay&quot;;</span><br><span class="line">                        reg-offset = &lt;0x0&gt;;</span><br><span class="line">                        current-speed = &lt;0x1c200&gt;;</span><br><span class="line">                        clock-frequency = &lt;0x16e3600&gt;;</span><br><span class="line">                        phandle = &lt;0x3e&gt;;</span><br><span class="line">                &#125;;</span><br><span class="line"></span><br><span class="line">                i2c@12050000 &#123;</span><br><span class="line">                        compatible = &quot;snps,designware-i2c&quot;;</span><br><span class="line">                        reg = &lt;0x0 0x12050000 0x0 0x10000&gt;;</span><br><span class="line">                        clocks = &lt;0xf 0x12a 0xf 0x8f&gt;;</span><br><span class="line">                        clock-names = &quot;ref&quot;, &quot;pclk&quot;;</span><br><span class="line">                        resets = &lt;0x10 0x51&gt;;</span><br><span class="line">                        #address-cells = &lt;0x1&gt;;</span><br><span class="line">                        #size-cells = &lt;0x0&gt;;</span><br><span class="line">                        status = &quot;okay&quot;;</span><br><span class="line">                        clock-frequency = &lt;0x186a0&gt;;</span><br><span class="line">                        i2c-sda-hold-time-ns = &lt;0x12c&gt;;</span><br><span class="line">                        i2c-sda-falling-time-ns = &lt;0xbb8&gt;;</span><br><span class="line">                        i2c-scl-falling-time-ns = &lt;0xbb8&gt;;</span><br><span class="line">                        auto_calc_scl_lhcnt;</span><br><span class="line">                        phandle = &lt;0x4b&gt;;</span><br><span class="line"></span><br><span class="line">                        eeprom@50 &#123;</span><br><span class="line">                                compatible = &quot;atmel,24c04&quot;;</span><br><span class="line">                                reg = &lt;0x50&gt;;</span><br><span class="line">                                pagesize = &lt;0x10&gt;;</span><br><span class="line">                        &#125;;</span><br><span class="line">                &#125;;</span><br><span class="line"></span><br><span class="line">                sdio0@16010000 &#123;</span><br><span class="line">                        compatible = &quot;snps,dw-mshc&quot;;</span><br><span class="line">                        reg = &lt;0x0 0x16010000 0x0 0x10000&gt;;</span><br><span class="line">                        clocks = &lt;0xf 0x5b 0xf 0x5d&gt;;</span><br><span class="line">                        clock-names = &quot;biu&quot;, &quot;ciu&quot;;</span><br><span class="line">                        resets = &lt;0x10 0x40&gt;;</span><br><span class="line">                        reset-names = &quot;reset&quot;;</span><br><span class="line">                        fifo-depth = &lt;0x20&gt;;</span><br><span class="line">                        bus-width = &lt;0x8&gt;;</span><br><span class="line">                        status = &quot;okay&quot;;</span><br><span class="line">                        phandle = &lt;0x4d&gt;;</span><br><span class="line">                &#125;;</span><br><span class="line"></span><br><span class="line">                sdio1@16020000 &#123;</span><br><span class="line">                        compatible = &quot;snps,dw-mshc&quot;;</span><br><span class="line">                        reg = &lt;0x0 0x16020000 0x0 0x10000&gt;;</span><br><span class="line">                        clocks = &lt;0xf 0x5c 0xf 0x5e&gt;;</span><br><span class="line">                        clock-names = &quot;biu&quot;, &quot;ciu&quot;;</span><br><span class="line">                        resets = &lt;0x10 0x41&gt;;</span><br><span class="line">                        reset-names = &quot;reset&quot;;</span><br><span class="line">                        fifo-depth = &lt;0x20&gt;;</span><br><span class="line">                        bus-width = &lt;0x4&gt;;</span><br><span class="line">                        status = &quot;okay&quot;;</span><br><span class="line">                        phandle = &lt;0x4e&gt;;</span><br><span class="line">                &#125;;</span><br><span class="line"></span><br><span class="line">                reset-controller &#123;</span><br><span class="line">                        compatible = &quot;starfive,jh7110-reset&quot;;</span><br><span class="line">                        reg = &lt;0x0 0x13020000 0x0 0x10000 0x0 0x10230000 0x0 0x10000 0x0 0x17000000 0x0 0x10000 0x0 0x19810000 0x0 0x10000 0x0 0x295c0000 0x0 0x10000&gt;;</span><br><span class="line">                        reg-names = &quot;syscrg&quot;, &quot;stgcrg&quot;, &quot;aoncrg&quot;, &quot;ispcrg&quot;, &quot;voutcrg&quot;;</span><br><span class="line">                        #reset-cells = &lt;0x1&gt;;</span><br><span class="line">                        status = &quot;okay&quot;;</span><br><span class="line">                        phandle = &lt;0x10&gt;;</span><br><span class="line">                &#125;;</span><br><span class="line"></span><br><span class="line">                dmc@100b0000 &#123;</span><br><span class="line">                        compatible = &quot;starfive,jh7110-dmc&quot;;</span><br><span class="line">                        reg = &lt;0x0 0x15700000 0x0 0x10000 0x0 0x13000000 0x0 0x10000&gt;;</span><br><span class="line">                        resets = &lt;0x10 0x26 0x10 0x27 0x10 0x28&gt;;</span><br><span class="line">                        reset-names = &quot;axi&quot;, &quot;osc&quot;, &quot;apb&quot;;</span><br><span class="line">                        clock-frequency = &lt;0x855&gt;;</span><br><span class="line">                        phandle = &lt;0x71&gt;;</span><br><span class="line">                &#125;;</span><br><span class="line">        &#125;;</span><br><span class="line"></span><br><span class="line">        aliases &#123;</span><br><span class="line">                spi0 = &quot;/soc/spi@13010000&quot;;</span><br><span class="line">                mmc0 = &quot;/soc/sdio0@16010000&quot;;</span><br><span class="line">                mmc1 = &quot;/soc/sdio1@16020000&quot;;</span><br><span class="line">                i2c0 = &quot;/soc/i2c@12050000&quot;;</span><br><span class="line">        &#125;;</span><br><span class="line"></span><br><span class="line">        chosen &#123;</span><br><span class="line">                stdout-path = &quot;/soc/serial@10000000:115200&quot;;</span><br><span class="line">        &#125;;</span><br><span class="line"></span><br><span class="line">        memory@80000000 &#123;</span><br><span class="line">                device_type = &quot;memory&quot;;</span><br><span class="line">                reg = &lt;0x0 0x40000000 0x1 0x0&gt;;</span><br><span class="line">        &#125;;</span><br><span class="line"></span><br><span class="line">        firmware &#123;</span><br><span class="line">                spi0 = &quot;/soc/qspi@11860000&quot;;</span><br><span class="line">        &#125;;</span><br><span class="line"></span><br><span class="line">        config &#123;</span><br><span class="line">                u-boot,spl-payload-offset = &lt;0x100000&gt;;</span><br><span class="line">        &#125;;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="u-boot-中evb-相关的组件"><a href="#u-boot-中evb-相关的组件" class="headerlink" title="u-boot 中evb 相关的组件"></a>u-boot 中evb 相关的组件</h1><ol>
+<li><p>pinctrl 相关<br>drivers&#x2F;pinctrl&#x2F;starfive&#x2F;*<br>pinmux 等 gpio_set_value<br>Figure 3-1 Pin Map <a href="bookxnotepro://opennote/?nb={271bb0dc-7d9c-449e-a550-0226a8c58d3e}&book=a5f162164e04133b2e1b6c293f8e5d07&page=39&x=133&y=136&id=4&uuid=32dab94cf86bda2db9889b09802f36cb">040</a></p>
+</li>
+<li><p>dram 相关<br>arch&#x2F;riscv&#x2F;cpu&#x2F;jh7110&#x2F;dram.c<br>只是获取大小, 基址等<br>没有进行ddr 初始化, 不涉及 drivers&#x2F;ram&#x2F;starfive&#x2F; 下的代码</p>
+</li>
+<li><p>clk 相关 pll<br>drivers&#x2F;clk&#x2F;starfive&#x2F;clk-jh7110.c<br>dts “starfive,jh7110-clkgen”<br>reg : aon sys stg</p>
+</li>
+<li><p>gpio<br>drivers&#x2F;gpio&#x2F;starfive-gpio.c<br>GPIO Function Description <a href="bookxnotepro://opennote/?nb={271bb0dc-7d9c-449e-a550-0226a8c58d3e}&book=a5f162164e04133b2e1b6c293f8e5d07&page=54&x=166&y=58&id=2&uuid=527e6fec490dd617c3592f993a16eb0b">055</a><br>Full Multiplexing <a href="bookxnotepro://opennote/?nb={271bb0dc-7d9c-449e-a550-0226a8c58d3e}&book=a5f162164e04133b2e1b6c293f8e5d07&page=59&x=152&y=58&id=3&uuid=2d7b64dedfadd55a92da684ac27992aa">060</a></p>
+</li>
+<li><p>eeprom<br>board&#x2F;starfive&#x2F;visionfive2&#x2F;visionfive2-i2c-eeprom.c<br>设置board相关信息, 如 mac0_address mac1_address pcb_revision product_id 等</p>
+</li>
+<li><p>arch 相关<br>arch&#x2F;riscv&#x2F;cpu&#x2F;jh7110&#x2F;<br>主要是pll</p>
+</li>
+<li><p>复位相关<br>drivers&#x2F;reset&#x2F;reset-jh7110.c</p>
+</li>
+</ol>
+<p>Table 5-4 Reset Source <a href="bookxnotepro://opennote/?nb={271bb0dc-7d9c-449e-a550-0226a8c58d3e}&book=a5f162164e04133b2e1b6c293f8e5d07&page=70&x=118&y=579&id=5&uuid=72712095d0742a2a4095aa6cc61ce154">071</a><br><img src="/attachments/Pasted%20image%2020230130164141.png"></p>
+<ol start="8">
+<li>net usb 相关<br>drivers&#x2F;usb&#x2F;cdns3&#x2F;cdns3-starfive.c (新增 cdns usb3 controller 驱动)<br>drivers&#x2F;net&#x2F;phy&#x2F;motorcomm.c  (新增 net:phy:YUTAI 驱动 Add YT8511&#x2F;yt8521 phy driver)<br>drivers&#x2F;net&#x2F;dwc_eth_qos.c :</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">eqos_ops</span> <span class="title">eqos_jh7110_ops</span> =</span> &#123;</span><br><span class="line">	.eqos_inval_desc = eqos_inval_desc_generic,</span><br><span class="line">	.eqos_flush_desc = eqos_flush_desc_generic,</span><br><span class="line">	.eqos_inval_buffer = eqos_inval_buffer_generic,</span><br><span class="line">	.eqos_flush_buffer = eqos_flush_buffer_generic,</span><br><span class="line">	.eqos_probe_resources = eqos_probe_resources_jh7110,</span><br><span class="line">	.eqos_remove_resources = eqos_remove_resources_jh7110,</span><br><span class="line">	.eqos_stop_resets = eqos_stop_resets_jh7110,</span><br><span class="line">	.eqos_start_resets = eqos_start_resets_jh7110,</span><br><span class="line">	.eqos_stop_clks = eqos_stop_clks_jh7110,</span><br><span class="line">	.eqos_start_clks = eqos_start_clks_jh7110,</span><br><span class="line">	.eqos_calibrate_pads = eqos_null_ops,</span><br><span class="line">	.eqos_disable_calibration = eqos_null_ops,</span><br><span class="line">	.eqos_set_tx_clk_speed = eqos_set_tx_clk_speed_jh7110,</span><br><span class="line">	.eqos_get_tick_clk_rate = eqos_get_tick_clk_rate_jh7110</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">eqos_config</span> __<span class="title">maybe_unused</span> <span class="title">eqos_jh7110_config</span> =</span> &#123;</span><br><span class="line">	.reg_access_always_ok = <span class="literal">false</span>,</span><br><span class="line">	.mdio_wait = <span class="number">10</span>,</span><br><span class="line">	.swr_wait = <span class="number">50</span>,</span><br><span class="line">	.config_mac = EQOS_MAC_RXQ_CTRL0_RXQ0EN_ENABLED_DCB,</span><br><span class="line">	.config_mac_mdio = EQOS_MAC_MDIO_ADDRESS_CR_250_300,</span><br><span class="line">	.axi_bus_width = EQOS_AXI_WIDTH_64,</span><br><span class="line">	.interface = eqos_get_interface_jh7110,</span><br><span class="line">	.ops = &amp;eqos_jh7110_ops</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+<ol start="9">
+<li><p>board 相关<br>board&#x2F;starfive&#x2F;evb&#x2F;starfive_visionfive2.c<br>board_init_r<br> enable_caches();<br> enable_prefetcher();<br> jh7110_jtag_init();<br> jh7110_timer_init();<br> jh7110_usb_init(true);<br> jh7110_i2c_init(5);<br> jh7110_gpio_init();<br>misc_init_r<br> set_uboot_fdt_addr_env<br>board_late_init<br> get_boot_mode();<br> jh7110_gmac_init(get_chip_type(), get_board_type());<br> env_set_hex(“memory_addr”, gd-&gt;ram_base);<br> env_set_hex(“memory_size”, gd-&gt;ram_size);</p>
+</li>
+<li><p>启动相关<br>include&#x2F;configs&#x2F;starfive-visionfive2.h<br>VF2_DISTRO_BOOTENV  env相关配置如 kernel_addr_r 等<br>“bootcmd&#x3D;” CONFIG_BOOTCOMMAND</p>
+</li>
+<li><p>cache相关<br>drivers&#x2F;cache&#x2F;cache-sifive-ccache.c<br>arch&#x2F;riscv&#x2F;lib&#x2F;cache.c<br>arch&#x2F;riscv&#x2F;lib&#x2F;sifive_cache.c</p>
+</li>
+</ol>
+<h1 id="spl中evb-相关组件"><a href="#spl中evb-相关组件" class="headerlink" title="spl中evb 相关组件"></a>spl中evb 相关组件</h1><ol>
+<li>pll 相关修改<br>arch&#x2F;riscv&#x2F;cpu&#x2F;jh7110&#x2F;pll.c<br>arch&#x2F;riscv&#x2F;cpu&#x2F;jh7110&#x2F;spl.c</li>
+</ol>
+<p>PLL0 PLL1 PLL2<br>Figure 5-2 Clock Structure <a href="bookxnotepro://opennote/?nb={271bb0dc-7d9c-449e-a550-0226a8c58d3e}&book=a5f162164e04133b2e1b6c293f8e5d07&page=72&x=125&y=53&id=1&uuid=4d92185862d2ea92970ec3700dedada6">073</a></p>
+<ol start="2">
+<li>dram相关初始化<br>arch&#x2F;riscv&#x2F;cpu&#x2F;jh7110&#x2F;dram.c<br>drivers&#x2F;ram&#x2F;starfive&#x2F;*<br>ddr_phy ddrcsr_boot ddr_csr_cfg&#x2F;ddr_csr_cfg1&#x2F;ddr_csr_cfg2&#x2F;ddr_csr_cfg3 dddrc_clock (controller 配置)</li>
+</ol>
+<p><img src="/attachments/Pasted%20image%2020230130163321.png"></p>
+<p>board&#x2F;starfive&#x2F;evb&#x2F;spl.c</p>
+<blockquote>
+<p>spl 中没有使用pinctrl</p>
+</blockquote>
+<ol start="3">
+<li><p>复位相关<br>drivers&#x2F;reset&#x2F;reset-jh7110.c<br>如ddr 初始化时会用到  rst_osc rst_apb rst_axi</p>
+</li>
+<li><p>cpu相关<br> arch&#x2F;riscv&#x2F;lib&#x2F;sifive_clint.c<br> arch&#x2F;riscv&#x2F;lib&#x2F;cache.c<br> arch&#x2F;riscv&#x2F;lib&#x2F;interrupts.c<br> arch&#x2F;riscv&#x2F;lib&#x2F;smp.c<br> ? drivers&#x2F;timer&#x2F;riscv_timer.c<br> drivers&#x2F;timer&#x2F;sifive_clint_timer.c</p>
+</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/04/15/hxd_new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/attachments/riscv%20%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B8%AD%E6%96%AD%E7%9B%B8%E5%85%B3%202023-05-15%2013.44.27.excalidraw/" rel="prev" title="">
+      <i class="fa fa-chevron-left"></i> 
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2024/04/15/hxd_new/riscv%E8%B0%83%E7%A0%94/porting/opensbi%20vf2%20%E7%9B%B8%E5%85%B3%E6%8F%90%E4%BA%A4/" rel="next" title="">
+       <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#base"><span class="nav-number">1.</span> <span class="nav-text">base</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%A9%B1%E5%8A%A8%E7%9B%B8%E5%85%B3"><span class="nav-number">2.</span> <span class="nav-text">驱动相关</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#arch"><span class="nav-number">3.</span> <span class="nav-text">arch</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#board"><span class="nav-number">4.</span> <span class="nav-text">board</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#net"><span class="nav-number">5.</span> <span class="nav-text">net</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#usb"><span class="nav-number">6.</span> <span class="nav-text">usb</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#dts"><span class="nav-number">7.</span> <span class="nav-text">dts</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#spl"><span class="nav-number">8.</span> <span class="nav-text">spl</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#u-boot-%E4%B8%ADevb-%E7%9B%B8%E5%85%B3%E7%9A%84%E7%BB%84%E4%BB%B6"><span class="nav-number">9.</span> <span class="nav-text">u-boot 中evb 相关的组件</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#spl%E4%B8%ADevb-%E7%9B%B8%E5%85%B3%E7%BB%84%E4%BB%B6"><span class="nav-number">10.</span> <span class="nav-text">spl中evb 相关组件</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

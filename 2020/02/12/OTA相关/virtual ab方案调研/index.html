@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="virtual ab方案调研从recovery开始说起Recovery挂载system12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576- CreateSnapsh">
+<meta property="og:type" content="article">
+<meta property="og:title" content="virtual ab方案调研">
+<meta property="og:url" content="https://liguangzhang.github.io/2020/02/12/OTA%E7%9B%B8%E5%85%B3/virtual%20ab%E6%96%B9%E6%A1%88%E8%B0%83%E7%A0%94/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="virtual ab方案调研从recovery开始说起Recovery挂载system12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576- CreateSnapsh">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://liguangzhang.github.io/images/20200721113638.png">
+<meta property="og:image" content="https://liguangzhang.github.io/images/20200721113643.png">
+<meta property="article:published_time" content="2020-02-12T10:15:54.000Z">
+<meta property="article:modified_time" content="2024-04-16T07:26:18.972Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="vab">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://liguangzhang.github.io/images/20200721113638.png">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2020/02/12/OTA%E7%9B%B8%E5%85%B3/virtual%20ab%E6%96%B9%E6%A1%88%E8%B0%83%E7%A0%94/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>virtual ab方案调研 | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2020/02/12/OTA%E7%9B%B8%E5%85%B3/virtual%20ab%E6%96%B9%E6%A1%88%E8%B0%83%E7%A0%94/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          virtual ab方案调研
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-02-12 18:15:54" itemprop="dateCreated datePublished" datetime="2020-02-12T18:15:54+08:00">2020-02-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 15:26:18" itemprop="dateModified" datetime="2024-04-16T15:26:18+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="virtual-ab方案调研"><a href="#virtual-ab方案调研" class="headerlink" title="virtual ab方案调研"></a>virtual ab方案调研</h1><h2 id="从recovery开始说起"><a href="#从recovery开始说起" class="headerlink" title="从recovery开始说起"></a>从recovery开始说起</h2><h3 id="Recovery挂载system"><a href="#Recovery挂载system" class="headerlink" title="Recovery挂载system"></a>Recovery挂载system</h3><figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br></pre></td><td class="code"><pre><span class="line">- <span class="title class_">CreateSnapshotPartitions</span></span><br><span class="line">    | - <span class="title class_">SnapshotManager</span>::<span class="title class_">NewForFirstStageMount</span> #first stage mount</span><br><span class="line">       \ - <span class="title class_">New</span>(info) # <span class="title class_">SnapshotManager</span>构造函数，初始化两个目录 gsid_dir_=ota metadata_dir_=<span class="regexp">/metadata/</span>ota</span><br><span class="line">       | - <span class="title class_">ForceLocalImageManager</span> #构造<span class="title class_">ImageManager</span></span><br><span class="line">         \ - <span class="title class_">ImageManager</span>::<span class="title class_">Open</span>(gsid_dir_) # 初始化两个目录 metadata_dir = <span class="regexp">/metadata/g</span>si/ota data_dir=<span class="regexp">/data/g</span>si/ota</span><br><span class="line">    | - sm-&gt;<span class="title class_">NeedSnapshotsInFirstStageMount</span>() # 调用上面<span class="title class_">SnapshotManager</span>的实例的该函数，根据merge state确定是否进行后续步骤</span><br><span class="line">       \ - <span class="title class_">GetCurrentSlot</span>() != <span class="title class_">Slot</span>::<span class="title class_">Target</span> # 根据这个判断是不是ota后的切换slot过程，<span class="title class_">Target</span>=<span class="number">2</span>，<span class="title class_">Source</span>=<span class="number">1</span> </span><br><span class="line">                                     # =<span class="number">1</span>说明未进行ota，未进行ota就不需要挂载snapshot，<span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">       | - <span class="title class_">ReadUpdateState</span> </span><br><span class="line">         \ - <span class="title class_">ReadSnapshotUpdateStatus</span> # /metadata/ota/state文件中获取ota后的merge状态</span><br><span class="line">                                      #  <span class="title class_">Unverified</span> <span class="title class_">Merging</span> <span class="title class_">MergeFailed</span> 返回<span class="literal">true</span></span><br><span class="line">    | - <span class="literal">true</span> - <span class="title class_">InitRequiredDevices</span>(&#123;<span class="string">&quot;userdata&quot;</span>&#125;) # <span class="title class_">NeedSnapshotsInFirstStageMount</span> 返回<span class="literal">true</span>时</span><br><span class="line">      \ - <span class="title class_">InitDeviceMapper</span> #初始化dm框架，创建uevent监听 /sys/devices/virtual/misc/device-mapper</span><br><span class="line">      | - <span class="keyword">return</span> <span class="title class_">UeventCallback</span>(uevent, &amp;devices); #如果下面有userdata设备创建了，才说明required <span class="title class_">Device</span>初始化成功了，才返回<span class="literal">true</span>。 而lp_metadata_partition_是<span class="title class_">FirstStageMount</span>早期阶段初始化的/devices/virtual/block/dm-&lt;&gt;/dm/name文件中读出的super partition名字，赋值给/dev/block/mapper/&lt;partition&gt;</span><br><span class="line">      | - true - sm-&gt;CreateLogicalAndSnapshotPartitions(lp_metadata_partition_) #创建logical device和snapshot device</span><br><span class="line">        \ - ReadMetadata(opener, super_device, slot) #读取super device对应slot的metadata描述</span><br><span class="line">        | - CreateLogicalPartitionParams (for params.partition:metadata-&gt;partitions) #挨个挂接metadata描述的partitions及其对应的</span><br><span class="line">                                                                                     #snapshot设备</span><br><span class="line">          \ - MapPartitionWithSnapshot(std::move(params)) </span><br><span class="line">            \ - GetSnapshotStatusFilePath(params.GetPartitionName() # /metadata/ota/snapshots/&lt;partition_name&gt;</span><br><span class="line">            | - ReadSnapshotStatus(lock, params.GetPartitionName(), &amp;*live_snapshot_status)  # /metadata/ota/snapshots/&lt;partition_name&gt;,</span><br><span class="line">               \ - status-&gt;ParseFromFileDescriptor(fd.get()) #解析该文件，获得live_snapshot_status状态</span><br><span class="line">            | - # MERGE_COMPLETED | NONE | cow_partition_size + cow_file_size = 0 代表no live snapshot</span><br><span class="line">            | - live_snapshot_status.has_value- # 如果有live snapshot</span><br><span class="line">               \ - params.device_name = GetBaseDeviceName(params.GetPartitionName()); #devicename变成了&lt;partionname&gt;—base</span><br><span class="line">               | -  created_devices.EmplaceBack&lt;AutoUnmapDevice&gt;(&amp;dm, params.GetDeviceName())</span><br><span class="line">            | - CreateLogicalPartition(params, &amp;base_path) #映射logical device 动态分区的映射，返回的path为/dev/block/dm-&lt;num&gt;</span><br><span class="line">            | - live_snapshot_status.has_value- #如果有live snapshot</span><br><span class="line">               \ - dm.GetDeviceString(params.GetDeviceName(), &amp;base_device) #返回base_device major:minor设备号</span><br><span class="line">               | - CreateLogicalPartitionParams cow_params = params</span><br><span class="line">               | - MapCowDevices(lock, cow_params, *live_snapshot_status, &amp;created_devices, &amp;cow_name) #映射cow_device写时复制</span><br><span class="line">                 \ - cow_image_name = GetCowImageDeviceName(partition_name) #&lt;partion_name&gt;-cow-img</span><br><span class="line">                 | - *cow_name = GetCowName(partition_name) #&lt;partition_name&gt;-cow</span><br><span class="line">                 | - EnsureImageManager()</span><br><span class="line">                   | - #因为前面已经执行过ForceLocalImageManager，所以image_不为空，后面的步骤不走了</span><br><span class="line">                 | - MapCowImage(partition_name, remaining_time)</span><br><span class="line">                   | - has_local_image_manager_- true # image_为之前ForceLocalImageManager时的实例，指向ImageManager</span><br><span class="line">                   \ - images_-&gt;MapImageWithDeviceMapper(opener, cow_image_name, &amp;cow_dev) #cow_image_name为&lt;partion_name&gt;-cow-img</span><br><span class="line">                     | - MapWithDmLinear(opener, cow_image_name, &#123;&#125;, &amp;ignore_path)</span><br><span class="line">                       \ - metadata = OpenMetadata(metadata_dir_) #metadata_dir_=/metadata/gsi/ota</span><br><span class="line">                          \ - metadata_file = GetMetadataFile(metadata_dir_) # /metadata/gsi/ota/lp_metadata</span><br><span class="line">               |   |         | - metadata = ReadFromImageFile(metadata_file) #从上述文件中解析出metadata描述</span><br><span class="line">                       | - super = GetMetadataSuperBlockDevice() # 获得super封装</span><br><span class="line">                       | - block_device = GetBlockDevicePartitionName(super)</span><br><span class="line">                       | - CreateLogicalPartition(params, path) #dm-linear 跟之前的动态分区的逻辑一样，映射设备，获得path /dev/block/dm-&lt;num&gt;</span><br><span class="line">                       | - WriteStringToFile(status_string, status_file) #/metadata/gsi/ota/&lt;parition_name-cow-img&gt;.status中写入dm:&lt;partition_name-cow-img&gt;</span><br><span class="line">                     | - dm.GetDeviceString(name, dev) #返回major：minor号给dev</span><br><span class="line">               | - created_devices-&gt;EmplaceBack&lt;AutoUnmapImage&gt;(images_.get(), cow_image_name） #created_devices再push新的cow_img</span><br><span class="line">               | - CreateLogicalPartitionParams cow_partition_params = params (.partition_name=*cow_name;); </span><br><span class="line">                                                                                          #cow_name = &lt;partition&gt;_cow</span><br><span class="line">               | - CreateDmTable(cow_partition_params, &amp;table) #创建映射表</span><br><span class="line">               | - cow_partition_sectors = snapshot_status.cow_partition_size() / kSectorSize #扇区</span><br><span class="line">               | - cow_image_sectors = snapshot_status.cow_file_size() / kSectorSize;</span><br><span class="line">               | - table.Emplace&lt;DmTargetLinear&gt;(cow_partition_sectors, cow_image_sectors, cow_image_device, 0);</span><br><span class="line">                       # 从cow-img的尾部开始算，长度为cow_image_sectors 个扇区，block_device还是用前面挂接的cow-img的device</span><br><span class="line">               | - dm.CreateDevice(*cow_name, table, &amp;cow_path, remaining_time) #为&lt;partition_name&gt;-cow创建dm设备</span><br><span class="line">               | - created_devices-&gt;EmplaceBack&lt;AutoUnmapDevice&gt;(&amp;dm, *cow_name); #push到created_devices中</span><br><span class="line">            | - dm.GetDeviceString(cow_name, &amp;cow_device)  #&lt;partion_name&gt;-cow获取设备号major /minor</span><br><span class="line">            | - MapSnapshot(lock, params.GetPartitionName(), base_device, cow_device, remaining_time, path)</span><br><span class="line">                              #base_device 代表动态分区的base_device, cow_device代表映射partion_name-cow的设备，为这两个设备之间建立映射快照</span><br><span class="line">               \ - ReadSnapshotStatus(name, &amp;status) #/metadata/ota/snapshots/&lt;partition_name&gt;读取状态，如果是MERGE_COMPLETED|NONE就退出，不需要快照了</span><br><span class="line">               | - snapshot_sectors = status.snapshot_size() / kSectorSize #snapshot快照的扇区数</span><br><span class="line">               | - linear_sectors = (status.device_size() - status.snapshot_size()) / kSectorSize #logical本身的扇区数</span><br><span class="line">               | - ReadUpdateState()  #/metadata/ota/state中读取ota的状态 MergeCompleted| MergeNeedsReboot return false，退出</span><br><span class="line">                                       # Merging|MergeFailed mode=merge或者Persistent</span><br><span class="line">               | - snap_name = GetSnapshotExtraDeviceName(partition_name) #&lt;parition_name&gt;-inner</span><br><span class="line">               | - table.Emplace&lt;DmTargetSnapshot&gt;(0, snapshot_sectors, base_device, cow_device, mode, kSnapshotChunkSize)</span><br><span class="line">                         #创建映射表，单位是4k，即8*sector_size  DmTargetSnapshot start=0. length = snapshot_sectors,mode=merge|Persistent</span><br><span class="line">                         #DmTargetSnapshot::name() mode=merge时返回&quot;snapshot-merge&quot;,其他状态下返回&quot;snapshot&quot;</span><br><span class="line">               | - dm.CreateDevice(snap_name, table, dev_path, timeout_ms) #创建dm设备</span><br><span class="line">               | - linear_sectors&gt;0 - #动态分区里的img不为空 </span><br><span class="line">                   \ - dm.GetDeviceString(snap_name, &amp;snap_dev) #获取snap_dev的major/minor</span><br><span class="line">                   | - table.Emplace&lt;DmTargetLinear&gt;(0, snapshot_sectors, snap_dev, 0); #先是snap_device</span><br><span class="line">                   | - table.Emplace&lt;DmTargetLinear&gt;(snapshot_sectors, linear_sectors, base_device, snapshot_sectors); </span><br><span class="line">                              #再是linear_device追加</span><br><span class="line">                   | - dm.CreateDevice(name, table, dev_path, timeout_ms) #最终创建&lt;partition_name&gt;的dm设备映射</span><br></pre></td></tr></table></figure>
+
+<h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4><p>对于动态分区的挂载流程，最终是按创建设备时的第一个参数device-name进行匹配查找对应的dm设备，从上述映射过程中可以发现，</p>
+<ul>
+<li><p>没有live.snapshot时，只进行了<code>CreateLogicalPartition</code>过程，传入的<code>device_name</code>就是<code>partition_name</code></p>
+</li>
+<li><p>而有live snapshot时，第一步的<code>CreateLogicalPartition</code>过程传入的<code>device_name</code>是<code>&lt;partition_name&gt;-base</code>，再走完了<code>MapSnapshot</code>过程后，最终创建的dm设备<code>device_name</code>才是<code>partition_name</code>。</p>
+<blockquote>
+<p>映射表，前面是base_device到cow_device的snapshot，后面是其本身的动态分区的数据。</p>
+</blockquote>
+</li>
+<li><p>借助动态分区的实现逻辑，既然可以有metadata描述分区信息的描述块这种东西，复用见userdata上cow_device的数据描述放在了metadata分区，然后就可以通过<code>dm-linear</code> 将数据映射成dm设备。<br>当前的分析还只是在userspace，跟核心的实现应该是device-mapper的内核实现，dm-snapshot 和dm-snapshot-merge的内部是怎样实现的，才是virtual ab方案的真正的核心。</p>
+<h2 id="snapshot理解"><a href="#snapshot理解" class="headerlink" title="snapshot理解"></a>snapshot理解</h2><p>android的virtual ab方案中snapshot的方案来自于lvm（Logical Volume Manager），要理解snapshot先从lvm说起<br>首先可以想通过lvm大致还原snapshot创建的过程</p>
+</li>
+</ul>
+<h3 id="lvm-snapshot过程理解"><a href="#lvm-snapshot过程理解" class="headerlink" title="lvm snapshot过程理解"></a>lvm snapshot过程理解</h3><p>在pc机上创建snapshot过程模拟</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">创建device的模拟设备</span></span><br><span class="line">dd if=/dev/zero of=sd10 bs=4M count=1000</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">关联loop设备</span></span><br><span class="line">losetup /dev/loop0 sd10</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">为loop设备创建lvm的物理分区</span></span><br><span class="line">sudo pvcreate /dev/loop0</span><br><span class="line">sudo pvscan</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">创建卷组</span></span><br><span class="line">sudo vgcreate -s 32M nickgroup /dev/loop0</span><br><span class="line">sudo vscan</span><br><span class="line">sudo vgdisplay</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">创建卷</span></span><br><span class="line">lvcreate -L 2G --name nickgroup/nicklv00</span><br><span class="line">sudo lvscan</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">为卷建立文件系统</span></span><br><span class="line">sudo mkfs.ext4 /dev/nickgroup/nicklv00</span><br><span class="line">sudo mount -t ext4 /dev/nickgroup/nicklv00 nicklv</span><br><span class="line">echo &quot;hello world&quot; &gt; test_change; echo &quot;i&#x27;m not change&quot;&gt;test_no_change</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">为卷建立snapshot</span></span><br><span class="line">sudo lvcreate -L 1G --snapshot --name nicklv00_snap  nickgroup/nicklv00</span><br><span class="line">sudo mount -t ext4 /dev/nickgroup/nicklv00_snap nicklv_snap</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">改变原始卷某文件的内容</span></span><br><span class="line">echo &quot;i&#x27;m change&quot; &gt;&gt; nicklv/test_change</span><br></pre></td></tr></table></figure>
+
+<p>为原始卷建关联snapshot设备后，改变原始卷的某文件的内容，做一下对比<br>首先，先看下未修改的文件test_no_change的内容，在原始卷和snapshot上内容都是一样的</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">[~/program/testlvm] - [五 4月 10, 15:33]</span><br><span class="line"><span class="meta prompt_">[$</span><span class="language-bash">] -&gt; sudo istat /dev/nickgroup/nicklv00_snap 13</span></span><br><span class="line">inode: 13</span><br><span class="line">Allocated</span><br><span class="line">Group: 0</span><br><span class="line">Generation Id: 2264406482</span><br><span class="line">uid / gid: 1000 / 1000</span><br><span class="line">mode: rrw-rw-r--</span><br><span class="line">Flags: Extents,</span><br><span class="line">size: 16</span><br><span class="line">num of links: 1</span><br><span class="line">Inode Times:</span><br><span class="line">Accessed:       2020-04-10 11:22:07.917092707 (CST)</span><br><span class="line">File Modified:  2020-04-10 11:22:03.053131212 (CST)</span><br><span class="line">Inode Modified: 2020-04-10 11:22:03.053131212 (CST)</span><br><span class="line">File Created:   2020-04-10 11:22:03.053131212 (CST)</span><br><span class="line">Direct Blocks:</span><br><span class="line">32898</span><br><span class="line">[~/program/testlvm] - [五 4月 10, 15:33]</span><br><span class="line"><span class="meta prompt_">[$</span><span class="language-bash">] -&gt; sudo istat /dev/nickgroup/nicklv00 13</span></span><br><span class="line">inode: 13</span><br><span class="line">Allocated</span><br><span class="line">Group: 0</span><br><span class="line">Generation Id: 2264406482</span><br><span class="line">uid / gid: 1000 / 1000</span><br><span class="line">mode: rrw-rw-r--</span><br><span class="line">Flags: Extents,</span><br><span class="line">size: 16</span><br><span class="line">num of links: 1</span><br><span class="line">Inode Times:</span><br><span class="line">Accessed:       2020-04-10 11:22:07.917092707 (CST)</span><br><span class="line">File Modified:  2020-04-10 11:22:03.053131212 (CST)</span><br><span class="line">Inode Modified: 2020-04-10 11:22:03.053131212 (CST)</span><br><span class="line">File Created:   2020-04-10 11:22:03.053131212 (CST)</span><br><span class="line">Direct Blocks:</span><br><span class="line">32898</span><br></pre></td></tr></table></figure>
+
+<p>而对于修改的文件 test_change</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">[$</span><span class="language-bash">] -&gt; sudo istat /dev/nickgroup/nicklv00 12</span></span><br><span class="line">inode: 12</span><br><span class="line">Allocated</span><br><span class="line">Group: 0</span><br><span class="line">Generation Id: 3262808564</span><br><span class="line">uid / gid: 1000 / 1000</span><br><span class="line">mode: rrw-rw-r--</span><br><span class="line">Flags: Extents,</span><br><span class="line">size: 37</span><br><span class="line">num of links: 1</span><br><span class="line">...</span><br><span class="line">Direct Blocks:</span><br><span class="line">33280</span><br><span class="line">[~/program/testlvm] - [五 4月 10, 15:34]</span><br><span class="line"><span class="meta prompt_">[$</span><span class="language-bash">] -&gt; sudo istat /dev/nickgroup/nicklv00_snap 12</span></span><br><span class="line">inode: 12</span><br><span class="line">Allocated</span><br><span class="line">Group: 0</span><br><span class="line">Generation Id: 3777049701</span><br><span class="line">uid / gid: 1000 / 1000</span><br><span class="line">mode: rrw-rw-r--</span><br><span class="line">Flags: Extents,</span><br><span class="line">size: 24</span><br><span class="line">num of links: 1</span><br><span class="line">...</span><br><span class="line"></span><br><span class="line">Direct Blocks:</span><br><span class="line">32897</span><br></pre></td></tr></table></figure>
+
+<p>发现修改文件的inode指向的direct block内容发生了变化，且snapshot的direct block对应的块号比较小，说明其是原始的，也可以在改之前验证下，确实是这样的。<br>说明修改原始卷后，共享的data block的内容并没有改变，而是修改了原始卷的inode的data block索引，并将修改后的内容写入到了新的data block上。<br>但是又不能简单这样理解，因为lvm是逻辑卷管理，并不代表实际的物理数据也是这样的，lvm也是借助device_mapper来实现的，其extents指向关系并不能简单的从文件系统的描述data block的变化得到。不能得到原始卷中改变了的内容只是将data block块换了位置存放新内容，而snapshot的inode继续指向原始datablock的结论，因为这样是违反常识的，一旦data block被耗尽，那原始的data block的内容岂不是要被删掉，那快照还有什么意义呢。<br>这里先提前将snapshot的原理说下<br>创建快照，实际上就是将原始卷文件系统的元数据信息复制了一份（包括super block inode imap bmap group gdt）等，这里可以先验证下</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo dumpe2fs /dev/nickgroup/nicklv00_snap|  sudo dumpe2fs /dev/nickgroup/nicklv00</span><br></pre></td></tr></table></figure>
+
+<p><img src="/images/20200721113638.png" alt="文件系统结构"><br><img src="/images/20200721113643.png" alt="lvm snapshot"></p>
+<p>实际上snapshot的原理可以理解为下面的过程：<br>左图为最初创建的快照数据卷状况，LVM 会预留一个区域 (比如左图的左侧三个 PE 区块) 作为数据存放处。 此时快照数据卷内并没有任何数据，而快照数据卷与源数据卷共享所有的 PE 数据， 因此你会看到快照数据卷的内容与源数据卷中的内容是一模一样的。 等到系统运行一阵子后，假设 A 区域的数据被更新了(上面右图所示)，则更新前系统会将该区域的数据移动到快照数据卷中， 所以在右图的快照数据卷中被占用了一块 PE 成为 A，而其他 B 到 I 的区块则还是与源数据卷共享！<br>由於快照区与原本的 LV 共享很多 PE 区块，因此快照区与被快照的 LV 必须要在同一个 VG 上头，下面两点非常重要：<br>VG中需要预留存放快照本身的空间，不能全部被占满。<br>快照所在的 VG 必须与被备份的 LV 相同，否则创建快照会失败。<br>重要的一点是，snapshot会存在一个cow img，但原始数据改变后，会将原来的内容拷贝一份，放到这个cow img中，而且data block号会复用，建立快照的过程，就是数据映射的过程，快照一旦建立，数据的映射关系就确定下来了。快照从文件系统层面上讲也固定下来了</p>
+<p>可以验证上述结论的实例是：<br>创建总大小为400M的loop设备，在这上面创建200M的原始卷，往其中写入198M大小的文件，对原始卷可以创建最小32M的snapshot，发现可以创建成功，也可以挂载snapshot，挂载后可以198M的文件是正常的，说明快照不是简单的备份关系。<br>而在上述过程走完后，可以修改原始卷中198M大小的文件，发现无论修改了什么内容，只要该文件被改了，那备份卷就被损坏了，同时原始卷中文件写入的操作会报空间不足的错误。<br>从上面snapshot的实现过程来推测，写时复制过程应该是借助device-mapper修改了物理块-逻辑块的映射关系，不然data block的复用就有问题了。</p>
+<p>下面再看下merge过程。<br>合并快照的操作也需要卸载源数据卷：<br>确认源数据卷和快照数据卷都没有被挂载后就可以执行合并快照的操作了</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo lvconvert --merge nickgroup/nicklv00_snap</span><br></pre></td></tr></table></figure>
+
+<p>merge过程可以看作是将snapshot的cow-img拷贝，覆盖掉改动文件的inode和data block的过程。merge之后，snapshot就变成无效的了<br>这个过程中牵涉到的核心点其实还是data_block的处理，因为从snapshot快照的建立到写时复制过程，如果要保证改写前后snapshot文件系统内data block块号不变，需要重定向物理扇区的过程，这里面需要device-mapper的参与。</p>
+<h2 id="lvm-android上snapshot"><a href="#lvm-android上snapshot" class="headerlink" title="lvm-android上snapshot"></a>lvm-android上snapshot</h2><p>从lvm的snapshot到android上的变体，可以发现的是android上是改动了一些东西，是不是可以认为<code>&lt;partition_name&gt;-cow</code>是snapshot复制的原始卷的元数据区，而<code>&lt;partition_name&gt;-cow-img</code>是写时复制的数据区呢。这个有待拿到真机后再进一步验证。</p>
+<h3 id="理解v-ab的升级过程"><a href="#理解v-ab的升级过程" class="headerlink" title="理解v-ab的升级过程"></a>理解v-ab的升级过程</h3><p>下面还需要研究virtual ab打包过程的变化，以便更好理解virtual ab的升级过程。</p>
+<p>对于升级过程， virtual ab方案使用的升级包和ab的升级包是共用的， 从build下的打包change来看，并没有直接适配virtual ab的升级包。另一方面，从update-engine的分析来看，在virtual ab的属性打开后，额外进行了一些操作：</p>
+<ol>
+<li>根据手机中版本的信息和升级包的信息作比对， 通过文件系统级别判断中差异量的大小，根据该大小，新建一个文件，用来存放cow 区。创建欲升级分区的dm-snap镜像，放在super的尾部，存放了欲升级分区的文件系统的元数据的复制信息，形成cow-device。</li>
+<li>存放cow（写时复制）区的文件，通过ioctl获取其占用的block map，和lp的extent数据结构结合， 最终形成dm-linear的索引，放到metadata分区中。</li>
+<li>升级过程中（整包升级及差分升级过程），将变动的文件存放到cow区域</li>
+<li>升级结束后，下次重启时，将cow-device和cow-file（写时复制区）拼接，形成snapshot-img。 对系统分区进行snapshot的映射，映射后的dm设备即为新版本。如果能正常开机，挂载dm-snapshot-merge在内核空间进行merge，merge的过程即将cow-file的内容覆盖到系统img中被修改的block块的过程。merge开始前，应该会根据需要resize动态分区。merge完成后，系统分区被更新为新版本。</li>
+</ol>
+<p>kernel的实现：</p>
+<p><code>kernel/msm-4.19/Documentation/device-mapper/snapshot.txt</code></p>
+<ul>
+<li><p>*) snapshot <origin> <COW device> &lt;persistent?&gt; <chunksize></p>
+<p>A snapshot of the <origin> block device is created. <code>Changed chunks of &lt;chunksize&gt; sectors will be stored on the &lt;COW device&gt;</code>.  <em><strong>Writes will<br>only go to the <COW device></strong></em>.  Reads will come from the <COW device> or<br>from <origin> for unchanged data.  <COW device> will often be<br>smaller than the origin and if it fills up the snapshot will become<br>useless and be disabled, returning errors.  So it is important to monitor<br>the amount of free space and expand the <COW device> before it fills up.</p>
+<p>&lt;persistent?&gt; is P (Persistent) or N (Not persistent - will not survive<br>after reboot).  O (Overflow) can be added as a persistent store option<br>to allow userspace to advertise its support for seeing “Overflow” in the<br>snapshot status.  So supported store types are “P”, “PO” and “N”.</p>
+<p>The difference between persistent and transient is with transient<br>snapshots less metadata must be saved on disk - they can be kept in<br>memory by the kernel.</p>
+<p>When loading or unloading the snapshot target, the corresponding<br>snapshot-origin or snapshot-merge target must be suspended. A failure to<br>suspend the origin target could result in data corruption.</p>
+</li>
+<li><p>snapshot-merge <origin> <COW device> <persistent> <chunksize></p>
+<p>takes the same table arguments as the snapshot target except it only<br>works with persistent snapshots.  <code>This target assumes the role of the &quot;snapshot-origin&quot; target and must not be loaded if the &quot;snapshot-origin&quot; is still present for &lt;origin&gt;</code>.</p>
+<p>Creates a merging snapshot that takes control of the changed chunks<br>stored in the <COW device> of an existing snapshot, through a handover<br>procedure, and merges these chunks back into the <origin>.  Once merging<br>has started (in the background) the <origin> may be opened and the merge<br>will continue while I&#x2F;O is flowing to it.  Changes to the <origin> are<br>deferred until the merging snapshot’s corresponding chunk(s) have been<br>merged.  Once merging has started the snapshot device, associated with<br>the “snapshot” target, will return -EIO when accessed.</p>
+</li>
+</ul>
+<p>从上述文档上看， 首先snapshot-origin的角色相当与传统的lvm的snapshot机制，即文件改动时，改动的内容写到了origin区域，而原始内容备份到了cow-device上。snapshot-merge的角色相当于snapshot-origin。 snapshot的角色机制与snapshot-origin机制相反： 改动的内容写到cow-device，原始内容不变。</p>
+<p>通过这两个机制能保证在ota升级过程中，挂载target为snapshot，改动的内容写到cow-device的cow-file中。 ota升级结束后，merge过程中，挂载类型为<code>snapshot-merge</code>改动的内容写到原始区域，即系统分区空间。</p>
+<p>从update_engine的升级过程看，以及对snapshot的实例分析，virtual ab的升级包应该和ab的升级包是同一个。差异化处理是在update_engine具体的升级过程。对snapshot的实例验证表明，snapshot的cow写时复制并不是以文件系统为基本单位的，而是以<code>block</code>为基本单位，block内容变更了，才会将原来的block的内容复制到cow-file中，并重用之前的block块号，再更新block写入新的修改，在lvm上是这样处理的。对于android而言，这个过程需要反过来，所以推测android上改写了snapshot的逻辑，再检测到block块号的内容变更后，由于系统分区为只读设备，新的内容是写进了cow-file中。而源分区的数据并没有进行改动。</p>
+<h3 id="virtual-ab-recovery下的挂载流程"><a href="#virtual-ab-recovery下的挂载流程" class="headerlink" title="virtual ab recovery下的挂载流程"></a>virtual ab recovery下的挂载流程</h3><p>源码位于</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kernel/msm-4.19/drivers/md/dm-snap*.c</span><br></pre></td></tr></table></figure>
+
+<p>android针对cow 镜像采用了<em>移花接木</em>的手段，正常recovery子系统是不能访问userdata分区的，但是cow-file又是存在于userdata分区上，而对于ab&#x2F;virtual ab升级来说，虽然是在主系统升级，但是还是需要recovery子系统作为一个备胎支持ab升级的能力。所以问题是recovery子系统上如何完整的挂载snapshot呢？</p>
+<p>这里从前面的流程分析可见，</p>
+<p>对于某个系统分区的cow镜像来说，存在一个<partition_name>_cow 为分区名的分区在super分区的metadata上，而对应该分区的分区组名为cow，元数据区域也在这个super上，对于cow-file，即写时复制的区域，是存在了userdata分区上的，而其metadata的描述是存在了metadata分区身上。对于<code>metadata描述</code>是指的metadata数据结构，其中包含了分区extents数据段，cow-file是先初始化，根据当前版本和目标版本的metadata的描述的差异，先计算cow-file需要多大的空间，直接在userdata上创建了这样一个文件，然后就可以通过ioctl命令获得其block map，将block map转化成extents，再通过dm-linear 根据extents制成dm table，最终可以创建dm设备，还原cow-file，再同cow-partition的元数据信息拼接形成完成cow partition的镜像。再通过map snapshot和源分区关联起来。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/vab/" rel="tag"># vab</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/12/12/OTA%E7%9B%B8%E5%85%B3/android%20r%20recovery%E9%80%82%E9%85%8D/" rel="prev" title="android r recovery适配">
+      <i class="fa fa-chevron-left"></i> android r recovery适配
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/arm64%20%E6%8C%87%E4%BB%A4debug/" rel="next" title="arm gdb 调试">
+      arm gdb 调试 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#virtual-ab%E6%96%B9%E6%A1%88%E8%B0%83%E7%A0%94"><span class="nav-number">1.</span> <span class="nav-text">virtual ab方案调研</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%8Erecovery%E5%BC%80%E5%A7%8B%E8%AF%B4%E8%B5%B7"><span class="nav-number">1.1.</span> <span class="nav-text">从recovery开始说起</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Recovery%E6%8C%82%E8%BD%BDsystem"><span class="nav-number">1.1.1.</span> <span class="nav-text">Recovery挂载system</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93"><span class="nav-number">1.1.1.1.</span> <span class="nav-text">小结</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#snapshot%E7%90%86%E8%A7%A3"><span class="nav-number">1.2.</span> <span class="nav-text">snapshot理解</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#lvm-snapshot%E8%BF%87%E7%A8%8B%E7%90%86%E8%A7%A3"><span class="nav-number">1.2.1.</span> <span class="nav-text">lvm snapshot过程理解</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#lvm-android%E4%B8%8Asnapshot"><span class="nav-number">1.3.</span> <span class="nav-text">lvm-android上snapshot</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%90%86%E8%A7%A3v-ab%E7%9A%84%E5%8D%87%E7%BA%A7%E8%BF%87%E7%A8%8B"><span class="nav-number">1.3.1.</span> <span class="nav-text">理解v-ab的升级过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#virtual-ab-recovery%E4%B8%8B%E7%9A%84%E6%8C%82%E8%BD%BD%E6%B5%81%E7%A8%8B"><span class="nav-number">1.3.2.</span> <span class="nav-text">virtual ab recovery下的挂载流程</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">269</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">87</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">96</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="//cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4/dist/instantsearch.production.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
