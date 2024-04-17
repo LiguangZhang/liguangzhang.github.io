@@ -17,7 +17,7 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":true,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":false,"nav":{"gitalk":{"order":-2}},"activeClass":"gitalk"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
   </script>
 
   <meta name="description" content="遇到的问题 抓kernel log fastboot oem uart-enable，重启后，会吐出kernel log， 否则只有kernel之前的log  提前设置好启动模式，misc不要清除   关掉avb校验 fastboot flash vbmeta --disable-verification  export ANDROID_PRODUCT_OUT&#x3D;&#x2F;home&#x2F;mi&#x2F;work_spac">
@@ -269,7 +269,7 @@
 <li><p>hidl 出错</p>
 <p>等待进一步调试，manifest是正常的，需要加log调试</p>
 <blockquote>
-<p>HidlServiceManagement: Waited one second for <a href="mailto:&#97;&#110;&#x64;&#x72;&#x6f;&#105;&#100;&#x2e;&#x68;&#97;&#x72;&#100;&#119;&#x61;&#114;&#101;&#x2e;&#107;&#x65;&#121;&#x6d;&#x61;&#115;&#x74;&#101;&#x72;&#x40;&#x34;&#46;&#x30;">&#97;&#110;&#x64;&#x72;&#x6f;&#105;&#100;&#x2e;&#x68;&#97;&#x72;&#100;&#119;&#x61;&#114;&#101;&#x2e;&#107;&#x65;&#121;&#x6d;&#x61;&#115;&#x74;&#101;&#x72;&#x40;&#x34;&#46;&#x30;</a>::IKeymasterDevice&#x2F;default</p>
+<p>HidlServiceManagement: Waited one second for <a href="mailto:&#97;&#110;&#100;&#114;&#111;&#x69;&#100;&#46;&#104;&#x61;&#114;&#100;&#x77;&#x61;&#114;&#x65;&#46;&#107;&#x65;&#121;&#x6d;&#x61;&#115;&#116;&#x65;&#114;&#64;&#x34;&#x2e;&#x30;">&#97;&#110;&#100;&#114;&#111;&#x69;&#100;&#46;&#104;&#x61;&#114;&#100;&#x77;&#x61;&#114;&#x65;&#46;&#107;&#x65;&#121;&#x6d;&#x61;&#115;&#116;&#x65;&#114;&#64;&#x34;&#x2e;&#x30;</a>::IKeymasterDevice&#x2F;default</p>
 </blockquote>
 <p>stop hwservicemanager后， 自动重启到recovery</p>
 <p>这个是vdc命令触发的，先关掉<code>reboot_into_recovery</code></p>
@@ -501,14 +501,14 @@
 NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
   NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
     var gitalk = new Gitalk({
-      clientID    : 'Iv1.773e833554cd839d',
-      clientSecret: '20f346072be63795eea604db04add5de16c76d1a',
-      repo        : 'BlogComments',
+      clientID    : 'Iv1.b2d7d95e69f1bcd6',
+      clientSecret: '7cfd4d9a0c01f1f4399ddfb410db655e9ef7e3b5',
+      repo        : 'liguangzhang.github.io',
       owner       : 'LiguangZhang',
       admin       : ['LiguangZhang'],
       id          : '616a81a8b979304d594d6c9a4391f854',
         language: 'zh-CN',
-      distractionFreeMode: true
+      distractionFreeMode: false
     });
     gitalk.render('gitalk-container');
   }, window.Gitalk);
