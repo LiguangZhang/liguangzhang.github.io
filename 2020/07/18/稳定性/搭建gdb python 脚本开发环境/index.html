@@ -12,12 +12,12 @@
 
 <link rel="stylesheet" href="/css/main.css">
 
-
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=LXGW WenKai:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
 <link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":true,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
   </script>
 
   <meta name="description" content="厂商或者系统继承的交叉工具链中的 gdb 一般不支持 python.或者即使支持python, 由于路径问题, 很难与当前系统中使用的python 配合. 如  出现python 第三方库不兼容问题等 缺少第三方库, 使用系统下载的第三方库不能嵌入到 gdb 中使用等问题.  因此, 我们在需要定制gdb脚本时往往需要自己动手编译交叉工具链的gdb.   下载编译gdb源码https:&#x2F;&#x2F;ftp.">
@@ -278,12 +278,12 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/signal%20%E7%9B%B8%E5%85%B3/" rel="prev" title="signal 相关整理">
-      <i class="fa fa-chevron-left"></i> signal 相关整理
+    <a href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/arm64%20%E6%8C%87%E4%BB%A4debug/" rel="prev" title="arm gdb 调试">
+      <i class="fa fa-chevron-left"></i> arm gdb 调试
     </a></div>
       <div class="post-nav-item">
-    <a href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/jemalloc5%20%E8%84%9A%E6%9C%AC%E5%AE%9E%E7%8E%B0/" rel="next" title="jemalloc5 脚本实现.md">
-      jemalloc5 脚本实现.md <i class="fa fa-chevron-right"></i>
+    <a href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/signal%20%E7%9B%B8%E5%85%B3/" rel="next" title="signal 相关整理">
+      signal 相关整理 <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
       </footer>
@@ -297,6 +297,7 @@
 
           </div>
           
+    <div class="comments" id="gitalk-container"></div>
 
 <script>
   window.addEventListener('tabs:register', () => {
@@ -466,6 +467,26 @@
   
 
   
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'Iv1.773e833554cd839d',
+      clientSecret: '4cd8b611b2443334348612d6b38282820001ae11',
+      repo        : 'BlogComments',
+      owner       : 'LiguangZhang',
+      admin       : ['LiguangZhang'],
+      id          : '67def3c474c4caf10b50a22cd47479a6',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
 
 </body>
 </html>

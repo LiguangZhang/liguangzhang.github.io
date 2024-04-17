@@ -12,12 +12,12 @@
 
 <link rel="stylesheet" href="/css/main.css">
 
-
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=LXGW WenKai:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
 <link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":true,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
   </script>
 
   <meta name="description" content="实现思路沿着内存dump的步骤 small slab先忽略tcache的话, 需要关注的结构 je_arenas, arena, bins , bin-&gt;slabcur  bin-&gt;slabs_nofull, bin-&gt;slabs_full, je_bin_infos extent_s 12345678p je_arenasp (*(struct arena_s*)je_aren">
@@ -289,8 +289,8 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/%E6%90%AD%E5%BB%BAgdb%20python%20%E8%84%9A%E6%9C%AC%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/" rel="prev" title="搭建gdb python 脚本开发环境">
-      <i class="fa fa-chevron-left"></i> 搭建gdb python 脚本开发环境
+    <a href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/signal%20%E7%9B%B8%E5%85%B3/" rel="prev" title="signal 相关整理">
+      <i class="fa fa-chevron-left"></i> signal 相关整理
     </a></div>
       <div class="post-nav-item">
     <a href="/2020/07/19/%E7%A8%B3%E5%AE%9A%E6%80%A7/jemalloc%E8%B0%83%E7%A0%94/" rel="next" title="jemalloc调研">
@@ -308,6 +308,7 @@
 
           </div>
           
+    <div class="comments" id="gitalk-container"></div>
 
 <script>
   window.addEventListener('tabs:register', () => {
@@ -477,6 +478,26 @@
   
 
   
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'Iv1.773e833554cd839d',
+      clientSecret: '4cd8b611b2443334348612d6b38282820001ae11',
+      repo        : 'BlogComments',
+      owner       : 'LiguangZhang',
+      admin       : ['LiguangZhang'],
+      id          : '830110a2bc2556d24d04938690675aed',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
 
 </body>
 </html>
