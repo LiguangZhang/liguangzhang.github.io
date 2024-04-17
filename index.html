@@ -184,6 +184,106 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2024/02/12/hxd_new/%E8%99%9A%E6%8B%9F%E5%8C%96/debug/riscv%20kvm%20guest%20os%20reboot%20%E5%90%8E%E6%8C%82%E6%AD%BB%E9%97%AE%E9%A2%98/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2024/02/12/hxd_new/%E8%99%9A%E6%8B%9F%E5%8C%96/debug/riscv%20kvm%20guest%20os%20reboot%20%E5%90%8E%E6%8C%82%E6%AD%BB%E9%97%AE%E9%A2%98/" class="post-title-link" itemprop="url">riscv kvm guest os reboot 后挂死问题</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-02-12 18:15:54" itemprop="dateCreated datePublished" datetime="2024-02-12T18:15:54+08:00">2024-02-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-17 10:36:57" itemprop="dateModified" datetime="2024-04-17T10:36:57+08:00">2024-04-17</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/RISCV/" itemprop="url" rel="index"><span itemprop="name">RISCV</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/RISCV/qemu/" itemprop="url" rel="index"><span itemprop="name">qemu</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/RISCV/qemu/debug/" itemprop="url" rel="index"><span itemprop="name">debug</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>问题:<br>在 guest shell 中发起 reboot, guest os 完成关机后挂死.<br>guest os 无 log 输出, kvm 无异常 log.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">The system is going down NOW!</span><br><span class="line">Sent SIGTERM to all processes</span><br><span class="line">logout</span><br><span class="line">Sent SIGKILL to all processes</span><br><span class="line">Requesting system reboot</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>从现象上看, 首先需要查 vcpu 在 kvm 中的调度是否正常.<br>需要的关键信息即 vcpu 的信息.</p>
+<h1 id="Guest-运行情况"><a href="#Guest-运行情况" class="headerlink" title="Guest 运行情况"></a>Guest 运行情况</h1><p>通过 vcpu-&gt;arch. Guest_csr 和 vcpu-&gt;arch. Guest_context 可以得到 guest 陷入到 kvm 前的 csr 和通用寄存器状态.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">guest_csr = &#123;</span><br><span class="line">  vsstatus = 0x200000020,</span><br><span class="line">  vsie = 0x222,</span><br><span class="line">  vstvec = 0xffffffff800031f4,</span><br><span class="line">  vsscratch = 0x0,</span><br><span class="line">  vsepc = 0xffffffff805b107a,</span><br><span class="line">  vscause = 0x8000000000000005,</span><br><span class="line">  vstval = 0x0,</span><br><span class="line">  hvip = 0x0,</span><br><span class="line">  vsatp = 0xa000100000082924,</span><br><span class="line">  scounteren = 0x7</span><br><span class="line">&#125;,</span><br></pre></td></tr></table></figure>
+
+<p>如果 host kernel 和 guest kernel 使用的同一份 Image, 其虚拟地址映射的符号应该是一致的, 因为 kernel va 的映射起始地址是一样的.<br>如果 host kernel 和 guest kernel 使用的 Image 不同, 可以查看 qemu 映射的 memory-layout</p>
+<p>Qemu 命令行  ctrl+a+c, 切换到 qemu 命令行</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta"># info mtree</span></span><br><span class="line"><span class="number">0000000080000000</span><span class="number">-0000000087f</span>fffff (prio <span class="number">0</span>, ram): riscv_virt_board.ram <span class="string">&quot;GPA 地址&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>Kernel 的 log</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2024/02/12/hxd_new/%E8%99%9A%E6%8B%9F%E5%8C%96/debug/riscv%20kvm%20guest%20os%20reboot%20%E5%90%8E%E6%8C%82%E6%AD%BB%E9%97%AE%E9%A2%98/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2024/01/12/hxd_new/%E8%99%9A%E6%8B%9F%E5%8C%96/debug/riscv%20kernel%20crash%20dump/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1072,99 +1172,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2023/07/11/hxd_new/riscv%E8%B0%83%E7%A0%94/riscv%20%E6%B5%8B%E8%AF%95/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/07/11/hxd_new/riscv%E8%B0%83%E7%A0%94/riscv%20%E6%B5%8B%E8%AF%95/" class="post-title-link" itemprop="url">nuclei riscv isa 测试</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2023-07-11 18:15:54" itemprop="dateCreated datePublished" datetime="2023-07-11T18:15:54+08:00">2023-07-11</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-16 14:13:44" itemprop="dateModified" datetime="2024-04-16T14:13:44+08:00">2024-04-16</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/RISCV/" itemprop="url" rel="index"><span itemprop="name">RISCV</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/RISCV/%E6%B5%8B%E8%AF%95/" itemprop="url" rel="index"><span itemprop="name">测试</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="nuclei-sdk"><a href="#nuclei-sdk" class="headerlink" title="nuclei sdk"></a>nuclei sdk</h1><h2 id="目录结构"><a href="#目录结构" class="headerlink" title="目录结构"></a>目录结构</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">nuclei-sdk</span><br><span class="line">├── Build  #build 生成目录</span><br><span class="line">├── Components  # 空目录</span><br><span class="line">├── NMSIS       # dsp nn的静态库和头文件</span><br><span class="line">├── OS          # FreeRTOS RTThread ucosii 头文件及源码目录</span><br><span class="line">├── SoC         # demosoc gd32vf103 bsp 头文件及源码目录</span><br><span class="line">├── application # baremental FreeRTOS RTThread ucosii 下跑的app 源码</span><br><span class="line">├── doc         # 文档</span><br><span class="line">├── logs        # 测试框架生成目录</span><br><span class="line">├── test        # riscv 指令集 中断 fpu pmp timer 等相关测试项, 在baremental下的测试</span><br><span class="line">└── tools       # 测试框架脚本</span><br></pre></td></tr></table></figure>
-
-<h2 id="编译baremental-app"><a href="#编译baremental-app" class="headerlink" title="编译baremental app"></a>编译baremental app</h2><p>例子</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make PROGRAM=application/baremetal/helloworld SOC=demosoc BOARD=nuclei_fpga_eval all</span><br></pre></td></tr></table></figure>
-
-<h2 id="运行baremental-app"><a href="#运行baremental-app" class="headerlink" title="运行baremental app"></a>运行baremental app</h2><p>例子</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nuclei_qemu/bin/qemu-system-riscv64  -M nuclei_n -cpu nuclei-ux600 -nodefaults -nographic -serial stdio -kernel application/baremetal/helloworld/helloworld.elf</span><br></pre></td></tr></table></figure>
-
-<h2 id="riscv-isa-测试框架"><a href="#riscv-isa-测试框架" class="headerlink" title="riscv isa 测试框架"></a>riscv isa 测试框架</h2>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2023/07/11/hxd_new/riscv%E8%B0%83%E7%A0%94/riscv%20%E6%B5%8B%E8%AF%95/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1234,14 +1241,14 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">146</span>
+          <span class="site-state-item-count">147</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">86</span>
+        <span class="site-state-item-count">88</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">

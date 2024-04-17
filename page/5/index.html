@@ -184,6 +184,191 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2023/01/11/hxd_new/riscv%E8%B0%83%E7%A0%94/xv6-riscv/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/01/11/hxd_new/riscv%E8%B0%83%E7%A0%94/xv6-riscv/" class="post-title-link" itemprop="url">xv6-riscv调研</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-01-11 18:15:54" itemprop="dateCreated datePublished" datetime="2023-01-11T18:15:54+08:00">2023-01-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 14:19:46" itemprop="dateModified" datetime="2024-04-16T14:19:46+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/os/" itemprop="url" rel="index"><span itemprop="name">os</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p><a target="_blank" rel="noopener" href="https://github.com/mit-pdos/xv6-riscv/">https://github.com/mit-pdos/xv6-riscv/</a><br>一个简单，类UNIX的 MIT(麻省理工) 教学用操作系统</p>
+<h1 id="用户态-syscall"><a href="#用户态-syscall" class="headerlink" title="用户态 syscall"></a>用户态 syscall</h1><p>Xv6内核提供了Unix内核传统上提供的服务和系统调用的子集</p>
+<table>
+<thead>
+<tr>
+<th><strong>系统调用</strong></th>
+<th><strong>描述</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>int fork()</code></td>
+<td>创建一个进程，返回子进程的PID</td>
+</tr>
+<tr>
+<td><code>int exit(int status)</code></td>
+<td>终止当前进程，并将状态报告给wait()函数。无返回</td>
+</tr>
+<tr>
+<td><code>int wait(int *status)</code></td>
+<td>等待一个子进程退出; 将退出状态存入*status; 返回子进程PID。</td>
+</tr>
+<tr>
+<td><code>int kill(int pid)</code></td>
+<td>终止对应PID的进程，返回0，或返回-1表示错误</td>
+</tr>
+<tr>
+<td><code>int getpid()</code></td>
+<td>返回当前进程的PID</td>
+</tr>
+<tr>
+<td><code>int sleep(int n)</code></td>
+<td>暂停n个时钟节拍</td>
+</tr>
+<tr>
+<td><code>int exec(char *file, char *argv[])</code></td>
+<td>加载一个文件并使用参数执行它; 只有在出错时才返回</td>
+</tr>
+<tr>
+<td><code>char *sbrk(int n)</code></td>
+<td>按n 字节增长进程的内存。返回新内存的开始</td>
+</tr>
+<tr>
+<td><code>int open(char *file, int flags)</code></td>
+<td>打开一个文件；flags表示read&#x2F;write；返回一个fd（文件描述符）</td>
+</tr>
+<tr>
+<td><code>int write(int fd, char *buf, int n)</code></td>
+<td>从buf 写n 个字节到文件描述符fd; 返回n</td>
+</tr>
+<tr>
+<td><code>int read(int fd, char *buf, int n)</code></td>
+<td>将n 个字节读入buf；返回读取的字节数；如果文件结束，返回0</td>
+</tr>
+<tr>
+<td><code>int close(int fd)</code></td>
+<td>释放打开的文件fd</td>
+</tr>
+<tr>
+<td><code>int dup(int fd)</code></td>
+<td>返回一个新的文件描述符，指向与fd 相同的文件</td>
+</tr>
+<tr>
+<td><code>int pipe(int p[])</code></td>
+<td>创建一个管道，把read&#x2F;write文件描述符放在p[0]和p[1]中</td>
+</tr>
+<tr>
+<td><code>int chdir(char *dir)</code></td>
+<td>改变当前的工作目录</td>
+</tr>
+<tr>
+<td><code>int mkdir(char *dir)</code></td>
+<td>创建一个新目录</td>
+</tr>
+<tr>
+<td><code>int mknod(char *file, int, int)</code></td>
+<td>创建一个设备文件</td>
+</tr>
+<tr>
+<td><code>int fstat(int fd, struct stat *st)</code></td>
+<td>将打开文件fd的信息放入*st</td>
+</tr>
+<tr>
+<td><code>int stat(char *file, struct stat *st)</code></td>
+<td>将指定名称的文件信息放入*st</td>
+</tr>
+<tr>
+<td><code>int link(char *file1, char *file2)</code></td>
+<td>为文件file1创建另一个名称(file2)</td>
+</tr>
+<tr>
+<td><code>int unlink(char *file)</code></td>
+<td>删除一个文件</td>
+</tr>
+</tbody></table>
+<p>用户态的基础接口</p>
+<ul>
+<li>文件操作 open read write close link unlink stat fstat mkdir chdir</li>
+<li>进程相关 fork dup wait pipe getpid exit kill</li>
+<li>log相关 printf</li>
+<li>内存  malloc free</li>
+<li>时间相关 uptime(获取当前的tick) sleep</li>
+</ul>
+<h1 id="文件系统"><a href="#文件系统" class="headerlink" title="文件系统"></a>文件系统</h1><p>提供了一个精简版的文件系统, 支持ramdisk, 支持文件读写</p>
+<p>可改code, 将用户态程序打包进文件系统, 将文件系统镜像融入到 kernel, 使之成为 kernel .rodata段的内容, 作为ramdisk使用</p>
+<p>不依赖加载器, 可以将用户态应用程序和 <code>little kernel</code> 打包到一起</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/01/11/hxd_new/riscv%E8%B0%83%E7%A0%94/xv6-riscv/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2022/10/25/hxd_new/TI%20crypto/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1058,107 +1243,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2022/09/11/hxd_new/riscv%E8%B0%83%E7%A0%94/u-boot%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/09/11/hxd_new/riscv%E8%B0%83%E7%A0%94/u-boot%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/" class="post-title-link" itemprop="url">u-boot启动流程分析</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2022-09-11 18:15:54" itemprop="dateCreated datePublished" datetime="2022-09-11T18:15:54+08:00">2022-09-11</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-16 14:17:21" itemprop="dateModified" datetime="2024-04-16T14:17:21+08:00">2024-04-16</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/u-boot/" itemprop="url" rel="index"><span itemprop="name">u-boot</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="RISCV-start-S-uboot-初始化总体框架解析"><a href="#RISCV-start-S-uboot-初始化总体框架解析" class="headerlink" title="RISCV start.S uboot 初始化总体框架解析"></a>RISCV start.S uboot 初始化总体框架解析</h1><p>u-boot 运行在S-mode下</p>
-<figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br></pre></td><td class="code"><pre><span class="line">+ _start:</span><br><span class="line"> \-- mv tp, a0 <span class="string">&quot;tp register save hartid&quot;</span></span><br><span class="line"> |-- csrw   MODE_PREFIX(tvec), t0 <span class="string">&quot;设置中断stvec 入口为 trap_entry&quot;</span></span><br><span class="line"> |-- li t0, SIE_SSIE</span><br><span class="line"> |-- csrs   MODE_PREFIX(ie), t0 <span class="string">&quot;设置sie 协处理器, 打开中断, 用来处理ipi 中断&quot;</span></span><br><span class="line"> |-+ call_board_init_f <span class="string">&quot;Set sp in internal/ex RAM to call board_init_f&quot;</span></span><br><span class="line">   \ -- li t1, CONFIG_SYS_INIT_SP_ADDR <span class="string">&quot;设置初始栈基址&quot;</span></span><br><span class="line">   | -- li t0, -<span class="number">16</span></span><br><span class="line">   | -- <span class="keyword">and</span>    sp, t1, t0   <span class="string">&quot;将堆栈16 bits对齐&quot;</span></span><br><span class="line"> |-+ call_board_init_f_0 <span class="string">&quot;从堆栈开始的地方，为u-boot的global data（struct global_data）分配空间&quot;</span></span><br><span class="line">   \ -- mv a0, sp</span><br><span class="line">   | -+ jal board_init_f_alloc_reserve</span><br><span class="line">      \ - top -= CONFIG_VAL(SYS_MALLOC_F_LEN) <span class="string">&quot;如定义了CONFIG_SYS_MALLOC_F_LEN，需预留出early malloc所需的空间&quot;</span></span><br><span class="line">   | -- slli t0, tp, CONFIG_STACK_SIZE_SHIFT <span class="string">&quot;tp代表的是hartid, 每个hart 分配STACK_SIZE 空间&quot;</span></span><br><span class="line">   | -- sub sp, a0, t0 <span class="string">&quot;sp = a0 - t0, 地址在初始栈基址上向上增长, a0 初始栈基址 top - malloc空间&quot;</span></span><br><span class="line">   | -- bnez   tp, secondary_hart_loop <span class="string">&quot;其他hart 跳转到 secondary_hart_loop, hart 0 继续&quot;</span></span><br><span class="line">   | -+ jal board_init_f_init_reserve <span class="string">&quot;初始化uboot的global data, 置0&quot;</span></span><br><span class="line">      \ -- <span class="string">&quot;如定义了SYS_MALLOC_F_LEN，则会初始化gd-&gt;malloc_base&quot;</span></span><br><span class="line">   | -- jal icache_enable</span><br><span class="line">   | -- jal dcache_enable</span><br><span class="line">   | -+ jalr -&gt; board_init_f <span class="string">&quot;调用board_init_f接口，执行前置的初始化操作&quot;</span> common/board_f.c</span><br><span class="line">      \ -+ initcall_run_list(init_sequence_f) <span class="string">&quot;执行init_sequence_f&quot;</span> 里的一系列初始化函数</span><br><span class="line">         \ -+ init_sequence_f</span><br><span class="line">            \ -- initf_malloc</span><br><span class="line">            | -- arch_cpu_init</span><br><span class="line">            | -- arch_cpu_init_dm</span><br><span class="line">            | -- timer_init</span><br><span class="line">            | -- env_init</span><br><span class="line">            | -- console_init_f</span><br><span class="line">            | -- print_cpuinfo</span><br><span class="line">            | -- dram_init</span><br><span class="line">            | -- ..</span><br><span class="line">            | -- reloc_fdt</span><br><span class="line">            | -- reloc_bootstage</span><br><span class="line">            | -- setup_reloc</span><br><span class="line">            | -+ jump_to_copy</span><br><span class="line">               \ -+ relocate_code(gd-&gt;start_addr_sp, gd-&gt;new_gd, gd-&gt;relocaddr) <span class="string">&quot;开始进行主核relocate&quot;</span></span><br><span class="line">                  \ -- mv s2, a0          /* save addr_sp */</span><br><span class="line">                  | -- mv s3, a1          /* save addr <span class="keyword">of</span> gd */</span><br><span class="line">                  | -- mv s4, a2          /* save addr <span class="keyword">of</span> destination */</span><br><span class="line">                  | -+ stack_setup</span><br><span class="line">                     \ -- slli   t0, tp, CONFIG_STACK_SIZE_SHIFT</span><br><span class="line">                     | -- sub    sp, s2, t0 <span class="string">&quot;gd-&gt;start_addr_sp - offset(of hartid)&quot;</span> </span><br><span class="line">                                 设置新的sp, 这个sp 是reloc 后的sp <span class="string">&quot;gd-&gt;start_addr_sp = gd-&gt;relocaddr;&quot;</span></span><br><span class="line">                     | -- clear_bss clbss_l  <span class="string">&quot;将__bss_start到__bss_end&quot;</span> 之间reloc 到 ram上的bss 区段清<span class="number">0</span>           </span><br><span class="line">                     | -- copy_loop <span class="string">&quot;reloc 将_start到_bss_start之间的代码段拷贝到 relocaddr处&quot;</span></span><br><span class="line">                  | -+ fix_rela_dyn <span class="string">&quot;Update dynamic relocations after board_init_f&quot;</span></span><br><span class="line">                  | -+ relocate_secondary_harts</span><br><span class="line">                     \ -- la  t0, secondary_hart_relocate</span><br><span class="line">                     | -- add a0, t0, t6 <span class="string">&quot;到reloc 地址上执行secondary_hart_relocate&quot;</span> </span><br><span class="line">                           a0 为 secondary_hart_relocate</span><br><span class="line">                     | -- mv a1, s2 <span class="string">&quot;s2 为 addr_sp&quot;</span></span><br><span class="line">                     | -- mv a2, s3 <span class="string">&quot;s3 为 gd 指针&quot;</span></span><br><span class="line">                     | -+ jal    smp_call_function</span><br><span class="line">                        \ -+ send_ipi_many(&amp;ipi); <span class="string">&quot;发送ipi中断&quot;</span>, 前面传的三个参数保存在 gd-&gt;arch.ipi 中</span><br><span class="line">                           \ -+ riscv_send_ipi(reg) <span class="string">&quot;reg为从uboot fdt中查到的所有的hart&quot;</span></span><br><span class="line">                              \ -- SBI_CALL_1(SBI_SEND_IPI, hart_mask); </span><br><span class="line">                                   <span class="string">&quot;调用opensbi的函数, 给指定的hart发送ipi中断&quot;</span></span><br><span class="line">               -----------------------------ipi中断, 跳入其他核----------------------------------------------                    </span><br><span class="line">                           | -+ secondary_hart_loop <span class="string">&quot;其他hart处在secondary_hart_loop 处调了 wfi 等待&quot;</span></span><br><span class="line">                              \ -- csrr   t0, MODE_PREFIX(ip) <span class="string">&quot;读sip&quot;</span></span><br><span class="line">                              | -- andi   t0, t0, SIE_SSIE</span><br><span class="line">                              | -- mv a0, tp <span class="string">&quot;hartid 为第一个参数&quot;</span></span><br><span class="line">                              | -+ jal handle_ipi <span class="string">&quot;如果来了software 中断, 即会跳到 handle_ipi 处理, 否则继续 secondary_hart_loop&quot;</span></span><br><span class="line">                                 \-+ handle_ipi(hartid) <span class="string">&quot;对应的hart 收到ipi 中断&quot;</span></span><br><span class="line">                                   \ -- riscv_clear_ipi(hart); <span class="string">&quot;会导致 mip.SSIP = sip.SSIP 清0&quot;</span></span><br><span class="line">                                   | -- invalidate_icache_all(); </span><br><span class="line">                                   | -- smp_function = gd-&gt;arch.ipi[hart].addr;</span><br><span class="line">                                      <span class="string">&quot;此处为传递的第一个参数, secondary_hart_relocate&quot;</span></span><br><span class="line">                                   | -+ smp_function(hart, gd-&gt;arch.ipi[hart].arg0, gd-&gt;arch.ipi[hart].arg1);</span><br><span class="line">                                      \ -+ secondary_hart_relocate   </span><br><span class="line">                                         \ -- slli   t0, tp, CONFIG_STACK_SIZE_SHIFT </span><br><span class="line">                                         | -- sub    sp, a1, t0 <span class="string">&quot;a1 为 new_sp, new_sp - offset(of hartid)&quot;</span></span><br><span class="line">                                         | -- mv gp, a2 <span class="string">&quot;更新gd指针到gp寄存器&quot;</span></span><br><span class="line">                                         | -- secondary_hart_loop wfi </span><br><span class="line">                                             <span class="string">&quot;其他核响应完ipi后, 只更新了sp和gp, 然后继续挂起等待&quot;</span></span><br><span class="line">      ---------------------------------回主核-------------------------------------------------</span><br><span class="line">            | -+ call_board_init_r</span><br><span class="line">               \ -- jal invalidate_icache_all</span><br><span class="line">               | -- jal flush_dcache_all</span><br><span class="line">               | -- mv  a0, s3          /* gd_t */</span><br><span class="line">               | -- mv  a1, s4          /* dest_addr */</span><br><span class="line">               | -+ jalr -&gt; board_init_r <span class="string">&quot;跳转到reloc board_init_r执行&quot;</span></span><br><span class="line">                  \ -+ initcall_run_list(init_sequence_r)</span><br><span class="line">                     \ -+ init_sequence_r</span><br><span class="line">                        \ -- initr_reloc_global_data</span><br><span class="line">                        | -- initr_barrier</span><br><span class="line">                        | -- bootstage_relocate</span><br><span class="line">                        | -- board_init</span><br><span class="line">                        | -- arch_early_init_r</span><br><span class="line">                        | -- initr_secondary_cpu</span><br><span class="line">                        | -- interrupt_init</span><br><span class="line">                        | -- board_late_init <span class="string">&quot;board 相关修改&quot;</span></span><br><span class="line">                        | -+ run_main_loop <span class="string">&quot;loop 等待接收输入的命令&quot;</span></span><br></pre></td></tr></table></figure>
-<blockquote>
-<p>上述过程中, riscv_send_ipi 发送ipi 中断给其他核, 其他核是在M-mode 的opensbi 下处理的ipi中断, 处理时会调用sbi_ipi_process_smode 函数将 MIP.SSIP 置位, 因为开启了mideleg的 MIP_SSIP 位, 会导致sip.SSIP 也会被置位. 返回给uboot后, 从核在secondary_hart_loop 中loop, 判断sip.SSIP &amp; sie.SSIE, 这个时候都置位了, 从核跳出secondary_hart_loop, 执行后面的handle_ipi 函数</p>
-</blockquote>
-<h1 id="u-boot-设计规范"><a href="#u-boot-设计规范" class="headerlink" title="u-boot 设计规范"></a>u-boot 设计规范</h1><p>u-boot是一个bootloader，有些情况下，它可能位于系统的只读存储器（ROM或者flash）中，并从那里开始执行。<br>因此，这种情况下，在u-boot执行的前期（在将自己copy到可读写的存储器之前），它所在的存储空间，是不可写的，这会有两个问题：</p>
-<ol>
-<li>堆栈无法使用，无法执行函数调用，也即C环境不可用。</li>
-<li>没有data段（或者正确初始化的data段）可用，不同函数或者代码之间，无法通过全局变量的形式共享数据。<br>对于问题1，通常的解决方案是：<br>u-boot运行起来之后，在那些<code>不需要执行任何初始化动作</code>即可使用的、可读写的存储区域，开辟一段堆栈（stack）空间。<br>一般来说，大部分的平台，都有自己的SRAM，可用作堆栈空间。如果实在不行，也有可借用CPU的data cache的方法（不再过多说明）。</li>
-</ol>
-<p>对于问题2，解决方案要稍微复杂一些：<br>首先，对于开发者来说，在u-boot被拷贝到可读写的RAM（这个动作称作relocation）之前，永远不要使用全局变量。<br>其次，在relocation之前，不同模块之间，确实有通过全局变量的形式传递数据的需求。怎么办？这就是global data需要解决的事情。</p>
-<p>为了在relocation前通过全局变量的形式传递数据，u-boot设计了一个巧妙的方法：</p>
-<ol>
-<li><p>定义一个struct global_data类型的数据结构，里面保存了各色各样需要传递的数据</p>
-</li>
-<li><p>堆栈配置好之后，在堆栈开始的位置，为struct global_data预留空间（可参考后面的说明)，并将开始地址（就是一个struct global_data指针）保存在一个寄存器中，后续的传递，都是通过保存在寄存器中的指针实现</p>
-<blockquote>
-<p>board_init_f_alloc_reserve 的返回值（a0）就是global data的指针</p>
-</blockquote>
-</li>
-</ol>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/09/11/hxd_new/riscv%E8%B0%83%E7%A0%94/u-boot%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1228,14 +1312,14 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">146</span>
+          <span class="site-state-item-count">147</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">86</span>
+        <span class="site-state-item-count">88</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">

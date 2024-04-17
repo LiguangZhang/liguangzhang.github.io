@@ -184,6 +184,143 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/arm64%20%E6%8C%87%E4%BB%A4debug/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/arm64%20%E6%8C%87%E4%BB%A4debug/" class="post-title-link" itemprop="url">arm gdb 调试</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-07-18 18:15:54" itemprop="dateCreated datePublished" datetime="2020-07-18T18:15:54+08:00">2020-07-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 16:00:15" itemprop="dateModified" datetime="2024-04-16T16:00:15+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%A8%B3%E5%AE%9A%E6%80%A7/" itemprop="url" rel="index"><span itemprop="name">稳定性</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="1-arm64-寄存器和指令"><a href="#1-arm64-寄存器和指令" class="headerlink" title="1. arm64 寄存器和指令"></a>1. arm64 寄存器和指令</h1><h2 id="1-1-寄存器"><a href="#1-1-寄存器" class="headerlink" title="1.1. 寄存器"></a>1.1. 寄存器</h2><p>arm64 有34个寄存器, 包含31个通用寄存器, SP PC CPSR</p>
+<blockquote>
+<p>寄存器中可以存地址, 也可以存值.</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>寄存器</th>
+<th>位数</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>x0-x30</td>
+<td>64</td>
+<td>通用寄存器, 可以作 位使用: w0-w30 (访问寄存器的低位)</td>
+</tr>
+<tr>
+<td>x0-x7</td>
+<td>64</td>
+<td>用于子程序调用时参数传递(形参), x0 还用于返回值传递</td>
+</tr>
+<tr>
+<td>FP(x29)</td>
+<td>64</td>
+<td>当前栈帧的栈底 (android上 向上增长), 栈顶地址 &lt; 栈底</td>
+</tr>
+<tr>
+<td>LR(x30)</td>
+<td>64</td>
+<td>程序链接寄存器, 保存子程序结束后需要执行的下一条指令. <span style="color: green">即谁调用了当前函数.</span></td>
+</tr>
+<tr>
+<td>SP</td>
+<td>64</td>
+<td>保存栈指针, 使用SP&#x2F;WSP来进行对栈寄存器的访问</td>
+</tr>
+<tr>
+<td>PC</td>
+<td>64</td>
+<td>程序计数器, 俗称PC指针, 总是指向即将执行的下一条指令, 在arm64中, 软件不能修改pc寄存器</td>
+</tr>
+<tr>
+<td>CPSR</td>
+<td>64</td>
+<td>状态寄存器,    NZCV是状态寄存器的条件标志位，分别代表运算过程中产生的状态</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>我们可以根据FP和SP寄存器回溯函数调用过程，通过这两个值，我们可以知道函数的栈起始地址（也就是FP寄存器的值）， 以及栈顶（也就是SP寄存器的值）。得到了m函数的栈帧，就很容易从里面提取LR寄存器的值了（FP向下偏移8个字节即为LR），也就知道了谁调用了当前函数。以此类推，可以得到一个完整的函数调用链（一般回溯到 main函数或者线程入口函数就没必要继续了）。实际上，回溯过程中我们并不需要知道栈顶SP，只要FP就够了</p>
+</blockquote>
+<p><a target="_blank" rel="noopener" href="https://juejin.im/post/6844903923719864333">https://juejin.im/post/6844903923719864333</a></p>
+<h3 id="1-1-1-arm64-约定"><a href="#1-1-1-arm64-约定" class="headerlink" title="1.1.1. arm64 约定"></a>1.1.1. arm64 约定</h3><ul>
+<li><code>x0 ~ x7</code> 分别会存放方法的前 8 个参数；如果参数个数超过了8个，多余的参数会存在栈上，新方法会通过栈来读取。</li>
+<li>方法的返回值一般都在 <code>x0</code> 上；如果方法返回值是一个较大的数据结构时，结果会存在 <code>x8</code> 执行的地址上。</li>
+</ul>
+<h2 id="1-2-虚存地址与elf-段地虚址"><a href="#1-2-虚存地址与elf-段地虚址" class="headerlink" title="1.2. 虚存地址与elf 段地虚址"></a>1.2. 虚存地址与elf 段地虚址</h2>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/arm64%20%E6%8C%87%E4%BB%A4debug/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2020/02/12/OTA%E7%9B%B8%E5%85%B3/virtual%20ab%E6%96%B9%E6%A1%88%E8%B0%83%E7%A0%94/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1107,94 +1244,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E8%AE%BE%E5%A4%87%E4%B8%8A%E9%94%81%E7%8A%B6%E6%80%81%E4%B8%8B1217%E6%97%A0%E6%B3%95%E5%B7%A5%E4%BD%9C%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E8%AE%BE%E5%A4%87%E4%B8%8A%E9%94%81%E7%8A%B6%E6%80%81%E4%B8%8B1217%E6%97%A0%E6%B3%95%E5%B7%A5%E4%BD%9C%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90/" class="post-title-link" itemprop="url">设备bootloader上锁状态下1217无法工作问题分析</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2019-10-12 18:15:54" itemprop="dateCreated datePublished" datetime="2019-10-12T18:15:54+08:00">2019-10-12</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-16 15:10:37" itemprop="dateModified" datetime="2024-04-16T15:10:37+08:00">2024-04-16</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Android/%E5%8A%A0%E5%AF%86/" itemprop="url" rel="index"><span itemprop="name">加密</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="设备bootloader上锁状态下1217无法工作问题分析"><a href="#设备bootloader上锁状态下1217无法工作问题分析" class="headerlink" title="设备bootloader上锁状态下1217无法工作问题分析"></a>设备bootloader上锁状态下1217无法工作问题分析</h1><h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>前面讲到r上6月份升级基线后, 因KM TA date support的升级导致recovery下无法正常使用解密服务.</p>
-<p>当时的方案是配置recovery vbmeta区域的 prop <code>--prop com.android.build.boot.security_patch:2020-06-05</code><br>从而在bootimg_hdr不支持识别date 信息的情况下, 可以在reocovery模式下bootloader能够读到天的信息, 并传给KM TA.</p>
-<h2 id="新问题"><a href="#新问题" class="headerlink" title="新问题"></a>新问题</h2><p>最近测试在复测该问题时, 发现手机bootloader上锁状态下, 无法执行1217功能. 因此需要重新分析下这个问题的原因.</p>
-<h2 id="locked-状态下的调试"><a href="#locked-状态下的调试" class="headerlink" title="locked 状态下的调试"></a>locked 状态下的调试</h2><h3 id="debug-abl的方法"><a href="#debug-abl的方法" class="headerlink" title="debug abl的方法"></a>debug abl的方法</h3><h4 id="locked状态下的限制"><a href="#locked状态下的限制" class="headerlink" title="locked状态下的限制"></a>locked状态下的限制</h4><p>首先, 小米机器locked 状态有如下限制:</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E8%AE%BE%E5%A4%87%E4%B8%8A%E9%94%81%E7%8A%B6%E6%80%81%E4%B8%8B1217%E6%97%A0%E6%B3%95%E5%B7%A5%E4%BD%9C%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1264,14 +1313,14 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">146</span>
+          <span class="site-state-item-count">147</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">86</span>
+        <span class="site-state-item-count">88</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">

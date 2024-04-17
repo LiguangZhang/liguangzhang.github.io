@@ -184,6 +184,94 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E8%AE%BE%E5%A4%87%E4%B8%8A%E9%94%81%E7%8A%B6%E6%80%81%E4%B8%8B1217%E6%97%A0%E6%B3%95%E5%B7%A5%E4%BD%9C%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E8%AE%BE%E5%A4%87%E4%B8%8A%E9%94%81%E7%8A%B6%E6%80%81%E4%B8%8B1217%E6%97%A0%E6%B3%95%E5%B7%A5%E4%BD%9C%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90/" class="post-title-link" itemprop="url">设备bootloader上锁状态下1217无法工作问题分析</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-10-12 18:15:54" itemprop="dateCreated datePublished" datetime="2019-10-12T18:15:54+08:00">2019-10-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 15:10:37" itemprop="dateModified" datetime="2024-04-16T15:10:37+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/%E5%8A%A0%E5%AF%86/" itemprop="url" rel="index"><span itemprop="name">加密</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="设备bootloader上锁状态下1217无法工作问题分析"><a href="#设备bootloader上锁状态下1217无法工作问题分析" class="headerlink" title="设备bootloader上锁状态下1217无法工作问题分析"></a>设备bootloader上锁状态下1217无法工作问题分析</h1><h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>前面讲到r上6月份升级基线后, 因KM TA date support的升级导致recovery下无法正常使用解密服务.</p>
+<p>当时的方案是配置recovery vbmeta区域的 prop <code>--prop com.android.build.boot.security_patch:2020-06-05</code><br>从而在bootimg_hdr不支持识别date 信息的情况下, 可以在reocovery模式下bootloader能够读到天的信息, 并传给KM TA.</p>
+<h2 id="新问题"><a href="#新问题" class="headerlink" title="新问题"></a>新问题</h2><p>最近测试在复测该问题时, 发现手机bootloader上锁状态下, 无法执行1217功能. 因此需要重新分析下这个问题的原因.</p>
+<h2 id="locked-状态下的调试"><a href="#locked-状态下的调试" class="headerlink" title="locked 状态下的调试"></a>locked 状态下的调试</h2><h3 id="debug-abl的方法"><a href="#debug-abl的方法" class="headerlink" title="debug abl的方法"></a>debug abl的方法</h3><h4 id="locked状态下的限制"><a href="#locked状态下的限制" class="headerlink" title="locked状态下的限制"></a>locked状态下的限制</h4><p>首先, 小米机器locked 状态有如下限制:</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E8%AE%BE%E5%A4%87%E4%B8%8A%E9%94%81%E7%8A%B6%E6%80%81%E4%B8%8B1217%E6%97%A0%E6%B3%95%E5%B7%A5%E4%BD%9C%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E5%8A%A0%E5%AF%86%E6%96%B9%E6%A1%88%E6%95%B4%E7%90%86/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1010,94 +1098,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/07/12/OTA%E7%9B%B8%E5%85%B3/ext3%E8%AF%BB%E5%86%99%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90%20/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2019/07/12/OTA%E7%9B%B8%E5%85%B3/ext3%E8%AF%BB%E5%86%99%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90%20/" class="post-title-link" itemprop="url">OTA相关/ext3读写过程分析 .md</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2019-07-12 18:15:54" itemprop="dateCreated datePublished" datetime="2019-07-12T18:15:54+08:00">2019-07-12</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-16 18:07:11" itemprop="dateModified" datetime="2024-04-16T18:07:11+08:00">2024-04-16</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">文件系统</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="1-Ext3文件系统读写过程分析"><a href="#1-Ext3文件系统读写过程分析" class="headerlink" title="1. Ext3文件系统读写过程分析"></a>1. Ext3文件系统读写过程分析</h1><h2 id="1-1-Ext3文件读写流程概述"><a href="#1-1-Ext3文件读写流程概述" class="headerlink" title="1.1. Ext3文件读写流程概述"></a>1.1. Ext3文件读写流程概述</h2><p> Ext3文件系统在进行读写操作的时候，首先需要open相应的文件，然后再进行读写操作。在open操作时，Linux kernel会创建一个file对象描述这个文件。File对象和文件的dentry和inode对象建立联系，并且将ext3的文件操作方法、映射处理方法（address space）注册到file对象中。 </p>
-<p>Ext3文件读写过程会涉及到VFS层的<strong>page cache</strong>，并且通常的读写操作都会使用到这层page cache，目的是提高磁盘的IO性能。在Linux中后台会运行writeback线程定时同步pagecache和设备之间的数据。Page cache的方式虽然能够提高IO性能，但是也对数据的安全性带来了潜在影响。 </p>
-<p>本文的目的是分析ext3文件系统读写流程中的关键函数，对于page cache原理以及writeback机制将在后继文章中做深入分析。</p>
-<h2 id="1-2-关键数据结构"><a href="#1-2-关键数据结构" class="headerlink" title="1.2. 关键数据结构"></a>1.2. 关键数据结构</h2><p>File数据结构是Linux用来描述文件的关键数据结构，该对象在一个文件被进程打开的时候被创建。当一个文件被关闭的时候，file对象也会被立即销毁。file数据结构不会被作为元数据信息持久化保存至设备。该数据结构定义如下： </p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">file</span> &#123;</span>  </span><br><span class="line">    <span class="comment">/*  </span></span><br><span class="line"><span class="comment">     * fu_list becomes invalid after file_free is called and queued via  </span></span><br><span class="line"><span class="comment">     * fu_rcuhead for RCU freeing  </span></span><br><span class="line"><span class="comment">     */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">union</span> &#123;</span>  </span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>    <span class="title">fu_list</span>;</span>  </span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">rcu_head</span>     <span class="title">fu_rcuhead</span>;</span>  </span><br><span class="line">    &#125; f_u;  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">path</span>     <span class="title">f_path</span>;</span>     <span class="comment">/* 文件路径，包含文件dentry目录项和vfsmount信息 */</span>  </span><br><span class="line"><span class="meta">#<span class="keyword">define</span> f_dentry    f_path.dentry  </span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> f_vfsmnt    f_path.mnt  </span></span><br><span class="line">    <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">file_operations</span>    *<span class="title">f_op</span>;</span>  <span class="comment">/* 文件操作函数集 */</span>  </span><br><span class="line"> </span><br><span class="line">    <span class="comment">/*  </span></span><br><span class="line"><span class="comment">     * Protects f_ep_links, f_flags, f_pos vs i_size in lseek SEEK_CUR.  </span></span><br><span class="line"><span class="comment">     * Must not be taken from IRQ context.  </span></span><br><span class="line"><span class="comment">     */</span>  </span><br><span class="line">    <span class="type">spinlock_t</span>      f_lock;  </span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_SMP  </span></span><br><span class="line">    <span class="type">int</span>         f_sb_list_cpu;  </span><br><span class="line"><span class="meta">#<span class="keyword">endif</span>  </span></span><br><span class="line">    <span class="type">atomic_long_t</span>       f_count;  </span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span>        f_flags;  </span><br><span class="line">    <span class="type">fmode_t</span>         f_mode; <span class="comment">/* 文件操作模式 */</span>  </span><br><span class="line">    <span class="type">loff_t</span>          f_pos;  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">fown_struct</span>  <span class="title">f_owner</span>;</span>  </span><br><span class="line">    <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">cred</span>   *<span class="title">f_cred</span>;</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">file_ra_state</span>    <span class="title">f_ra</span>;</span>  </span><br><span class="line"> </span><br><span class="line">    u64         f_version;  </span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_SECURITY  </span></span><br><span class="line">    <span class="type">void</span>            *f_security;  </span><br><span class="line"><span class="meta">#<span class="keyword">endif</span>  </span></span><br><span class="line">    <span class="comment">/* needed for tty driver, and maybe others */</span>  </span><br><span class="line">    <span class="type">void</span>            *private_data;  </span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_EPOLL  </span></span><br><span class="line">    <span class="comment">/* Used by fs/eventpoll.c to link all the hooks to this file */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>    <span class="title">f_ep_links</span>;</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>    <span class="title">f_tfile_llink</span>;</span>  </span><br><span class="line"><span class="meta">#<span class="keyword">endif</span> <span class="comment">/* #ifdef CONFIG_EPOLL */</span>  </span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">address_space</span>    *<span class="title">f_mapping</span>;</span> <span class="comment">/* address space映射信息，指向inode中的i_mapping */</span>  </span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_DEBUG_WRITECOUNT  </span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span> f_mnt_write_state;  </span><br><span class="line"><span class="meta">#<span class="keyword">endif</span>  </span></span><br><span class="line">&#125;; </span><br></pre></td></tr></table></figure>
-
-<p>每个文件在内存中都会对应一个inode对象。在设备上也会保存每个文件的inode元数据信息，通过inode元数据信息可以找到该文件所占用的所有文件数据块（block）。VFS定义了一个通用的inode数据结构，同时ext3定义了ext3_inode元数据结构。在创建内存inode对象时，需要采用ext3_inode元数据信息初始化inode对象。Inode数据结构定义如下：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br></pre></td><td class="code"><pre><span class="line"> <span class="class"><span class="keyword">struct</span> <span class="title">inode</span> &#123;</span>  </span><br><span class="line">    <span class="type">umode_t</span>         i_mode;  </span><br><span class="line">    <span class="type">unsigned</span> <span class="type">short</span>      i_opflags;  </span><br><span class="line">    <span class="type">uid_t</span>           i_uid;  </span><br><span class="line">    <span class="type">gid_t</span>           i_gid;  </span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span>        i_flags;  </span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_FS_POSIX_ACL  </span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">posix_acl</span>    *<span class="title">i_acl</span>;</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">posix_acl</span>    *<span class="title">i_default_acl</span>;</span>  </span><br><span class="line"><span class="meta">#<span class="keyword">endif</span>  </span></span><br><span class="line"> </span><br><span class="line">    <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">inode_operations</span>   *<span class="title">i_op</span>;</span>  <span class="comment">/* inode操作函数集 */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">super_block</span>  *<span class="title">i_sb</span>;</span>      <span class="comment">/* 指向superblock */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">address_space</span>    *<span class="title">i_mapping</span>;</span> <span class="comment">/* 指向当前使用的页缓存的映射信息 */</span>  </span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_SECURITY  </span></span><br><span class="line">    <span class="type">void</span>            *i_security;  </span><br><span class="line"><span class="meta">#<span class="keyword">endif</span>  </span></span><br><span class="line"> </span><br><span class="line">    <span class="comment">/* Stat data, not accessed from path walking */</span>  </span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>       i_ino;  </span><br><span class="line">    <span class="comment">/*  </span></span><br><span class="line"><span class="comment">     * Filesystems may only read i_nlink directly.  They shall use the  </span></span><br><span class="line"><span class="comment">     * following functions for modification:  </span></span><br><span class="line"><span class="comment">     *  </span></span><br><span class="line"><span class="comment">     *    (set|clear|inc|drop)_nlink  </span></span><br><span class="line"><span class="comment">     *    inode_(inc|dec)_link_count  </span></span><br><span class="line"><span class="comment">     */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">union</span> &#123;</span>  </span><br><span class="line">        <span class="type">const</span> <span class="type">unsigned</span> <span class="type">int</span> i_nlink;  </span><br><span class="line">        <span class="type">unsigned</span> <span class="type">int</span> __i_nlink;  </span><br><span class="line">    &#125;;  </span><br><span class="line">    <span class="type">dev_t</span>           i_rdev;     <span class="comment">/* 设备号，major&amp;minor */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">timespec</span>     <span class="title">i_atime</span>;</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">timespec</span>     <span class="title">i_mtime</span>;</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">timespec</span>     <span class="title">i_ctime</span>;</span>  </span><br><span class="line">    <span class="type">spinlock_t</span>      i_lock; <span class="comment">/* i_blocks, i_bytes, maybe i_size */</span>  </span><br><span class="line">    <span class="type">unsigned</span> <span class="type">short</span>          i_bytes;  </span><br><span class="line">    <span class="type">blkcnt_t</span>        i_blocks;   <span class="comment">/* 文件块数量 */</span>  </span><br><span class="line">    <span class="type">loff_t</span>          i_size;  </span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> __NEED_I_SIZE_ORDERED  </span></span><br><span class="line">    <span class="type">seqcount_t</span>      i_size_seqcount;  </span><br><span class="line"><span class="meta">#<span class="keyword">endif</span>  </span></span><br><span class="line"> </span><br><span class="line">    <span class="comment">/* Misc */</span>  </span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>       i_state;  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">mutex</span>        <span class="title">i_mutex</span>;</span>  </span><br><span class="line"> </span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>       dirtied_when;   <span class="comment">/* jiffies of first dirtying */</span>  </span><br><span class="line"> </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">hlist_node</span>   <span class="title">i_hash</span>;</span> <span class="comment">/* 连接到inode Hash Table中 */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>    <span class="title">i_wb_list</span>;</span>  <span class="comment">/* backing dev IO list */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>    <span class="title">i_lru</span>;</span>      <span class="comment">/* inode LRU list */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>    <span class="title">i_sb_list</span>;</span>  </span><br><span class="line">    <span class="class"><span class="keyword">union</span> &#123;</span>  </span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>    <span class="title">i_dentry</span>;</span>  </span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">rcu_head</span>     <span class="title">i_rcu</span>;</span>  </span><br><span class="line">    &#125;;  </span><br><span class="line">    <span class="type">atomic_t</span>        i_count;  </span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span>        i_blkbits;  <span class="comment">/* 块大小，通常磁盘块大小为512字节，因此i_blkbits为9 */</span>  </span><br><span class="line">    u64         i_version;  </span><br><span class="line">    <span class="type">atomic_t</span>        i_dio_count;  </span><br><span class="line">    <span class="type">atomic_t</span>        i_writecount;  </span><br><span class="line">    <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">file_operations</span>    *<span class="title">i_fop</span>;</span> <span class="comment">/* former -&gt;i_op-&gt;default_file_ops，文件操作函数集 */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">file_lock</span>    *<span class="title">i_flock</span>;</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">address_space</span>    <span class="title">i_data</span>;</span> <span class="comment">/* 页高速缓存映射信息 */</span>  </span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_QUOTA  </span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">dquot</span>        *<span class="title">i_dquot</span>[<span class="title">MAXQUOTAS</span>];</span>  </span><br><span class="line"><span class="meta">#<span class="keyword">endif</span>  </span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>    <span class="title">i_devices</span>;</span>  </span><br><span class="line">    <span class="class"><span class="keyword">union</span> &#123;</span>  </span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">pipe_inode_info</span>  *<span class="title">i_pipe</span>;</span>        <span class="comment">/* 管道设备 */</span>  </span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">block_device</span> *<span class="title">i_bdev</span>;</span>    <span class="comment">/* block device块设备 */</span>  </span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">cdev</span>     *<span class="title">i_cdev</span>;</span>    <span class="comment">/* 字符设备 */</span>  </span><br><span class="line">    &#125;;  </span><br><span class="line"> </span><br><span class="line">    __u32           i_generation;  </span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_FSNOTIFY  </span></span><br><span class="line">    __u32           i_fsnotify_mask; <span class="comment">/* all events this inode cares about */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">hlist_head</span>   <span class="title">i_fsnotify_marks</span>;</span>  </span><br><span class="line"><span class="meta">#<span class="keyword">endif</span>  </span></span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_IMA  </span></span><br><span class="line">    <span class="type">atomic_t</span>        i_readcount; <span class="comment">/* struct files open RO */</span>  </span><br><span class="line"><span class="meta">#<span class="keyword">endif</span>  </span></span><br><span class="line">    <span class="type">void</span>            *i_private; <span class="comment">/* fs or device private pointer */</span>  </span><br><span class="line">&#125;; </span><br></pre></td></tr></table></figure>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2019/07/12/OTA%E7%9B%B8%E5%85%B3/ext3%E8%AF%BB%E5%86%99%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90%20/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1167,14 +1167,14 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">146</span>
+          <span class="site-state-item-count">147</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">86</span>
+        <span class="site-state-item-count">88</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
