@@ -17,7 +17,7 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":false,"nav":{"gitalk":{"order":-2}},"activeClass":"gitalk"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":{"valine":{"order":-1}},"activeClass":"valine"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
   </script>
 
   <meta name="description" content="遇到的问题 抓kernel log fastboot oem uart-enable，重启后，会吐出kernel log， 否则只有kernel之前的log  提前设置好启动模式，misc不要清除   关掉avb校验 fastboot flash vbmeta --disable-verification  export ANDROID_PRODUCT_OUT&#x3D;&#x2F;home&#x2F;mi&#x2F;work_spac">
@@ -238,6 +238,20 @@
             </span>
 
           
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2019/12/12/OTA%E7%9B%B8%E5%85%B3/android%20r%20recovery%E9%80%82%E9%85%8D/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2019/12/12/OTA%E7%9B%B8%E5%85%B3/android%20r%20recovery%E9%80%82%E9%85%8D/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
 
         </div>
       </header>
@@ -269,7 +283,7 @@
 <li><p>hidl 出错</p>
 <p>等待进一步调试，manifest是正常的，需要加log调试</p>
 <blockquote>
-<p>HidlServiceManagement: Waited one second for <a href="mailto:&#97;&#110;&#100;&#114;&#111;&#x69;&#100;&#46;&#104;&#x61;&#114;&#100;&#x77;&#x61;&#114;&#x65;&#46;&#107;&#x65;&#121;&#x6d;&#x61;&#115;&#116;&#x65;&#114;&#64;&#x34;&#x2e;&#x30;">&#97;&#110;&#100;&#114;&#111;&#x69;&#100;&#46;&#104;&#x61;&#114;&#100;&#x77;&#x61;&#114;&#x65;&#46;&#107;&#x65;&#121;&#x6d;&#x61;&#115;&#116;&#x65;&#114;&#64;&#x34;&#x2e;&#x30;</a>::IKeymasterDevice&#x2F;default</p>
+<p>HidlServiceManagement: Waited one second for <a href="mailto:&#97;&#x6e;&#100;&#114;&#111;&#105;&#x64;&#46;&#x68;&#x61;&#x72;&#x64;&#119;&#97;&#114;&#x65;&#x2e;&#x6b;&#x65;&#121;&#109;&#x61;&#115;&#116;&#x65;&#114;&#x40;&#52;&#x2e;&#x30;">&#97;&#x6e;&#100;&#114;&#111;&#105;&#x64;&#46;&#x68;&#x61;&#x72;&#x64;&#119;&#97;&#114;&#x65;&#x2e;&#x6b;&#x65;&#121;&#109;&#x61;&#115;&#116;&#x65;&#114;&#x40;&#52;&#x2e;&#x30;</a>::IKeymasterDevice&#x2F;default</p>
 </blockquote>
 <p>stop hwservicemanager后， 自动重启到recovery</p>
 <p>这个是vdc命令触发的，先关掉<code>reboot_into_recovery</code></p>
@@ -305,8 +319,8 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2019/11/12/OTA%E7%9B%B8%E5%85%B3/log%E5%88%86%E6%9E%90/" rel="prev" title="小米手机抓log">
-      <i class="fa fa-chevron-left"></i> 小米手机抓log
+    <a href="/2019/11/12/OTA%E7%9B%B8%E5%85%B3/Q%20recovery%20fastboot%E8%B0%83%E8%AF%95/" rel="prev" title="Q动态分区 recovey fastbootd 调研">
+      <i class="fa fa-chevron-left"></i> Q动态分区 recovey fastbootd 调研
     </a></div>
       <div class="post-nav-item">
     <a href="/2020/02/12/OTA%E7%9B%B8%E5%85%B3/virtual%20ab%E6%96%B9%E6%A1%88%E8%B0%83%E7%A0%94/" rel="next" title="virtual ab方案调研">
@@ -324,7 +338,7 @@
 
           </div>
           
-    <div class="comments" id="gitalk-container"></div>
+    <div class="comments" id="valine-comments"></div>
 
 <script>
   window.addEventListener('tabs:register', () => {
@@ -495,23 +509,32 @@
 
   
 
-<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
 
 <script>
-NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
-  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
-    var gitalk = new Gitalk({
-      clientID    : 'Iv1.b2d7d95e69f1bcd6',
-      clientSecret: '7cfd4d9a0c01f1f4399ddfb410db655e9ef7e3b5',
-      repo        : 'liguangzhang.github.io',
-      owner       : 'LiguangZhang',
-      admin       : ['LiguangZhang'],
-      id          : '616a81a8b979304d594d6c9a4391f854',
-        language: 'zh-CN',
-      distractionFreeMode: false
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
     });
-    gitalk.render('gitalk-container');
-  }, window.Gitalk);
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'VrGRp2q7WwXjxsCNmlDIZYbC-gzGzoHsz',
+      appKey     : 'JgMXmmB7yKQf2zm80TaBp3JT',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : 'zh-cn' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
 });
 </script>
 

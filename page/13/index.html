@@ -17,7 +17,7 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":false,"nav":{"gitalk":{"order":-2}},"activeClass":"gitalk"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":{"valine":{"order":-1}},"activeClass":"valine"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
   </script>
 
   <meta property="og:type" content="website">
@@ -185,7 +185,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2018/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9F%A5%E8%AF%861/">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2018/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%90%86%E8%A7%A3/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -199,7 +199,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2018/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9F%A5%E8%AF%861/" class="post-title-link" itemprop="url">文件系统结构理解</a>
+            <a href="/2018/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%90%86%E8%A7%A3/" class="post-title-link" itemprop="url">文件系统调研</a>
         </h2>
 
         <div class="post-meta">
@@ -216,7 +216,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-16 18:05:59" itemprop="dateModified" datetime="2024-04-16T18:05:59+08:00">2024-04-16</time>
+                <time title="修改时间：2024-04-16 10:21:22" itemprop="dateModified" datetime="2024-04-16T10:21:22+08:00">2024-04-16</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -229,6 +229,20 @@
             </span>
 
           
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2018/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%90%86%E8%A7%A3/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2018/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%90%86%E8%A7%A3/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
 
         </div>
       </header>
@@ -239,16 +253,30 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="1-文件系统知识1"><a href="#1-文件系统知识1" class="headerlink" title="1. 文件系统知识1"></a>1. 文件系统知识1</h1><h2 id="1-1-文件相关数据结构"><a href="#1-1-文件相关数据结构" class="headerlink" title="1.1. 文件相关数据结构"></a>1.1. 文件相关数据结构</h2><p>每个进程的task_struct结构体中, 包含一个<code>struct files_struct* files</code>结构体指针,指向该进程所有已经打开的文件&#x2F;目录对应的相关信息的结构体.<br>files内部又包含<code>struct file fd_array[]</code>数组, 每一个都是<code>struct file</code>结构体(又被称作fd, 文件描述符), 每个<code>file</code>结构体中记录了被打开文件的基本信息, 如记录该文件对应的目录项<code>dentry</code>,<br>用于操作该文件的<code>file_operations</code>回调函数等, 从<code>dentry</code>中可以找到该文件对应的<code>inode</code>结构体, 从而得到该文件的各种属性信息.</p>
-<p>fd_array数组的长度存放在max_fds字段中, linux系统中，一个进程打开的文件数是有初步限制的，即其文件描述符数初始时有最大化定量，即一个进程一般只能打开<code>NR_OPEN_DEFAULT</code>个文件，该值在32位机上为32个，在64位机上为64个<br>init fork一个子进程时, 也是如此.</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">do_fork======-&gt;copy_process</span><br><span class="line">    |======-&gt;dup_task_struct======-&gt;alloc_task_struct</span><br><span class="line">    |======-&gt;copy_files======-&gt;dup_fd======-&gt;alloc_files</span><br></pre></td></tr></table></figure>
-<h3 id="1-1-1-struct-files-struct扩充"><a href="#1-1-1-struct-files-struct扩充" class="headerlink" title="1.1.1. struct  files_struct扩充"></a>1.1.1. struct  files_struct扩充</h3><p>进程打开的fd数目超过<code>NR_OPEN_DEFAULT</code>时, 对已经初始化的files_struct进行扩充<br>当进行struct files_struct扩充时，会分配一个新的struct fdtable, 分配并初始化新的struct fdtable变量后，原先指向fdtab的struct files_struct指针成员<code>fdt</code>，会指向新分配的struct fdtable变量。这时，struct files_struct实例变量中就包含两个struct fdtable存储区：一个是其自身的，一个新分配的，用fdt指向。执行完上述的操作后，还要<em>将旧的结构存储区的内容拷贝到新的存储区</em>，这包括files_struct自身所包含的close_on_exec，open_fds，fd到新分配的close_on_exec，open_fds，fd的拷贝。<br>执行完上述拷贝之后，就要释放旧的struct fdtable，但这里并不执行执行该项释放操作. (需要时机触发)<br>struct files_struct扩充使用内核源码中的expand_files来实现，<code>expand_files</code>会调用<code>expand_fdtable</code>：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">expand_fdtable</span><span class="params">(<span class="keyword">struct</span> files_struct *files, <span class="type">int</span> nr)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">fdtable</span> *<span class="title">new_fdt</span>, *<span class="title">cur_fdt</span>;</span></span><br><span class="line">    new_fdt = alloc_fdtable(nr);      <span class="comment">//分配了一个fdtable</span></span><br><span class="line">    cur_fdt = files_fdtable(files);   <span class="comment">//files-&gt;fdt</span></span><br><span class="line">    <span class="keyword">if</span> (nr &gt;= cur_fdt-&gt;max_fds) &#123;</span><br><span class="line">        <span class="comment">/* Continue as planned */</span></span><br><span class="line">        copy_fdtable(new_fdt, cur_fdt);   <span class="comment">//拷贝了其中的3个变量:fd,open_fds,close_on_exec</span></span><br><span class="line">        rcu_assign_pointer(files-&gt;fdt, new_fdt);  <span class="comment">//将新分配的fdtable赋值给files的fdt</span></span><br><span class="line">          <span class="keyword">if</span> (cur_fdt-&gt;max_fds &gt; NR_OPEN_DEFAULT)  <span class="comment">//注意它第一次初始化为NR_OPEN_DEFAULT</span></span><br><span class="line">            free_fdtable(cur_fdt);</span><br><span class="line">     &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>扩充后, 内核会同时更新<code>max_fds</code>字段值.</p>
-<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/metersun/article/details/80513702">files_struct扩充</a></p>
+          <p>[TOC]</p>
+<h1 id="1-文件系统的组成部分"><a href="#1-文件系统的组成部分" class="headerlink" title="1.  文件系统的组成部分"></a>1.  文件系统的组成部分</h1><h2 id="1-1-block块理解"><a href="#1-1-block块理解" class="headerlink" title="1.1. block块理解"></a>1.1. block块理解</h2><p>硬盘的读写IO一次是一个扇区<code>512</code>字节, 如果要读写大量文件，以<code>扇区</code>为单位肯定很慢很消耗性能，所以Linux中通过文件系统控制使用<code>&quot;块&quot;</code>为读写单元<br>比如需要读一个或多个块时，文件系统的<code>IO管理器</code>通知磁盘控制器要读取哪些<code>块</code>的数据，硬盘控制器将这些块按<code>扇区</code>读取出来，再通过硬盘控制器将这些扇区数据重组返回给计算机</p>
+<ul>
+<li>block的出现使得在文件系统层面上读写性能大大提高，也大量减少了碎片</li>
+<li>可能造成空间浪费<blockquote>
+<p>在当下硬盘容量廉价且追求性能的时代，使用block是一定的。</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="1-2-inode"><a href="#1-2-inode" class="headerlink" title="1.2. inode"></a>1.2. inode</h2><p>假如block大小为1KB，仅仅存储一个<code>10M</code>的文件就需要10240个block，而且这些blocks很可能在位置上是<code>不连续</code>在一起的(不相邻)</p>
+<blockquote>
+<p>读取该文件时难道要从前向后扫描整个文件系统的块，然后找出属于该文件的块吗？<br>???<br>每个文件都有属性(如权限、大小、时间戳等)，这些属性类的元数据存储在哪里呢？难道也和文件的数据部分存储在块中吗？<br>如果一个文件占用多个block那是不是每个属于该文件的block都要存储一份文件元数据？<br>如果不在每个block中存储元数据文件系统又怎么知道某一个block是不是属于该文件呢？<br>解决方法是使用索引，通过扫描索引找到对应的数据，而且索引可以存储部分数据<br>在文件系统上索引技术具体化为索引节点(<code>index node</code>)，在索引节点上存储的部分数据即为文件的属性元数据及其他少量信息.<br>索引节点称为inode。在inode中存储了<strong>inode号、文件类型、权限、文件所有者、大小、时间戳</strong>等元数据信息，最重要的是还存储了<strong>指向属于该文件block的指针</strong></p>
+</blockquote>
+<ul>
+<li>可以用stat命令，查看某个文件的inode信息：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">stat</span> ~/.bashrc         </span><br><span class="line">  File: ‘/home/local/SPREADTRUM/liguang.zhang/.bashrc’</span><br><span class="line">  Size: 7829      	Blocks: 16         IO Block: 4096   regular file</span><br><span class="line">Device: 821h/2081d	Inode: 39059515    Links: 1</span><br><span class="line">Access: (0644/-rw-r--r--)  Uid: (1488486870/SPREADTRUM\liguang.zhang)   Gid: (1488454145/SPREADTRUM\domain^<span class="built_in">users</span>)</span><br><span class="line">Access: 2019-03-18 09:52:16.796663821 +0800</span><br><span class="line">Modify: 2019-02-22 10:10:58.044537613 +0800</span><br><span class="line">Change: 2019-02-22 10:10:58.044537613 +0800</span><br><span class="line"> Birth: -</span><br></pre></td></tr></table></figure></li>
+<li>查看每个inode节点的大小，可以用如下命令：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ sudo dumpe2fs /dev/sda1 | grep <span class="string">&quot;Inode size&quot;</span></span><br><span class="line">dumpe2fs 1.42.9 (4-Feb-2014)</span><br><span class="line">Inode size:	          256</span><br></pre></td></tr></table></figure>
+打印文件的inode number<br>ls命令用于列出文件&#x2F;文件夹的信息。参数 -i 说明需要显示每个文件的inode number。我们可以结合参数 -l 一起使用以列出详细信息：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">ls</span> -li</span><br><span class="line">total 16</span><br><span class="line">43650565 drwxr-xr-x 108 SPREADTRUM\liguang.zhang SPREADTRUM\domain^<span class="built_in">users</span> 12288 Mar 15 10:10 extensions</span><br><span class="line">43783364 drwxr-xr-x   2 SPREADTRUM\liguang.zhang SPREADTRUM\domain^<span class="built_in">users</span>  4096 May 17  2018 projects</span><br></pre></td></tr></table></figure>
+显示文件系统inode的使用信息<br>df命令汇总可用和已用的磁盘空间。你可以通过传递 -i 或 –inodes 选项来接收有关可用和已使用的inode报告。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">df</span> -i             </span><br><span class="line">Filesystem                                                            Inodes   IUsed     IFree IUse% Mounted on</span><br><span class="line">udev                                                                 2040313     563   2039750    1% /dev</span><br><span class="line">tmpfs                                                                2043070     647   2042423    1% /run</span><br><span class="line">/dev/sda1                                                            3055616  909414   2146202   30% /</span><br><span class="line">none                                                                 2043070       2   2043068    1% /sys/fs/cgroup</span><br><span class="line">none                                                                 2043070       5   2043065    1% /run/lock</span><br><span class="line">none                                                                 2043070     119   2042951    1% /run/shm</span><br><span class="line">none                                                                 2043070      38   2043032    1% /run/user</span><br><span class="line">/dev/sda3                                                           25526272  276893  25249379    2% /home</span><br><span class="line">/dev/sdb3                                                           56901632 6017447  50884185   11% /home/newdisk</span><br><span class="line">/dev/sdc1                                                          244195328 7604192 236591136    4% /home/newdisk1</span><br><span class="line">//tjnas1/data_exchange_tunnel/From_Shanghai/PLD_APPS/liguang.zhang         0       0         0     - /home/newdisk1/liguang.zhang/smb_dir/datasync</span><br></pre></td></tr></table></figure>
+列出文件系统超级块的信息<br>tune2fs -l 命令来显示所有与inode相关的信息<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ sudo tune2fs -l /dev/sda1 | grep inode</span><br><span class="line">Filesystem features:      has_journal ext_attr resize_inode dir_index filetype needs_recovery extent flex_bg sparse_super large_file huge_file uninit_bg dir_nlink extra_isize</span><br><span class="line">Free inodes:              2146270</span><br><span class="line">First inode:              11</span><br><span class="line">Journal inode:            8</span><br><span class="line">First orphan inode:       131185</span><br><span class="line">Journal backup:           inode blocks</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="1-3-bmap出现-只对写优化"><a href="#1-3-bmap出现-只对写优化" class="headerlink" title="1.3. bmap出现(只对写优化)"></a>1.3. bmap出现(只对写优化)</h2>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2018/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9F%A5%E8%AF%861/#more" rel="contents">
+              <a class="btn" href="/2018/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%90%86%E8%A7%A3/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -316,6 +344,20 @@
             </span>
 
           
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2018/07/19/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/debugfs/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2018/07/19/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/debugfs/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
 
         </div>
       </header>
@@ -415,6 +457,20 @@
             </span>
 
           
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2018/07/02/USB%E7%9B%B8%E5%85%B3/Midi%E6%A1%86%E6%9E%B6/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2018/07/02/USB%E7%9B%B8%E5%85%B3/Midi%E6%A1%86%E6%9E%B6/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
 
         </div>
       </header>
@@ -505,6 +561,20 @@
             </span>
 
           
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2018/07/01/USB%E7%9B%B8%E5%85%B3/AndroidQ%20Usb%E5%B7%AE%E5%BC%82%E5%AF%B9%E6%AF%94/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2018/07/01/USB%E7%9B%B8%E5%85%B3/AndroidQ%20Usb%E5%B7%AE%E5%BC%82%E5%AF%B9%E6%AF%94/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
 
         </div>
       </header>
@@ -533,297 +603,6 @@
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2018/07/01/USB%E7%9B%B8%E5%85%B3/AndroidQ%20Usb%E5%B7%AE%E5%BC%82%E5%AF%B9%E6%AF%94/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2018/07/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%88%9D%E6%8E%A2/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2018/07/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%88%9D%E6%8E%A2/" class="post-title-link" itemprop="url">文件系统初探</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2018-07-01 00:00:00" itemprop="dateCreated datePublished" datetime="2018-07-01T00:00:00+08:00">2018-07-01</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-16 18:07:22" itemprop="dateModified" datetime="2024-04-16T18:07:22+08:00">2024-04-16</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">文件系统</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="1-VFS"><a href="#1-VFS" class="headerlink" title="1. VFS"></a>1. VFS</h1><p>VFS以一组通用对象看待所有文件系统.</p>
-<ul>
-<li>超级块(SuperBlock)</li>
-<li>索引节点(inode)</li>
-<li>目录项(dentry)</li>
-<li>文件(struct file)</li>
-</ul>
-<h2 id="1-1-超级块-sb"><a href="#1-1-超级块-sb" class="headerlink" title="1.1. 超级块 sb"></a>1.1. 超级块 sb</h2><p>超级块代表一个已经安装的文件系统,存储该文件系统的有关信息(如类型\大小\状态等)</p>
-<blockquote>
-<ol>
-<li>对基于<code>磁盘</code>的文件系统, 该对象通常存放在磁盘的特定扇区上;</li>
-<li>对<code>非磁盘</code>的(如sysfs),现场创建保存在内存中</li>
-</ol>
-</blockquote>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">super_block</span> &#123;</span><br><span class="line">    <span class="comment">//用于形成超级块链表</span></span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">list_head</span>	s_list;		<span class="comment">/* Keep this first */</span></span><br><span class="line">    <span class="comment">// 所属文件系统所在的设备描述符</span></span><br><span class="line">	<span class="type">dev_t</span>			s_dev;		<span class="comment">/* search index; _not_ kdev_t */</span></span><br><span class="line">    <span class="comment">// 一个块需要几个bit表示, 如块为1024字节, 该处就是10 块大小的就位数</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">char</span>		s_blocksize_bits;</span><br><span class="line">    <span class="comment">// 块大小, 以字节为单位.</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span>		s_blocksize;</span><br><span class="line">	<span class="type">loff_t</span>			s_maxbytes;	<span class="comment">/* Max file size */</span></span><br><span class="line">    <span class="comment">// 文件系统类型</span></span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">file_system_type</span>	*s_type;</span><br><span class="line">    <span class="comment">// 超级块操作</span></span><br><span class="line">	<span class="type">const</span> <span class="keyword">struct</span> <span class="title class_">super_operations</span>	*s_op;</span><br><span class="line">    <span class="comment">// VFS磁盘限额处理方法</span></span><br><span class="line">	<span class="type">const</span> <span class="keyword">struct</span> <span class="title class_">dquot_operations</span>	*dq_op;</span><br><span class="line">    <span class="comment">// 用于配置磁盘限额的方法,处理来自用户空间的请求</span></span><br><span class="line">	<span class="type">const</span> <span class="keyword">struct</span> <span class="title class_">quotactl_ops</span>	*s_qcop;</span><br><span class="line">    <span class="comment">// 导出的方法, 从NFS服务器中共享目录又称导出目录</span></span><br><span class="line">	<span class="type">const</span> <span class="keyword">struct</span> <span class="title class_">export_operations</span> *s_export_op;</span><br><span class="line">    <span class="comment">// mount的flag,</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span>		s_flags;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span>		s_iflags;	<span class="comment">/* internal SB_I_* flags */</span></span><br><span class="line">    <span class="comment">// 魔数,用于识别文件系统</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span>		s_magic;</span><br><span class="line">    <span class="comment">// 文件系统的根目录的目录项对象, 从文件系统的超级块可以读到任何一个文件, 前提是知道根目录在哪里. </span></span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">dentry</span>		*s_root;</span><br><span class="line">    <span class="comment">// 卸载所用的信号量</span></span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">rw_semaphore</span>	s_umount;</span><br><span class="line">    <span class="comment">// 引用计数</span></span><br><span class="line">	<span class="type">int</span>			s_count;</span><br><span class="line">    <span class="comment">// 引用计数</span></span><br><span class="line">	<span class="type">atomic_t</span>		s_active;</span><br><span class="line">    <span class="comment">// 指向超级块扩展属性结构的指针</span></span><br><span class="line">	<span class="type">const</span> <span class="keyword">struct</span> <span class="title class_">xattr_handler</span> **s_xattr;</span><br><span class="line">    <span class="comment">// 加密相关的操作</span></span><br><span class="line">	<span class="type">const</span> <span class="keyword">struct</span> <span class="title class_">fscrypt_operations</span>	*s_cop;</span><br><span class="line">    <span class="comment">// 要导出的匿名目录项的列表    </span></span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">hlist_bl_head</span>	s_anon;		<span class="comment">/* anonymous dentries for (nfs) exporting */</span></span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">list_head</span>	s_mounts;	<span class="comment">/* list of mounts; _not_ for fs use */</span></span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">block_device</span>	*s_bdev;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">backing_dev_info</span> *s_bdi;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">mtd_info</span>		*s_mtd;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">hlist_node</span>	s_instances;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span>		s_quota_types;	<span class="comment">/* Bitmask of supported quota types */</span></span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">quota_info</span>	s_dquot;	<span class="comment">/* Diskquota specific options */</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">sb_writers</span>	s_writers;</span><br><span class="line"></span><br><span class="line">	<span class="type">char</span> s_id[<span class="number">32</span>];				<span class="comment">/* Informational name */</span></span><br><span class="line">	u8 s_uuid[<span class="number">16</span>];				<span class="comment">/* UUID */</span></span><br><span class="line"></span><br><span class="line">	<span class="type">void</span> 			*s_fs_info;	<span class="comment">/* Filesystem private info */</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span>		s_max_links;</span><br><span class="line">	<span class="type">fmode_t</span>			s_mode;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Granularity of c/m/atime in ns.</span></span><br><span class="line"><span class="comment">	   Cannot be worse than a second */</span></span><br><span class="line">	u32		   s_time_gran;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * The next field is for VFS *only*. No filesystems have any business</span></span><br><span class="line"><span class="comment">	 * even looking at it. You had been warned.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">mutex</span> s_vfs_rename_mutex;	<span class="comment">/* Kludge */</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Filesystem subtype.  If non-empty the filesystem type field</span></span><br><span class="line"><span class="comment">	 * in /proc/mounts will be &quot;type.subtype&quot;</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="type">char</span> *s_subtype;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Saved mount options for lazy filesystems using</span></span><br><span class="line"><span class="comment">	 * generic_show_options()</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="type">char</span> __rcu *s_options;</span><br><span class="line">	<span class="type">const</span> <span class="keyword">struct</span> <span class="title class_">dentry_operations</span> *s_d_op; <span class="comment">/* default d_op for dentries */</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Saved pool identifier for cleancache (-1 means none)</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="type">int</span> cleancache_poolid;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">shrinker</span> s_shrink;	<span class="comment">/* per-sb shrinker handle */</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Number of inodes with nlink == 0 but still referenced */</span></span><br><span class="line">	<span class="type">atomic_long_t</span> s_remove_count;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Being remounted read-only */</span></span><br><span class="line">	<span class="type">int</span> s_readonly_remount;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* AIO completions deferred from interrupt context */</span></span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">workqueue_struct</span> *s_dio_done_wq;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">hlist_head</span> s_pins;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Keep the lru lists last in the structure so they always sit on their</span></span><br><span class="line"><span class="comment">	 * own individual cachelines.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">list_lru</span>		s_dentry_lru ____cacheline_aligned_in_smp;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">list_lru</span>		s_inode_lru ____cacheline_aligned_in_smp;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">rcu_head</span>		rcu;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">work_struct</span>	destroy_work;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">mutex</span>		s_sync_lock;	<span class="comment">/* sync serialisation lock */</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Indicates how deep in a filesystem stack this SB is</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="type">int</span> s_stack_depth;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* s_inode_list_lock protects s_inodes */</span></span><br><span class="line">	<span class="type">spinlock_t</span>		s_inode_list_lock ____cacheline_aligned_in_smp;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">list_head</span>	s_inodes;	<span class="comment">/* all inodes */</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-
-<h3 id="1-1-1-超级块操作"><a href="#1-1-1-超级块操作" class="headerlink" title="1.1.1. 超级块操作"></a>1.1.1. 超级块操作</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">super_operations</span> &#123;</span><br><span class="line">   	<span class="keyword">struct</span> <span class="title class_">inode</span> *(*alloc_inode)(<span class="keyword">struct</span> super_block *sb);</span><br><span class="line">	<span class="built_in">void</span> (*destroy_inode)(<span class="keyword">struct</span> inode *);</span><br><span class="line">   	<span class="built_in">void</span> (*dirty_inode) (<span class="keyword">struct</span> inode *, <span class="type">int</span> flags);</span><br><span class="line">	<span class="built_in">int</span> (*write_inode) (<span class="keyword">struct</span> inode *, <span class="keyword">struct</span> writeback_control *wbc);</span><br><span class="line">	<span class="built_in">int</span> (*drop_inode) (<span class="keyword">struct</span> inode *);</span><br><span class="line">	<span class="built_in">void</span> (*evict_inode) (<span class="keyword">struct</span> inode *);</span><br><span class="line">	<span class="built_in">void</span> (*put_super) (<span class="keyword">struct</span> super_block *);</span><br><span class="line">	<span class="built_in">int</span> (*sync_fs)(<span class="keyword">struct</span> super_block *sb, <span class="type">int</span> wait);</span><br><span class="line">	<span class="built_in">int</span> (*freeze_super) (<span class="keyword">struct</span> super_block *);</span><br><span class="line">	<span class="built_in">int</span> (*freeze_fs) (<span class="keyword">struct</span> super_block *);</span><br><span class="line">	<span class="built_in">int</span> (*thaw_super) (<span class="keyword">struct</span> super_block *);</span><br><span class="line">	<span class="built_in">int</span> (*unfreeze_fs) (<span class="keyword">struct</span> super_block *);</span><br><span class="line">	<span class="built_in">int</span> (*statfs) (<span class="keyword">struct</span> dentry *, <span class="keyword">struct</span> kstatfs *);</span><br><span class="line">	<span class="built_in">int</span> (*remount_fs) (<span class="keyword">struct</span> super_block *, <span class="type">int</span> *, <span class="type">char</span> *);</span><br><span class="line">	<span class="built_in">int</span> (*remount_fs2) (<span class="keyword">struct</span> vfsmount *, <span class="keyword">struct</span> super_block *, <span class="type">int</span> *, <span class="type">char</span> *);</span><br><span class="line">	<span class="type">void</span> *(*clone_mnt_data) (<span class="type">void</span> *);</span><br><span class="line">	<span class="built_in">void</span> (*copy_mnt_data) (<span class="type">void</span> *, <span class="type">void</span> *);</span><br><span class="line">	<span class="built_in">void</span> (*umount_begin) (<span class="keyword">struct</span> super_block *);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">int</span> (*show_options)(<span class="keyword">struct</span> seq_file *, <span class="keyword">struct</span> dentry *);</span><br><span class="line">	<span class="built_in">int</span> (*show_options2)(<span class="keyword">struct</span> vfsmount *,<span class="keyword">struct</span> seq_file *, <span class="keyword">struct</span> dentry *);</span><br><span class="line">	<span class="built_in">int</span> (*show_devname)(<span class="keyword">struct</span> seq_file *, <span class="keyword">struct</span> dentry *);</span><br><span class="line">	<span class="built_in">int</span> (*show_path)(<span class="keyword">struct</span> seq_file *, <span class="keyword">struct</span> dentry *);</span><br><span class="line">	<span class="built_in">int</span> (*show_stats)(<span class="keyword">struct</span> seq_file *, <span class="keyword">struct</span> dentry *);</span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_QUOTA</span></span><br><span class="line">	<span class="built_in">ssize_t</span> (*quota_read)(<span class="keyword">struct</span> super_block *, <span class="type">int</span>, <span class="type">char</span> *, <span class="type">size_t</span>, <span class="type">loff_t</span>);</span><br><span class="line">	<span class="built_in">ssize_t</span> (*quota_write)(<span class="keyword">struct</span> super_block *, <span class="type">int</span>, <span class="type">const</span> <span class="type">char</span> *, <span class="type">size_t</span>, <span class="type">loff_t</span>);</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">dquot</span> **(*get_dquots)(<span class="keyword">struct</span> inode *);</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line">	<span class="built_in">int</span> (*bdev_try_to_free_page)(<span class="keyword">struct</span> super_block*, <span class="keyword">struct</span> page*, <span class="type">gfp_t</span>);</span><br><span class="line">	<span class="built_in">long</span> (*nr_cached_objects)(<span class="keyword">struct</span> super_block *,</span><br><span class="line">				  <span class="keyword">struct</span> shrink_control *);</span><br><span class="line">	<span class="built_in">long</span> (*free_cached_objects)(<span class="keyword">struct</span> super_block *,</span><br><span class="line">				    <span class="keyword">struct</span> shrink_control *);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-
-<h2 id="1-2-索引节点-inode"><a href="#1-2-索引节点-inode" class="headerlink" title="1.2. 索引节点 inode"></a>1.2. 索引节点 inode</h2>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2018/07/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%88%9D%E6%8E%A2/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2018/07/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/Android%20fuse%20%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E4%BB%8B%E7%BB%8D/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2018/07/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/Android%20fuse%20%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E4%BB%8B%E7%BB%8D/" class="post-title-link" itemprop="url">Android fuse 文件系统调研</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2018-07-01 00:00:00" itemprop="dateCreated datePublished" datetime="2018-07-01T00:00:00+08:00">2018-07-01</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-16 18:06:42" itemprop="dateModified" datetime="2024-04-16T18:06:42+08:00">2024-04-16</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">文件系统</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="1-开篇"><a href="#1-开篇" class="headerlink" title="1. 开篇"></a>1. 开篇</h1><p>本篇主要从存储挂载系统介绍fuse的相关流程. 在Android系统中, 在内部存储和外部存储之上新加了fuse 挂载, 对内部存储而言, 多用户情况下, 每个用户只能访问自己的内部存储目录(对应&#x2F;mnt&#x2F;runtime&#x2F;read|write&#x2F;emulated目录.) , 除此之外, 对应运行时权限的需求, 非特权应用(没有平台签名 , 不能申请安装权限android.permission.<code>WRITE_MEDIA_STORAGE</code> 的应用, 只能通过申请运行时WRITE_EXTERNAL_STORAGE权限的应用) 通过fuse实现了对存储的访问需求.</p>
-<h1 id="2-从sdcard-volume挂载说起"><a href="#2-从sdcard-volume挂载说起" class="headerlink" title="2. 从sdcard volume挂载说起"></a>2. 从sdcard volume挂载说起</h1><p>&#x2F;system&#x2F;bin&#x2F;sdcard 进程为fuse的用户态守护进程. 在sd卡的volume卷挂载后, 会执行下列命令</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">/system/bin/sdcard -u <span class="number">1023</span> -g <span class="number">1023</span> -U userid -w /mnt/media_rw/XXXX-XXXX XXXX-<span class="function">XXXX</span></span><br><span class="line"><span class="function"><span class="title">if</span> <span class="params">(execl(kFusePath, kFusePath,</span></span></span><br><span class="line"><span class="params"><span class="function">                <span class="string">&quot;-u&quot;</span>, <span class="string">&quot;1023&quot;</span>, <span class="comment">// AID_MEDIA_RW</span></span></span></span><br><span class="line"><span class="params"><span class="function">                <span class="string">&quot;-g&quot;</span>, <span class="string">&quot;1023&quot;</span>, <span class="comment">// AID_MEDIA_RW</span></span></span></span><br><span class="line"><span class="params"><span class="function">                <span class="string">&quot;-U&quot;</span>, std::to_string(getMountUserId()).c_str(),</span></span></span><br><span class="line"><span class="params"><span class="function">                <span class="string">&quot;-w&quot;</span>,</span></span></span><br><span class="line"><span class="params"><span class="function">                mRawPath.c_str(),</span></span></span><br><span class="line"><span class="params"><span class="function">                stableName.c_str(),</span></span></span><br><span class="line"><span class="params"><span class="function">                <span class="literal">NULL</span>))</span> </span>&#123;</span><br><span class="line">            <span class="built_in">PLOG</span>(ERROR) &lt;&lt; <span class="string">&quot;Failed to exec&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>进入sdcard进程, uid 1023  gid 1023 userid (当前的用户id)  -w  full_write  mRawPath对应 source_path,  label 对应 stableName</p>
-<p>没有配置sdcardfs情况下, </p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 对于sd卡, multi_user参数没传, 这里为false. 对于内部存储, multi_user为true</span></span><br><span class="line"><span class="built_in">run</span>(source_path, label, uid, gid, userid, multi_user, full_write);</span><br><span class="line"><span class="comment">/* Physical storage is readable by all users on device, but</span></span><br><span class="line"><span class="comment"> * the Android directories are masked off to a single user</span></span><br><span class="line"><span class="comment"> * deep inside attr_from_stat(). */</span></span><br><span class="line"><span class="comment">// full_write 为 true</span></span><br><span class="line"><span class="built_in">fuse_setup</span>(&amp;fuse_default, AID_SDCARD_RW, <span class="number">0006</span>)</span><br><span class="line">                || <span class="built_in">fuse_setup</span>(&amp;fuse_read, AID_EVERYBODY, full_write ? <span class="number">0027</span> : <span class="number">0022</span>)</span><br><span class="line">                || <span class="built_in">fuse_setup</span>(&amp;fuse_write, AID_EVERYBODY, full_write ? <span class="number">0007</span> : <span class="number">0022</span>))</span><br></pre></td></tr></table></figure>
-
-<p>指定了fuse_default&#x2F;fuse_read&#x2F;fuse_write 结构体挂载 &#x2F;mnt&#x2F;runtime&#x2F;default | read | write.</p>
-<p>对于前面的参数, 大多保存到了 struct fuse_global global 字段中.  初始化根目录node，sdcard也类似kernel fs为每个目录和文件维护了一个node结构体</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2018/07/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/Android%20fuse%20%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E4%BB%8B%E7%BB%8D/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2018/07/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/SAF%E6%A1%86%E6%9E%B6/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2018/07/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/SAF%E6%A1%86%E6%9E%B6/" class="post-title-link" itemprop="url">SAF框架</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2018-07-01 00:00:00" itemprop="dateCreated datePublished" datetime="2018-07-01T00:00:00+08:00">2018-07-01</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-15 17:59:59" itemprop="dateModified" datetime="2024-04-15T17:59:59+08:00">2024-04-15</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/SAF/" itemprop="url" rel="index"><span itemprop="name">SAF</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/SAF/DocumentUI/" itemprop="url" rel="index"><span itemprop="name">DocumentUI</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/SAF/DocumentUI/ExternalStorageProvider/" itemprop="url" rel="index"><span itemprop="name">ExternalStorageProvider</span></a>
-                </span>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>Android 4.4（API 级别 19）引入了存储访问框架 (SAF)。它可以让用户方便的浏览、打开文档、图片和其它<br>的文件。用户可以通过标准的用户界面来浏览文件、打开最近访问的文件。</p>
-<p>SAF框架包含下面三个部分:</p>
-<ul>
-<li><code>Document provider</code>:<br>  一种ContentProvider，DocumentsProvider的子类。Android平台内置了多个，例如Downloads，Images，Videos</li>
-<li><code>Client App</code>:<br>  应用端，调用<code>ACTION_OPEN_DOCUMENT</code>&#x2F;<code>ACTION_CREATE_DOCUMENT</code>，并且接收provider返回的文件</li>
-<li><code>Picker</code>:<br>  系统界面，允许用户访问所有满足应用端搜索条件的provider提供的文档。例如平台的<code>DocumentsUI</code></li>
-</ul>
-<p>SAF 提供的部分功能如下：</p>
-<ul>
-<li>允许用户浏览所有文档提供程序而不仅仅是单个应用中的内容；</li>
-<li>让应用获得对provider所拥有文档的长期、持久性访问权限。 用户可以通过此访问权限添加、编辑、保存<br>和删除提供程序上的文件；</li>
-<li>支持多个用户帐户和临时根目录，如只有在插入驱动器后才会出现的 USB 存储提供程序。<br>注意：<br>在SAF中，客户端并不会直接与provider交互。客户端请求与文件交互(即读、编辑、创建、删除)的权限。</li>
-</ul>
-<h1 id="1-应用端代码示例"><a href="#1-应用端代码示例" class="headerlink" title="1. 应用端代码示例"></a>1. 应用端代码示例</h1><h2 id="1-1-授予目录访问权限"><a href="#1-1-授予目录访问权限" class="headerlink" title="1.1. 授予目录访问权限"></a>1.1. 授予目录访问权限</h2><h3 id="1-1-1-通过ACTION-OPEN-DOCUMENT-TREE授予应用访问特定目录的权限"><a href="#1-1-1-通过ACTION-OPEN-DOCUMENT-TREE授予应用访问特定目录的权限" class="headerlink" title="1.1.1. 通过ACTION_OPEN_DOCUMENT_TREE授予应用访问特定目录的权限"></a>1.1.1. 通过<code>ACTION_OPEN_DOCUMENT_TREE</code>授予应用访问特定目录的权限</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">performGrantSdWriteAcess</span><span class="params">()</span> &#123;</span><br><span class="line">	<span class="type">Intent</span> <span class="variable">intent</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Intent</span>(Intent.ACTION_OPEN_DOCUMENT_TREE);</span><br><span class="line">	intent.addCategory(Intent.CATEGORY_DEFAULT);</span><br><span class="line">	startActivityForResult(intent, TREE_REQUEST_CODE);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>通过<code>DocumentsUi</code> picker 选择好目录后，可以在<code>onActivityResult</code>中对返回的URI进行处理</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2018/07/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/SAF%E6%A1%86%E6%9E%B6/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -891,6 +670,20 @@
             </span>
 
           
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2018/07/01/USB%E7%9B%B8%E5%85%B3/usb%E6%A1%86%E6%9E%B6%E6%95%B4%E7%90%86/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2018/07/01/USB%E7%9B%B8%E5%85%B3/usb%E6%A1%86%E6%9E%B6%E6%95%B4%E7%90%86/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
 
         </div>
       </header>
@@ -1042,6 +835,339 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2018/07/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/Android%20fuse%20%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E4%BB%8B%E7%BB%8D/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2018/07/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/Android%20fuse%20%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E4%BB%8B%E7%BB%8D/" class="post-title-link" itemprop="url">Android fuse 文件系统调研</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-07-01 00:00:00" itemprop="dateCreated datePublished" datetime="2018-07-01T00:00:00+08:00">2018-07-01</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 18:06:42" itemprop="dateModified" datetime="2024-04-16T18:06:42+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">文件系统</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2018/07/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/Android%20fuse%20%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E4%BB%8B%E7%BB%8D/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2018/07/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/Android%20fuse%20%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E4%BB%8B%E7%BB%8D/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="1-开篇"><a href="#1-开篇" class="headerlink" title="1. 开篇"></a>1. 开篇</h1><p>本篇主要从存储挂载系统介绍fuse的相关流程. 在Android系统中, 在内部存储和外部存储之上新加了fuse 挂载, 对内部存储而言, 多用户情况下, 每个用户只能访问自己的内部存储目录(对应&#x2F;mnt&#x2F;runtime&#x2F;read|write&#x2F;emulated目录.) , 除此之外, 对应运行时权限的需求, 非特权应用(没有平台签名 , 不能申请安装权限android.permission.<code>WRITE_MEDIA_STORAGE</code> 的应用, 只能通过申请运行时WRITE_EXTERNAL_STORAGE权限的应用) 通过fuse实现了对存储的访问需求.</p>
+<h1 id="2-从sdcard-volume挂载说起"><a href="#2-从sdcard-volume挂载说起" class="headerlink" title="2. 从sdcard volume挂载说起"></a>2. 从sdcard volume挂载说起</h1><p>&#x2F;system&#x2F;bin&#x2F;sdcard 进程为fuse的用户态守护进程. 在sd卡的volume卷挂载后, 会执行下列命令</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">/system/bin/sdcard -u <span class="number">1023</span> -g <span class="number">1023</span> -U userid -w /mnt/media_rw/XXXX-XXXX XXXX-<span class="function">XXXX</span></span><br><span class="line"><span class="function"><span class="title">if</span> <span class="params">(execl(kFusePath, kFusePath,</span></span></span><br><span class="line"><span class="params"><span class="function">                <span class="string">&quot;-u&quot;</span>, <span class="string">&quot;1023&quot;</span>, <span class="comment">// AID_MEDIA_RW</span></span></span></span><br><span class="line"><span class="params"><span class="function">                <span class="string">&quot;-g&quot;</span>, <span class="string">&quot;1023&quot;</span>, <span class="comment">// AID_MEDIA_RW</span></span></span></span><br><span class="line"><span class="params"><span class="function">                <span class="string">&quot;-U&quot;</span>, std::to_string(getMountUserId()).c_str(),</span></span></span><br><span class="line"><span class="params"><span class="function">                <span class="string">&quot;-w&quot;</span>,</span></span></span><br><span class="line"><span class="params"><span class="function">                mRawPath.c_str(),</span></span></span><br><span class="line"><span class="params"><span class="function">                stableName.c_str(),</span></span></span><br><span class="line"><span class="params"><span class="function">                <span class="literal">NULL</span>))</span> </span>&#123;</span><br><span class="line">            <span class="built_in">PLOG</span>(ERROR) &lt;&lt; <span class="string">&quot;Failed to exec&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>进入sdcard进程, uid 1023  gid 1023 userid (当前的用户id)  -w  full_write  mRawPath对应 source_path,  label 对应 stableName</p>
+<p>没有配置sdcardfs情况下, </p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 对于sd卡, multi_user参数没传, 这里为false. 对于内部存储, multi_user为true</span></span><br><span class="line"><span class="built_in">run</span>(source_path, label, uid, gid, userid, multi_user, full_write);</span><br><span class="line"><span class="comment">/* Physical storage is readable by all users on device, but</span></span><br><span class="line"><span class="comment"> * the Android directories are masked off to a single user</span></span><br><span class="line"><span class="comment"> * deep inside attr_from_stat(). */</span></span><br><span class="line"><span class="comment">// full_write 为 true</span></span><br><span class="line"><span class="built_in">fuse_setup</span>(&amp;fuse_default, AID_SDCARD_RW, <span class="number">0006</span>)</span><br><span class="line">                || <span class="built_in">fuse_setup</span>(&amp;fuse_read, AID_EVERYBODY, full_write ? <span class="number">0027</span> : <span class="number">0022</span>)</span><br><span class="line">                || <span class="built_in">fuse_setup</span>(&amp;fuse_write, AID_EVERYBODY, full_write ? <span class="number">0007</span> : <span class="number">0022</span>))</span><br></pre></td></tr></table></figure>
+
+<p>指定了fuse_default&#x2F;fuse_read&#x2F;fuse_write 结构体挂载 &#x2F;mnt&#x2F;runtime&#x2F;default | read | write.</p>
+<p>对于前面的参数, 大多保存到了 struct fuse_global global 字段中.  初始化根目录node，sdcard也类似kernel fs为每个目录和文件维护了一个node结构体</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2018/07/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/Android%20fuse%20%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E4%BB%8B%E7%BB%8D/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2018/07/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/SAF%E6%A1%86%E6%9E%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2018/07/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/SAF%E6%A1%86%E6%9E%B6/" class="post-title-link" itemprop="url">SAF框架</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-07-01 00:00:00" itemprop="dateCreated datePublished" datetime="2018-07-01T00:00:00+08:00">2018-07-01</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-15 17:59:59" itemprop="dateModified" datetime="2024-04-15T17:59:59+08:00">2024-04-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/SAF/" itemprop="url" rel="index"><span itemprop="name">SAF</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/SAF/DocumentUI/" itemprop="url" rel="index"><span itemprop="name">DocumentUI</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/SAF/DocumentUI/ExternalStorageProvider/" itemprop="url" rel="index"><span itemprop="name">ExternalStorageProvider</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2018/07/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/SAF%E6%A1%86%E6%9E%B6/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2018/07/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/SAF%E6%A1%86%E6%9E%B6/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>Android 4.4（API 级别 19）引入了存储访问框架 (SAF)。它可以让用户方便的浏览、打开文档、图片和其它<br>的文件。用户可以通过标准的用户界面来浏览文件、打开最近访问的文件。</p>
+<p>SAF框架包含下面三个部分:</p>
+<ul>
+<li><code>Document provider</code>:<br>  一种ContentProvider，DocumentsProvider的子类。Android平台内置了多个，例如Downloads，Images，Videos</li>
+<li><code>Client App</code>:<br>  应用端，调用<code>ACTION_OPEN_DOCUMENT</code>&#x2F;<code>ACTION_CREATE_DOCUMENT</code>，并且接收provider返回的文件</li>
+<li><code>Picker</code>:<br>  系统界面，允许用户访问所有满足应用端搜索条件的provider提供的文档。例如平台的<code>DocumentsUI</code></li>
+</ul>
+<p>SAF 提供的部分功能如下：</p>
+<ul>
+<li>允许用户浏览所有文档提供程序而不仅仅是单个应用中的内容；</li>
+<li>让应用获得对provider所拥有文档的长期、持久性访问权限。 用户可以通过此访问权限添加、编辑、保存<br>和删除提供程序上的文件；</li>
+<li>支持多个用户帐户和临时根目录，如只有在插入驱动器后才会出现的 USB 存储提供程序。<br>注意：<br>在SAF中，客户端并不会直接与provider交互。客户端请求与文件交互(即读、编辑、创建、删除)的权限。</li>
+</ul>
+<h1 id="1-应用端代码示例"><a href="#1-应用端代码示例" class="headerlink" title="1. 应用端代码示例"></a>1. 应用端代码示例</h1><h2 id="1-1-授予目录访问权限"><a href="#1-1-授予目录访问权限" class="headerlink" title="1.1. 授予目录访问权限"></a>1.1. 授予目录访问权限</h2><h3 id="1-1-1-通过ACTION-OPEN-DOCUMENT-TREE授予应用访问特定目录的权限"><a href="#1-1-1-通过ACTION-OPEN-DOCUMENT-TREE授予应用访问特定目录的权限" class="headerlink" title="1.1.1. 通过ACTION_OPEN_DOCUMENT_TREE授予应用访问特定目录的权限"></a>1.1.1. 通过<code>ACTION_OPEN_DOCUMENT_TREE</code>授予应用访问特定目录的权限</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">performGrantSdWriteAcess</span><span class="params">()</span> &#123;</span><br><span class="line">	<span class="type">Intent</span> <span class="variable">intent</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Intent</span>(Intent.ACTION_OPEN_DOCUMENT_TREE);</span><br><span class="line">	intent.addCategory(Intent.CATEGORY_DEFAULT);</span><br><span class="line">	startActivityForResult(intent, TREE_REQUEST_CODE);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>通过<code>DocumentsUi</code> picker 选择好目录后，可以在<code>onActivityResult</code>中对返回的URI进行处理</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2018/07/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/SAF%E6%A1%86%E6%9E%B6/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2018/07/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%88%9D%E6%8E%A2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2018/07/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%88%9D%E6%8E%A2/" class="post-title-link" itemprop="url">文件系统初探</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-07-01 00:00:00" itemprop="dateCreated datePublished" datetime="2018-07-01T00:00:00+08:00">2018-07-01</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 18:07:22" itemprop="dateModified" datetime="2024-04-16T18:07:22+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">文件系统</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2018/07/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%88%9D%E6%8E%A2/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2018/07/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%88%9D%E6%8E%A2/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="1-VFS"><a href="#1-VFS" class="headerlink" title="1. VFS"></a>1. VFS</h1><p>VFS以一组通用对象看待所有文件系统.</p>
+<ul>
+<li>超级块(SuperBlock)</li>
+<li>索引节点(inode)</li>
+<li>目录项(dentry)</li>
+<li>文件(struct file)</li>
+</ul>
+<h2 id="1-1-超级块-sb"><a href="#1-1-超级块-sb" class="headerlink" title="1.1. 超级块 sb"></a>1.1. 超级块 sb</h2><p>超级块代表一个已经安装的文件系统,存储该文件系统的有关信息(如类型\大小\状态等)</p>
+<blockquote>
+<ol>
+<li>对基于<code>磁盘</code>的文件系统, 该对象通常存放在磁盘的特定扇区上;</li>
+<li>对<code>非磁盘</code>的(如sysfs),现场创建保存在内存中</li>
+</ol>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">super_block</span> &#123;</span><br><span class="line">    <span class="comment">//用于形成超级块链表</span></span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">list_head</span>	s_list;		<span class="comment">/* Keep this first */</span></span><br><span class="line">    <span class="comment">// 所属文件系统所在的设备描述符</span></span><br><span class="line">	<span class="type">dev_t</span>			s_dev;		<span class="comment">/* search index; _not_ kdev_t */</span></span><br><span class="line">    <span class="comment">// 一个块需要几个bit表示, 如块为1024字节, 该处就是10 块大小的就位数</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">char</span>		s_blocksize_bits;</span><br><span class="line">    <span class="comment">// 块大小, 以字节为单位.</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span>		s_blocksize;</span><br><span class="line">	<span class="type">loff_t</span>			s_maxbytes;	<span class="comment">/* Max file size */</span></span><br><span class="line">    <span class="comment">// 文件系统类型</span></span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">file_system_type</span>	*s_type;</span><br><span class="line">    <span class="comment">// 超级块操作</span></span><br><span class="line">	<span class="type">const</span> <span class="keyword">struct</span> <span class="title class_">super_operations</span>	*s_op;</span><br><span class="line">    <span class="comment">// VFS磁盘限额处理方法</span></span><br><span class="line">	<span class="type">const</span> <span class="keyword">struct</span> <span class="title class_">dquot_operations</span>	*dq_op;</span><br><span class="line">    <span class="comment">// 用于配置磁盘限额的方法,处理来自用户空间的请求</span></span><br><span class="line">	<span class="type">const</span> <span class="keyword">struct</span> <span class="title class_">quotactl_ops</span>	*s_qcop;</span><br><span class="line">    <span class="comment">// 导出的方法, 从NFS服务器中共享目录又称导出目录</span></span><br><span class="line">	<span class="type">const</span> <span class="keyword">struct</span> <span class="title class_">export_operations</span> *s_export_op;</span><br><span class="line">    <span class="comment">// mount的flag,</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span>		s_flags;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span>		s_iflags;	<span class="comment">/* internal SB_I_* flags */</span></span><br><span class="line">    <span class="comment">// 魔数,用于识别文件系统</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span>		s_magic;</span><br><span class="line">    <span class="comment">// 文件系统的根目录的目录项对象, 从文件系统的超级块可以读到任何一个文件, 前提是知道根目录在哪里. </span></span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">dentry</span>		*s_root;</span><br><span class="line">    <span class="comment">// 卸载所用的信号量</span></span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">rw_semaphore</span>	s_umount;</span><br><span class="line">    <span class="comment">// 引用计数</span></span><br><span class="line">	<span class="type">int</span>			s_count;</span><br><span class="line">    <span class="comment">// 引用计数</span></span><br><span class="line">	<span class="type">atomic_t</span>		s_active;</span><br><span class="line">    <span class="comment">// 指向超级块扩展属性结构的指针</span></span><br><span class="line">	<span class="type">const</span> <span class="keyword">struct</span> <span class="title class_">xattr_handler</span> **s_xattr;</span><br><span class="line">    <span class="comment">// 加密相关的操作</span></span><br><span class="line">	<span class="type">const</span> <span class="keyword">struct</span> <span class="title class_">fscrypt_operations</span>	*s_cop;</span><br><span class="line">    <span class="comment">// 要导出的匿名目录项的列表    </span></span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">hlist_bl_head</span>	s_anon;		<span class="comment">/* anonymous dentries for (nfs) exporting */</span></span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">list_head</span>	s_mounts;	<span class="comment">/* list of mounts; _not_ for fs use */</span></span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">block_device</span>	*s_bdev;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">backing_dev_info</span> *s_bdi;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">mtd_info</span>		*s_mtd;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">hlist_node</span>	s_instances;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span>		s_quota_types;	<span class="comment">/* Bitmask of supported quota types */</span></span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">quota_info</span>	s_dquot;	<span class="comment">/* Diskquota specific options */</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">sb_writers</span>	s_writers;</span><br><span class="line"></span><br><span class="line">	<span class="type">char</span> s_id[<span class="number">32</span>];				<span class="comment">/* Informational name */</span></span><br><span class="line">	u8 s_uuid[<span class="number">16</span>];				<span class="comment">/* UUID */</span></span><br><span class="line"></span><br><span class="line">	<span class="type">void</span> 			*s_fs_info;	<span class="comment">/* Filesystem private info */</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span>		s_max_links;</span><br><span class="line">	<span class="type">fmode_t</span>			s_mode;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Granularity of c/m/atime in ns.</span></span><br><span class="line"><span class="comment">	   Cannot be worse than a second */</span></span><br><span class="line">	u32		   s_time_gran;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * The next field is for VFS *only*. No filesystems have any business</span></span><br><span class="line"><span class="comment">	 * even looking at it. You had been warned.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">mutex</span> s_vfs_rename_mutex;	<span class="comment">/* Kludge */</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Filesystem subtype.  If non-empty the filesystem type field</span></span><br><span class="line"><span class="comment">	 * in /proc/mounts will be &quot;type.subtype&quot;</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="type">char</span> *s_subtype;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Saved mount options for lazy filesystems using</span></span><br><span class="line"><span class="comment">	 * generic_show_options()</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="type">char</span> __rcu *s_options;</span><br><span class="line">	<span class="type">const</span> <span class="keyword">struct</span> <span class="title class_">dentry_operations</span> *s_d_op; <span class="comment">/* default d_op for dentries */</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Saved pool identifier for cleancache (-1 means none)</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="type">int</span> cleancache_poolid;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">shrinker</span> s_shrink;	<span class="comment">/* per-sb shrinker handle */</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Number of inodes with nlink == 0 but still referenced */</span></span><br><span class="line">	<span class="type">atomic_long_t</span> s_remove_count;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Being remounted read-only */</span></span><br><span class="line">	<span class="type">int</span> s_readonly_remount;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* AIO completions deferred from interrupt context */</span></span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">workqueue_struct</span> *s_dio_done_wq;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">hlist_head</span> s_pins;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Keep the lru lists last in the structure so they always sit on their</span></span><br><span class="line"><span class="comment">	 * own individual cachelines.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">list_lru</span>		s_dentry_lru ____cacheline_aligned_in_smp;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">list_lru</span>		s_inode_lru ____cacheline_aligned_in_smp;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">rcu_head</span>		rcu;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">work_struct</span>	destroy_work;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">mutex</span>		s_sync_lock;	<span class="comment">/* sync serialisation lock */</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Indicates how deep in a filesystem stack this SB is</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="type">int</span> s_stack_depth;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* s_inode_list_lock protects s_inodes */</span></span><br><span class="line">	<span class="type">spinlock_t</span>		s_inode_list_lock ____cacheline_aligned_in_smp;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">list_head</span>	s_inodes;	<span class="comment">/* all inodes */</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h3 id="1-1-1-超级块操作"><a href="#1-1-1-超级块操作" class="headerlink" title="1.1.1. 超级块操作"></a>1.1.1. 超级块操作</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">super_operations</span> &#123;</span><br><span class="line">   	<span class="keyword">struct</span> <span class="title class_">inode</span> *(*alloc_inode)(<span class="keyword">struct</span> super_block *sb);</span><br><span class="line">	<span class="built_in">void</span> (*destroy_inode)(<span class="keyword">struct</span> inode *);</span><br><span class="line">   	<span class="built_in">void</span> (*dirty_inode) (<span class="keyword">struct</span> inode *, <span class="type">int</span> flags);</span><br><span class="line">	<span class="built_in">int</span> (*write_inode) (<span class="keyword">struct</span> inode *, <span class="keyword">struct</span> writeback_control *wbc);</span><br><span class="line">	<span class="built_in">int</span> (*drop_inode) (<span class="keyword">struct</span> inode *);</span><br><span class="line">	<span class="built_in">void</span> (*evict_inode) (<span class="keyword">struct</span> inode *);</span><br><span class="line">	<span class="built_in">void</span> (*put_super) (<span class="keyword">struct</span> super_block *);</span><br><span class="line">	<span class="built_in">int</span> (*sync_fs)(<span class="keyword">struct</span> super_block *sb, <span class="type">int</span> wait);</span><br><span class="line">	<span class="built_in">int</span> (*freeze_super) (<span class="keyword">struct</span> super_block *);</span><br><span class="line">	<span class="built_in">int</span> (*freeze_fs) (<span class="keyword">struct</span> super_block *);</span><br><span class="line">	<span class="built_in">int</span> (*thaw_super) (<span class="keyword">struct</span> super_block *);</span><br><span class="line">	<span class="built_in">int</span> (*unfreeze_fs) (<span class="keyword">struct</span> super_block *);</span><br><span class="line">	<span class="built_in">int</span> (*statfs) (<span class="keyword">struct</span> dentry *, <span class="keyword">struct</span> kstatfs *);</span><br><span class="line">	<span class="built_in">int</span> (*remount_fs) (<span class="keyword">struct</span> super_block *, <span class="type">int</span> *, <span class="type">char</span> *);</span><br><span class="line">	<span class="built_in">int</span> (*remount_fs2) (<span class="keyword">struct</span> vfsmount *, <span class="keyword">struct</span> super_block *, <span class="type">int</span> *, <span class="type">char</span> *);</span><br><span class="line">	<span class="type">void</span> *(*clone_mnt_data) (<span class="type">void</span> *);</span><br><span class="line">	<span class="built_in">void</span> (*copy_mnt_data) (<span class="type">void</span> *, <span class="type">void</span> *);</span><br><span class="line">	<span class="built_in">void</span> (*umount_begin) (<span class="keyword">struct</span> super_block *);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">int</span> (*show_options)(<span class="keyword">struct</span> seq_file *, <span class="keyword">struct</span> dentry *);</span><br><span class="line">	<span class="built_in">int</span> (*show_options2)(<span class="keyword">struct</span> vfsmount *,<span class="keyword">struct</span> seq_file *, <span class="keyword">struct</span> dentry *);</span><br><span class="line">	<span class="built_in">int</span> (*show_devname)(<span class="keyword">struct</span> seq_file *, <span class="keyword">struct</span> dentry *);</span><br><span class="line">	<span class="built_in">int</span> (*show_path)(<span class="keyword">struct</span> seq_file *, <span class="keyword">struct</span> dentry *);</span><br><span class="line">	<span class="built_in">int</span> (*show_stats)(<span class="keyword">struct</span> seq_file *, <span class="keyword">struct</span> dentry *);</span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_QUOTA</span></span><br><span class="line">	<span class="built_in">ssize_t</span> (*quota_read)(<span class="keyword">struct</span> super_block *, <span class="type">int</span>, <span class="type">char</span> *, <span class="type">size_t</span>, <span class="type">loff_t</span>);</span><br><span class="line">	<span class="built_in">ssize_t</span> (*quota_write)(<span class="keyword">struct</span> super_block *, <span class="type">int</span>, <span class="type">const</span> <span class="type">char</span> *, <span class="type">size_t</span>, <span class="type">loff_t</span>);</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">dquot</span> **(*get_dquots)(<span class="keyword">struct</span> inode *);</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line">	<span class="built_in">int</span> (*bdev_try_to_free_page)(<span class="keyword">struct</span> super_block*, <span class="keyword">struct</span> page*, <span class="type">gfp_t</span>);</span><br><span class="line">	<span class="built_in">long</span> (*nr_cached_objects)(<span class="keyword">struct</span> super_block *,</span><br><span class="line">				  <span class="keyword">struct</span> shrink_control *);</span><br><span class="line">	<span class="built_in">long</span> (*free_cached_objects)(<span class="keyword">struct</span> super_block *,</span><br><span class="line">				    <span class="keyword">struct</span> shrink_control *);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h2 id="1-2-索引节点-inode"><a href="#1-2-索引节点-inode" class="headerlink" title="1.2. 索引节点 inode"></a>1.2. 索引节点 inode</h2>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2018/07/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%88%9D%E6%8E%A2/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2018/05/19/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/fde%E5%8A%A0%E5%AF%86%E4%B8%8E%E8%A7%A3%E9%94%81/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1086,6 +1212,20 @@
             </span>
 
           
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2018/05/19/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/fde%E5%8A%A0%E5%AF%86%E4%B8%8E%E8%A7%A3%E9%94%81/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2018/05/19/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/fde%E5%8A%A0%E5%AF%86%E4%B8%8E%E8%A7%A3%E9%94%81/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
 
         </div>
       </header>
@@ -1179,6 +1319,20 @@
             </span>
 
           
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2017/11/12/OTA%E7%9B%B8%E5%85%B3/repart%E8%87%AA%E9%80%82%E5%BA%94%E8%B0%83%E6%95%B4%E7%89%A9%E7%90%86%E5%88%86%E5%8C%BA/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2017/11/12/OTA%E7%9B%B8%E5%85%B3/repart%E8%87%AA%E9%80%82%E5%BA%94%E8%B0%83%E6%95%B4%E7%89%A9%E7%90%86%E5%88%86%E5%8C%BA/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
 
         </div>
       </header>
@@ -1399,6 +1553,34 @@
 
   
 
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'VrGRp2q7WwXjxsCNmlDIZYbC-gzGzoHsz',
+      appKey     : 'JgMXmmB7yKQf2zm80TaBp3JT',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : 'zh-cn' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
 
 </body>
 </html>

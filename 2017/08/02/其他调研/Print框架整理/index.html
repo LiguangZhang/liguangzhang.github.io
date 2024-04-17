@@ -17,7 +17,7 @@
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"gitalk","storage":true,"lazyload":false,"nav":{"gitalk":{"order":-2}},"activeClass":"gitalk"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":{"valine":{"order":-1}},"activeClass":"valine"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
   </script>
 
   <meta name="description" content="1. 开篇涉及的主要文件: com.android.server.print 系统打印服务,   打印服务是一种插件（ plug-in components），它能够通过一些标准协议和打印机通讯。这些服务像一座桥，处于系统和打印机之间。因此，打印机和打印协议的具体实现从系统中分离的，能够独立开发和更新。该处讲解的是和打印插件关联的系统服务. &#x2F;frameworks&#x2F;base&amp;#">
@@ -236,6 +236,20 @@
             </span>
 
           
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2017/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/Print%E6%A1%86%E6%9E%B6%E6%95%B4%E7%90%86/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2017/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/Print%E6%A1%86%E6%9E%B6%E6%95%B4%E7%90%86/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
 
         </div>
       </header>
@@ -419,12 +433,12 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2017/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E9%80%9A%E8%BF%87adb%20install%20%E5%AE%89%E8%A3%85apk/" rel="prev" title="通过adb install 安装apk">
-      <i class="fa fa-chevron-left"></i> 通过adb install 安装apk
+    <a href="/2017/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/PackageManagerService%E5%90%AF%E5%8A%A8%E7%AF%87%E6%95%B4%E7%90%861/" rel="prev" title="PackageManagerService启动篇整理1">
+      <i class="fa fa-chevron-left"></i> PackageManagerService启动篇整理1
     </a></div>
       <div class="post-nav-item">
-    <a href="/2017/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E6%96%87%E4%BB%B6%E5%8A%A0%E5%AF%86/" rel="next" title="文件加密FBE&DirectBoot模式调研">
-      文件加密FBE&DirectBoot模式调研 <i class="fa fa-chevron-right"></i>
+    <a href="/2017/10/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/%E7%BB%9F%E8%AE%A1app%E6%80%BB%E4%BD%BF%E7%94%A8%E7%A9%BA%E9%97%B4/" rel="next" title="统计app 总使用空间">
+      统计app 总使用空间 <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
       </footer>
@@ -438,7 +452,7 @@
 
           </div>
           
-    <div class="comments" id="gitalk-container"></div>
+    <div class="comments" id="valine-comments"></div>
 
 <script>
   window.addEventListener('tabs:register', () => {
@@ -609,23 +623,32 @@
 
   
 
-<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
 
 <script>
-NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
-  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
-    var gitalk = new Gitalk({
-      clientID    : 'Iv1.b2d7d95e69f1bcd6',
-      clientSecret: '7cfd4d9a0c01f1f4399ddfb410db655e9ef7e3b5',
-      repo        : 'liguangzhang.github.io',
-      owner       : 'LiguangZhang',
-      admin       : ['LiguangZhang'],
-      id          : 'bccbe08055753526f02b66a02f21389d',
-        language: 'zh-CN',
-      distractionFreeMode: false
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
     });
-    gitalk.render('gitalk-container');
-  }, window.Gitalk);
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'VrGRp2q7WwXjxsCNmlDIZYbC-gzGzoHsz',
+      appKey     : 'JgMXmmB7yKQf2zm80TaBp3JT',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : 'zh-cn' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
 });
 </script>
 
