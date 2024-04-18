@@ -1122,6 +1122,115 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/jemalloc5%20%E8%84%9A%E6%9C%AC%E5%AE%9E%E7%8E%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/jemalloc5%20%E8%84%9A%E6%9C%AC%E5%AE%9E%E7%8E%B0/" class="post-title-link" itemprop="url">jemalloc5 脚本实现.md</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-07-18 18:15:54" itemprop="dateCreated datePublished" datetime="2020-07-18T18:15:54+08:00">2020-07-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 18:02:56" itemprop="dateModified" datetime="2024-04-16T18:02:56+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%A8%B3%E5%AE%9A%E6%80%A7/" itemprop="url" rel="index"><span itemprop="name">稳定性</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/jemalloc5%20%E8%84%9A%E6%9C%AC%E5%AE%9E%E7%8E%B0/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/jemalloc5%20%E8%84%9A%E6%9C%AC%E5%AE%9E%E7%8E%B0/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="实现思路"><a href="#实现思路" class="headerlink" title="实现思路"></a>实现思路</h1><p>沿着内存dump的步骤</p>
+<h3 id="small-slab"><a href="#small-slab" class="headerlink" title="small slab"></a>small slab</h3><p>先忽略tcache的话, 需要关注的结构 <code>je_arenas</code>, <code>arena</code>, <code>bins</code> , <code>bin-&gt;slabcur</code>  <code>bin-&gt;slabs_nofull</code>, <code>bin-&gt;slabs_full</code>, <code>je_bin_infos</code> <code>extent_s</code></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">p je_arenas</span><br><span class="line">p (*(struct arena_s*)je_arenas[0])</span><br><span class="line">p (*(struct arena_s*)je_arenas[0]).bins</span><br><span class="line">p (*(struct arena_s*)je_arenas[0]).bins[0]  0-NSIZES</span><br><span class="line">p je_bin_infos</span><br><span class="line">p (*(struct arena_s*)je_arenas[0]).bins[0].slabcur</span><br><span class="line">p *(struct extent_s*)  [p (*(struct arena_s*)je_arenas[0]).bins[0].slabcur] #取slabcur 的slab</span><br><span class="line">p (*(struct arena_s*)je_arenas[0]).extents_dirty</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>extent 元信息中关于ind的信息?</p>
+<p>extent_szind_get</p>
+<p>(extent-&gt;e_bits &amp; EXTENT_BITS_SZIND_MASK) &gt;&gt; EXTENT_BITS_SZIND_SHIFT</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">EXTENT_BITS_ARENA_WIDTH = <span class="number">12</span> ;</span><br><span class="line">EXTENT_BITS_ARENA_SHIFT =<span class="number">0</span>;</span><br><span class="line">EXTENT_BITS_ARENA_MASK =((((<span class="number">1</span> &lt;&lt; (<span class="number">12</span>)) - <span class="number">1</span>)) &lt;&lt; (<span class="number">0</span>));  <span class="comment">//4095 111111111111    fff</span></span><br><span class="line">EXTENT_BITS_SLAB_WIDTH =<span class="number">1</span>;</span><br><span class="line">EXTENT_BITS_SLAB_SHIFT =(<span class="number">12</span> + <span class="number">0</span>);</span><br><span class="line">EXTENT_BITS_SLAB_MASK =((((<span class="number">1</span> &lt;&lt; (<span class="number">1</span>)) - <span class="number">1</span>)) &lt;&lt; ((<span class="number">12</span> + <span class="number">0</span>))); <span class="comment">//4096 1000000000000     1000</span></span><br><span class="line">EXTENT_BITS_COMMITTED_WIDTH = <span class="number">1</span>;</span><br><span class="line">EXTENT_BITS_COMMITTED_SHIFT = (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>));</span><br><span class="line">EXTENT_BITS_COMMITTED_MASK =((((<span class="number">1</span> &lt;&lt; (<span class="number">1</span>)) - <span class="number">1</span>)) &lt;&lt; ((<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>)))); <span class="comment">//8192  10000000000000   2000</span></span><br><span class="line">EXTENT_BITS_DUMPABLE_WIDTH = <span class="number">1</span>;</span><br><span class="line">EXTENT_BITS_DUMPABLE_SHIFT = (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>))) ;</span><br><span class="line">EXTENT_BITS_DUMPABLE_MASK =((((<span class="number">1</span> &lt;&lt; (<span class="number">1</span>)) - <span class="number">1</span>)) &lt;&lt; ((<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>))))); <span class="comment">//16384 100000000000000 4000</span></span><br><span class="line">EXTENT_BITS_ZEROED_WIDTH =<span class="number">1</span>;</span><br><span class="line">EXTENT_BITS_ZEROED_SHIFT =(<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>))));  <span class="comment">//15   1111 f </span></span><br><span class="line">EXTENT_BITS_ZEROED_MASK = ((((<span class="number">1</span> &lt;&lt; (<span class="number">1</span>)) - <span class="number">1</span>)) &lt;&lt; ((<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>)))))); <span class="comment">//32768  1000000000000000 8000</span></span><br><span class="line">EXTENT_BITS_STATE_WIDTH = <span class="number">2</span>;</span><br><span class="line">EXTENT_BITS_STATE_SHIFT = (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>))))); <span class="comment">//16</span></span><br><span class="line">EXTENT_BITS_STATE_MASK =((((<span class="number">1</span> &lt;&lt; (<span class="number">2</span>)) - <span class="number">1</span>)) &lt;&lt; ((<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>))))))); <span class="comment">//196608  110000000000000000 30000</span></span><br><span class="line">EXTENT_BITS_SZIND_WIDTH =<span class="number">8</span>;</span><br><span class="line">EXTENT_BITS_SZIND_SHIFT =(<span class="number">2</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>))))));  <span class="comment">// 18 10010 12 </span></span><br><span class="line">EXTENT_BITS_SZIND_MASK =((((<span class="number">1</span> &lt;&lt; (<span class="number">8</span>)) - <span class="number">1</span>)) &lt;&lt; ((<span class="number">2</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>)))))))); <span class="comment">// 66846720 11111111000000000000000000 3FC0000</span></span><br><span class="line">EXTENT_BITS_NFREE_WIDTH =((<span class="number">12</span> - <span class="number">3</span>) + <span class="number">1</span>);    <span class="comment">//10 1010 a </span></span><br><span class="line">EXTENT_BITS_NFREE_SHIFT =(<span class="number">8</span> + (<span class="number">2</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>)))))));    <span class="comment">//26 11010 1a </span></span><br><span class="line">EXTENT_BITS_NFREE_MASK =((((<span class="number">1</span> &lt;&lt; (((<span class="number">12</span> - <span class="number">3</span>) + <span class="number">1</span>))) - <span class="number">1</span>)) &lt;&lt; ((<span class="number">8</span> + (<span class="number">2</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>)))))))));  <span class="comment">// 68652367872 111111111100000000000000000000000000 FFC000000 </span></span><br><span class="line">EXTENT_BITS_SN_SHIFT =(((<span class="number">12</span> - <span class="number">3</span>) + <span class="number">1</span>) + (<span class="number">8</span> + (<span class="number">2</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>)))))))); <span class="comment">// 36 100100 24</span></span><br><span class="line">EXTENT_BITS_SN_MASK =(<span class="number">18446744073709551615</span> &lt;&lt; (((<span class="number">12</span> - <span class="number">3</span>) + <span class="number">1</span>) + (<span class="number">8</span> + (<span class="number">2</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>))))))))); <span class="comment">//  FFFFFFFFFFFFFFFF000000000 </span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">e_bits = <span class="number">29863505920</span></span><br><span class="line"><span class="number">11011110100000000001111000000000000</span></span><br></pre></td></tr></table></figure>
+
+<p>通过rtree 信息直接检索所有的extent</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">p je_extents_rtree.root #遍历R树 是一个1&lt;&lt;18 容量的数组, root是头指针</span><br><span class="line">p je_extents_rtree.root[x].child # 每一个都是1个 1&lt;&lt;18容量的数组, child是头指针, 需要遍历非0x0的有效数</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">最后找出有效的叶子节点</span></span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/jemalloc5%20%E8%84%9A%E6%9C%AC%E5%AE%9E%E7%8E%B0/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/arm64%20%E6%8C%87%E4%BB%A4debug/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1250,115 +1359,6 @@
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/arm64%20%E6%8C%87%E4%BB%A4debug/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/jemalloc5%20%E8%84%9A%E6%9C%AC%E5%AE%9E%E7%8E%B0/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/jemalloc5%20%E8%84%9A%E6%9C%AC%E5%AE%9E%E7%8E%B0/" class="post-title-link" itemprop="url">jemalloc5 脚本实现.md</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-07-18 18:15:54" itemprop="dateCreated datePublished" datetime="2020-07-18T18:15:54+08:00">2020-07-18</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-16 18:02:56" itemprop="dateModified" datetime="2024-04-16T18:02:56+08:00">2024-04-16</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E7%A8%B3%E5%AE%9A%E6%80%A7/" itemprop="url" rel="index"><span itemprop="name">稳定性</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/jemalloc5%20%E8%84%9A%E6%9C%AC%E5%AE%9E%E7%8E%B0/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/jemalloc5%20%E8%84%9A%E6%9C%AC%E5%AE%9E%E7%8E%B0/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="实现思路"><a href="#实现思路" class="headerlink" title="实现思路"></a>实现思路</h1><p>沿着内存dump的步骤</p>
-<h3 id="small-slab"><a href="#small-slab" class="headerlink" title="small slab"></a>small slab</h3><p>先忽略tcache的话, 需要关注的结构 <code>je_arenas</code>, <code>arena</code>, <code>bins</code> , <code>bin-&gt;slabcur</code>  <code>bin-&gt;slabs_nofull</code>, <code>bin-&gt;slabs_full</code>, <code>je_bin_infos</code> <code>extent_s</code></p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">p je_arenas</span><br><span class="line">p (*(struct arena_s*)je_arenas[0])</span><br><span class="line">p (*(struct arena_s*)je_arenas[0]).bins</span><br><span class="line">p (*(struct arena_s*)je_arenas[0]).bins[0]  0-NSIZES</span><br><span class="line">p je_bin_infos</span><br><span class="line">p (*(struct arena_s*)je_arenas[0]).bins[0].slabcur</span><br><span class="line">p *(struct extent_s*)  [p (*(struct arena_s*)je_arenas[0]).bins[0].slabcur] #取slabcur 的slab</span><br><span class="line">p (*(struct arena_s*)je_arenas[0]).extents_dirty</span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>extent 元信息中关于ind的信息?</p>
-<p>extent_szind_get</p>
-<p>(extent-&gt;e_bits &amp; EXTENT_BITS_SZIND_MASK) &gt;&gt; EXTENT_BITS_SZIND_SHIFT</p>
-</blockquote>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">EXTENT_BITS_ARENA_WIDTH = <span class="number">12</span> ;</span><br><span class="line">EXTENT_BITS_ARENA_SHIFT =<span class="number">0</span>;</span><br><span class="line">EXTENT_BITS_ARENA_MASK =((((<span class="number">1</span> &lt;&lt; (<span class="number">12</span>)) - <span class="number">1</span>)) &lt;&lt; (<span class="number">0</span>));  <span class="comment">//4095 111111111111    fff</span></span><br><span class="line">EXTENT_BITS_SLAB_WIDTH =<span class="number">1</span>;</span><br><span class="line">EXTENT_BITS_SLAB_SHIFT =(<span class="number">12</span> + <span class="number">0</span>);</span><br><span class="line">EXTENT_BITS_SLAB_MASK =((((<span class="number">1</span> &lt;&lt; (<span class="number">1</span>)) - <span class="number">1</span>)) &lt;&lt; ((<span class="number">12</span> + <span class="number">0</span>))); <span class="comment">//4096 1000000000000     1000</span></span><br><span class="line">EXTENT_BITS_COMMITTED_WIDTH = <span class="number">1</span>;</span><br><span class="line">EXTENT_BITS_COMMITTED_SHIFT = (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>));</span><br><span class="line">EXTENT_BITS_COMMITTED_MASK =((((<span class="number">1</span> &lt;&lt; (<span class="number">1</span>)) - <span class="number">1</span>)) &lt;&lt; ((<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>)))); <span class="comment">//8192  10000000000000   2000</span></span><br><span class="line">EXTENT_BITS_DUMPABLE_WIDTH = <span class="number">1</span>;</span><br><span class="line">EXTENT_BITS_DUMPABLE_SHIFT = (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>))) ;</span><br><span class="line">EXTENT_BITS_DUMPABLE_MASK =((((<span class="number">1</span> &lt;&lt; (<span class="number">1</span>)) - <span class="number">1</span>)) &lt;&lt; ((<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>))))); <span class="comment">//16384 100000000000000 4000</span></span><br><span class="line">EXTENT_BITS_ZEROED_WIDTH =<span class="number">1</span>;</span><br><span class="line">EXTENT_BITS_ZEROED_SHIFT =(<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>))));  <span class="comment">//15   1111 f </span></span><br><span class="line">EXTENT_BITS_ZEROED_MASK = ((((<span class="number">1</span> &lt;&lt; (<span class="number">1</span>)) - <span class="number">1</span>)) &lt;&lt; ((<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>)))))); <span class="comment">//32768  1000000000000000 8000</span></span><br><span class="line">EXTENT_BITS_STATE_WIDTH = <span class="number">2</span>;</span><br><span class="line">EXTENT_BITS_STATE_SHIFT = (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>))))); <span class="comment">//16</span></span><br><span class="line">EXTENT_BITS_STATE_MASK =((((<span class="number">1</span> &lt;&lt; (<span class="number">2</span>)) - <span class="number">1</span>)) &lt;&lt; ((<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>))))))); <span class="comment">//196608  110000000000000000 30000</span></span><br><span class="line">EXTENT_BITS_SZIND_WIDTH =<span class="number">8</span>;</span><br><span class="line">EXTENT_BITS_SZIND_SHIFT =(<span class="number">2</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>))))));  <span class="comment">// 18 10010 12 </span></span><br><span class="line">EXTENT_BITS_SZIND_MASK =((((<span class="number">1</span> &lt;&lt; (<span class="number">8</span>)) - <span class="number">1</span>)) &lt;&lt; ((<span class="number">2</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>)))))))); <span class="comment">// 66846720 11111111000000000000000000 3FC0000</span></span><br><span class="line">EXTENT_BITS_NFREE_WIDTH =((<span class="number">12</span> - <span class="number">3</span>) + <span class="number">1</span>);    <span class="comment">//10 1010 a </span></span><br><span class="line">EXTENT_BITS_NFREE_SHIFT =(<span class="number">8</span> + (<span class="number">2</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>)))))));    <span class="comment">//26 11010 1a </span></span><br><span class="line">EXTENT_BITS_NFREE_MASK =((((<span class="number">1</span> &lt;&lt; (((<span class="number">12</span> - <span class="number">3</span>) + <span class="number">1</span>))) - <span class="number">1</span>)) &lt;&lt; ((<span class="number">8</span> + (<span class="number">2</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>)))))))));  <span class="comment">// 68652367872 111111111100000000000000000000000000 FFC000000 </span></span><br><span class="line">EXTENT_BITS_SN_SHIFT =(((<span class="number">12</span> - <span class="number">3</span>) + <span class="number">1</span>) + (<span class="number">8</span> + (<span class="number">2</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>)))))))); <span class="comment">// 36 100100 24</span></span><br><span class="line">EXTENT_BITS_SN_MASK =(<span class="number">18446744073709551615</span> &lt;&lt; (((<span class="number">12</span> - <span class="number">3</span>) + <span class="number">1</span>) + (<span class="number">8</span> + (<span class="number">2</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>))))))))); <span class="comment">//  FFFFFFFFFFFFFFFF000000000 </span></span><br></pre></td></tr></table></figure>
-
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">e_bits = <span class="number">29863505920</span></span><br><span class="line"><span class="number">11011110100000000001111000000000000</span></span><br></pre></td></tr></table></figure>
-
-<p>通过rtree 信息直接检索所有的extent</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">p je_extents_rtree.root #遍历R树 是一个1&lt;&lt;18 容量的数组, root是头指针</span><br><span class="line">p je_extents_rtree.root[x].child # 每一个都是1个 1&lt;&lt;18容量的数组, child是头指针, 需要遍历非0x0的有效数</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">最后找出有效的叶子节点</span></span><br></pre></td></tr></table></figure>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/jemalloc5%20%E8%84%9A%E6%9C%AC%E5%AE%9E%E7%8E%B0/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
