@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=LXGW WenKai:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":{"valine":{"order":-1}},"activeClass":"valine"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
+  </script>
+
+  <meta name="description" content="FreeRTOS有两种方法触发任务切换：  执行系统调用，比如普通任务可以使用taskYIELD()强制任务切换，中断服务程序中使用portYIELD_FROM_ISR()强制任务切换； 系统节拍时钟中断  PendSV 中断对于第一种任务切换方法，不管是使用taskYIELD()还是portYIELD_FROM_ISR()，最终都会执行宏portYIELD() 1234#define portY">
+<meta property="og:type" content="article">
+<meta property="og:title" content="freertos 任务切换">
+<meta property="og:url" content="https://liguangzhang.github.io/2021/10/16/freertos/freertos%E4%BB%BB%E5%8A%A1%E5%88%87%E6%8D%A2%E5%88%86%E6%9E%90/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="FreeRTOS有两种方法触发任务切换：  执行系统调用，比如普通任务可以使用taskYIELD()强制任务切换，中断服务程序中使用portYIELD_FROM_ISR()强制任务切换； 系统节拍时钟中断  PendSV 中断对于第一种任务切换方法，不管是使用taskYIELD()还是portYIELD_FROM_ISR()，最终都会执行宏portYIELD() 1234#define portY">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-10-16T10:15:54.000Z">
+<meta property="article:modified_time" content="2024-04-18T02:58:35.115Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="freertos">
+<meta property="article:tag" content="调度">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2021/10/16/freertos/freertos%E4%BB%BB%E5%8A%A1%E5%88%87%E6%8D%A2%E5%88%86%E6%9E%90/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+<link rel="stylesheet" href="https://npm.elemecdn.com/lxgw-wenkai-screen-webfont/style.css" media="print" onload="this.media='all'" />
+
+  <title>freertos 任务切换 | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2021/10/16/freertos/freertos%E4%BB%BB%E5%8A%A1%E5%88%87%E6%8D%A2%E5%88%86%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          freertos 任务切换
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-10-16 18:15:54" itemprop="dateCreated datePublished" datetime="2021-10-16T18:15:54+08:00">2021-10-16</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-18 10:58:35" itemprop="dateModified" datetime="2024-04-18T10:58:35+08:00">2024-04-18</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MIPS/" itemprop="url" rel="index"><span itemprop="name">MIPS</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MIPS/os/" itemprop="url" rel="index"><span itemprop="name">os</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2021/10/16/freertos/freertos%E4%BB%BB%E5%8A%A1%E5%88%87%E6%8D%A2%E5%88%86%E6%9E%90/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2021/10/16/freertos/freertos%E4%BB%BB%E5%8A%A1%E5%88%87%E6%8D%A2%E5%88%86%E6%9E%90/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>FreeRTOS有两种方法触发任务切换：</p>
+<ul>
+<li>执行系统调用，比如普通任务可以使用taskYIELD()强制任务切换，中断服务程序中使用<code>portYIELD_FROM_ISR()</code>强制任务切换；</li>
+<li>系统节拍时钟中断</li>
+</ul>
+<h2 id="PendSV-中断"><a href="#PendSV-中断" class="headerlink" title="PendSV 中断"></a>PendSV 中断</h2><p>对于第一种任务切换方法，不管是使用<code>taskYIELD()</code>还是<code>portYIELD_FROM_ISR()</code>，最终都会执行宏<code>portYIELD()</code></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> portYIELD()      do &#123; \</span></span><br><span class="line"><span class="meta">							  <span class="comment">// status pending sw0 mask 位置1, 与cause 协处理器中的pending位配合, 即触发sw0 上的中断</span></span></span><br><span class="line">                              mips_biscr( SR_SINT0 ); \</span><br><span class="line">                             &#125; <span class="keyword">while</span> (<span class="number">0</span>)</span><br></pre></td></tr></table></figure>
+<h2 id="SysTick-中断，-系统时钟节拍"><a href="#SysTick-中断，-系统时钟节拍" class="headerlink" title="SysTick 中断， 系统时钟节拍"></a>SysTick 中断， 系统时钟节拍</h2><p>对于第二种任务切换方法，在系统节拍时钟中断服务函数中，首先会更新tick计数器的值、查看是否有任务解除阻塞，如果有任务解除阻塞的话，则使能PandSV中断</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 上一章中调度器创建中讲过 xPortStartScheduler 会初始化timer</span></span><br><span class="line">__attribute__(( weak )) <span class="type">void</span> <span class="title function_">vApplicationSetupTickTimerInterrupt</span><span class="params">( <span class="type">void</span> )</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">/* Install interrupt handler */</span></span><br><span class="line">    <span class="comment">// 安装tick中断处理函数 vPortTickInterruptHandler</span></span><br><span class="line">    pvPortInstallISR( HW5, vPortTickInterruptHandler );</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* Set Compare to Count as a starting point */</span> <span class="comment">// 初始化compare</span></span><br><span class="line">    mips_setcompare( mips_getcount() );</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* Set the interrupt to fire 1us from now */</span>  <span class="comment">//systick + 1</span></span><br><span class="line">    prvSetNextTick( <span class="number">1</span> );</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 来了tick中断, 会进入 vPortTickInterruptHandler</span></span><br><span class="line">vPortTickInterruptHandler:</span><br><span class="line">	<span class="comment">// 保存任务上下文 保存寄存器</span></span><br><span class="line">	portSAVE_CONTEXT</span><br><span class="line">    <span class="comment">// 跳转到 vPortIncrementTick</span></span><br><span class="line">	jal 		vPortIncrementTick</span><br><span class="line">	nop</span><br><span class="line"><span class="type">void</span> <span class="title function_">vPortIncrementTick</span><span class="params">( <span class="type">void</span> )</span></span><br><span class="line">&#123;</span><br><span class="line">    UBaseType_t uxSavedStatus;</span><br><span class="line">    <span class="comment">// 暂存status寄存器, 清 status 的 8-15 的mask </span></span><br><span class="line">	uxSavedStatus = uxPortSetInterruptMaskFromISR();</span><br><span class="line">	&#123;</span><br><span class="line">        <span class="comment">// 任务delay到期或者任务的时间片用完了, 这个函数会返回true</span></span><br><span class="line">		<span class="keyword">if</span>( xTaskIncrementTick() != pdFALSE )</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="comment">// 触发pendsv 中断, 因为前面清了mask,因此这里只有sw0的mask置位了</span></span><br><span class="line">			portYIELD();</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">    <span class="comment">// 恢复status寄存器</span></span><br><span class="line">	vPortClearInterruptMaskFromISR( uxSavedStatus );</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Look for the ISR stack getting near or past its limit. */</span></span><br><span class="line">	portCHECK_ISR_STACK();</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Clear timer interrupt. */</span> <span class="comment">// 清除timer cause hw5 pending位</span></span><br><span class="line">	configCLEAR_TICK_TIMER_INTERRUPT();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="xTaskIncrementTick"><a href="#xTaskIncrementTick" class="headerlink" title="xTaskIncrementTick"></a>xTaskIncrementTick</h2><p>tick中断到的时候, 什么条件下要触发pendsv中断的问题:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br></pre></td><td class="code"><pre><span class="line">BaseType_t <span class="title function_">xTaskIncrementTick</span><span class="params">( <span class="type">void</span> )</span></span><br><span class="line">&#123;</span><br><span class="line">    TCB_t * pxTCB;</span><br><span class="line">    TickType_t xItemValue;</span><br><span class="line">    BaseType_t xSwitchRequired = pdFALSE;</span><br><span class="line">	<span class="comment">// 调度器未被挂起</span></span><br><span class="line">	<span class="keyword">if</span>( uxSchedulerSuspended == ( UBaseType_t ) pdFALSE )</span><br><span class="line">	&#123;   </span><br><span class="line">        <span class="comment">// 当前tick 计时数更新</span></span><br><span class="line">		<span class="type">const</span> TickType_t xConstTickCount = xTickCount + ( TickType_t ) <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">		<span class="comment">/* Increment the RTOS tick, switching the delayed and overflowed</span></span><br><span class="line"><span class="comment">		delayed lists if it wraps to 0. */</span></span><br><span class="line">		xTickCount = xConstTickCount;</span><br><span class="line">		<span class="keyword">if</span>( xConstTickCount == ( TickType_t ) <span class="number">0U</span> )</span><br><span class="line">		&#123;	</span><br><span class="line">            <span class="comment">// tick 溢出, 切换delay list</span></span><br><span class="line">			taskSWITCH_DELAYED_LISTS();</span><br><span class="line">		&#125;</span><br><span class="line">        <span class="comment">// 当前tick 大于 下一个要解除阻塞的任务的timeout</span></span><br><span class="line">		<span class="keyword">if</span>( xConstTickCount &gt;= xNextTaskUnblockTime )</span><br><span class="line">		&#123;</span><br><span class="line">            <span class="comment">// 这里为什么用循环? 因为pxDelayedTaskList 里可能不止一个任务在此刻到期了, 如果有多个任务到期, 就要把这几个任务挨个加入到就绪列表中进行排队等待调度.</span></span><br><span class="line">			<span class="keyword">for</span>( ;; )</span><br><span class="line">			&#123;</span><br><span class="line">				<span class="keyword">if</span>( listLIST_IS_EMPTY( pxDelayedTaskList ) != pdFALSE )</span><br><span class="line">				&#123;</span><br><span class="line">                    <span class="comment">// delay list为空, 设置xNextTaskUnblockTime 为UINT_MAX</span></span><br><span class="line">					xNextTaskUnblockTime = portMAX_DELAY;</span><br><span class="line">					<span class="keyword">break</span>;</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="keyword">else</span></span><br><span class="line">				&#123;</span><br><span class="line">					<span class="comment">//这个队列是按照TCB的timeout 升序排列的,排在前面的是timeout小的</span></span><br><span class="line">					pxTCB = ( TCB_t * ) listGET_OWNER_OF_HEAD_ENTRY( pxDelayedTaskList );</span><br><span class="line">                    <span class="comment">// 从TCB的 xStateListItem 取出为其设置的timeout</span></span><br><span class="line">					xItemValue = listGET_LIST_ITEM_VALUE( &amp;( pxTCB-&gt;xStateListItem ) );</span><br><span class="line"></span><br><span class="line">					<span class="keyword">if</span>( xConstTickCount &lt; xItemValue )</span><br><span class="line">					&#123;</span><br><span class="line">                    <span class="comment">// 还没到时间解除这个任务的阻塞状态呢, 直接退出循环, 并把xNextTaskUnblockTime 更新为这个排在最前面timeout最小的任务的timeout</span></span><br><span class="line">						xNextTaskUnblockTime = xItemValue;</span><br><span class="line">						<span class="keyword">break</span>;</span><br><span class="line">					&#125;</span><br><span class="line">                     <span class="comment">// 能来到这里说明 xConstTickCount &gt; xItemValue, 说明到时间解除排在delaylist最前面的timeout最小的任务了, 将这个任务从delaylist中删除, 出队.</span></span><br><span class="line">					( <span class="type">void</span> ) uxListRemove( &amp;( pxTCB-&gt;xStateListItem ) );</span><br><span class="line"></span><br><span class="line">					<span class="comment">/* Is the task waiting on an event also?  If so remove</span></span><br><span class="line"><span class="comment">					it from the event list. */</span></span><br><span class="line">                    <span class="comment">// 这个任务在等待事件吗? 如果正在等事件唤醒的话, 将其从它所属的事件列表中抹掉.</span></span><br><span class="line">                    <span class="comment">// 这个地方怎么理解? 比如任务要take一个信号量, 并为其设置了timeout, 所以timeout时间到了, 还没take到, 这时要把这个任务唤醒解除阻塞状态了, 同时还要把其从等待队列中抹掉. 因为这个任务不用再等这个信号量了, 可以解除阻塞了.</span></span><br><span class="line">					<span class="keyword">if</span>( listLIST_ITEM_CONTAINER( &amp;( pxTCB-&gt;xEventListItem ) ) != <span class="literal">NULL</span> )</span><br><span class="line">					&#123;</span><br><span class="line">						( <span class="type">void</span> ) uxListRemove( &amp;( pxTCB-&gt;xEventListItem ) );</span><br><span class="line">					&#125;</span><br><span class="line">                    <span class="comment">// 任务切换到就绪状态, 就是还要排队, 如果它前面没有别的任务了, 就要调度到这个任务. 如果它前面有别的任务,那忍着,先让排在它前面的任务先得到调度. 调度就是拿到cpu资源的意思</span></span><br><span class="line">					prvAddTaskToReadyList( pxTCB );</span><br><span class="line">                    <span class="comment">// 只有配置了configUSE_PREEMPTION的情况下, 且这个任务的优先级大于等于当前正在运行的任务的优先级, 才会调度到这个任务, 不然就等着当前任务运行完, 切换到非就绪状态</span></span><br><span class="line">					<span class="meta">#<span class="keyword">if</span> (  configUSE_PREEMPTION == 1 )</span></span><br><span class="line">					&#123;</span><br><span class="line">						<span class="keyword">if</span>( pxTCB-&gt;uxPriority &gt;= pxCurrentTCB-&gt;uxPriority )</span><br><span class="line">						&#123;</span><br><span class="line">							xSwitchRequired = pdTRUE;</span><br><span class="line">						&#125;</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="meta">#<span class="keyword">endif</span> <span class="comment">/* configUSE_PREEMPTION */</span></span></span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 配置了 configUSE_PREEMPTION 和 configUSE_TIME_SLICING的情况下, 相同优先级的任务时间片轮转, 自己的时间片到期了,就切到和它优先级一致的其他任务上, 前提是其他任务已经排到就绪列表中了, 这个比较挫,不支持设置任务要用多少个时间片? rtthread是支持的</span></span><br><span class="line">		<span class="meta">#<span class="keyword">if</span> ( ( configUSE_PREEMPTION == 1 ) &amp;&amp; ( configUSE_TIME_SLICING == 1 ) )</span></span><br><span class="line">		&#123;</span><br><span class="line">			<span class="keyword">if</span>( listCURRENT_LIST_LENGTH( &amp;( pxReadyTasksLists[ pxCurrentTCB-&gt;uxPriority ] ) ) &gt; ( UBaseType_t ) <span class="number">1</span> )</span><br><span class="line">			&#123;</span><br><span class="line">				xSwitchRequired = pdTRUE;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="meta">#<span class="keyword">endif</span> <span class="comment">/* ( ( configUSE_PREEMPTION == 1 ) &amp;&amp; ( configUSE_TIME_SLICING == 1 ) ) */</span></span></span><br><span class="line"></span><br><span class="line">		<span class="meta">#<span class="keyword">if</span> ( configUSE_TICK_HOOK == 1 )</span></span><br><span class="line">		&#123;</span><br><span class="line">			<span class="comment">// 配置了 configUSE_TICK_HOOK, 每个tick 在调度器未被挂起的情况下会调用vApplicationTickHook函数,这个函数里只能加入简单的功能,不能阻塞tick 函数的运行, 需要运算的时间比较短</span></span><br><span class="line">			<span class="keyword">if</span>( uxPendedTicks == ( UBaseType_t ) <span class="number">0U</span> )</span><br><span class="line">			&#123;</span><br><span class="line">				vApplicationTickHook();</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="meta">#<span class="keyword">endif</span> <span class="comment">/* configUSE_TICK_HOOK */</span></span></span><br><span class="line">	&#125;</span><br><span class="line">    <span class="comment">// 调度器被挂起的情况</span></span><br><span class="line">	<span class="keyword">else</span></span><br><span class="line">	&#123;</span><br><span class="line">        <span class="comment">// 这个用来记录调度器挂起的时长</span></span><br><span class="line">		++uxPendedTicks;</span><br><span class="line">		<span class="meta">#<span class="keyword">if</span> ( configUSE_TICK_HOOK == 1 )</span></span><br><span class="line">		&#123;</span><br><span class="line">            <span class="comment">// 在调度器被挂起的情况下也会调用vApplicationTickHook函数,这个函数里只能加入简单的功能,不能阻塞tick 函数的运行, 需要运算的时间比较短</span></span><br><span class="line">			vApplicationTickHook();</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">#<span class="keyword">if</span> ( configUSE_PREEMPTION == 1 )</span></span><br><span class="line">	&#123;</span><br><span class="line">        <span class="comment">// 这个是resume 调度器的时候, 设置的标记, 说明有任务被pending了, 要被调度</span></span><br><span class="line">		<span class="keyword">if</span>( xYieldPending != pdFALSE )</span><br><span class="line">		&#123;</span><br><span class="line">			xSwitchRequired = pdTRUE;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="meta">#<span class="keyword">endif</span> <span class="comment">/* configUSE_PREEMPTION */</span></span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> xSwitchRequired;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>回到之前的问题, 什么条件下需要触发pendsv中断:</p>
+<ol>
+<li>配置了<code>configUSE_PREEMPTION</code>和<code>configUSE_TIME_SLICING</code>的情况, 和当前任务优先级相同的任务要进行时间片轮转. (不能设置任务初始的时间片?)</li>
+<li>只有配置了<code>configUSE_PREEMPTION</code>的情况下, 有任务到期了, 且这个任务的优先级大于等于当前正在运行的任务的优先级, 才会调度到这个任务, 不然就等着当前任务运行完, 切换到非就绪状态. <ol>
+<li>那如果没有配置<code>configUSE_PREEMPTION</code>, 怎样完成任务切换呢, 只有任务自己调yield, 触发pendsv中断才可以切到其他任务上. (比如调delay函数, take函数等最后都可能调到yield, 触发pendsv中断)</li>
+</ol>
+</li>
+<li>配置了<code>configUSE_PREEMPTION</code>的情况下, 调度器被挂起的时候, 有pending的任务.</li>
+</ol>
+<h2 id="PendSV-中断处理流程分析"><a href="#PendSV-中断处理流程分析" class="headerlink" title="PendSV 中断处理流程分析"></a>PendSV 中断处理流程分析</h2><p>主要有三个点：</p>
+<ul>
+<li>保存当前任务堆栈 </li>
+<li>切换任务 （vTaskSwitchContext）</li>
+<li>切换到新任务后，将新任务的堆栈恢复<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">  <span class="comment">// 上一章中调度器创建中讲过 xPortStartScheduler 会注册SW0的中断处理函数vPortYieldISR</span></span><br><span class="line"><span class="comment">/* Install the software yield handler */</span></span><br><span class="line">    pvPortInstallISR( SW0, vPortYieldISR );</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">vPortYieldISR</span><br><span class="line">vPortYieldISR:</span><br><span class="line">	portYIELD_SAVE</span><br><span class="line"></span><br><span class="line">	jal		vTaskSwitchContext</span><br><span class="line">		nop</span><br><span class="line"></span><br><span class="line">	portYIELD_RESTORE</span><br><span class="line"></span><br><span class="line">	.end		vPortYieldISR</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h3 id="portYIELD-SAVE"><a href="#portYIELD-SAVE" class="headerlink" title="portYIELD_SAVE"></a>portYIELD_SAVE</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br></pre></td><td class="code"><pre><span class="line">   .macro portYIELD_SAVE</span><br><span class="line">addiu		sp, sp, -portCONTEXT_SIZE                            <span class="meta"># sp = sp-132 这132个字节用来保存当前任务运行到此处的寄存器信息/协处理器(status cause epc)等的信息</span></span><br><span class="line">mfc0		k1, C0_STATUS                                        # k1 &lt;- cp0_status</span><br><span class="line">                                                                    # 下面把sp 换成  pxTopofStack, 因为这个sp已经代表是当前任务TCB的pxTopofStack了                       </span><br><span class="line">sw			s6, <span class="number">44</span>(sp)                                           # [pxTopofStack+<span class="number">44</span>]  &lt;- s6</span><br><span class="line">sw			s5, <span class="number">40</span>(sp)                                           # [pxTopofStack+<span class="number">40</span>]  &lt;- s5</span><br><span class="line">sw			k1, portSTATUS_STACK_LOCATION(sp)                    # [pxTopofStack+<span class="number">128</span>] &lt;- cp0_status</span><br><span class="line"></span><br><span class="line"><span class="comment">/* Prepare to re-enable the interrupts. */</span></span><br><span class="line">ins 		k1, zero, <span class="number">8</span>, <span class="number">8</span></span><br><span class="line">ori			k1, k1, ( <span class="number">0x80</span> &lt;&lt; <span class="number">8</span> )                                # k1 的 第<span class="number">15</span>位 即 hw5 置<span class="number">1</span>, 这个是给timer用的号</span><br><span class="line">ins			k1, zero, <span class="number">1</span>, <span class="number">4</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* s5 is used as the frame pointer. */</span></span><br><span class="line">add			s5, zero, sp                                         # s5 &lt;- sp</span><br><span class="line"></span><br><span class="line"><span class="comment">/* Swap to the system stack.  This is not conditional on the nesting</span></span><br><span class="line"><span class="comment">count as this interrupt is always the lowest priority and therefore</span></span><br><span class="line"><span class="comment">the nesting is always 0. */</span></span><br><span class="line">la			sp, xISRStackTop                                     <span class="meta"># sp &lt;- xISRStackTop  !!!!<span class="string">&#x27;Swap to the system stack&#x27;</span>, 注意这里sp变了,叫system stack了</span></span><br><span class="line">                                                                    # 可以理解为就是给pendsv 中断上下文专门开辟的一块空间, 用来临时保存恢复一些寄存器的值, 因为寄存器不够用,需要内存来回倒腾.</span><br><span class="line">lw			sp, (sp)</span><br><span class="line"></span><br><span class="line"><span class="comment">/* Set the nesting count. */</span></span><br><span class="line">la			k0, uxInterruptNesting</span><br><span class="line">addiu		s6, zero, <span class="number">1</span></span><br><span class="line">sw			s6, <span class="number">0</span>(k0)                                            # uxInterruptNesting = <span class="number">1</span></span><br><span class="line"></span><br><span class="line">mfc0 		s6, C0_EPC                                           # s6 &lt;- cp0_epc</span><br><span class="line"></span><br><span class="line"><span class="comment">/* Re-enable interrupts above configMAX_SYSCALL_INTERRUPT_PRIORITY. */</span></span><br><span class="line">mtc0		k1, C0_STATUS                                        # cp0_status &lt;- k1, 这里只置了hw5, 也就是把其他的mask都干掉了, sw0 不能再响应了</span><br><span class="line"></span><br><span class="line"><span class="comment">/* Save the context into the space just created.  s6 is saved again</span></span><br><span class="line"><span class="comment">here as it now contains the EPC value. */</span></span><br><span class="line">sw			ra, <span class="number">120</span>(s5)</span><br><span class="line">sw			s8, <span class="number">116</span>(s5)</span><br><span class="line">sw			t9, <span class="number">112</span>(s5)</span><br><span class="line">sw			t8, <span class="number">108</span>(s5)</span><br><span class="line">sw			t7, <span class="number">104</span>(s5)</span><br><span class="line">sw			t6, <span class="number">100</span>(s5)</span><br><span class="line">sw			t5, <span class="number">96</span>(s5)</span><br><span class="line">sw			t4, <span class="number">92</span>(s5)</span><br><span class="line">sw			t3, <span class="number">88</span>(s5)</span><br><span class="line">sw			t2, <span class="number">84</span>(s5)</span><br><span class="line">sw			t1, <span class="number">80</span>(s5)</span><br><span class="line">sw			t0, <span class="number">76</span>(s5)</span><br><span class="line">sw			a3, <span class="number">72</span>(s5)</span><br><span class="line">sw			a2, <span class="number">68</span>(s5)</span><br><span class="line">sw			a1, <span class="number">64</span>(s5)</span><br><span class="line">sw			a0, <span class="number">60</span>(s5)</span><br><span class="line">sw			v1, <span class="number">56</span>(s5)</span><br><span class="line">sw			v0, <span class="number">52</span>(s5)</span><br><span class="line">sw			s7, <span class="number">48</span>(s5)</span><br><span class="line">sw			s6, portEPC_STACK_LOCATION(s5)                       # [pxTopofStack+<span class="number">124</span>] &lt;- cp0_epc</span><br><span class="line"><span class="comment">/* s5 and s6 has already been saved. */</span></span><br><span class="line">sw			s4, <span class="number">36</span>(s5)</span><br><span class="line">sw			s3, <span class="number">32</span>(s5)</span><br><span class="line">sw			s2, <span class="number">28</span>(s5)</span><br><span class="line">sw			s1, <span class="number">24</span>(s5)</span><br><span class="line">sw			s0, <span class="number">20</span>(s5)</span><br><span class="line">sw			$<span class="number">1</span>, <span class="number">16</span>(s5)</span><br><span class="line"></span><br><span class="line"><span class="comment">/* s7 is used as a scratch register as this should always be saved across</span></span><br><span class="line"><span class="comment">nesting interrupts. */</span></span><br><span class="line">mfhi		s7</span><br><span class="line">sw			s7, <span class="number">12</span>(s5)                                           # [pxTopofStack+<span class="number">12</span>] &lt;- hi</span><br><span class="line">mflo		s7</span><br><span class="line">sw			s7, <span class="number">8</span>(s5)                                            # [pxTopofStack+<span class="number">8</span>] &lt;- lo</span><br><span class="line"></span><br><span class="line"><span class="comment">/* Save the stack pointer to the task. */</span></span><br><span class="line">la			s7, pxCurrentTCB</span><br><span class="line">lw			s7, (s7)</span><br><span class="line">sw			s5, (s7)                                              # 更新s5, 这里就是正式把任务TCB的第一项pxTopofStack更新成刚进来的sp<span class="number">-132</span>的位置了</span><br><span class="line"></span><br><span class="line">di                                                                # 全局关中断, status的第<span class="number">0</span>位置<span class="number">0</span></span><br><span class="line">ehb</span><br><span class="line">mfc0		s7, C0_STATUS                                         </span><br><span class="line">ins 		s7, zero, <span class="number">8</span>, <span class="number">8</span></span><br><span class="line">ori			s6, s7, ( <span class="number">0x80</span> &lt;&lt; <span class="number">8</span> ) | <span class="number">1</span>                             <span class="meta"># status 重置,将8到14位清0, 只置hw5为1, 第0位 置1</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* Re-enable interrupts */</span></span><br><span class="line">mtc0		s6, C0_STATUS                                         # 启用中断, hw5 置位, 只响应timer</span><br><span class="line">ehb</span><br><span class="line"></span><br><span class="line">   <span class="comment">/* Clear the software interrupt in the core, so that we don&#x27;t infinitely</span></span><br><span class="line"><span class="comment">   recurse. */</span></span><br><span class="line">mfc0		s6, C0_CAUSE                                          </span><br><span class="line">ins			s6, zero, <span class="number">8</span>, <span class="number">1</span></span><br><span class="line">mtc0		s6, C0_CAUSE                                          # cp0_cause pending位中 sw0 置<span class="number">0</span></span><br><span class="line">ehb</span><br><span class="line"></span><br><span class="line">   .endm</span><br></pre></td></tr></table></figure>
+<p>这个函数除了status cause中断位相关的操作外, 主要的工作就是把当前运行的任务运行到此处时的寄存器信息和cp0 epc status等的信息保存到了当前任务的堆栈中, 并更新了当前任务TCB的<code>pxTopofStack</code></p>
+<blockquote>
+<p>cp0_epc什么时候被更新的,不要忘了, 这个是进的sw0的中断, 发生中断和异常一样, cp0_epc会被更新为进sw0 中断处理函数前的最后一行指令的位置</p>
+</blockquote>
+<p>还是参考这个图<br><a target="_blank" rel="noopener" href="https://www.yuque.com/huakaibanxia-loogp/ibattu/bh9cmw?inner=xL6T3&view=doc_embed">freertos 任务调度</a></p>
+<h3 id="vTaskSwitchContext"><a href="#vTaskSwitchContext" class="headerlink" title="vTaskSwitchContext"></a>vTaskSwitchContext</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">vTaskSwitchContext</span><span class="params">( <span class="type">void</span> )</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">if</span>( uxSchedulerSuspended != ( UBaseType_t ) pdFALSE )</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="comment">/* The scheduler is currently suspended - do not allow a context</span></span><br><span class="line"><span class="comment">		switch. */</span></span><br><span class="line">        <span class="comment">// 调度器被挂起, 切换任务暂时pending</span></span><br><span class="line">		xYieldPending = pdTRUE;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">else</span></span><br><span class="line">	&#123;</span><br><span class="line">        <span class="comment">// 调度器未被挂起, 不用pending</span></span><br><span class="line">		xYieldPending = pdFALSE;</span><br><span class="line">		<span class="comment">// 检查是否堆栈溢出</span></span><br><span class="line">		taskCHECK_FOR_STACK_OVERFLOW();</span><br><span class="line">		taskSELECT_HIGHEST_PRIORITY_TASK(); <span class="comment">// 这是个宏, 直接嵌进来</span></span><br><span class="line">        <span class="meta">#<span class="keyword">define</span> taskSELECT_HIGHEST_PRIORITY_TASK()														\</span></span><br><span class="line"><span class="meta">        &#123;																								\</span></span><br><span class="line"><span class="meta">            UBaseType_t uxTopPriority;																		\</span></span><br><span class="line"><span class="meta">            <span class="comment">/* Find the highest priority list that contains ready tasks. */</span>								\</span></span><br><span class="line"><span class="meta">            <span class="comment">// 查找最高优先级. 就是个宏,这里直接展开了</span></span></span><br><span class="line">            portGET_HIGHEST_PRIORITY( uxTopPriority, uxTopReadyPriority );								\</span><br><span class="line">            <span class="comment">// mips_clz 从其最高位开始同最低位方向检查，直到遇到值为“1”的位，将该位之前“0”的个数保存到地址为rd的通用寄存器中，如果地址为rs的通用寄存器的所有位都为0（即0x00000000），那么将32保存到地址为rd的通用寄存器中。</span></span><br><span class="line">            <span class="comment">// 这里巧妙的通过一个word(32个bit位), 利用位图的方式记录优先级, 那查找最高优先级就等同于从该word的最高位开始查找,找到第一个不为0的bit位即可</span></span><br><span class="line">            uxTopPriority = ( <span class="number">31</span> - mips_clz( ( uxReadyPriorities ) ) )</span><br><span class="line">            <span class="comment">// 从数组pxReadyTasksLists[uxTopPriority] 中取出任务               </span></span><br><span class="line">            listGET_OWNER_OF_NEXT_ENTRY( pxCurrentTCB, &amp;( pxReadyTasksLists[ uxTopPriority ] ) );		\</span><br><span class="line">        &#125; <span class="comment">/* taskSELECT_HIGHEST_PRIORITY_TASK() */</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>调度器未被挂起的情况下, 根据<code>uxTopReadyPriority</code>从<code>pxReadyTasksLists[ uxTopPriority ]</code>中找到最高优先级的任务, 赋值给<code>**pxCurrentTCB**</code><br>这里关联到 <code>prvAddTaskToReadyList</code>这个函数, 任务要转为就绪状态, 才能得到调度, 而要转到就绪状态,就需要调用<code>**prvAddTaskToReadyList**</code>** **这个函数<br>这个函数做的事情:</p>
+<ul>
+<li>更新 uxTopReadyPriority, 调用<code>taskRECORD_READY_PRIORITY</code>, <code>( uxReadyPriorities ) |= ( 1**UL** &lt;&lt; ( TCB-&gt;priority) )</code>, 通过位图的方式来表示最高优先级.</li>
+<li>将TCB 的 <code>**xStateListItem**</code>状态列表项挂接到 pxReadyTasksLists[ TCB-&gt;priority ] 的 列表下</li>
+</ul>
+<h3 id="portYIELD-RESTORE"><a href="#portYIELD-RESTORE" class="headerlink" title="portYIELD_RESTORE"></a>portYIELD_RESTORE</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br></pre></td><td class="code"><pre><span class="line">   .macro portYIELD_RESTORE</span><br><span class="line">mtc0		s7, C0_STATUS      # 调用c的函数, s0-s7不会被使用,这是gcc的规定. 所以s7 还是调vTaskSwitchContext前的值</span><br><span class="line">                               # 关联到上面的portYIELD_SAVE, 即 status 重置,将<span class="number">8</span>到<span class="number">14</span>位清<span class="number">0</span>, 只置hw5为<span class="number">1</span>, 第<span class="number">0</span>位 置<span class="number">1</span></span><br><span class="line">ehb</span><br><span class="line"></span><br><span class="line"><span class="comment">/* Restore the stack pointer from the TCB. */</span></span><br><span class="line">la			s0, pxCurrentTCB   # pxCurrentTCB 已经被更新到要切换到的新任务的TCB了</span><br><span class="line">lw			s0, (s0)           </span><br><span class="line">lw			s5, (s0)           # s5 即 pxTopofStack</span><br><span class="line"></span><br><span class="line"><span class="comment">/* Restore the rest of the context. */</span></span><br><span class="line">lw			s0, <span class="number">8</span>(s5)          </span><br><span class="line">mtlo		s0                 <span class="meta"># lo &lt;- [pxTopofStack+8]</span></span><br><span class="line">lw			s0, <span class="number">12</span>(s5)</span><br><span class="line">mthi		s0                 <span class="meta"># hi &lt;- [pxTopofStack+12]</span></span><br><span class="line">lw			$<span class="number">1</span>, <span class="number">16</span>(s5)</span><br><span class="line">lw			s0, <span class="number">20</span>(s5)</span><br><span class="line">lw			s1, <span class="number">24</span>(s5)</span><br><span class="line">lw			s2, <span class="number">28</span>(s5)</span><br><span class="line">lw			s3, <span class="number">32</span>(s5)</span><br><span class="line">lw			s4, <span class="number">36</span>(s5)</span><br><span class="line"><span class="comment">/* s5 is loaded later. */</span></span><br><span class="line">lw			s6, <span class="number">44</span>(s5)</span><br><span class="line">lw			s7, <span class="number">48</span>(s5)</span><br><span class="line">lw			v0, <span class="number">52</span>(s5)</span><br><span class="line">lw			v1, <span class="number">56</span>(s5)</span><br><span class="line">lw			a0, <span class="number">60</span>(s5)</span><br><span class="line">lw			a1, <span class="number">64</span>(s5)</span><br><span class="line">lw			a2, <span class="number">68</span>(s5)</span><br><span class="line">lw			a3, <span class="number">72</span>(s5)</span><br><span class="line">lw			t0, <span class="number">76</span>(s5)</span><br><span class="line">lw			t1, <span class="number">80</span>(s5)</span><br><span class="line">lw			t2, <span class="number">84</span>(s5)</span><br><span class="line">lw			t3, <span class="number">88</span>(s5)</span><br><span class="line">lw			t4, <span class="number">92</span>(s5)</span><br><span class="line">lw			t5, <span class="number">96</span>(s5)</span><br><span class="line">lw			t6, <span class="number">100</span>(s5)</span><br><span class="line">lw			t7, <span class="number">104</span>(s5)</span><br><span class="line">lw			t8, <span class="number">108</span>(s5)</span><br><span class="line">lw			t9, <span class="number">112</span>(s5)</span><br><span class="line">lw			s8, <span class="number">116</span>(s5)</span><br><span class="line">lw			ra, <span class="number">120</span>(s5)</span><br><span class="line"></span><br><span class="line"><span class="comment">/* Protect access to the k registers, and others. */</span></span><br><span class="line">di                             <span class="meta"># status 第0位置0, 关中断, 保护k0 k1</span></span><br><span class="line">ehb</span><br><span class="line"></span><br><span class="line"><span class="comment">/* Set nesting back to zero.  As the lowest priority interrupt this</span></span><br><span class="line"><span class="comment">interrupt cannot have nested. */</span></span><br><span class="line">la			k0, uxInterruptNesting</span><br><span class="line">sw			zero, <span class="number">0</span>(k0)        # uxInterruptNesting = <span class="number">0</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* Switch back to use the real stack pointer. */</span></span><br><span class="line">add			sp, zero, s5       <span class="meta"># sp &lt;- pxTopofStack</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* Restore the real s5 value. */</span></span><br><span class="line">lw			s5, <span class="number">40</span>(sp)         # s5 &lt;- [pxTopofStack+<span class="number">40</span>]</span><br><span class="line"></span><br><span class="line"><span class="comment">/* Pop the status and epc values. */</span></span><br><span class="line">lw			k1, portSTATUS_STACK_LOCATION(sp) # k1 &lt;- [pxTopofStack+<span class="number">128</span>]</span><br><span class="line">lw			k0, portEPC_STACK_LOCATION(sp)    # k0 &lt;- [pxTopofStack+<span class="number">124</span>]</span><br><span class="line"></span><br><span class="line"><span class="comment">/* Remove stack frame. */</span></span><br><span class="line">addiu		sp, sp, portCONTEXT_SIZE          <span class="meta"># sp &lt;- pxTopofStack + 132 !!!!</span></span><br><span class="line"></span><br><span class="line">mtc0		k1, C0_STATUS                     # cp0_status &lt;- [pxTopofStack+<span class="number">128</span>] 这里把status恢复了, 即恢复了切换任务前中断相关的配置</span><br><span class="line">mtc0 		k0, C0_EPC                        # cp0_epc &lt;- [pxTopofStack+<span class="number">124</span>]</span><br><span class="line">ehb                                           # 指令冒险, cp0_epc与eret存在冒险,查pdf, 有人说要还要加ssnop</span><br><span class="line">eret                                          # 调度到 pxTopofStack+<span class="number">124</span> 地址存的位置处执行, 下一行指令跳转到新任务的上次被切出去时的位置执行</span><br><span class="line">nop</span><br><span class="line"></span><br><span class="line">   .endm</span><br></pre></td></tr></table></figure>
+<p>这个函数的注意点</p>
+<ul>
+<li>新任务的sp被更新成了pxTopofStack + 132的位置, 跟上面的流程图对应</li>
+<li>sp 是什么时候从system stack切回来的</li>
+<li>当前任务运行着,突然来了pendsv中断,在进中断处理函数前, cp0_epc会变成进中断处理函数前最后一条指令的位置, 即函数运行到的位置, 这个cp0_epc被保存到了<code>TCB-&gt;pxTopofStack+124</code>的位置, 从别的任务切换回该任务时, 要把<code>cp0_epc</code> 恢复回来, 调用<code>eret</code>回到任务切走前的指令位置.</li>
+<li>eret 和 cp0_epc的指令冒险是否还有问题,</li>
+</ul>
+<h2 id="调度器的挂起和恢复"><a href="#调度器的挂起和恢复" class="headerlink" title="调度器的挂起和恢复"></a>调度器的挂起和恢复</h2><p>前面接触到了很多的调度器挂起&#x2F;未挂起的情况, 有必要深究一下.<br>先看调度器挂起和恢复的函数做了什么</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">vTaskSuspendAll</span><span class="params">( <span class="type">void</span> )</span></span><br><span class="line">&#123;</span><br><span class="line">	++uxSchedulerSuspended;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">BaseType_t <span class="title function_">xTaskResumeAll</span><span class="params">( <span class="type">void</span> )</span></span><br><span class="line">&#123;</span><br><span class="line">    TCB_t *pxTCB = <span class="literal">NULL</span>;</span><br><span class="line">    BaseType_t xAlreadyYielded = pdFALSE;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 调度器挂起时,有可能ISR 将任务从等待事件列表中移出了, 这种情况下,从等待事件列表中移出的任务被加入到了xPendingReadyList中.</span></span><br><span class="line">    <span class="comment">// 一旦调度器恢复, 此时可以安全的将xPendingReadyList中的任务挪到ready list中, 进入就绪列表排队</span></span><br><span class="line">	<span class="comment">// 进入临界区, 关systick中断    </span></span><br><span class="line">	taskENTER_CRITICAL();</span><br><span class="line">	&#123;</span><br><span class="line">        <span class="comment">// 这玩意可以大于1, 减到0才能恢复</span></span><br><span class="line">		--uxSchedulerSuspended;</span><br><span class="line">		<span class="keyword">if</span>( uxSchedulerSuspended == ( UBaseType_t ) pdFALSE )</span><br><span class="line">		&#123;</span><br><span class="line">            <span class="comment">// 总共创建了多少个任务, 调用xTaskCreate 创建任务, 该数+1, 调用vTaskDelete 删除任务, 该数-1</span></span><br><span class="line">			<span class="keyword">if</span>( uxCurrentNumberOfTasks &gt; ( UBaseType_t ) <span class="number">0U</span> )</span><br><span class="line">			&#123;</span><br><span class="line">				<span class="comment">/* Move any readied tasks from the pending list into the</span></span><br><span class="line"><span class="comment">				appropriate ready list. */</span></span><br><span class="line">                <span class="comment">// 挨个将xPendingReadyList中的任务移出到readylist下</span></span><br><span class="line">				<span class="keyword">while</span>( listLIST_IS_EMPTY( &amp;xPendingReadyList ) == pdFALSE )</span><br><span class="line">				&#123;</span><br><span class="line">					pxTCB = ( TCB_t * ) listGET_OWNER_OF_HEAD_ENTRY( ( &amp;xPendingReadyList ) );</span><br><span class="line">					( <span class="type">void</span> ) uxListRemove( &amp;( pxTCB-&gt;xEventListItem ) );</span><br><span class="line">					( <span class="type">void</span> ) uxListRemove( &amp;( pxTCB-&gt;xStateListItem ) );</span><br><span class="line">					prvAddTaskToReadyList( pxTCB );</span><br><span class="line">					<span class="comment">// 如果pendinglist中的任务的优先级大于等于当前任务的优先级, 将xYieldPending 置为True, 函数结束后要触发pendsv中断</span></span><br><span class="line">					<span class="keyword">if</span>( pxTCB-&gt;uxPriority &gt;= pxCurrentTCB-&gt;uxPriority )</span><br><span class="line">					&#123;</span><br><span class="line">						xYieldPending = pdTRUE;</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line"></span><br><span class="line">				<span class="keyword">if</span>( pxTCB != <span class="literal">NULL</span> )</span><br><span class="line">				&#123;</span><br><span class="line">                    <span class="comment">// 这个要结合前面的xTaskIncrementTick过程看,因为调度器被挂起时,不会更新xNextTaskUnblockTime, 如果这里不重置,在恢复调度器后,xNextTaskUnblockTime 这个时间已经不准确了. </span></span><br><span class="line">                    <span class="comment">// 因为之前xNextTaskUnblockTime表示的任务可能已经过期了, 早就过了timeout了</span></span><br><span class="line">                    <span class="comment">// 需要同时关注下任务什么时候被加入到xPendingReadyList 中的 (这个是等待事件等到了被加入进来的,可以看看相关的几个api)</span></span><br><span class="line">                    <span class="comment">// pendinglist中有任务的情况下, 要重置 xNextTaskUnblockTime, 这里直接展开了</span></span><br><span class="line">					prvResetNextTaskUnblockTime();</span><br><span class="line">                    &#123;</span><br><span class="line">                        <span class="comment">// 延时队列中没有任务, 这个直接置成UINT_MAX</span></span><br><span class="line">                        <span class="keyword">if</span>( listLIST_IS_EMPTY( pxDelayedTaskList ) != pdFALSE )</span><br><span class="line">                        &#123;</span><br><span class="line">                            xNextTaskUnblockTime = portMAX_DELAY;</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="keyword">else</span> <span class="comment">// 置成delaylist 排在最前面的任务的timeout(tick为单位)</span></span><br><span class="line">                        &#123;</span><br><span class="line">                            ( pxTCB ) = ( TCB_t * ) listGET_OWNER_OF_HEAD_ENTRY( pxDelayedTaskList );</span><br><span class="line">                            xNextTaskUnblockTime = listGET_LIST_ITEM_VALUE( &amp;( ( pxTCB )-&gt;xStateListItem ) );</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">				&#125;</span><br><span class="line">				<span class="comment">// 调度器挂起时,每来一个tick, uxPendedTicks会加1, 这里表示在调度器挂起的这段事件内, 任务多占用了uxPendedTicks这么长事件的时间片</span></span><br><span class="line">                <span class="comment">// 因此为了任务计时准确,这里让tick更新, 不会漏掉, 同时模拟正常运行的状况,该多少个tick 切出任务就多少个tick</span></span><br><span class="line">				&#123;</span><br><span class="line">					UBaseType_t uxPendedCounts = uxPendedTicks; <span class="comment">/* Non-volatile copy. */</span></span><br><span class="line"></span><br><span class="line">					<span class="keyword">if</span>( uxPendedCounts &gt; ( UBaseType_t ) <span class="number">0U</span> )</span><br><span class="line">					&#123;</span><br><span class="line">						<span class="keyword">do</span></span><br><span class="line">						&#123;</span><br><span class="line">							<span class="keyword">if</span>( xTaskIncrementTick() != pdFALSE )</span><br><span class="line">							&#123;</span><br><span class="line">								xYieldPending = pdTRUE;</span><br><span class="line">							&#125;</span><br><span class="line">							--uxPendedCounts;</span><br><span class="line">						&#125; <span class="keyword">while</span>( uxPendedCounts &gt; ( UBaseType_t ) <span class="number">0U</span> );</span><br><span class="line">                         <span class="comment">// 重置tick, 下一次挂起时,这个数重新开始从0累加</span></span><br><span class="line">						uxPendedTicks = <span class="number">0</span>;</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line">                <span class="comment">// pendinglist 中的任务优先级大于等于当前运行的任务的优先级, 且配置了configUSE_PREEMPTION的情况下要触发pendsv中断,切换任务</span></span><br><span class="line">				<span class="keyword">if</span>( xYieldPending != pdFALSE )</span><br><span class="line">				&#123;</span><br><span class="line">					<span class="meta">#<span class="keyword">if</span>( configUSE_PREEMPTION != 0 )</span></span><br><span class="line">					&#123;</span><br><span class="line">						xAlreadyYielded = pdTRUE;</span><br><span class="line">					&#125;</span><br><span class="line">					<span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line">                    <span class="comment">// 触发pendsv, 切换任务</span></span><br><span class="line">					taskYIELD_IF_USING_PREEMPTION();</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">    <span class="comment">// 退出临界区,打开systick中断</span></span><br><span class="line">	taskEXIT_CRITICAL();</span><br><span class="line">	<span class="keyword">return</span> xAlreadyYielded;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到主要的流程都在<code>xTaskResumeAll</code>中, 主要做了以下的事情:</p>
+<ol>
+<li>处理<code>xPendingReadyList</code>,   在调度器挂起时,有可能任务从等待事件列表中移出了,(事件列表项, 等待的事件等到了,但这时调度器被挂起了, 因此移入了<code>xPendingReadyList</code>中)</li>
+</ol>
+<p>这种情况下,从等待事件列表中移出的任务被加入到了xPendingReadyList中. 一旦调度器恢复, 此时可以安全的将xPendingReadyList中的任务挪到ready list中, 进入就绪列表排队<br>如果移入ready list中的任务的优先级大于等于当前运行任务的优先级, 在配置了<code>configUSE_PREEMPTION</code>的情况下,要触发pendsv中断切换任务</p>
+<ol start="2">
+<li><p>更新tick数, 同时模拟任务已经跑了<code>uxPendedTicks</code>个tick, 因为调度器挂起时, 不能因systick切换任务, 当前运行的任务会多跑<code>uxPendedTicks</code>的tick, 为了准确计时, 要让这个任务把多跑的这些tick吐出来</p>
+</li>
+<li><p><code>xPendingReadyList</code>中有任务时, 要重置xNextTaskUnblockTime, 因为调度器被挂起时, xNextTaskUnblockTime不再更新. </p>
+<p>   在调度器被恢复后, 上次赋值的xNextTaskUnblockTime表示的任务可能已经过了timeout了, 所以需要重新赋值.</p>
+</li>
+</ol>
+<blockquote>
+<p>TODO: 需要关注下什么情况下任务会被加入到<code>xPendingReadyList</code>中, 看情况多数都是在调度器挂起时, 任务等待事件等到了, 被加入到的这个list?</p>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/freertos/" rel="tag"># freertos</a>
+              <a href="/tags/%E8%B0%83%E5%BA%A6/" rel="tag"># 调度</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/10/15/freertos/freertos%20%E4%BB%BB%E5%8A%A1%E9%80%9A%E4%BF%A1%E8%B0%83%E7%A0%94/" rel="prev" title="freertos 任务通信">
+      <i class="fa fa-chevron-left"></i> freertos 任务通信
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/10/17/freertos/mips%20linux%20spinlock%E5%88%86%E6%9E%90/" rel="next" title="mips linux spinlock">
+      mips linux spinlock <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#PendSV-%E4%B8%AD%E6%96%AD"><span class="nav-number">1.</span> <span class="nav-text">PendSV 中断</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SysTick-%E4%B8%AD%E6%96%AD%EF%BC%8C-%E7%B3%BB%E7%BB%9F%E6%97%B6%E9%92%9F%E8%8A%82%E6%8B%8D"><span class="nav-number">2.</span> <span class="nav-text">SysTick 中断， 系统时钟节拍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#xTaskIncrementTick"><span class="nav-number">3.</span> <span class="nav-text">xTaskIncrementTick</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PendSV-%E4%B8%AD%E6%96%AD%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B%E5%88%86%E6%9E%90"><span class="nav-number">4.</span> <span class="nav-text">PendSV 中断处理流程分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#portYIELD-SAVE"><span class="nav-number">4.1.</span> <span class="nav-text">portYIELD_SAVE</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#vTaskSwitchContext"><span class="nav-number">4.2.</span> <span class="nav-text">vTaskSwitchContext</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#portYIELD-RESTORE"><span class="nav-number">4.3.</span> <span class="nav-text">portYIELD_RESTORE</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B0%83%E5%BA%A6%E5%99%A8%E7%9A%84%E6%8C%82%E8%B5%B7%E5%92%8C%E6%81%A2%E5%A4%8D"><span class="nav-number">5.</span> <span class="nav-text">调度器的挂起和恢复</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">93</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">109</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'VrGRp2q7WwXjxsCNmlDIZYbC-gzGzoHsz',
+      appKey     : 'JgMXmmB7yKQf2zm80TaBp3JT',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : 'zh-cn' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

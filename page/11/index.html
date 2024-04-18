@@ -185,7 +185,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E6%9C%BA%E5%9E%8Bfastbootd%E4%BD%BF%E7%94%A8/">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/signal%20%E7%9B%B8%E5%85%B3/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -199,7 +199,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E6%9C%BA%E5%9E%8Bfastbootd%E4%BD%BF%E7%94%A8/" class="post-title-link" itemprop="url">vab机型fastbootd使用</a>
+            <a href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/signal%20%E7%9B%B8%E5%85%B3/" class="post-title-link" itemprop="url">signal 相关整理</a>
         </h2>
 
         <div class="post-meta">
@@ -209,14 +209,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2019-10-12 18:15:54" itemprop="dateCreated datePublished" datetime="2019-10-12T18:15:54+08:00">2019-10-12</time>
+              <time title="创建时间：2020-07-18 18:15:54" itemprop="dateCreated datePublished" datetime="2020-07-18T18:15:54+08:00">2020-07-18</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-16 15:08:39" itemprop="dateModified" datetime="2024-04-16T15:08:39+08:00">2024-04-16</time>
+                <time title="修改时间：2024-04-16 15:57:54" itemprop="dateModified" datetime="2024-04-16T15:57:54+08:00">2024-04-16</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -225,6 +225,10 @@
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
                   <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/%E7%A8%B3%E5%AE%9A%E6%80%A7/" itemprop="url" rel="index"><span itemprop="name">稳定性</span></a>
                 </span>
             </span>
 
@@ -237,8 +241,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E6%9C%BA%E5%9E%8Bfastbootd%E4%BD%BF%E7%94%A8/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E6%9C%BA%E5%9E%8Bfastbootd%E4%BD%BF%E7%94%A8/" itemprop="commentCount"></span>
+    <a title="valine" href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/signal%20%E7%9B%B8%E5%85%B3/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/signal%20%E7%9B%B8%E5%85%B3/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -253,85 +257,22 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>vnote_backup_file_826537664 &#x2F;home&#x2F;mi&#x2F;Documents&#x2F;backup&#x2F;VnoteBook&#x2F;OTA相关&#x2F;动态分区机型fastbootd使用.md</p>
-<h1 id="动态分区机型fastbootd使用"><a href="#动态分区机型fastbootd使用" class="headerlink" title="动态分区机型fastbootd使用"></a>动态分区机型fastbootd使用</h1><h2 id="fastbootd简介"><a href="#fastbootd简介" class="headerlink" title="fastbootd简介"></a>fastbootd简介</h2><p>在动态分区机型上bootloader的fastboot不能烧写动态分区的镜像, 需要使用<strong>recovery子系统</strong>下的fastbootd来进行用户空间的烧写镜像的工作</p>
-<p>fastbootd是recovery子系统下的一个native进程, 由init fork出来. 具体实现方式类似于adbd.<br>包括进程创建, 驱动通道, 与init的协作都与adbd一致, 是属于借助usb的config配置实现的功能.<br>因此不能同时启用adb和fastboot模式, 因为这两个独占同一个通道.</p>
-<h2 id="fastbootd命令"><a href="#fastbootd命令" class="headerlink" title="fastbootd命令"></a>fastbootd命令</h2><table>
-<thead>
-<tr>
-<th>Command</th>
-<th>Description</th>
-<th>Available when device is OEM locked</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>getvar is-userspace</td>
-<td>Return yes</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>getvar<br>is-logical:<partition></partition></td>
-<td>Return yes if the given partition is a<br>logical partition, no otherwise</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>getvar super-partition-name</td>
-<td>MUST return super for a device<br>launching with logical partitions</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>create-logical-partition<br><partition> <size></size></partition></td>
-<td>Create a logical partition with the<br>given name and size</td>
-<td>No</td>
-</tr>
-<tr>
-<td>delete-logical-partition<br><partition></partition></td>
-<td>Delete the given logical partition</td>
-<td>No</td>
-</tr>
-<tr>
-<td>resize-logical-partition<br><partition> <size></size></partition></td>
-<td>Resize the logical partition to the new<br>size without changing its contents</td>
-<td>No</td>
-</tr>
-<tr>
-<td>update-super <partition></partition></td>
-<td>Similar to flash super, except rather<br>than flashing raw data to the super<br>partition, this will ensure that all<br>partitions within the downloaded<br>image are created</td>
-<td>No</td>
-</tr>
-<tr>
-<td>getvar max-download-size</td>
-<td>Return the maximum size of an image<br>that can be downloaded in bytes in<br>hex</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>getvar partition-type<br><partition-name></partition-name></td>
-<td>Return file system type: ext4, f2fs,<br>raw</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>flash <em>partition_name</em> filename</td>
-<td>Flash the partition through a series of<br>download and flash fastboot<br>protocol commands</td>
-<td>No</td>
-</tr>
-<tr>
-<td>reboot bootloader</td>
-<td>Reboot into bootloader mode</td>
-<td>Yes</td>
-</tr>
-<tr>
-<td>reboot fastboot</td>
-<td>Reboot back into fastbootd mode</td>
-<td>Yes</td>
-</tr>
-</tbody></table>
-<h2 id="安装最新的fastboot工具"><a href="#安装最新的fastboot工具" class="headerlink" title="安装最新的fastboot工具"></a>安装最新的fastboot工具</h2><p>在<a target="_blank" rel="noopener" href="https://developer.android.com/studio/releases/platform-tools">platform-tools</a>获取最新的fastboot和adb的工具</p>
-<ul>
-<li>linux下替换<br>解压后得到platform-tools 目录</li>
-</ul>
+          <blockquote>
+<p>android r base</p>
+</blockquote>
+<h1 id="信号相关流程梳理"><a href="#信号相关流程梳理" class="headerlink" title="信号相关流程梳理"></a>信号相关流程梳理</h1><p>程序分为两种：<br> <strong>1.<code>静态链接</code>:</strong> 由链接器在链接时将库的内容添加到可执行程序中的做法，最大缺点是生成的可执行文件太大，需要更多的系统资源，在装入内存也会消耗更多的时间。<br> <strong>2.<code>动态链接</code>:</strong> 将独立的模块先编译成动态库，程序运行有需要它们时才加载，最大缺点是可执行程序依赖分别存储的库文件才能正确执行。<br> 在Android中，大部分都是动态链接，而只有init等少部分是静态链接，因此native程序也是动态链接程序，动态链接程序是需要链接器才能跑起来，<span style="color: green">liner</span>就是Android的链接器。<br> liner也是在程序的进程空间内，当内核将应用程序加载起来后，并不是先跑应用程序代码，而是先跑liner。<code>linker</code>负责将应用程序所需的库加载到进程空间内，之后才跑应用程序代码。</p>
+<p>绝大多数的native app都是以linker为入口(<span style="color: red">动态连接的程序</span>),在启动时先由汇编跳转到__link_init函数.</p>
+<p>[-&gt; arch&#x2F;arm64&#x2F;begin.S]</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">ENTRY(_start)</span><br><span class="line">  // Force unwinds to end in this function.</span><br><span class="line">  .cfi_undefined x30</span><br><span class="line"></span><br><span class="line">  mov x0, sp</span><br><span class="line">  bl __linker_init</span><br><span class="line"></span><br><span class="line">  /* linker init returns the _entry address in the main image */</span><br><span class="line">  br x0</span><br><span class="line">END(_start)</span><br></pre></td></tr></table></figure>
+
+<h2 id="到debuggerd-init的调用链"><a href="#到debuggerd-init的调用链" class="headerlink" title="到debuggerd_init的调用链"></a>到debuggerd_init的调用链</h2><figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">-- bl __linker_init</span><br><span class="line">| - extern &quot;C&quot; ElfW<span class="params">(Addr)</span> __linker_init<span class="params">(void* raw_args)</span> % bionic/linker/linker_main.cpp</span><br><span class="line">   \ - __linker_init_post_relocation(KernelArgumentBlock&amp; args, soinfo&amp; tmp_linker_so)</span><br><span class="line">         \ - return start_address = linker_main(args, exe_to_load); </span><br><span class="line">		 \ - ElfW(Addr) linker_main(KernelArgumentBlock&amp; args, const char* exe_to_load)</span><br><span class="line">			\ - linker_debuggerd_init(); <span class="comment">% Register the debuggerd signal handler. [ linker_debuggerd_android.cpp ]</span></span><br><span class="line">				\ - debuggerd_init(debuggerd_callbacks_t* callbacks) <span class="comment">%  [debuggerd/handler/debuggerd_handler.cpp ]</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">linker_debuggerd_init</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  <span class="type">debuggerd_callbacks_t</span> callbacks = &#123;</span><br><span class="line">    .get_abort_message = []() &#123;</span><br><span class="line">      <span class="keyword">return</span> __libc_shared_globals()-&gt;abort_msg;</span><br><span class="line">    &#125;,</span><br><span class="line">    .post_dump = &amp;notify_gdb_of_libraries,</span><br><span class="line">    .get_gwp_asan_state = []() &#123;</span><br><span class="line">      <span class="keyword">return</span> __libc_shared_globals()-&gt;gwp_asan_state;</span><br><span class="line">    &#125;,</span><br><span class="line">    .get_gwp_asan_metadata = []() &#123;</span><br><span class="line">      <span class="keyword">return</span> __libc_shared_globals()-&gt;gwp_asan_metadata;</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;;</span><br><span class="line">  <span class="built_in">debuggerd_init</span>(&amp;callbacks);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="debuggerd-init"><a href="#debuggerd-init" class="headerlink" title="debuggerd_init"></a>debuggerd_init</h2>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E6%9C%BA%E5%9E%8Bfastbootd%E4%BD%BF%E7%94%A8/#more" rel="contents">
+              <a class="btn" href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/signal%20%E7%9B%B8%E5%85%B3/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -355,7 +296,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E8%AE%BE%E5%A4%87%E4%B8%8A%E9%94%81%E7%8A%B6%E6%80%81%E4%B8%8B1217%E6%97%A0%E6%B3%95%E5%B7%A5%E4%BD%9C%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90/">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/%E6%90%AD%E5%BB%BAgdb%20python%20%E8%84%9A%E6%9C%AC%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -369,7 +310,897 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E8%AE%BE%E5%A4%87%E4%B8%8A%E9%94%81%E7%8A%B6%E6%80%81%E4%B8%8B1217%E6%97%A0%E6%B3%95%E5%B7%A5%E4%BD%9C%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90/" class="post-title-link" itemprop="url">设备bootloader上锁状态下1217无法工作问题分析</a>
+            <a href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/%E6%90%AD%E5%BB%BAgdb%20python%20%E8%84%9A%E6%9C%AC%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/" class="post-title-link" itemprop="url">搭建gdb python 脚本开发环境</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-07-18 18:15:54" itemprop="dateCreated datePublished" datetime="2020-07-18T18:15:54+08:00">2020-07-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 18:02:21" itemprop="dateModified" datetime="2024-04-16T18:02:21+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%A8%B3%E5%AE%9A%E6%80%A7/" itemprop="url" rel="index"><span itemprop="name">稳定性</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/%E6%90%AD%E5%BB%BAgdb%20python%20%E8%84%9A%E6%9C%AC%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/%E6%90%AD%E5%BB%BAgdb%20python%20%E8%84%9A%E6%9C%AC%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>厂商或者系统继承的交叉工具链中的 gdb 一般不支持 python.<br>或者即使支持python, 由于路径问题, 很难与当前系统中使用的python 配合. 如</p>
+<ul>
+<li>出现python 第三方库不兼容问题等</li>
+<li>缺少第三方库, 使用系统下载的第三方库不能嵌入到 gdb 中使用等问题.</li>
+</ul>
+<p>因此, 我们在需要定制gdb脚本时往往需要自己动手编译交叉工具链的gdb.  </p>
+<h1 id="下载编译gdb源码"><a href="#下载编译gdb源码" class="headerlink" title="下载编译gdb源码"></a>下载编译gdb源码</h1><p><a target="_blank" rel="noopener" href="https://ftp.gnu.org/gnu/gdb/gdb-9.2.tar.xz">https://ftp.gnu.org/gnu/gdb/gdb-9.2.tar.xz</a></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">tar gdb-9.2.tar.xz</span><br><span class="line"><span class="built_in">cd</span> gdb-9.2</span><br><span class="line"><span class="built_in">mkdir</span> build</span><br><span class="line">../configure --target=mips-mti-elf --prefix=/home/mi/program/mips-gdb \</span><br><span class="line">--enable-unicode=ucs4 \</span><br><span class="line">--with-python=/usr \</span><br><span class="line">--with-auto-load-dir=<span class="variable">$debugdir</span>:<span class="variable">$datadir</span>/auto-load \</span><br><span class="line">--with-auto-load-safe-path=<span class="variable">$debugdir</span>:<span class="variable">$datadir</span>/auto-load \</span><br><span class="line">--with-expat --without-libunwind-ia64 --without-lzma --without-babeltrace --without-intel-pt --disable-libmcheck --without-mpfr --without-guile</span><br><span class="line">make</span><br><span class="line">make install</span><br></pre></td></tr></table></figure>
+
+<p>这里注意的地方, <code>target</code> <code>prefix</code> 参数需要自己填</p>
+<ol>
+<li>target 这个该怎么填, 可以用这个简单方法, 用系统继承或厂商提供的gdb, 执行下, 在gdb环境下执行<code>show configuration</code>, 看<code>target</code>是什么, 这里就填什么</li>
+<li>prefix, 填编译gdb完成后安装到的位置, 添加到环境变量中</li>
+<li><code>with-python</code> 选项是查找 <code>python</code> 的库的位置, 简单来说就是你想定制的 gdb 用的 python 环境是哪个 python 环境, 这里就填哪个目录, ubuntu 等这类 linux 一般会在&#x2F;usr 下默认配置好 python2, 你如果想使用自己定制的 python, 如使用 <code>pyenv</code> 或 <code>conda``virtualenv</code> 等定制的 python, 则需要填响应的 python 所在的目录. 后面在 gdb 环境下使用 python 报缺少三方库, 则需要用对应环境的 <code>pip</code> 安装对应的库&#x2F;组件.</li>
+</ol>
+<h1 id="使用-gdb-定制-python-脚本"><a href="#使用-gdb-定制-python-脚本" class="headerlink" title="使用 gdb 定制 python 脚本"></a>使用 gdb 定制 python 脚本</h1><p>使用上述步骤编译安装的gdb即可, 再进行gdb 环境下定制脚本的开发</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/%E6%90%AD%E5%BB%BAgdb%20python%20%E8%84%9A%E6%9C%AC%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2020/02/12/OTA%E7%9B%B8%E5%85%B3/virtual%20ab%E6%96%B9%E6%A1%88%E8%B0%83%E7%A0%94/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/02/12/OTA%E7%9B%B8%E5%85%B3/virtual%20ab%E6%96%B9%E6%A1%88%E8%B0%83%E7%A0%94/" class="post-title-link" itemprop="url">virtual ab方案调研</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-02-12 18:15:54" itemprop="dateCreated datePublished" datetime="2020-02-12T18:15:54+08:00">2020-02-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 15:26:18" itemprop="dateModified" datetime="2024-04-16T15:26:18+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/02/12/OTA%E7%9B%B8%E5%85%B3/virtual%20ab%E6%96%B9%E6%A1%88%E8%B0%83%E7%A0%94/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2020/02/12/OTA%E7%9B%B8%E5%85%B3/virtual%20ab%E6%96%B9%E6%A1%88%E8%B0%83%E7%A0%94/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="virtual-ab方案调研"><a href="#virtual-ab方案调研" class="headerlink" title="virtual ab方案调研"></a>virtual ab方案调研</h1><h2 id="从recovery开始说起"><a href="#从recovery开始说起" class="headerlink" title="从recovery开始说起"></a>从recovery开始说起</h2><h3 id="Recovery挂载system"><a href="#Recovery挂载system" class="headerlink" title="Recovery挂载system"></a>Recovery挂载system</h3><figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br></pre></td><td class="code"><pre><span class="line">- <span class="title class_">CreateSnapshotPartitions</span></span><br><span class="line">    | - <span class="title class_">SnapshotManager</span>::<span class="title class_">NewForFirstStageMount</span> #first stage mount</span><br><span class="line">       \ - <span class="title class_">New</span>(info) # <span class="title class_">SnapshotManager</span>构造函数，初始化两个目录 gsid_dir_=ota metadata_dir_=<span class="regexp">/metadata/</span>ota</span><br><span class="line">       | - <span class="title class_">ForceLocalImageManager</span> #构造<span class="title class_">ImageManager</span></span><br><span class="line">         \ - <span class="title class_">ImageManager</span>::<span class="title class_">Open</span>(gsid_dir_) # 初始化两个目录 metadata_dir = <span class="regexp">/metadata/g</span>si/ota data_dir=<span class="regexp">/data/g</span>si/ota</span><br><span class="line">    | - sm-&gt;<span class="title class_">NeedSnapshotsInFirstStageMount</span>() # 调用上面<span class="title class_">SnapshotManager</span>的实例的该函数，根据merge state确定是否进行后续步骤</span><br><span class="line">       \ - <span class="title class_">GetCurrentSlot</span>() != <span class="title class_">Slot</span>::<span class="title class_">Target</span> # 根据这个判断是不是ota后的切换slot过程，<span class="title class_">Target</span>=<span class="number">2</span>，<span class="title class_">Source</span>=<span class="number">1</span> </span><br><span class="line">                                     # =<span class="number">1</span>说明未进行ota，未进行ota就不需要挂载snapshot，<span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">       | - <span class="title class_">ReadUpdateState</span> </span><br><span class="line">         \ - <span class="title class_">ReadSnapshotUpdateStatus</span> # /metadata/ota/state文件中获取ota后的merge状态</span><br><span class="line">                                      #  <span class="title class_">Unverified</span> <span class="title class_">Merging</span> <span class="title class_">MergeFailed</span> 返回<span class="literal">true</span></span><br><span class="line">    | - <span class="literal">true</span> - <span class="title class_">InitRequiredDevices</span>(&#123;<span class="string">&quot;userdata&quot;</span>&#125;) # <span class="title class_">NeedSnapshotsInFirstStageMount</span> 返回<span class="literal">true</span>时</span><br><span class="line">      \ - <span class="title class_">InitDeviceMapper</span> #初始化dm框架，创建uevent监听 /sys/devices/virtual/misc/device-mapper</span><br><span class="line">      | - <span class="keyword">return</span> <span class="title class_">UeventCallback</span>(uevent, &amp;devices); #如果下面有userdata设备创建了，才说明required <span class="title class_">Device</span>初始化成功了，才返回<span class="literal">true</span>。 而lp_metadata_partition_是<span class="title class_">FirstStageMount</span>早期阶段初始化的/devices/virtual/block/dm-&lt;&gt;/dm/name文件中读出的super partition名字，赋值给/dev/block/mapper/&lt;partition&gt;</span><br><span class="line">      | - true - sm-&gt;CreateLogicalAndSnapshotPartitions(lp_metadata_partition_) #创建logical device和snapshot device</span><br><span class="line">        \ - ReadMetadata(opener, super_device, slot) #读取super device对应slot的metadata描述</span><br><span class="line">        | - CreateLogicalPartitionParams (for params.partition:metadata-&gt;partitions) #挨个挂接metadata描述的partitions及其对应的</span><br><span class="line">                                                                                     #snapshot设备</span><br><span class="line">          \ - MapPartitionWithSnapshot(std::move(params)) </span><br><span class="line">            \ - GetSnapshotStatusFilePath(params.GetPartitionName() # /metadata/ota/snapshots/&lt;partition_name&gt;</span><br><span class="line">            | - ReadSnapshotStatus(lock, params.GetPartitionName(), &amp;*live_snapshot_status)  # /metadata/ota/snapshots/&lt;partition_name&gt;,</span><br><span class="line">               \ - status-&gt;ParseFromFileDescriptor(fd.get()) #解析该文件，获得live_snapshot_status状态</span><br><span class="line">            | - # MERGE_COMPLETED | NONE | cow_partition_size + cow_file_size = 0 代表no live snapshot</span><br><span class="line">            | - live_snapshot_status.has_value- # 如果有live snapshot</span><br><span class="line">               \ - params.device_name = GetBaseDeviceName(params.GetPartitionName()); #devicename变成了&lt;partionname&gt;—base</span><br><span class="line">               | -  created_devices.EmplaceBack&lt;AutoUnmapDevice&gt;(&amp;dm, params.GetDeviceName())</span><br><span class="line">            | - CreateLogicalPartition(params, &amp;base_path) #映射logical device 动态分区的映射，返回的path为/dev/block/dm-&lt;num&gt;</span><br><span class="line">            | - live_snapshot_status.has_value- #如果有live snapshot</span><br><span class="line">               \ - dm.GetDeviceString(params.GetDeviceName(), &amp;base_device) #返回base_device major:minor设备号</span><br><span class="line">               | - CreateLogicalPartitionParams cow_params = params</span><br><span class="line">               | - MapCowDevices(lock, cow_params, *live_snapshot_status, &amp;created_devices, &amp;cow_name) #映射cow_device写时复制</span><br><span class="line">                 \ - cow_image_name = GetCowImageDeviceName(partition_name) #&lt;partion_name&gt;-cow-img</span><br><span class="line">                 | - *cow_name = GetCowName(partition_name) #&lt;partition_name&gt;-cow</span><br><span class="line">                 | - EnsureImageManager()</span><br><span class="line">                   | - #因为前面已经执行过ForceLocalImageManager，所以image_不为空，后面的步骤不走了</span><br><span class="line">                 | - MapCowImage(partition_name, remaining_time)</span><br><span class="line">                   | - has_local_image_manager_- true # image_为之前ForceLocalImageManager时的实例，指向ImageManager</span><br><span class="line">                   \ - images_-&gt;MapImageWithDeviceMapper(opener, cow_image_name, &amp;cow_dev) #cow_image_name为&lt;partion_name&gt;-cow-img</span><br><span class="line">                     | - MapWithDmLinear(opener, cow_image_name, &#123;&#125;, &amp;ignore_path)</span><br><span class="line">                       \ - metadata = OpenMetadata(metadata_dir_) #metadata_dir_=/metadata/gsi/ota</span><br><span class="line">                          \ - metadata_file = GetMetadataFile(metadata_dir_) # /metadata/gsi/ota/lp_metadata</span><br><span class="line">               |   |         | - metadata = ReadFromImageFile(metadata_file) #从上述文件中解析出metadata描述</span><br><span class="line">                       | - super = GetMetadataSuperBlockDevice() # 获得super封装</span><br><span class="line">                       | - block_device = GetBlockDevicePartitionName(super)</span><br><span class="line">                       | - CreateLogicalPartition(params, path) #dm-linear 跟之前的动态分区的逻辑一样，映射设备，获得path /dev/block/dm-&lt;num&gt;</span><br><span class="line">                       | - WriteStringToFile(status_string, status_file) #/metadata/gsi/ota/&lt;parition_name-cow-img&gt;.status中写入dm:&lt;partition_name-cow-img&gt;</span><br><span class="line">                     | - dm.GetDeviceString(name, dev) #返回major：minor号给dev</span><br><span class="line">               | - created_devices-&gt;EmplaceBack&lt;AutoUnmapImage&gt;(images_.get(), cow_image_name） #created_devices再push新的cow_img</span><br><span class="line">               | - CreateLogicalPartitionParams cow_partition_params = params (.partition_name=*cow_name;); </span><br><span class="line">                                                                                          #cow_name = &lt;partition&gt;_cow</span><br><span class="line">               | - CreateDmTable(cow_partition_params, &amp;table) #创建映射表</span><br><span class="line">               | - cow_partition_sectors = snapshot_status.cow_partition_size() / kSectorSize #扇区</span><br><span class="line">               | - cow_image_sectors = snapshot_status.cow_file_size() / kSectorSize;</span><br><span class="line">               | - table.Emplace&lt;DmTargetLinear&gt;(cow_partition_sectors, cow_image_sectors, cow_image_device, 0);</span><br><span class="line">                       # 从cow-img的尾部开始算，长度为cow_image_sectors 个扇区，block_device还是用前面挂接的cow-img的device</span><br><span class="line">               | - dm.CreateDevice(*cow_name, table, &amp;cow_path, remaining_time) #为&lt;partition_name&gt;-cow创建dm设备</span><br><span class="line">               | - created_devices-&gt;EmplaceBack&lt;AutoUnmapDevice&gt;(&amp;dm, *cow_name); #push到created_devices中</span><br><span class="line">            | - dm.GetDeviceString(cow_name, &amp;cow_device)  #&lt;partion_name&gt;-cow获取设备号major /minor</span><br><span class="line">            | - MapSnapshot(lock, params.GetPartitionName(), base_device, cow_device, remaining_time, path)</span><br><span class="line">                              #base_device 代表动态分区的base_device, cow_device代表映射partion_name-cow的设备，为这两个设备之间建立映射快照</span><br><span class="line">               \ - ReadSnapshotStatus(name, &amp;status) #/metadata/ota/snapshots/&lt;partition_name&gt;读取状态，如果是MERGE_COMPLETED|NONE就退出，不需要快照了</span><br><span class="line">               | - snapshot_sectors = status.snapshot_size() / kSectorSize #snapshot快照的扇区数</span><br><span class="line">               | - linear_sectors = (status.device_size() - status.snapshot_size()) / kSectorSize #logical本身的扇区数</span><br><span class="line">               | - ReadUpdateState()  #/metadata/ota/state中读取ota的状态 MergeCompleted| MergeNeedsReboot return false，退出</span><br><span class="line">                                       # Merging|MergeFailed mode=merge或者Persistent</span><br><span class="line">               | - snap_name = GetSnapshotExtraDeviceName(partition_name) #&lt;parition_name&gt;-inner</span><br><span class="line">               | - table.Emplace&lt;DmTargetSnapshot&gt;(0, snapshot_sectors, base_device, cow_device, mode, kSnapshotChunkSize)</span><br><span class="line">                         #创建映射表，单位是4k，即8*sector_size  DmTargetSnapshot start=0. length = snapshot_sectors,mode=merge|Persistent</span><br><span class="line">                         #DmTargetSnapshot::name() mode=merge时返回&quot;snapshot-merge&quot;,其他状态下返回&quot;snapshot&quot;</span><br><span class="line">               | - dm.CreateDevice(snap_name, table, dev_path, timeout_ms) #创建dm设备</span><br><span class="line">               | - linear_sectors&gt;0 - #动态分区里的img不为空 </span><br><span class="line">                   \ - dm.GetDeviceString(snap_name, &amp;snap_dev) #获取snap_dev的major/minor</span><br><span class="line">                   | - table.Emplace&lt;DmTargetLinear&gt;(0, snapshot_sectors, snap_dev, 0); #先是snap_device</span><br><span class="line">                   | - table.Emplace&lt;DmTargetLinear&gt;(snapshot_sectors, linear_sectors, base_device, snapshot_sectors); </span><br><span class="line">                              #再是linear_device追加</span><br><span class="line">                   | - dm.CreateDevice(name, table, dev_path, timeout_ms) #最终创建&lt;partition_name&gt;的dm设备映射</span><br></pre></td></tr></table></figure>
+
+<h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4><p>对于动态分区的挂载流程，最终是按创建设备时的第一个参数device-name进行匹配查找对应的dm设备，从上述映射过程中可以发现，</p>
+<ul>
+<li><p>没有live.snapshot时，只进行了<code>CreateLogicalPartition</code>过程，传入的<code>device_name</code>就是<code>partition_name</code></p>
+</li>
+<li><p>而有live snapshot时，第一步的<code>CreateLogicalPartition</code>过程传入的<code>device_name</code>是<code>&lt;partition_name&gt;-base</code>，再走完了<code>MapSnapshot</code>过程后，最终创建的dm设备<code>device_name</code>才是<code>partition_name</code>。</p>
+<blockquote>
+<p>映射表，前面是base_device到cow_device的snapshot，后面是其本身的动态分区的数据。</p>
+</blockquote>
+</li>
+<li><p>借助动态分区的实现逻辑，既然可以有metadata描述分区信息的描述块这种东西，复用见userdata上cow_device的数据描述放在了metadata分区，然后就可以通过<code>dm-linear</code> 将数据映射成dm设备。<br>当前的分析还只是在userspace，跟核心的实现应该是device-mapper的内核实现，dm-snapshot 和dm-snapshot-merge的内部是怎样实现的，才是virtual ab方案的真正的核心。</p>
+<h2 id="snapshot理解"><a href="#snapshot理解" class="headerlink" title="snapshot理解"></a>snapshot理解</h2><p>android的virtual ab方案中snapshot的方案来自于lvm（Logical Volume Manager），要理解snapshot先从lvm说起<br>首先可以想通过lvm大致还原snapshot创建的过程</p>
+</li>
+</ul>
+<h3 id="lvm-snapshot过程理解"><a href="#lvm-snapshot过程理解" class="headerlink" title="lvm snapshot过程理解"></a>lvm snapshot过程理解</h3><p>在pc机上创建snapshot过程模拟</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">创建device的模拟设备</span></span><br><span class="line">dd if=/dev/zero of=sd10 bs=4M count=1000</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">关联loop设备</span></span><br><span class="line">losetup /dev/loop0 sd10</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">为loop设备创建lvm的物理分区</span></span><br><span class="line">sudo pvcreate /dev/loop0</span><br><span class="line">sudo pvscan</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">创建卷组</span></span><br><span class="line">sudo vgcreate -s 32M nickgroup /dev/loop0</span><br><span class="line">sudo vscan</span><br><span class="line">sudo vgdisplay</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">创建卷</span></span><br><span class="line">lvcreate -L 2G --name nickgroup/nicklv00</span><br><span class="line">sudo lvscan</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">为卷建立文件系统</span></span><br><span class="line">sudo mkfs.ext4 /dev/nickgroup/nicklv00</span><br><span class="line">sudo mount -t ext4 /dev/nickgroup/nicklv00 nicklv</span><br><span class="line">echo &quot;hello world&quot; &gt; test_change; echo &quot;i&#x27;m not change&quot;&gt;test_no_change</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">为卷建立snapshot</span></span><br><span class="line">sudo lvcreate -L 1G --snapshot --name nicklv00_snap  nickgroup/nicklv00</span><br><span class="line">sudo mount -t ext4 /dev/nickgroup/nicklv00_snap nicklv_snap</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">改变原始卷某文件的内容</span></span><br><span class="line">echo &quot;i&#x27;m change&quot; &gt;&gt; nicklv/test_change</span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/02/12/OTA%E7%9B%B8%E5%85%B3/virtual%20ab%E6%96%B9%E6%A1%88%E8%B0%83%E7%A0%94/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/12/12/OTA%E7%9B%B8%E5%85%B3/android%20r%20recovery%E9%80%82%E9%85%8D/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2019/12/12/OTA%E7%9B%B8%E5%85%B3/android%20r%20recovery%E9%80%82%E9%85%8D/" class="post-title-link" itemprop="url">android r recovery适配</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-12-12 18:15:54" itemprop="dateCreated datePublished" datetime="2019-12-12T18:15:54+08:00">2019-12-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 15:16:45" itemprop="dateModified" datetime="2024-04-16T15:16:45+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/recovery/" itemprop="url" rel="index"><span itemprop="name">recovery</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2019/12/12/OTA%E7%9B%B8%E5%85%B3/android%20r%20recovery%E9%80%82%E9%85%8D/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2019/12/12/OTA%E7%9B%B8%E5%85%B3/android%20r%20recovery%E9%80%82%E9%85%8D/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="遇到的问题"><a href="#遇到的问题" class="headerlink" title="遇到的问题"></a>遇到的问题</h2><ol>
+<li><p>抓kernel log</p>
+<p>fastboot oem uart-enable，重启后，会吐出kernel log， 否则只有kernel之前的log</p>
+<blockquote>
+<p>提前设置好启动模式，misc不要清除</p>
+</blockquote>
+</li>
+<li><p>关掉avb校验</p>
+<p><code>fastboot flash vbmeta --disable-verification</code> </p>
+<p><code>export ANDROID_PRODUCT_OUT=/home/mi/work_space/miui-r-umi-dev/out/target/product/cmi</code></p>
+<p><code>make vbmeta</code></p>
+</li>
+<li><p>ninja 编译问题</p>
+<p>make编译完后，再使用ninja编译， 会重新完全编译， 打印下面的log。 后来发现是ninja版本的问题，ninja 需要同源码的prebuilts下的相同，就不会重新编译</p>
+<blockquote>
+<p>bad deps log signature or version; starting over</p>
+</blockquote>
+</li>
+<li><p>hidl 出错</p>
+<p>等待进一步调试，manifest是正常的，需要加log调试</p>
+<blockquote>
+<p>HidlServiceManagement: Waited one second for <a href="mailto:&#97;&#x6e;&#100;&#114;&#111;&#105;&#x64;&#46;&#x68;&#x61;&#x72;&#x64;&#119;&#97;&#114;&#x65;&#x2e;&#x6b;&#x65;&#121;&#109;&#x61;&#115;&#116;&#x65;&#114;&#x40;&#52;&#x2e;&#x30;">&#97;&#x6e;&#100;&#114;&#111;&#105;&#x64;&#46;&#x68;&#x61;&#x72;&#x64;&#119;&#97;&#114;&#x65;&#x2e;&#x6b;&#x65;&#121;&#109;&#x61;&#115;&#116;&#x65;&#114;&#x40;&#52;&#x2e;&#x30;</a>::IKeymasterDevice&#x2F;default</p>
+</blockquote>
+<p>stop hwservicemanager后， 自动重启到recovery</p>
+<p>这个是vdc命令触发的，先关掉<code>reboot_into_recovery</code></p>
+<p><code>vdc cryptfs mountFstab /dev/block/bootdevice/by-name/userdata /data</code></p>
+<p>​       调试libhidlbase时， 这个so在system分区，但是动态分区的机型recovery模式下只能挂载只读的system。怎样调试是个问题，可以调换ld.config.text文件中lib库的加载顺序，先创建一个虚拟的文件夹，这个文件夹只在recovery启动后启动特别模式后，再装载需要调试的lib库。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">namespace.default.search.paths = /system_lib</span><br><span class="line">namespace.default.search.paths += /system_root/system/$&#123;LIB&#125;</span><br><span class="line">namespace.default.search.paths += /system_root/system/$&#123;LIB&#125;/bootstrap</span><br><span class="line">namespace.default.search.paths += /system/$&#123;LIB&#125;</span><br></pre></td></tr></table></figure>
+
+<p>不这样处理，如果直接替换recovery的， recovery会无法启动</p>
+<p>从log上看，manifest中定义的keymaster组件是已经找到了， 为什么启动不了呢， 原来是对应的hidl的service的rc没有在<code>mount_all</code>时加载， androidr上修改了mount_all的流程，不再主动加载挂载分区的rc。</p>
+<p>还有一个问题是recovery早期阶段， 创建dm设备时出现device busy问题， 这个还需要进一步分析。</p>
+</li>
+<li><p>ota适配</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./ota_from_target_files --no_signing -s ~/work_space/miui-r-umi-dev/vendor/qcom/opensource/recovery-ext/tools/releasetools.py --extracted_input_target_files ~/Downloads/cmi-target_files-0.0.12-11.0_e9b5e7be6c  ~/Downloads/cmi-target_files-0.0.12-11.0_e9b5e7be6c.zip ota_test.zip</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>ufs分区节点没出来</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">没有dev/block/platform节点, 初步判断原因为ufs_ice没找到 platform节点未生成</span></span><br><span class="line">Copying target dtb/dtbo files to prebuilt</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">与本地dtb编译有关, 将kernel代码删除, 重新<span class="built_in">sync</span></span></span><br><span class="line">cp: cannot stat &#x27;/home/mi/work_space/miui-r-umi-dev/out/target/product/cmi/obj/kernel/msm-4.19/arch/arm64/boot/dts/vendor/qcom/*.dtb&#x27;: No such file or directory</span><br><span class="line"></span><br></pre></td></tr></table></figure></li>
+</ol>
+
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2019/12/12/OTA%E7%9B%B8%E5%85%B3/android%20r%20recovery%E9%80%82%E9%85%8D/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/11/12/OTA%E7%9B%B8%E5%85%B3/Q%20recovery%20fastboot%E8%B0%83%E8%AF%95/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2019/11/12/OTA%E7%9B%B8%E5%85%B3/Q%20recovery%20fastboot%E8%B0%83%E8%AF%95/" class="post-title-link" itemprop="url">Q动态分区 recovey fastbootd 调研</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-11-12 18:15:54" itemprop="dateCreated datePublished" datetime="2019-11-12T18:15:54+08:00">2019-11-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 15:23:50" itemprop="dateModified" datetime="2024-04-16T15:23:50+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2019/11/12/OTA%E7%9B%B8%E5%85%B3/Q%20recovery%20fastboot%E8%B0%83%E8%AF%95/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2019/11/12/OTA%E7%9B%B8%E5%85%B3/Q%20recovery%20fastboot%E8%B0%83%E8%AF%95/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">需要先挂载fastboot</span></span><br><span class="line">mkdir /config/usb_gadget/g1/functions/ffs.fastboot</span><br><span class="line">mount -t functionfs fastboot /dev/usb-ffs/fastboot</span><br></pre></td></tr></table></figure>
+
+<p>初步调试 清除数据wipe_data进 fastboot, 重启进adb模式</p>
+<p>使用wireshark进行调试</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">T:  Bus=01 Lev=01 Prnt=01 Port=08 Cnt=03 Dev#= 40 Spd=480  MxCh= 0</span><br><span class="line">D:  Ver= 2.00 Cls=00(&gt;ifc ) Sub=00 Prot=00 MxPS=64 #Cfgs=  1</span><br><span class="line">P:  Vendor=18d1 ProdID=4ee0 Rev= 4.19</span><br><span class="line">S:  Manufacturer=Xiaomi</span><br><span class="line">S:  Product=Umi</span><br><span class="line">S:  SerialNumber=4e80ec52</span><br><span class="line">C:* #Ifs= 1 Cfg#= 1 Atr=80 MxPwr=500mA</span><br><span class="line">I:* If#= 0 Alt= 0 #EPs= 2 Cls=ff(vend.) Sub=42 Prot=03 Driver=(none)</span><br><span class="line">E:  Ad=01(O) Atr=02(Bulk) MxPS= 512 Ivl=0ms</span><br><span class="line">E:  Ad=81(I) Atr=02(Bulk) MxPS= 512 Ivl=0ms</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">打包recovery的ramdisk</span></span><br><span class="line">out/host/linux-x86/bin/mkbootfs -d out/target/product/umi/system out/target/product/umi/recovery/root | out/host/linux-x86/bin/minigzip &gt; out/target/product/umi/ramdisk-recovery.img</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">打包recovery.img</span></span><br><span class="line">out/host/linux-x86/bin/mkbootfs -d out/target/product/umi/system out/target/product/umi/recovery/root | out/host/linux-x86/bin/minigzip &gt; out/target/product/umi/ramdisk-recovery.img &amp;&amp; out/host/linux-x86/bin/mkbootimg  --kernel out/target/product/umi/kernel  --ramdisk out/target/product/umi/ramdisk-recovery.img --cmdline &quot;console=ttyMSM0,115200n8 androidboot.hardware=qcom androidboot.console=ttyMSM0 androidboot.memcg=1 lpm_levels.sleep_disabled=1 video=vfb:640x400,bpp=32,memsize=3072000 msm_rtb.filter=0x237 service_locator.enable=1 androidboot.usbcontroller=a600000.dwc3 swiotlb=2048 loop.max_part=7 cgroup.memory=nokmem,nosocket reboot=panic_warm androidboot.selinux=permissive androidboot.usbconfigfs=true&quot; --base 0x00000000 --pagesize 4096 --recovery_dtbo out/target/product/umi/prebuilt_dtbo.img --dtb out/target/product/umi/dtb.img --os_version 10 --os_patch_level 2019-09-05 --header_version 2 --output  out/target/product/umi/recovery.img</span><br></pre></td></tr></table></figure>
+
+<p>OTA测试环境OTA地址</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://husky.pt.miui.com/buildFile/miui_UMI_9.9.20_f2a2d4cc2d_10.0.zip</span><br></pre></td></tr></table></figure>
+
+<h2 id="1-关于hidl-service"><a href="#1-关于hidl-service" class="headerlink" title="1. 关于hidl service"></a>1. 关于hidl service</h2><h3 id="1-1-hal简介"><a href="#1-1-hal简介" class="headerlink" title="1.1. hal简介"></a>1.1. hal简介</h3><p>HAL 接口定义语言（简称 HIDL，发音为“hide-l”）是用于指定 HAL 和其用户之间的接口的一种接口描述语言. 用于进程间通信.分为直通式(passthrough)和绑定式(binderized)</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2019/11/12/OTA%E7%9B%B8%E5%85%B3/Q%20recovery%20fastboot%E8%B0%83%E8%AF%95/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/11/12/OTA%E7%9B%B8%E5%85%B3/Q%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E8%B0%83%E7%A0%94/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2019/11/12/OTA%E7%9B%B8%E5%85%B3/Q%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E8%B0%83%E7%A0%94/" class="post-title-link" itemprop="url">Q动态分区调研</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-11-12 18:15:54" itemprop="dateCreated datePublished" datetime="2019-11-12T18:15:54+08:00">2019-11-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 15:22:45" itemprop="dateModified" datetime="2024-04-16T15:22:45+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2019/11/12/OTA%E7%9B%B8%E5%85%B3/Q%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E8%B0%83%E7%A0%94/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2019/11/12/OTA%E7%9B%B8%E5%85%B3/Q%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E8%B0%83%E7%A0%94/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="1-Q动态分区调研"><a href="#1-Q动态分区调研" class="headerlink" title="1. Q动态分区调研"></a>1. Q动态分区调研</h1><h2 id="1-1-相关文档"><a href="#1-1-相关文档" class="headerlink" title="1.1. 相关文档"></a>1.1. 相关文档</h2><p> [Android Bootcamp 2019 - Dynamic Partitions in Q (go_android-dynamic-partitions-slides).pdf](..&#x2F;..&#x2F;..&#x2F;google_document&#x2F;Android Bootcamp 2019 - Dynamic Partitions in Q (go_android-dynamic-partitions-slides).pdf) </p>
+<p> <a href="../../../google_document/06._Dynamic_Partitions_-_LPC_Android_MC_v2.pdf">06.<em>Dynamic_Partitions</em>-_LPC_Android_MC_v2.pdf</a> </p>
+<h2 id="1-2-代码路径"><a href="#1-2-代码路径" class="headerlink" title="1.2. 代码路径"></a>1.2. 代码路径</h2><p>bootable&#x2F;recovery&#x2F;updater&#x2F; <a href="../../../../work_space/q9/bootable/recovery/updater/dynamic_partitions.cpp">dynamic_partitions.cpp</a> </p>
+<p>system&#x2F;core&#x2F;fs_mgr&#x2F; <a href="/home/mi/work_space/q9/system/core/fs_mgr/liblp">liblp</a></p>
+<p>system&#x2F;core&#x2F;fastboot&#x2F;device  <a href="/home/mi/work_space/q9/system/core/fastboot/device">fastbootd</a></p>
+<p>build&#x2F;core&#x2F;Makefile</p>
+<h2 id="1-3-宏配置"><a href="#1-3-宏配置" class="headerlink" title="1.3. 宏配置"></a>1.3. 宏配置</h2>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2019/11/12/OTA%E7%9B%B8%E5%85%B3/Q%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E8%B0%83%E7%A0%94/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/11/12/OTA%E7%9B%B8%E5%85%B3/AB%E8%B0%83%E8%AF%95%E7%AC%94%E8%AE%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2019/11/12/OTA%E7%9B%B8%E5%85%B3/AB%E8%B0%83%E8%AF%95%E7%AC%94%E8%AE%B0/" class="post-title-link" itemprop="url">AB调试笔记</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-11-12 18:15:54" itemprop="dateCreated datePublished" datetime="2019-11-12T18:15:54+08:00">2019-11-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 16:41:13" itemprop="dateModified" datetime="2024-04-16T16:41:13+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/OTA/" itemprop="url" rel="index"><span itemprop="name">OTA</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2019/11/12/OTA%E7%9B%B8%E5%85%B3/AB%E8%B0%83%E8%AF%95%E7%AC%94%E8%AE%B0/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2019/11/12/OTA%E7%9B%B8%E5%85%B3/AB%E8%B0%83%E8%AF%95%E7%AC%94%E8%AE%B0/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="AB调试笔记"><a href="#AB调试笔记" class="headerlink" title="AB调试笔记"></a>AB调试笔记</h1><p>基于androidP base.</p>
+<h2 id="相关文档"><a href="#相关文档" class="headerlink" title="相关文档"></a>相关文档</h2><h3 id="官方文档"><a href="#官方文档" class="headerlink" title="官方文档"></a>官方文档</h3><p><a target="_blank" rel="noopener" href="https://source.android.com/devices/tech/ota/ab">AB官方文档</a></p>
+<p>在启用了 A&#x2F;B 的设备上，可以在后台对应用进行编译，以更新到新的系统映像。如需在系统映像中选择性地加入编译脚本和二进制文件，请参阅在后台编译应用。</p>
+<p><a target="_blank" rel="noopener" href="https://source.android.com/devices/tech/dalvik/configure.html#other_odex">preopt相关</a></p>
+<p><a target="_blank" rel="noopener" href="https://source.android.com/devices/tech/ota/ab_updates.html#compilation">AB 系统更新概括</a></p>
+<p><a target="_blank" rel="noopener" href="https://source.android.com/devices/tech/ota/ab_implement.html">AB配置</a><a target="_blank" rel="noopener" href="https://source.android.com/devices/tech/ota/ab_implement.html">https://source.android.com/devices/tech/ota/ab_implement.html</a>)</p>
+<h3 id="第三方文档"><a href="#第三方文档" class="headerlink" title="第三方文档"></a>第三方文档</h3>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2019/11/12/OTA%E7%9B%B8%E5%85%B3/AB%E8%B0%83%E8%AF%95%E7%AC%94%E8%AE%B0/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/11/12/OTA%E7%9B%B8%E5%85%B3/log%E5%88%86%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2019/11/12/OTA%E7%9B%B8%E5%85%B3/log%E5%88%86%E6%9E%90/" class="post-title-link" itemprop="url">小米手机抓log</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-11-12 18:15:54" itemprop="dateCreated datePublished" datetime="2019-11-12T18:15:54+08:00">2019-11-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 17:31:34" itemprop="dateModified" datetime="2024-04-16T17:31:34+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2019/11/12/OTA%E7%9B%B8%E5%85%B3/log%E5%88%86%E6%9E%90/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2019/11/12/OTA%E7%9B%B8%E5%85%B3/log%E5%88%86%E6%9E%90/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="log分析"><a href="#log分析" class="headerlink" title="log分析"></a>log分析</h1><p>抓串口log方式</p>
+<h2 id="打开串口log-通过串口线获取"><a href="#打开串口log-通过串口线获取" class="headerlink" title="打开串口log, 通过串口线获取"></a>打开串口log, 通过串口线获取</h2><p>使用fastboot oem uart-enable 打开串口log<br>minicom -c on -C <log> 抓取log.</log></p>
+<blockquote>
+<p>注意波特率要设置正确, 可以问下相关的底层或适配组的同事. 如果波特率不对, 可能窗口没有<strong>任何输出</strong>或输出<strong>乱码</strong></p>
+</blockquote>
+<h2 id="logfs获取"><a href="#logfs获取" class="headerlink" title="logfs获取"></a>logfs获取</h2><p>会保存最近5份开机(包括recovery子系统)的串口log</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mount /dev/block/bootdevice/by-name/logfs /data/log</span><br></pre></td></tr></table></figure>
+
+<h2 id="获取kernel-log"><a href="#获取kernel-log" class="headerlink" title="获取kernel log"></a>获取kernel log</h2><p>高通sm8250平台可以通过电量下+电源键(长按3s)进入ramdump模式<br>进入后, 连接qpst工具抓取即可. kernel log会优先输出</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2019/11/12/OTA%E7%9B%B8%E5%85%B3/log%E5%88%86%E6%9E%90/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/11/12/OTA%E7%9B%B8%E5%85%B3/%E4%BC%98%E5%8C%96cache/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2019/11/12/OTA%E7%9B%B8%E5%85%B3/%E4%BC%98%E5%8C%96cache/" class="post-title-link" itemprop="url">优化cache</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-11-12 18:15:54" itemprop="dateCreated datePublished" datetime="2019-11-12T18:15:54+08:00">2019-11-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 15:15:56" itemprop="dateModified" datetime="2024-04-16T15:15:56+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/cache-%E5%88%86%E5%8C%BA/" itemprop="url" rel="index"><span itemprop="name">cache 分区</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/cache-%E5%88%86%E5%8C%BA/recovery/" itemprop="url" rel="index"><span itemprop="name">recovery</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2019/11/12/OTA%E7%9B%B8%E5%85%B3/%E4%BC%98%E5%8C%96cache/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2019/11/12/OTA%E7%9B%B8%E5%85%B3/%E4%BC%98%E5%8C%96cache/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="优化cache"><a href="#优化cache" class="headerlink" title="优化cache"></a>优化cache</h1><h2 id="cache文件系统损坏问题"><a href="#cache文件系统损坏问题" class="headerlink" title="cache文件系统损坏问题"></a>cache文件系统损坏问题</h2><p>因文件系统损坏, 可能导致可用空间信息不准确, 或cache空间变成一半.<br>开机加入强制check cache, 可以解决可用空间错误的问题.</p>
+<p><a target="_blank" rel="noopener" href="http://gerritlvs.pt.miui.com/#/c/641165/">http://gerritlvs.pt.miui.com/#/c/641165/</a></p>
+<h3 id="原生方案"><a href="#原生方案" class="headerlink" title="原生方案"></a>原生方案</h3><p>没有强制check cache. 开机阶段对cache分区进行检查, 如果出现过异常关机的情况, 会对cache分区进行修复.</p>
+<ul>
+<li>fstab中options配置了<strong>check</strong></li>
+<li>读取文件系统超级块信息时返回的状态是<strong>FS_STAT_UNCLEAN_SHUTDOWN</strong>或<strong>FS_STAT_QUOTA_ENABLED</strong></li>
+</ul>
+<blockquote>
+<p>FS_STAT_UNCLEAN_SHUTDOWN状态可以理解完出现了异常关机</p>
+<p>FS_STAT_QUOTA_ENABLED状态则是分区是否启用了磁盘配额机制</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">read_ext4_superblock</span>(blk_device, &amp;sb, &amp;fs_stat)</span><br><span class="line"><span class="comment">// fstab中options配置了check或者读取文件系统超级块信息时返回的状态是FS_STAT_UNCLEAN_SHUTDOWN或FS_STAT_QUOTA_ENABLED   </span></span><br><span class="line">    <span class="keyword">if</span> ((rec-&gt;fs_mgr_flags &amp; MF_CHECK) ||</span><br><span class="line">       (fs_stat &amp; (FS_STAT_UNCLEAN_SHUTDOWN | FS_STAT_QUOTA_ENABLED))) &#123;</span><br><span class="line">       <span class="built_in">check_fs</span>(blk_device, rec-&gt;fs_type, rec-&gt;mount_point, &amp;fs_stat, rec);</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="因cache文件系统损坏导致的recovery无法更新成功问题"><a href="#因cache文件系统损坏导致的recovery无法更新成功问题" class="headerlink" title="因cache文件系统损坏导致的recovery无法更新成功问题"></a>因cache文件系统损坏导致的recovery无法更新成功问题</h5>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2019/11/12/OTA%E7%9B%B8%E5%85%B3/%E4%BC%98%E5%8C%96cache/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/10/12/OTA%E7%9B%B8%E5%85%B3/keymaster%E8%A7%A3%E5%AF%86%E9%97%AE%E9%A2%98/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/keymaster%E8%A7%A3%E5%AF%86%E9%97%AE%E9%A2%98/" class="post-title-link" itemprop="url">设备bootloader上锁状态下1217无法工作问题分析1</a>
         </h2>
 
         <div class="post-meta">
@@ -386,7 +1217,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-16 15:10:37" itemprop="dateModified" datetime="2024-04-16T15:10:37+08:00">2024-04-16</time>
+                <time title="修改时间：2024-04-16 17:35:48" itemprop="dateModified" datetime="2024-04-16T17:35:48+08:00">2024-04-16</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -411,8 +1242,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E8%AE%BE%E5%A4%87%E4%B8%8A%E9%94%81%E7%8A%B6%E6%80%81%E4%B8%8B1217%E6%97%A0%E6%B3%95%E5%B7%A5%E4%BD%9C%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E8%AE%BE%E5%A4%87%E4%B8%8A%E9%94%81%E7%8A%B6%E6%80%81%E4%B8%8B1217%E6%97%A0%E6%B3%95%E5%B7%A5%E4%BD%9C%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90/" itemprop="commentCount"></span>
+    <a title="valine" href="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/keymaster%E8%A7%A3%E5%AF%86%E9%97%AE%E9%A2%98/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/keymaster%E8%A7%A3%E5%AF%86%E9%97%AE%E9%A2%98/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -428,861 +1259,13 @@
 
       
           <h1 id="设备bootloader上锁状态下1217无法工作问题分析"><a href="#设备bootloader上锁状态下1217无法工作问题分析" class="headerlink" title="设备bootloader上锁状态下1217无法工作问题分析"></a>设备bootloader上锁状态下1217无法工作问题分析</h1><h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>前面讲到r上6月份升级基线后, 因KM TA date support的升级导致recovery下无法正常使用解密服务.</p>
-<p>当时的方案是配置recovery vbmeta区域的 prop <code>--prop com.android.build.boot.security_patch:2020-06-05</code><br>从而在bootimg_hdr不支持识别date 信息的情况下, 可以在reocovery模式下bootloader能够读到天的信息, 并传给KM TA.</p>
+<p>当时的方案是配置recovery vbmeta区域的 prop <code>--prop com.android.build.boot.security_patch:2020-06-05 </code></p>
+<p>从而在bootimg_hdr不支持识别date 信息的情况下, 可以在reocovery模式下bootloader能够读到天的信息, 并传给KM TA.</p>
 <h2 id="新问题"><a href="#新问题" class="headerlink" title="新问题"></a>新问题</h2><p>最近测试在复测该问题时, 发现手机bootloader上锁状态下, 无法执行1217功能. 因此需要重新分析下这个问题的原因.</p>
-<h2 id="locked-状态下的调试"><a href="#locked-状态下的调试" class="headerlink" title="locked 状态下的调试"></a>locked 状态下的调试</h2><h3 id="debug-abl的方法"><a href="#debug-abl的方法" class="headerlink" title="debug abl的方法"></a>debug abl的方法</h3><h4 id="locked状态下的限制"><a href="#locked状态下的限制" class="headerlink" title="locked状态下的限制"></a>locked状态下的限制</h4><p>首先, 小米机器locked 状态有如下限制:</p>
+<h2 id="locked-状态下的调试"><a href="#locked-状态下的调试" class="headerlink" title="locked 状态下的调试"></a>locked 状态下的调试</h2><h3 id="debug-abl的方法"><a href="#debug-abl的方法" class="headerlink" title="debug abl的方法"></a>debug abl的方法</h3><h4 id="locked状态下的限制"><a href="#locked状态下的限制" class="headerlink" title="locked状态下的限制"></a>locked状态下的限制</h4>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E8%AE%BE%E5%A4%87%E4%B8%8A%E9%94%81%E7%8A%B6%E6%80%81%E4%B8%8B1217%E6%97%A0%E6%B3%95%E5%B7%A5%E4%BD%9C%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/10/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/%E5%BC%80%E6%9C%BAlog%E7%9B%B8%E5%85%B3/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2019/10/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/%E5%BC%80%E6%9C%BAlog%E7%9B%B8%E5%85%B3/" class="post-title-link" itemprop="url">小米开机log相关</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2019-10-01 00:00:00" itemprop="dateCreated datePublished" datetime="2019-10-01T00:00:00+08:00">2019-10-01</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-15 18:49:09" itemprop="dateModified" datetime="2024-04-15T18:49:09+08:00">2024-04-15</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/log/" itemprop="url" rel="index"><span itemprop="name">log</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2019/10/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/%E5%BC%80%E6%9C%BAlog%E7%9B%B8%E5%85%B3/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2019/10/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/%E5%BC%80%E6%9C%BAlog%E7%9B%B8%E5%85%B3/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="1-开机log相关"><a href="#1-开机log相关" class="headerlink" title="1. 开机log相关"></a>1. 开机log相关</h1><h2 id="1-1-抓取log的方式"><a href="#1-1-抓取log的方式" class="headerlink" title="1.1. 抓取log的方式"></a>1.1. 抓取log的方式</h2><h3 id="1-1-1-通过rec-overy抓取ota的log"><a href="#1-1-1-通过rec-overy抓取ota的log" class="headerlink" title="1.1.1. 通过rec overy抓取ota的log"></a>1.1.1. 通过rec overy抓取ota的log</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">@startuml</span><br><span class="line">-设置</span><br><span class="line">-系统更新</span><br><span class="line">-菜单(重启到recovery)</span><br><span class="line">note right</span><br><span class="line">稳定版本需要连续点击logo</span><br><span class="line">才会出现菜单项</span><br><span class="line">end note</span><br><span class="line">-系统重启到recovery模式</span><br><span class="line">-选择连接小米助手</span><br><span class="line">- pc端执行 adb pull /cache/ .</span><br><span class="line">@enduml</span><br></pre></td></tr></table></figure>
-
-<h4 id="1-1-1-1-抓取的log分析"><a href="#1-1-1-1-抓取的log分析" class="headerlink" title="1.1.1.1. 抓取的log分析"></a>1.1.1.1. 抓取的log分析</h4><p><code>/cache/recovery/</code>下面是ota升级相关的log日志<br><code>/cache/mqsas</code>下是重启到recovery模式前主系统最后保存的日志</p>
-<h3 id="1-1-2-主系统的日志"><a href="#1-1-2-主系统的日志" class="headerlink" title="1.1.2. 主系统的日志"></a>1.1.2. 主系统的日志</h3><p>如果adb 可以连接, 可查看的log信息<br>&#96;adblog</p>
-<p>&#96;cat</p>
-
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2019/10/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/%E5%BC%80%E6%9C%BAlog%E7%9B%B8%E5%85%B3/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/09/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/github/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2019/09/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/github/" class="post-title-link" itemprop="url">github 加速</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2019-09-20 10:00:01" itemprop="dateCreated datePublished" datetime="2019-09-20T10:00:01+08:00">2019-09-20</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-15 18:55:47" itemprop="dateModified" datetime="2024-04-15T18:55:47+08:00">2024-04-15</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/debug/" itemprop="url" rel="index"><span itemprop="name">debug</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2019/09/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/github/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2019/09/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/github/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="github-加速"><a href="#github-加速" class="headerlink" title="github 加速"></a>github 加速</h1><p>git 仓库地址中的<code>github.com</code>变成<span style="color: green"><code>github.com.cnpmjs.org</code></span></p>
-<p>git clone <a target="_blank" rel="noopener" href="https://github.com.cnpmjs.org/SpencerPark/IJava.git">https://github.com.cnpmjs.org/SpencerPark/IJava.git</a></p>
-<h1 id="全局配置"><a href="#全局配置" class="headerlink" title="全局配置"></a>全局配置</h1><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git config --global url.<span class="string">&quot;https://github.com.cnpmjs.org/&quot;</span>.insteadOf <span class="string">&quot;https://github.com/&quot;</span></span><br></pre></td></tr></table></figure>
-
-
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2019/09/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/github/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/09/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/vscode%E8%B0%83%E8%AF%95c++/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2019/09/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/vscode%E8%B0%83%E8%AF%95c++/" class="post-title-link" itemprop="url">vscode 调试 C++</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2019-09-20 10:00:01" itemprop="dateCreated datePublished" datetime="2019-09-20T10:00:01+08:00">2019-09-20</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-15 18:56:35" itemprop="dateModified" datetime="2024-04-15T18:56:35+08:00">2024-04-15</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/debug/" itemprop="url" rel="index"><span itemprop="name">debug</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2019/09/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/vscode%E8%B0%83%E8%AF%95c++/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2019/09/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/vscode%E8%B0%83%E8%AF%95c++/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>添加配置, 设置.<br>launch脚本</p>
-<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">    <span class="comment">// 使用 IntelliSense 了解相关属性.</span></span><br><span class="line">    <span class="comment">// 悬停以查看现有属性的描述。</span></span><br><span class="line">    <span class="comment">// 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387</span></span><br><span class="line">    <span class="attr">&quot;version&quot;</span><span class="punctuation">:</span> <span class="string">&quot;0.2.0&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;configurations&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">        <span class="punctuation">&#123;</span></span><br><span class="line">            <span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;(gdb) Launch&quot;</span><span class="punctuation">,</span></span><br><span class="line">            <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;cppdbg&quot;</span><span class="punctuation">,</span></span><br><span class="line">            <span class="attr">&quot;request&quot;</span><span class="punctuation">:</span> <span class="string">&quot;launch&quot;</span><span class="punctuation">,</span></span><br><span class="line">            <span class="attr">&quot;program&quot;</span><span class="punctuation">:</span> <span class="string">&quot;$&#123;workspaceRoot&#125;/bin/main&quot;</span><span class="punctuation">,</span></span><br><span class="line">            <span class="attr">&quot;args&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">            <span class="attr">&quot;stopAtEntry&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">false</span></span><span class="punctuation">,</span></span><br><span class="line">            <span class="attr">&quot;cwd&quot;</span><span class="punctuation">:</span> <span class="string">&quot;$&#123;workspaceRoot&#125;&quot;</span><span class="punctuation">,</span></span><br><span class="line">            <span class="attr">&quot;environment&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">            <span class="attr">&quot;externalConsole&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">false</span></span><span class="punctuation">,</span></span><br><span class="line">            <span class="attr">&quot;MIMode&quot;</span><span class="punctuation">:</span> <span class="string">&quot;gdb&quot;</span><span class="punctuation">,</span></span><br><span class="line">            <span class="attr">&quot;preLaunchTask&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Build&quot;</span><span class="punctuation">,</span></span><br><span class="line">            <span class="attr">&quot;setupCommands&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">                <span class="punctuation">&#123;</span></span><br><span class="line">                    <span class="attr">&quot;description&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Enable pretty-printing for gdb&quot;</span><span class="punctuation">,</span></span><br><span class="line">                    <span class="attr">&quot;text&quot;</span><span class="punctuation">:</span> <span class="string">&quot;-enable-pretty-printing&quot;</span><span class="punctuation">,</span></span><br><span class="line">                    <span class="attr">&quot;ignoreFailures&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span></span><br><span class="line">                <span class="punctuation">&#125;</span></span><br><span class="line">            <span class="punctuation">]</span></span><br><span class="line">        <span class="punctuation">&#125;</span></span><br><span class="line">    <span class="punctuation">]</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-<p>其中的task脚本</p>
-<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">    <span class="comment">// See https://go.microsoft.com/fwlink/?LinkId=733558</span></span><br><span class="line">    <span class="comment">// for the documentation about the tasks.json format</span></span><br><span class="line">    <span class="attr">&quot;version&quot;</span><span class="punctuation">:</span> <span class="string">&quot;2.0.0&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="punctuation">&#123;</span></span><br><span class="line">        <span class="comment">// See https://go.microsoft.com/fwlink/?LinkId=733558</span></span><br><span class="line">        <span class="comment">// for the documentation about the tasks.json format</span></span><br><span class="line">        <span class="attr">&quot;version&quot;</span><span class="punctuation">:</span> <span class="string">&quot;2.0.0&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;tasks&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">            <span class="punctuation">&#123;</span></span><br><span class="line">                <span class="attr">&quot;taskname&quot;</span><span class="punctuation">:</span> <span class="string">&quot;build&quot;</span><span class="punctuation">,</span></span><br><span class="line">                <span class="attr">&quot;label&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Build&quot;</span><span class="punctuation">,</span></span><br><span class="line">                <span class="attr">&quot;command&quot;</span><span class="punctuation">:</span> <span class="string">&quot;g++-5&quot;</span><span class="punctuation">,</span></span><br><span class="line">                <span class="attr">&quot;args&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">                    <span class="string">&quot;-g&quot;</span><span class="punctuation">,</span></span><br><span class="line">                    <span class="string">&quot;-Wall&quot;</span><span class="punctuation">,</span></span><br><span class="line">                    <span class="string">&quot;-std=c++14&quot;</span><span class="punctuation">,</span></span><br><span class="line">                    <span class="string">&quot;$&#123;file&#125;&quot;</span><span class="punctuation">,</span></span><br><span class="line">                    <span class="string">&quot;-lpthread&quot;</span><span class="punctuation">,</span></span><br><span class="line">                    <span class="string">&quot;-o&quot;</span><span class="punctuation">,</span></span><br><span class="line">                    <span class="string">&quot;$&#123;workspaceRoot&#125;/bin/main&quot;</span></span><br><span class="line">                <span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">                <span class="attr">&quot;problemMatcher&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">                    <span class="attr">&quot;owner&quot;</span><span class="punctuation">:</span> <span class="string">&quot;cpp&quot;</span><span class="punctuation">,</span></span><br><span class="line">                    <span class="attr">&quot;fileLocation&quot;</span><span class="punctuation">:</span> <span class="string">&quot;absolute&quot;</span><span class="punctuation">,</span></span><br><span class="line">                    <span class="attr">&quot;pattern&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">                        <span class="attr">&quot;regexp&quot;</span><span class="punctuation">:</span> <span class="string">&quot;^(.*):(\\d+):(\\d+):\\s+(error):\\s+(.*)$&quot;</span><span class="punctuation">,</span></span><br><span class="line">                        <span class="attr">&quot;file&quot;</span><span class="punctuation">:</span> <span class="number">1</span><span class="punctuation">,</span></span><br><span class="line">                        <span class="attr">&quot;line&quot;</span><span class="punctuation">:</span> <span class="number">2</span><span class="punctuation">,</span></span><br><span class="line">                        <span class="attr">&quot;column&quot;</span><span class="punctuation">:</span> <span class="number">3</span><span class="punctuation">,</span></span><br><span class="line">                        <span class="attr">&quot;severity&quot;</span><span class="punctuation">:</span> <span class="number">4</span><span class="punctuation">,</span></span><br><span class="line">                        <span class="attr">&quot;message&quot;</span><span class="punctuation">:</span> <span class="number">5</span></span><br><span class="line">                    <span class="punctuation">&#125;</span></span><br><span class="line">                <span class="punctuation">&#125;</span></span><br><span class="line">            <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">            <span class="punctuation">&#123;</span></span><br><span class="line">                <span class="attr">&quot;label&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Run&quot;</span><span class="punctuation">,</span></span><br><span class="line">                <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;shell&quot;</span><span class="punctuation">,</span></span><br><span class="line">                <span class="attr">&quot;dependsOn&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Build&quot;</span><span class="punctuation">,</span></span><br><span class="line">                <span class="attr">&quot;command&quot;</span><span class="punctuation">:</span> <span class="string">&quot;$&#123;workspaceRoot&#125;/bin/main&quot;</span><span class="punctuation">,</span></span><br><span class="line">                <span class="attr">&quot;args&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">                <span class="attr">&quot;presentation&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">                    <span class="attr">&quot;reveal&quot;</span><span class="punctuation">:</span> <span class="string">&quot;always&quot;</span><span class="punctuation">,</span></span><br><span class="line">                    <span class="attr">&quot;focus&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span></span><br><span class="line">                <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">                <span class="attr">&quot;problemMatcher&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">                <span class="attr">&quot;group&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">                    <span class="attr">&quot;kind&quot;</span><span class="punctuation">:</span> <span class="string">&quot;test&quot;</span><span class="punctuation">,</span></span><br><span class="line">                    <span class="attr">&quot;isDefault&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span></span><br><span class="line">                <span class="punctuation">&#125;</span></span><br><span class="line">            <span class="punctuation">&#125;</span></span><br><span class="line">        <span class="punctuation">]</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-
-<p>其中build部分可以替换为makefile. 如果是多文件编译, 可以使用make all命令, 编译单一cpp(含main)的文件, 使用make $(file)进行替换.</p>
-<figure class="highlight make"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 描述： multifile 项目 makefile文件</span></span><br><span class="line"><span class="comment"># 版本： v2.0</span></span><br><span class="line"><span class="comment"># 修改记录:  1.先测试普通的cpp文件的编译运行</span></span><br><span class="line"><span class="comment">#           2.使用变量来改进我们的makefile文件</span></span><br><span class="line"><span class="comment">#           3.新加了一个源文件</span></span><br><span class="line"><span class="comment">#           4.使用伪目标，加上clean规则</span></span><br><span class="line"><span class="comment">#           5.使用wildcard函数，自动扫描当前目录下的源文件</span></span><br><span class="line"><span class="comment">#           6.加入了自动规则依赖</span></span><br><span class="line"><span class="comment">#           7.实现了opencv程序的编译</span></span><br><span class="line"><span class="comment"># 定义了可执行文件变量</span></span><br><span class="line">BIN := bin</span><br><span class="line">OUT := out</span><br><span class="line">CFLAGS := -std=c++14</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 传递了文件参数</span></span><br><span class="line">FILE := <span class="variable">$(FILE)</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义了源文件列表变量</span></span><br><span class="line"><span class="keyword">ifeq</span> (<span class="variable">$(<span class="built_in">strip</span> <span class="variable">$(FILE)</span>)</span>, )</span><br><span class="line">sources := <span class="variable">$(<span class="built_in">wildcard</span> *.cpp)</span></span><br><span class="line">target:= all</span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">sources := <span class="variable">$(FILE)</span></span><br><span class="line">target:=<span class="variable">$(<span class="built_in">notdir</span> $(<span class="built_in">basename</span> <span class="variable">$(sources)</span>)</span>)</span><br><span class="line"><span class="keyword">endif</span></span><br><span class="line"></span><br><span class="line">executable  := <span class="variable">$(BIN)</span>/<span class="variable">$(target)</span></span><br><span class="line">executable_main := <span class="variable">$(BIN)</span>/main</span><br><span class="line"></span><br><span class="line">SRC := <span class="variable">$(<span class="built_in">notdir</span> <span class="variable">$(sources)</span>)</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 使用变量的引用替换，定义了object文件列表</span></span><br><span class="line">objects := <span class="variable">$(<span class="built_in">addprefix</span> <span class="variable">$(OUT)</span>/,  $(SRC:.cpp=.o)</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 使用变量引用替换，定义依赖文件列表</span></span><br><span class="line">deps    := $(SRC:.cpp=.d)</span><br><span class="line"><span class="comment"># 定义编译命令变量</span></span><br><span class="line">CC  := g++-5</span><br><span class="line">rm  := rm -rf</span><br><span class="line"></span><br><span class="line"><span class="comment">#需要调用的链接库</span></span><br><span class="line">LIBS := -lpthread</span><br><span class="line"></span><br><span class="line"><span class="comment"># 头文件路径</span></span><br><span class="line">INCLUDE := -I.</span><br><span class="line"></span><br><span class="line"><span class="comment"># 链接库路径</span></span><br><span class="line">LDFLAGS := -L/usr/local/lib</span><br><span class="line"><span class="comment"># 终极目标规则，生成可执行文件</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="variable">$(executable)</span> : <span class="variable">$(objects)</span></span><br><span class="line">	-mkdir bin</span><br><span class="line">	<span class="variable">$(CC)</span> <span class="variable">$(CFLAGS)</span> -o <span class="variable">$@</span> <span class="variable">$^</span> <span class="variable">$(LDFLAGS)</span> <span class="variable">$(LIBS)</span></span><br><span class="line">	mv <span class="variable">$(executable)</span> <span class="variable">$(executable_main)</span></span><br><span class="line"></span><br><span class="line"><span class="variable">$(objects)</span>: %.o: <span class="variable">$(sources)</span></span><br><span class="line">	-mkdir <span class="variable">$(OUT)</span></span><br><span class="line">	<span class="variable">$(CC)</span> <span class="variable">$(CFLAGS)</span> -o <span class="variable">$@</span> -c <span class="variable">$&lt;</span> <span class="variable">$(INCLUDE)</span></span><br><span class="line"></span><br><span class="line">all : <span class="variable">$(executable)</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">#clean规则</span></span><br><span class="line"><span class="meta"><span class="keyword">.PHONY</span>: clean</span></span><br><span class="line"><span class="section">clean:</span></span><br><span class="line"><span class="comment">#清除编译生成的所有文件</span></span><br><span class="line"><span class="comment">#$(RM) $(executable) $(objects) $(deps)</span></span><br><span class="line"><span class="comment">#清除编译生成的所有文件,不包括可执行文件</span></span><br><span class="line">	<span class="variable">$(RM)</span> <span class="variable">$(objects)</span> <span class="variable">$(deps)</span> <span class="variable">$(executable)</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 自动规则依赖</span></span><br><span class="line">deps := <span class="variable">$(<span class="built_in">addprefix</span> <span class="variable">$(OUT)</span>/, $(SRC:.cpp=.d)</span>)</span><br><span class="line"><span class="keyword">sinclude</span> <span class="variable">$(deps)</span></span><br><span class="line"><span class="variable">$(deps)</span>: %.d: <span class="variable">$(sources)</span></span><br><span class="line">	<span class="variable">$(CC)</span> -MM <span class="variable">$(CFLAGS)</span> <span class="variable">$&lt;</span> &gt; <span class="variable">$@</span></span><br></pre></td></tr></table></figure>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2019/09/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/vscode%E8%B0%83%E8%AF%95c++/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/09/12/OTA%E7%9B%B8%E5%85%B3/%E7%BC%96%E8%AF%91%E7%9B%B8%E5%85%B3/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2019/09/12/OTA%E7%9B%B8%E5%85%B3/%E7%BC%96%E8%AF%91%E7%9B%B8%E5%85%B3/" class="post-title-link" itemprop="url">Android bp 编译相关</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2019-09-12 18:15:54" itemprop="dateCreated datePublished" datetime="2019-09-12T18:15:54+08:00">2019-09-12</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-16 15:07:08" itemprop="dateModified" datetime="2024-04-16T15:07:08+08:00">2024-04-16</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2019/09/12/OTA%E7%9B%B8%E5%85%B3/%E7%BC%96%E8%AF%91%E7%9B%B8%E5%85%B3/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2019/09/12/OTA%E7%9B%B8%E5%85%B3/%E7%BC%96%E8%AF%91%E7%9B%B8%E5%85%B3/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="1-编译相关"><a href="#1-编译相关" class="headerlink" title="1. 编译相关"></a>1. 编译相关</h1><h2 id="1-1-bp-makefile通用规则"><a href="#1-1-bp-makefile通用规则" class="headerlink" title="1.1. bp makefile通用规则"></a>1.1. bp makefile通用规则</h2><p>编译规则:</p>
-<ul>
-<li>bp 可以引用bp定义的module</li>
-<li>bp不能引用mk定义的module</li>
-<li>mk可以引用mk和bp定义的module</li>
-</ul>
-<p>传统的写法下, bp中不能引用外部的make定义的变量</p>
-<p>可以借助原生文件的写法, 在soong_config.mk中引用mk文件<br>build&#x2F;core&#x2F;soong_config.mk<br>    –include miui&#x2F;build&#x2F;soong&#x2F;import_miui_soong_vars.mk</p>
-<p>在mk文件中可以加bp规则的hook</p>
-<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">ifeq</span> (true,<span class="variable">$(ENABLE_MIUI_DEBUGGING)</span>)</span><br><span class="line">_adb_local_cflags := -UALLOW_ADBD_ROOT -DALLOW_ADBD_ROOT=1 -DALLOW_ADBD_DISABLE_VERITY -DALLOW_ADBD_NO_AUTH</span><br><span class="line"><span class="variable">$(<span class="built_in">call</span> add_additional_soong_var, adbd_defaults, cflags, <span class="variable">$(_adb_local_cflags)</span>)</span></span><br><span class="line"><span class="keyword">endif</span></span><br></pre></td></tr></table></figure>
-<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">cc_defaults &#123;</span><br><span class="line">    name: <span class="string">&quot;adbd_defaults&quot;</span>,</span><br><span class="line">    defaults: [<span class="string">&quot;adb_defaults&quot;</span>],</span><br><span class="line"></span><br><span class="line">    cflags: [<span class="string">&quot;-UADB_HOST&quot;</span>, <span class="string">&quot;-DADB_HOST=0&quot;</span>],</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">cc_library &#123;</span><br><span class="line">    name: <span class="string">&quot;libadbd&quot;</span>,</span><br><span class="line">    defaults: [<span class="string">&quot;adbd_defaults&quot;</span>, <span class="string">&quot;host_adbd_supported&quot;</span>],</span><br><span class="line">    recovery_available: <span class="literal">true</span>,</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p>参照上述写法, 可以在bp中引用外部的mk变量</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2019/09/12/OTA%E7%9B%B8%E5%85%B3/%E7%BC%96%E8%AF%91%E7%9B%B8%E5%85%B3/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/08/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/gdb%20stl%E6%94%AF%E6%8C%81/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2019/08/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/gdb%20stl%E6%94%AF%E6%8C%81/" class="post-title-link" itemprop="url">Android AOSP gdb stl 支持</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2019-08-20 10:00:01" itemprop="dateCreated datePublished" datetime="2019-08-20T10:00:01+08:00">2019-08-20</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-15 18:55:11" itemprop="dateModified" datetime="2024-04-15T18:55:11+08:00">2024-04-15</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/debug/" itemprop="url" rel="index"><span itemprop="name">debug</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2019/08/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/gdb%20stl%E6%94%AF%E6%8C%81/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2019/08/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/gdb%20stl%E6%94%AF%E6%8C%81/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="Android-AOSP-gdb-stl-支持"><a href="#Android-AOSP-gdb-stl-支持" class="headerlink" title="Android AOSP gdb stl 支持"></a>Android AOSP gdb stl 支持</h1><p>默认情况下不支持stl 输出, 需要gdb支持python脚本, 一般需要自己编译.</p>
-<ol>
-<li><p>下载编译python3.x 源码:</p>
- <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">curl -O https://www.python.org/ftp/python/3.8.1/Python-3.8.1.tar.xz</span><br><span class="line">cd Python-3.8.1</span><br><span class="line">mkdir build</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">prefix 是指定安装目录, 也可指到任一目录, 因为这里只用到编译python时生成的临时文件</span></span><br><span class="line">../configure --prefix=~/Programs/python3 --enable-optimizations --enable-shared</span><br><span class="line">make</span><br><span class="line">make install</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>下载编译gdb源码:</p>
-<p> <a target="_blank" rel="noopener" href="https://ftp.gnu.org/gnu/gdb/gdb-9.2.tar.xz">https://ftp.gnu.org/gnu/gdb/gdb-9.2.tar.xz</a></p>
-<p> 这个链接有点慢, 可以直接下附件中的</p>
- <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">tar gdb-9.2.tar.xz</span><br><span class="line">mkdir build</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">prefix 是安装目录, with-python选项的路径填上一步编译python的build路径</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">arm64</span></span><br><span class="line">../configure --target=aarch64-linux-android --prefix=/home/mi/Programs/gdb --enable-unicode=ucs4 --with-python=/home/mi/Programs/Python-3.8.1/build</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">mips</span></span><br><span class="line">../configure --target=mips-mti-elf --prefix=/home/mi/program/mips-gdb --enable-unicode=ucs4 --with-python=/usr --with-auto-load-dir=$debugdir:$datadir/auto-load --with-auto-load-safe-path=$debugdir:$datadir/auto-load --with-expat --without-libunwind-ia64 --without-lzma --without-babeltrace --without-intel-pt --disable-libmcheck --without-mpfr --without-guile</span><br><span class="line">make</span><br><span class="line">make install</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>切换本地python版本为python3</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo rm /usr/bin/python; sudo ln -s /usr/bin/python3 /usr/bin/python;</span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>这里注意的点是xiaomi的code环境是依赖python2的, repo可以切到python2上, 将repo的第一行改成<code>#!/usr/bin/env python2 </code>即可, 但代码编译时, 有些模块在python3下会报错, 目前发现的有依赖kernel 模块的, 使用ninja都会报错. 所以最好在编译时将python版本切换到python2.</p>
-</blockquote>
-</li>
-<li><p>定制gdbinit</p>
-<p>android上废弃了stlport和gnustl的支持, 只支持libc++的方式集成stl.</p>
-<p>所以python解析脚本是基于libc++开发的, 这里提供一下github上的一个脚本</p>
-<p><a target="_blank" rel="noopener" href="https://github.com/koutheir/libcxx-pretty-printers">https://github.com/koutheir/libcxx-pretty-printers</a></p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git clone https://github.com/koutheir/libcxx-pretty-printers</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">python</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"><span class="comment">#路径填刚才clone到本地的, 指定到第一级src目录</span></span><br><span class="line">sys.path.insert(<span class="number">0</span>, <span class="string">&#x27;/home/mi/program/libcxx-pretty-printers/src&#x27;</span>)</span><br><span class="line"><span class="keyword">from</span> libcxx.v1.printers <span class="keyword">import</span> register_libcxx_printers</span><br><span class="line">register_libcxx_printers (<span class="literal">None</span>)</span><br><span class="line">end</span><br></pre></td></tr></table></figure>
-
-
-
-</li>
-<li><p>android编译module修改, Android.bp修改</p>
-<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"># 添加stl支持</span><br><span class="line">cflags<span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">        <span class="string">&quot;-O0&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">stl<span class="punctuation">:</span> <span class="string">&quot;c++_static&quot;</span><span class="punctuation">,</span> 或</span><br><span class="line">stl<span class="punctuation">:</span> <span class="string">&quot;c++_shared&quot;</span></span><br></pre></td></tr></table></figure>
-</li>
-<li><p>vscode 中使用gdb</p>
-<p>vscode的launch.json也要配置打开 pretty-printers, 对于remote调试感兴趣的可以看另一篇文档中的介绍</p>
-</li>
-</ol>
-  <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;version&quot;</span><span class="punctuation">:</span> <span class="string">&quot;0.2.0&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;configurations&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">      <span class="punctuation">&#123;</span></span><br><span class="line">          <span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;(gdb) Remote Launch&quot;</span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;cppdbg&quot;</span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;request&quot;</span><span class="punctuation">:</span> <span class="string">&quot;launch&quot;</span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;miDebuggerServerAddress&quot;</span><span class="punctuation">:</span> <span class="string">&quot;127.0.0.1:8888&quot;</span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;program&quot;</span><span class="punctuation">:</span> <span class="string">&quot;/home/mi/work_space/miui-r-umi-dev/out/target/product/cmi/symbols/system/bin/test_code_aaaaaaa&quot;</span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;args&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;stopAtEntry&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;cwd&quot;</span><span class="punctuation">:</span> <span class="string">&quot;$&#123;workspaceFolder&#125;&quot;</span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;environment&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;externalConsole&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;sourceFileMap&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">              <span class="attr">&quot;system/core/crypto_test&quot;</span><span class="punctuation">:</span> <span class="string">&quot;/home/mi/work_space/miui-r-umi-dev/system/core/test_code&quot;</span></span><br><span class="line">          <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;logging&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">              <span class="attr">&quot;trace&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">              <span class="attr">&quot;traceResponse&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">              <span class="attr">&quot;engineLogging&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">          <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;MIMode&quot;</span><span class="punctuation">:</span> <span class="string">&quot;gdb&quot;</span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;miDebuggerPath&quot;</span><span class="punctuation">:</span> <span class="string">&quot;/home/mi/Programs/gdb/bin/aarch64-linux-android-gdb&quot;</span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;setupCommands&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">            <span class="punctuation">&#123;</span></span><br><span class="line">            <span class="attr">&quot;description&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Enable pretty-printing for gdb&quot;</span><span class="punctuation">,</span></span><br><span class="line">            <span class="attr">&quot;text&quot;</span><span class="punctuation">:</span> <span class="string">&quot;-enable-pretty-printing&quot;</span><span class="punctuation">,</span></span><br><span class="line">            <span class="attr">&quot;ignoreFailures&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span></span><br><span class="line">            <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">          <span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">      <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">]</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-
-
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2019/08/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/gdb%20stl%E6%94%AF%E6%8C%81/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/08/12/OTA%E7%9B%B8%E5%85%B3/f2fs%20gc/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2019/08/12/OTA%E7%9B%B8%E5%85%B3/f2fs%20gc/" class="post-title-link" itemprop="url">f2fs gc</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2019-08-12 18:15:54" itemprop="dateCreated datePublished" datetime="2019-08-12T18:15:54+08:00">2019-08-12</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-16 18:07:15" itemprop="dateModified" datetime="2024-04-16T18:07:15+08:00">2024-04-16</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">文件系统</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2019/08/12/OTA%E7%9B%B8%E5%85%B3/f2fs%20gc/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2019/08/12/OTA%E7%9B%B8%E5%85%B3/f2fs%20gc/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>vnote_backup_file_826537664 &#x2F;home&#x2F;mi&#x2F;Documents&#x2F;backup&#x2F;VnoteBook&#x2F;OTA相关&#x2F;f2fs gc.md</p>
-<h1 id="1-f2fs-gc"><a href="#1-f2fs-gc" class="headerlink" title="1. f2fs gc"></a>1. f2fs gc</h1><p>do_garbage_collect<br>    -&gt; gc_data_segment<br>        -&gt; move_data_page<br>           -&gt; f2fs_pin_file_control<br>    -&gt; stat_inc_seg_count</p>
-<p>解密map</p>
-<p>umi:&#x2F;data&#x2F;media&#x2F;0&#x2F;downloaded_rom # sha1sum &#x2F;cache&#x2F;recovery&#x2F;block.map<br>a31f2e057e6a02fc64f55dedd3e69ed71c2c4821  &#x2F;cache&#x2F;recovery&#x2F;block.map</p>
-<p>初次解密后</p>
-<p>umi:&#x2F;data&#x2F;media&#x2F;0&#x2F;downloaded_rom # sha1sum miui_UMI_9.11.18_6d674ad5a9_10.0.zip<br>631b3f61f9ea85911d354c277c98f9fcdb56b0bc  miui_UMI_9.11.18_6d674ad5a9_10.0.zip</p>
-<p>recovery会更改?<br>-rw-rw-r– 1 media_rw media_rw 2594048280 2019-11-18 10:14 miui_UMI_9.11.18_6d674ad5a9_10.0.zip<br>sha1sum miui_UMI_9.11.18_6d674ad5a9_10.0.zip<br>parse_ld_lib_path (null)<br>6fcdd51f751fe1a19af20c70302575b3fdb70086  miui_UMI_9.11.18_6d674ad5a9_10.0.zip</p>
-<p>原始</p>
-<p>[$] -&gt; sha1sum ~&#x2F;Downloads&#x2F;miui_UMI_9.11.18_6d674ad5a9_10.0.zip<br>88abea31fe641216b7a2659a6e63f5c4d619efaa  &#x2F;home&#x2F;mi&#x2F;Downloads&#x2F;miui_UMI_9.11.18_6d674ad5a9_10.0.zip</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2019/08/12/OTA%E7%9B%B8%E5%85%B3/f2fs%20gc/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/08/12/OTA%E7%9B%B8%E5%85%B3/fbe%E4%B8%8E%E7%94%A8%E6%88%B7%E5%AE%89%E5%85%A8%E5%AF%86%E7%A0%81/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2019/08/12/OTA%E7%9B%B8%E5%85%B3/fbe%E4%B8%8E%E7%94%A8%E6%88%B7%E5%AE%89%E5%85%A8%E5%AF%86%E7%A0%81/" class="post-title-link" itemprop="url">fbe与用户安全密码</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2019-08-12 18:15:54" itemprop="dateCreated datePublished" datetime="2019-08-12T18:15:54+08:00">2019-08-12</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-16 18:07:29" itemprop="dateModified" datetime="2024-04-16T18:07:29+08:00">2024-04-16</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">文件系统</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/%E5%8A%A0%E5%AF%86/" itemprop="url" rel="index"><span itemprop="name">加密</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2019/08/12/OTA%E7%9B%B8%E5%85%B3/fbe%E4%B8%8E%E7%94%A8%E6%88%B7%E5%AE%89%E5%85%A8%E5%AF%86%E7%A0%81/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2019/08/12/OTA%E7%9B%B8%E5%85%B3/fbe%E4%B8%8E%E7%94%A8%E6%88%B7%E5%AE%89%E5%85%A8%E5%AF%86%E7%A0%81/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>[TOC]</p>
-<h1 id="1-fbe与用户安全密码"><a href="#1-fbe与用户安全密码" class="headerlink" title="1. fbe与用户安全密码"></a>1. fbe与用户安全密码</h1><p>之前介绍了fde与用户安全密码的关系，发现其是相对简单的。而对fbe和metadata加密的方式，在调研过程中发现密码的存储与文件ce区的密钥的关系则复杂的多。</p>
-<h2 id="1-1-用户ce区文件解密"><a href="#1-1-用户ce区文件解密" class="headerlink" title="1.1. 用户ce区文件解密"></a>1.1. 用户ce区文件解密</h2><p>这个过程伴随着一个函数向下执行的，即<code>unlockUserKey</code><em><strong>函数</strong></em>，首先看下伴随这个过程的密钥来自哪里</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">unlockUserKey(userId, <span class="literal">null</span>, auth.deriveDiskEncryptionKey());</span><br><span class="line">    <span class="comment">/** Unlock disk encryption */</span></span><br><span class="line"><span class="number">1712</span>     <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">unlockUserKey</span><span class="params">(<span class="type">int</span> userId, <span class="type">byte</span>[] token, <span class="type">byte</span>[] secret)</span> <span class="keyword">throws</span> RemoteException &#123;</span><br><span class="line"><span class="number">1713</span>         <span class="keyword">final</span> <span class="type">UserInfo</span> <span class="variable">userInfo</span> <span class="operator">=</span> mUserManager.getUserInfo(userId);</span><br><span class="line"><span class="number">1714</span>         mStorageManager.unlockUserKey(userId, userInfo.serialNumber, token, secret);</span><br><span class="line"><span class="number">1715</span>     &#125;</span><br></pre></td></tr></table></figure>
-<p>以机主用户为例， 上述参数中userID为0， token 为空， serialNumber为0，未知的只有secret，来自<code>deriveDiskEncryptionKey</code></p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">      <span class="keyword">public</span> <span class="type">byte</span>[] deriveDiskEncryptionKey() &#123;</span><br><span class="line"><span class="number">179</span>             <span class="keyword">return</span> derivePassword(PERSONALIZATION_FBE_KEY);</span><br><span class="line"><span class="number">180</span>         &#125;</span><br><span class="line"></span><br><span class="line"><span class="number">160</span>         <span class="keyword">private</span> <span class="type">byte</span>[] derivePassword(<span class="type">byte</span>[] personalization) &#123;</span><br><span class="line"><span class="number">161</span>             <span class="keyword">if</span> (mVersion == SYNTHETIC_PASSWORD_VERSION_V3) &#123;</span><br><span class="line"><span class="number">162</span>                 <span class="keyword">return</span> (<span class="keyword">new</span> <span class="title class_">SP800Derive</span>(syntheticPassword.getBytes()))</span><br><span class="line"><span class="number">163</span>                     .withContext(personalization, PERSONALISATION_CONTEXT);</span><br><span class="line"><span class="number">164</span>             &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"><span class="number">165</span>                 <span class="keyword">return</span> SyntheticPasswordCrypto.personalisedHash(personalization,</span><br><span class="line"><span class="number">166</span>                         syntheticPassword.getBytes());</span><br><span class="line"><span class="number">167</span>             &#125;</span><br><span class="line"><span class="number">168</span>         &#125;</span><br></pre></td></tr></table></figure>
-<p>关键参数只有一个<code>syntheticPassword</code></p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">        <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">initialize</span><span class="params">(<span class="type">byte</span>[] P0, <span class="type">byte</span>[] P1)</span> &#123;</span><br><span class="line"><span class="number">191</span>             <span class="built_in">this</span>.P1 = P1;</span><br><span class="line"><span class="number">192</span>             <span class="built_in">this</span>.syntheticPassword = String.valueOf(HexEncoding.encode(</span><br><span class="line"><span class="number">193</span>                     SyntheticPasswordCrypto.personalisedHash(</span><br><span class="line"><span class="number">194</span>                             PERSONALIZATION_SP_SPLIT, P0, P1)));</span><br></pre></td></tr></table></figure>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2019/08/12/OTA%E7%9B%B8%E5%85%B3/fbe%E4%B8%8E%E7%94%A8%E6%88%B7%E5%AE%89%E5%85%A8%E5%AF%86%E7%A0%81/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/07/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/clion%20%E9%98%85%E8%AF%BB%E8%B0%83%E8%AF%95Android%20native%E6%BA%90%E7%A0%81/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2019/07/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/clion%20%E9%98%85%E8%AF%BB%E8%B0%83%E8%AF%95Android%20native%E6%BA%90%E7%A0%81/" class="post-title-link" itemprop="url">clion vscode 阅读Android native源码</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2019-07-20 10:00:01" itemprop="dateCreated datePublished" datetime="2019-07-20T10:00:01+08:00">2019-07-20</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-16 18:16:15" itemprop="dateModified" datetime="2024-04-16T18:16:15+08:00">2024-04-16</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/debug/" itemprop="url" rel="index"><span itemprop="name">debug</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2019/07/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/clion%20%E9%98%85%E8%AF%BB%E8%B0%83%E8%AF%95Android%20native%E6%BA%90%E7%A0%81/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2019/07/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/clion%20%E9%98%85%E8%AF%BB%E8%B0%83%E8%AF%95Android%20native%E6%BA%90%E7%A0%81/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="1-clion-vscode-阅读Android-native源码"><a href="#1-clion-vscode-阅读Android-native源码" class="headerlink" title="1. clion vscode 阅读Android native源码"></a>1. clion vscode 阅读Android native源码</h1><h2 id="1-1-为native源码编译生成cmake文件"><a href="#1-1-为native源码编译生成cmake文件" class="headerlink" title="1.1. 为native源码编译生成cmake文件"></a>1.1. 为native源码编译生成cmake文件</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">export</span> SOONG_GEN_CMAKEFILES=1</span><br><span class="line"><span class="built_in">export</span> SOONG_GEN_CMAKEFILES_DEBUG=1</span><br></pre></td></tr></table></figure>
-<p>将上面两句加入到~&#x2F;.bashrc下, 以后新工程就不用重复export了</p>
-<p>源码source lunch后, 直接make随便一个module即可.<br>cmake文件会生成在源码根目录的out&#x2F;development&#x2F;ide&#x2F;clion下</p>
-<h2 id="1-2-使用clion导入native工程"><a href="#1-2-使用clion导入native工程" class="headerlink" title="1.2. 使用clion导入native工程"></a>1.2. 使用clion导入native工程</h2><p>可以直接看单module,<br>file-&gt;new cmake project from sources</p>
-<p>但多个module 需要手动写cmake 引进子的module, 重复工作量大, 而且soong生成的cmake 同一module包含多个子目标</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">drwxrwxr-x  2 mi mi 4096 3月  13 20:51 librecovery-arm64-android</span><br><span class="line">drwxrwxr-x  2 mi mi 4096 3月  13 20:51 librecovery-arm-android</span><br></pre></td></tr></table></figure>
-<p>手动添加工作量比较大, 而且是重复工作</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2019/07/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/clion%20%E9%98%85%E8%AF%BB%E8%B0%83%E8%AF%95Android%20native%E6%BA%90%E7%A0%81/#more" rel="contents">
+              <a class="btn" href="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/keymaster%E8%A7%A3%E5%AF%86%E9%97%AE%E9%A2%98/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -1305,7 +1288,7 @@
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/10/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/10/">10</a><span class="page-number current">11</span><a class="page-number" href="/page/12/">12</a><span class="space">&hellip;</span><a class="page-number" href="/page/15/">15</a><a class="extend next" rel="next" href="/page/12/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+    <a class="extend prev" rel="prev" href="/page/10/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/10/">10</a><span class="page-number current">11</span><a class="page-number" href="/page/12/">12</a><span class="space">&hellip;</span><a class="page-number" href="/page/16/">16</a><a class="extend next" rel="next" href="/page/12/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
   </nav>
 
 
@@ -1371,20 +1354,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">147</span>
+          <span class="site-state-item-count">158</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">90</span>
+        <span class="site-state-item-count">93</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">102</span>
+        <span class="site-state-item-count">109</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>

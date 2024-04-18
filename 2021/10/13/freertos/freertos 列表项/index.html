@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=LXGW WenKai:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":{"valine":{"order":-1}},"activeClass":"valine"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
+  </script>
+
+  <meta name="description" content="FreeRTOS内核调度大量使用了列表（list）和列表项（list item）数据结构。列表被FreeRTOS调度器使用，用于跟踪任务，处于就绪、挂起、延时的任务，都会被挂接到各自的列表中。用户程序如果有需要，也可以使用列表。FreeRTOS列表使用指针指向列表项(item)。一个列表（list）下面可能有很多个列表项（list item），每个列表项都有一个指针指向列表。 列表项有两种形式，全">
+<meta property="og:type" content="article">
+<meta property="og:title" content="freertos 列表项">
+<meta property="og:url" content="https://liguangzhang.github.io/2021/10/13/freertos/freertos%20%E5%88%97%E8%A1%A8%E9%A1%B9/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="FreeRTOS内核调度大量使用了列表（list）和列表项（list item）数据结构。列表被FreeRTOS调度器使用，用于跟踪任务，处于就绪、挂起、延时的任务，都会被挂接到各自的列表中。用户程序如果有需要，也可以使用列表。FreeRTOS列表使用指针指向列表项(item)。一个列表（list）下面可能有很多个列表项（list item），每个列表项都有一个指针指向列表。 列表项有两种形式，全">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-10-13T10:15:54.000Z">
+<meta property="article:modified_time" content="2024-04-18T03:28:12.762Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="freertos">
+<meta property="article:tag" content="list">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2021/10/13/freertos/freertos%20%E5%88%97%E8%A1%A8%E9%A1%B9/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+<link rel="stylesheet" href="https://npm.elemecdn.com/lxgw-wenkai-screen-webfont/style.css" media="print" onload="this.media='all'" />
+
+  <title>freertos 列表项 | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2021/10/13/freertos/freertos%20%E5%88%97%E8%A1%A8%E9%A1%B9/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          freertos 列表项
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-10-13 18:15:54" itemprop="dateCreated datePublished" datetime="2021-10-13T18:15:54+08:00">2021-10-13</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-18 11:28:12" itemprop="dateModified" datetime="2024-04-18T11:28:12+08:00">2024-04-18</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MIPS/" itemprop="url" rel="index"><span itemprop="name">MIPS</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MIPS/os/" itemprop="url" rel="index"><span itemprop="name">os</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2021/10/13/freertos/freertos%20%E5%88%97%E8%A1%A8%E9%A1%B9/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2021/10/13/freertos/freertos%20%E5%88%97%E8%A1%A8%E9%A1%B9/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>FreeRTOS内核调度大量使用了列表（list）和列表项（list item）数据结构。<br>列表被FreeRTOS调度器使用，用于跟踪任务，处于就绪、挂起、延时的任务，都会被挂接到各自的列表中。用户程序如果有需要，也可以使用列表。<br>FreeRTOS列表使用指针指向列表项(item)。一个列表（list）下面可能有很多个列表项（list item），每个列表项都有一个指针指向列表。</p>
+<p><img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gIoSUNDX1BST0ZJTEUAAQEAAAIYAAAAAAIQAABtbnRyUkdCIFhZWiAAAAAAAAAAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAAHRyWFlaAAABZAAAABRnWFlaAAABeAAAABRiWFlaAAABjAAAABRyVFJDAAABoAAAAChnVFJDAAABoAAAAChiVFJDAAABoAAAACh3dHB0AAAByAAAABRjcHJ0AAAB3AAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAFgAAAAcAHMAUgBHAEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFhZWiAAAAAAAABvogAAOPUAAAOQWFlaIAAAAAAAAGKZAAC3hQAAGNpYWVogAAAAAAAAJKAAAA+EAAC2z3BhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABYWVogAAAAAAAA9tYAAQAAAADTLW1sdWMAAAAAAAAAAQAAAAxlblVTAAAAIAAAABwARwBvAG8AZwBsAGUAIABJAG4AYwAuACAAMgAwADEANv/bAEMABgQFBgUEBgYFBgcHBggKEAoKCQkKFA4PDBAXFBgYFxQWFhodJR8aGyMcFhYgLCAjJicpKikZHy0wLSgwJSgpKP/bAEMBBwcHCggKEwoKEygaFhooKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKP/AABEIArkE1wMBIgACEQEDEQH/xAAcAAEBAQEBAAMBAAAAAAAAAAAABwYFBAEDCAL/xABYEAEAAQMDAAUFCggKCAQFBQEAAQIDBAUGEQcSFyExE0FWpNEIFCI2UWFmcYHjFTJ1hJGhsbMjNEZSVHOio7LDFjdCVWJydLSSlMHTJCUzV4IYJzU4Q5X/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8A/VIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA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"><br>列表项有两种形式，全功能版的列表项xLIST_ITEM和迷你版的列表项xMINI_LIST_ITEM。我们来看一下它们具体的定义，先看全功能版。</p>
+<h2 id="全功能版的列表项-xLIST-ITEM"><a href="#全功能版的列表项-xLIST-ITEM" class="headerlink" title="全功能版的列表项 xLIST_ITEM"></a>全功能版的列表项 xLIST_ITEM</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">xLIST_ITEM</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">	listFIRST_LIST_ITEM_INTEGRITY_CHECK_VALUE			<span class="comment">/*用于检测列表项数据是否完整*/</span></span><br><span class="line">	configLIST_VOLATILE TickType_t xItemValue;			<span class="comment">/*列表项值*/</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">xLIST_ITEM</span> * <span class="title">configLIST_VOLATILE</span> <span class="title">pxNext</span>;</span>		</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">xLIST_ITEM</span> * <span class="title">configLIST_VOLATILE</span> <span class="title">pxPrevious</span>;</span>	</span><br><span class="line">	<span class="type">void</span> * pvOwner;										<span class="comment">/*指向一个任务TCB */</span></span><br><span class="line">	<span class="type">void</span> * configLIST_VOLATILE pvContainer;				<span class="comment">/*指向包含该列表项的列表 */</span></span><br><span class="line">	listSECOND_LIST_ITEM_INTEGRITY_CHECK_VALUE			<span class="comment">/*用于检测列表项数据是否完整*/</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>xItemValue是列表项值，通常是一个被跟踪的任务优先级或是一个调度事件的计数器值。<br>如果任务因为等待从队列取数据而进入阻塞状态，则 <code>任务的事件列表项</code> 的列表项值<code>保存任务优先级</code>有关信息，状态列表项的列表项值<code>保存阻塞时间</code>有关的信息</p>
+<h2 id="迷你版的列表项-xMINI-LIST-ITEM"><a href="#迷你版的列表项-xMINI-LIST-ITEM" class="headerlink" title="迷你版的列表项 xMINI_LIST_ITEM"></a>迷你版的列表项 xMINI_LIST_ITEM</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">xMINI_LIST_ITEM</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">	listFIRST_LIST_ITEM_INTEGRITY_CHECK_VALUE</span><br><span class="line">	configLIST_VOLATILE TickType_t xItemValue;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">xLIST_ITEM</span> * <span class="title">configLIST_VOLATILE</span> <span class="title">pxNext</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">xLIST_ITEM</span> * <span class="title">configLIST_VOLATILE</span> <span class="title">pxPrevious</span>;</span></span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">xMINI_LIST_ITEM</span> <span class="title">MiniListItem_t</span>;</span></span><br></pre></td></tr></table></figure>
+<p>和全功能xLIST_ITEM对比少了<code>pvContainer</code>, <code>pvOwner</code></p>
+<blockquote>
+<p>列表结构体需要一个列表项成员，但又不需要列表项中的所有字段，所以才有了迷你版列表项</p>
+</blockquote>
+<h2 id="列表-xLIST"><a href="#列表-xLIST" class="headerlink" title="列表 xLIST"></a>列表 xLIST</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">xLIST</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">	listFIRST_LIST_INTEGRITY_CHECK_VALUE				<span class="comment">/*校验位 */</span></span><br><span class="line">	<span class="keyword">volatile</span> UBaseType_t uxNumberOfItems;               <span class="comment">/*列表项的数目*/</span></span><br><span class="line">	ListItem_t * configLIST_VOLATILE pxIndex;			<span class="comment">/*列表项当前的游标*/</span></span><br><span class="line">	MiniListItem_t xListEnd;							<span class="comment">/*初始列表项*/</span></span><br><span class="line">	listSECOND_LIST_INTEGRITY_CHECK_VALUE				<span class="comment">/*用于检测列表项数据是否完整 */</span></span><br><span class="line">&#125; List_t;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>列表项类型指针 <code>pxIndex</code> 用于遍历列表，列表初始化后，这个指针指向&amp;<code>xListEnd</code>（表示空列表， 只有一个元素，xListEnd）。通过宏<code>listGET_OWNER_OF_NEXT_ENTRY()</code>来获取列表中的下一个列表项。</p>
+<h3 id="看一个例子"><a href="#看一个例子" class="headerlink" title="看一个例子:"></a>看一个例子:</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//将TCB的事件列表项插入到 pxReadyTasksLists[prority]</span></span><br><span class="line"><span class="comment">//pxReadyTasksLists 这一项是一个 xLIST的数组, 根据priority index找到 xLIST</span></span><br><span class="line">vListInsertEnd( &amp;( pxReadyTasksLists[ ( pxTCB )-&gt;uxPriority ] ), &amp;( ( pxTCB )-&gt;xStateListItem ) );</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">vListInsertEnd</span><span class="params">( List_t * <span class="type">const</span> pxList, ListItem_t * <span class="type">const</span> pxNewListItem )</span></span><br><span class="line"> &#123;</span><br><span class="line">    <span class="comment">// 此处的pxIndex 指向的列表项应该是xListEnd</span></span><br><span class="line">    ListItem_t* <span class="type">const</span> pxIndex = pxList-&gt;pxIndex;</span><br><span class="line">    <span class="comment">/*向列表中插入新的列表项*/</span></span><br><span class="line">    pxNewListItem-&gt;pxNext = pxIndex;</span><br><span class="line">    pxNewListItem-&gt;pxPrevious =pxIndex-&gt;pxPrevious;</span><br><span class="line">    <span class="comment">/* 以pxIndex xList-&gt;pxIndex 的位置插入新的列表项</span></span><br><span class="line"><span class="comment">    pxIndex-&gt;pxPrevious-&gt;pxNext =pxNewListItem;</span></span><br><span class="line"><span class="comment">    pxIndex-&gt;pxPrevious = pxNewListItem;</span></span><br><span class="line"><span class="comment">    // 列表项的pvContainer指向该列表</span></span><br><span class="line"><span class="comment">    pxNewListItem-&gt;pvContainer = ( void* ) pxList;</span></span><br><span class="line"><span class="comment">    // 列表元素的数目+1</span></span><br><span class="line"><span class="comment">    ( pxList-&gt;uxNumberOfItems )++;</span></span><br><span class="line"><span class="comment">  &#125;</span></span><br></pre></td></tr></table></figure>
+<h3 id="初始化列表"><a href="#初始化列表" class="headerlink" title="初始化列表"></a>初始化列表</h3><p>列表结构体中包含一个列表项成员，主要用于标记列表结束。初始化列表就是把这个列表项插入到列表中。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">vListInitialise</span><span class="params">( List_t * <span class="type">const</span> pxList )</span></span><br><span class="line">&#123;</span><br><span class="line">     <span class="comment">/*列表索引指向列表项*/</span></span><br><span class="line">     pxList-&gt;pxIndex = ( ListItem_t * )&amp;( pxList-&gt;xListEnd );                  </span><br><span class="line">     <span class="comment">/* 设置为最大可能值 */</span> <span class="comment">// 一个列表初始化后 有一个列表项 xListEnd, 指向自己,表示列表项的结束位置,循环双向链表必须有一个元素表示结束位置</span></span><br><span class="line">     pxList-&gt;xListEnd.xItemValue =portMAX_DELAY;</span><br><span class="line">     <span class="comment">/* 列表项xListEnd的pxNext和pxPrevious指针指向了它自己 */</span></span><br><span class="line">     pxList-&gt;xListEnd.pxNext = (ListItem_t * ) &amp;( pxList-&gt;xListEnd );</span><br><span class="line">     pxList-&gt;xListEnd.pxPrevious= ( ListItem_t * ) &amp;( pxList-&gt;xListEnd );</span><br><span class="line">     pxList-&gt;uxNumberOfItems = ( UBaseType_t) <span class="number">0U</span>;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>![d3ee6c0b-2979-4328-85cc-a0abbde954b1 (1)](attachments&#x2F;d3ee6c0b-2979-4328-85cc-a0abbde954b1 (1)-171341083095748.png)</p>
+<h3 id="初始化列表项"><a href="#初始化列表项" class="headerlink" title="初始化列表项"></a>初始化列表项</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">vListInitialiseItem</span><span class="params">( ListItem_t * <span class="type">const</span> pxItem )</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">//该指针用于指向包含该列表项的列表，这里设置为NULL表示这个列表项不属于任何列表</span></span><br><span class="line">    pxItem-&gt;pvContainer = <span class="literal">NULL</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="列表项插入到列表"><a href="#列表项插入到列表" class="headerlink" title="列表项插入到列表"></a>列表项插入到列表</h3><p>将列表项插入到列表中，列表项所在的位置取决于列表项的列表项值（<code>xItemValue</code>）<br>通常是一个被跟踪的任务<code>优先级</code>或是一个调度事件的<code>计数器值</code>。调用API函数<code>vListInsert( List_t _ const pxList, ListItem_t _ const pxNewListItem)</code>可以将pxNewListItem指向的列表项插入到pxList指向的列表中<br>列表项在列表的位置由pxNewListItem-&gt;xItemValue决定，按照升序排列。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">vListInsert</span><span class="params">( List_t * <span class="type">const</span> pxList, ListItem_t * <span class="type">const</span> pxNewListItem )</span></span><br><span class="line">&#123;</span><br><span class="line">    ListItem_t *pxIterator;</span><br><span class="line">    <span class="type">const</span> TickType_t xValueOfInsertion = pxNewListItem-&gt;xItemValue;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span>( xValueOfInsertion == portMAX_DELAY )</span><br><span class="line">	&#123;</span><br><span class="line">        <span class="comment">//如果列表的xItemValue 为UINT_MAX, 将其插入到xListEnd的前面,表示最后一个元素, 升序排列,前面的小,后面的大</span></span><br><span class="line">		pxIterator = pxList-&gt;xListEnd.pxPrevious;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">else</span></span><br><span class="line">	&#123;</span><br><span class="line">        <span class="comment">//链表遍历,查找插入位置,找到后记录为pxIterator</span></span><br><span class="line">		<span class="keyword">for</span>( pxIterator = ( ListItem_t * ) &amp;( pxList-&gt;xListEnd ); pxIterator-&gt;pxNext-&gt;xItemValue &lt;= xValueOfInsertion; pxIterator = pxIterator-&gt;pxNext ); </span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 插入链表</span></span><br><span class="line">	pxNewListItem-&gt;pxNext = pxIterator-&gt;pxNext;</span><br><span class="line">	pxNewListItem-&gt;pxNext-&gt;pxPrevious = pxNewListItem;</span><br><span class="line">	pxNewListItem-&gt;pxPrevious = pxIterator;</span><br><span class="line">	pxIterator-&gt;pxNext = pxNewListItem;</span><br><span class="line">	<span class="comment">// 列表项的owner指向该xList</span></span><br><span class="line">	pxNewListItem-&gt;pvContainer = ( <span class="type">void</span> * ) pxList;</span><br><span class="line">	<span class="comment">// 列表项数目+1</span></span><br><span class="line">	( pxList-&gt;uxNumberOfItems )++;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>![ebc8d88c-d45a-488d-9d62-f099e5d032ea (1)](attachments&#x2F;ebc8d88c-d45a-488d-9d62-f099e5d032ea (1).png)</p>
+<p>在此基础上，如果再将一个列表项值（xItemValue）为40的列表项插入到列表中，调用vListInsert()函数后，列表和列表项的关系如图下所示</p>
+<p>![f56dbc83-6914-4aca-adce-da47e9fa3148 (1)](attachments&#x2F;f56dbc83-6914-4aca-adce-da47e9fa3148 (1).png)</p>
+<h2 id="调度相关的列表"><a href="#调度相关的列表" class="headerlink" title="调度相关的列表"></a>调度相关的列表</h2><p>先看一下任务的结构体的定义</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">tskTaskControlBlock</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">	<span class="keyword">volatile</span> StackType_t	*pxTopOfStack;	<span class="comment">/*&lt; Points to the location of the last item placed on the tasks stack.  THIS MUST BE THE FIRST MEMBER OF THE TCB STRUCT. */</span></span><br><span class="line"></span><br><span class="line">	ListItem_t			xStateListItem;	    <span class="comment">// 状态列表项, ready blocked suspended 状态轮转</span></span><br><span class="line">	ListItem_t			xEventListItem;		<span class="comment">// 事件列表项 </span></span><br><span class="line">	UBaseType_t			uxPriority;			<span class="comment">/* 任务优先级, 0是最低的优先级 */</span></span><br><span class="line">	StackType_t			*pxStack;			<span class="comment">/* 任务栈的起始地址*/</span></span><br><span class="line">	<span class="type">char</span>				pcTaskName[ configMAX_TASK_NAME_LEN ]; <span class="comment">// 任务名字</span></span><br><span class="line"></span><br><span class="line">	<span class="meta">#<span class="keyword">if</span> ( ( portSTACK_GROWTH &gt; 0 ) || ( configRECORD_STACK_HIGH_ADDRESS == 1 ) )</span></span><br><span class="line">		StackType_t		*pxEndOfStack;		<span class="comment">/* 任务栈的 结束地址*/</span></span><br><span class="line">	<span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">	<span class="meta">#<span class="keyword">if</span> ( portCRITICAL_NESTING_IN_TCB == 1 )</span></span><br><span class="line">		UBaseType_t		uxCriticalNesting;	<span class="comment">/* 任务嵌套深度*/</span></span><br><span class="line">	<span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">	<span class="meta">#<span class="keyword">if</span> ( configUSE_MUTEXES == 1 )</span></span><br><span class="line">		UBaseType_t		uxBasePriority;		<span class="comment">/*&lt; The priority last assigned to the task - used by the priority inheritance mechanism.  用于任务优先级继承的机制*/</span></span><br><span class="line">		UBaseType_t		uxMutexesHeld;</span><br><span class="line">	<span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">	<span class="meta">#<span class="keyword">if</span>( configUSE_TASK_NOTIFICATIONS == 1 )  <span class="comment">// 任务通知机制, 用于简洁的任务通信</span></span></span><br><span class="line">		<span class="keyword">volatile</span> <span class="type">uint32_t</span> ulNotifiedValue;</span><br><span class="line">		<span class="keyword">volatile</span> <span class="type">uint8_t</span> ucNotifyState;</span><br><span class="line">	<span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/* See the comments above the definition of</span></span><br><span class="line"><span class="comment">	tskSTATIC_AND_DYNAMIC_ALLOCATION_POSSIBLE. */</span></span><br><span class="line">	<span class="meta">#<span class="keyword">if</span>( tskSTATIC_AND_DYNAMIC_ALLOCATION_POSSIBLE != 0 ) </span></span><br><span class="line">		<span class="type">uint8_t</span>	ucStaticallyAllocated; 		<span class="comment">/* true 标识任务栈是静态分配的, 不需要free*/</span></span><br><span class="line">	<span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">&#125; tskTCB;</span><br></pre></td></tr></table></figure>
+<p>TCB结构体中包括 <code>xEventListItem </code> 和 <code>xStateListItem</code>	</p>
+<h3 id="状态列表项"><a href="#状态列表项" class="headerlink" title="状态列表项"></a>状态列表项</h3><p>大概的用途, 用于追踪任务的状态, 从ready blocked delay suspend等状态间轮转, 其<code>xItemValue</code>值是调度事件的计数器值, 比如timeout等</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xNextTaskUnblockTime = listGET_LIST_ITEM_VALUE( &amp;( ( pxTCB )-&gt;xStateListItem ) );</span><br></pre></td></tr></table></figure>
+<p>前面的章节中介绍过一个例子: 将TCB的事件列表项挂入到readyTaskList中, 表示该TCB 转到就绪状态. </p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//将TCB的事件列表项插入到 pxReadyTasksLists[prority]</span></span><br><span class="line"><span class="comment">//pxReadyTasksLists 这一项是一个 xLIST的数组, 根据priority index找到 xLIST</span></span><br><span class="line">vListInsertEnd( &amp;( pxReadyTasksLists[ ( pxTCB )-&gt;uxPriority ] ), &amp;( ( pxTCB )-&gt;xStateListItem ) );</span><br></pre></td></tr></table></figure>
+<p>通常的用法是 状态轮转, 调用 <code>uxListRemove</code> 将其从之前的状态列表中删除, 然后调用<code>vListInsert </code>等插入函数挂入到新的状态列表中</p>
+<h3 id="事件列表项"><a href="#事件列表项" class="headerlink" title="事件列表项"></a>事件列表项</h3><p>等待事件的列表?   其<code>xItemValue</code>值 保存的是任务优先级.</p>
+<ol>
+<li>任务调度器相关的操作<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 调度器挂起时, ready的任务挂入到xPendingReadyList下, 调度器resume后, 从ready list中取任务调度执行</span></span><br><span class="line">PRIVILEGED_DATA <span class="type">static</span> List_t xPendingReadyList;	<span class="comment">/*&lt; Tasks that have been readied while the scheduler was suspended.  They will be moved to the ready list when the scheduler is resumed. */</span></span><br></pre></td></tr></table></figure>
+xTaskResumeFromISR<br>xTaskGenericNotifyFromISR<br>xTaskResumeAll<br>prvTaskIsTaskSuspended<br>xTaskRemoveFromEventList	-&gt; 用于队列的出队队列							<br>因等待出队而阻塞的任务会将任务的事件列表项<code>xEventListItem</code>挂接到<strong>队列</strong>的<strong>等待出队列表</strong>上<br>要解除任务阻塞，我们需要将任务的事件列表项从<code>**队列**</code>的<code>等待出队队列</code>（xTasksWaitingToReceive）上删除，并且将任务移动到就绪列表中。<br>调用函数xTaskRemoveFromEventList()实现。<br><code>xTasksWaitingToReceive</code>是<code>xQUEUE</code>的成员<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">QueueDefinition</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">	<span class="type">int8_t</span> *pcHead;					<span class="comment">/*&lt; Points to the beginning of the queue storage area. */</span></span><br><span class="line">	<span class="type">int8_t</span> *pcTail;					<span class="comment">/*&lt; Points to the byte at the end of the queue storage area.  Once more byte is allocated than necessary to store the queue items, this is used as a marker. */</span></span><br><span class="line">	<span class="type">int8_t</span> *pcWriteTo;				<span class="comment">/*&lt; Points to the free next place in the storage area. */</span></span><br><span class="line"></span><br><span class="line">	<span class="class"><span class="keyword">union</span>							/* <span class="title">Use</span> <span class="title">of</span> <span class="title">a</span> <span class="title">union</span> <span class="title">is</span> <span class="title">an</span> <span class="title">exception</span> <span class="title">to</span> <span class="title">the</span> <span class="title">coding</span> <span class="title">standard</span> <span class="title">to</span> <span class="title">ensure</span> <span class="title">two</span> <span class="title">mutually</span> <span class="title">exclusive</span> <span class="title">structure</span> <span class="title">members</span> <span class="title">don</span>&#x27;<span class="title">t</span> <span class="title">appear</span> <span class="title">simultaneously</span> (<span class="title">wasting</span> <span class="title">RAM</span>). */</span></span><br><span class="line"><span class="class">	&#123;</span></span><br><span class="line">		<span class="type">int8_t</span> *pcReadFrom;			<span class="comment">/*&lt; Points to the last place that a queued item was read from when the structure is used as a queue. */</span></span><br><span class="line">		UBaseType_t uxRecursiveCallCount;<span class="comment">/*&lt; Maintains a count of the number of times a recursive mutex has been recursively &#x27;taken&#x27; when the structure is used as a mutex. */</span></span><br><span class="line">	&#125; u;</span><br><span class="line"></span><br><span class="line">	List_t xTasksWaitingToSend;		<span class="comment">/*&lt; List of tasks that are blocked waiting to post onto this queue.  Stored in priority order. */</span></span><br><span class="line">	List_t xTasksWaitingToReceive;	<span class="comment">/*&lt; List of tasks that are blocked waiting to read from this queue.  Stored in priority order. */</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">volatile</span> UBaseType_t uxMessagesWaiting; <span class="comment">/*&lt; The number of items currently in the queue. */</span></span><br><span class="line">	UBaseType_t uxLength;			<span class="comment">/*&lt; The length of the queue defined as the number of items it will hold, not the number of bytes. */</span></span><br><span class="line">	UBaseType_t uxItemSize;			<span class="comment">/*&lt; The size of each items that the queue will hold. */</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">volatile</span> <span class="type">int8_t</span> cRxLock;		<span class="comment">/*&lt; Stores the number of items received from the queue (removed from the queue) while the queue was locked.  Set to queueUNLOCKED when the queue is not locked. */</span></span><br><span class="line">	<span class="keyword">volatile</span> <span class="type">int8_t</span> cTxLock;		<span class="comment">/*&lt; Stores the number of items transmitted to the queue (added to the queue) while the queue was locked.  Set to queueUNLOCKED when the queue is not locked. */</span></span><br><span class="line"></span><br><span class="line">	<span class="meta">#<span class="keyword">if</span>( ( configSUPPORT_STATIC_ALLOCATION == 1 ) &amp;&amp; ( configSUPPORT_DYNAMIC_ALLOCATION == 1 ) )</span></span><br><span class="line">		<span class="type">uint8_t</span> ucStaticallyAllocated;	<span class="comment">/* true 标识任务栈是静态分配的, 不需要free*/</span></span><br><span class="line">	<span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line">&#125; xQUEUE;</span><br></pre></td></tr></table></figure></li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/freertos/" rel="tag"># freertos</a>
+              <a href="/tags/list/" rel="tag"># list</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/10/12/freertos/freertos%20%E9%98%9F%E5%88%97xQueue%E5%88%86%E6%9E%90/" rel="prev" title="freertos 队列xQueue分析">
+      <i class="fa fa-chevron-left"></i> freertos 队列xQueue分析
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/10/14/freertos/freertos%20%E4%BB%BB%E5%8A%A1%E8%B0%83%E5%BA%A6/" rel="next" title="freertos 任务调度">
+      freertos 任务调度 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%A8%E5%8A%9F%E8%83%BD%E7%89%88%E7%9A%84%E5%88%97%E8%A1%A8%E9%A1%B9-xLIST-ITEM"><span class="nav-number">1.</span> <span class="nav-text">全功能版的列表项 xLIST_ITEM</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%B7%E4%BD%A0%E7%89%88%E7%9A%84%E5%88%97%E8%A1%A8%E9%A1%B9-xMINI-LIST-ITEM"><span class="nav-number">2.</span> <span class="nav-text">迷你版的列表项 xMINI_LIST_ITEM</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%97%E8%A1%A8-xLIST"><span class="nav-number">3.</span> <span class="nav-text">列表 xLIST</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%9C%8B%E4%B8%80%E4%B8%AA%E4%BE%8B%E5%AD%90"><span class="nav-number">3.1.</span> <span class="nav-text">看一个例子:</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9D%E5%A7%8B%E5%8C%96%E5%88%97%E8%A1%A8"><span class="nav-number">3.2.</span> <span class="nav-text">初始化列表</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9D%E5%A7%8B%E5%8C%96%E5%88%97%E8%A1%A8%E9%A1%B9"><span class="nav-number">3.3.</span> <span class="nav-text">初始化列表项</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%97%E8%A1%A8%E9%A1%B9%E6%8F%92%E5%85%A5%E5%88%B0%E5%88%97%E8%A1%A8"><span class="nav-number">3.4.</span> <span class="nav-text">列表项插入到列表</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B0%83%E5%BA%A6%E7%9B%B8%E5%85%B3%E7%9A%84%E5%88%97%E8%A1%A8"><span class="nav-number">4.</span> <span class="nav-text">调度相关的列表</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%8A%B6%E6%80%81%E5%88%97%E8%A1%A8%E9%A1%B9"><span class="nav-number">4.1.</span> <span class="nav-text">状态列表项</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8B%E4%BB%B6%E5%88%97%E8%A1%A8%E9%A1%B9"><span class="nav-number">4.2.</span> <span class="nav-text">事件列表项</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">93</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">109</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'VrGRp2q7WwXjxsCNmlDIZYbC-gzGzoHsz',
+      appKey     : 'JgMXmmB7yKQf2zm80TaBp3JT',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : 'zh-cn' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

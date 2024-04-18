@@ -185,7 +185,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/07/12/OTA%E7%9B%B8%E5%85%B3/ext3%E8%AF%BB%E5%86%99%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90%20/">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E5%8A%A0%E5%AF%86%E6%96%B9%E6%A1%88%E6%95%B4%E7%90%86/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -199,7 +199,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2019/07/12/OTA%E7%9B%B8%E5%85%B3/ext3%E8%AF%BB%E5%86%99%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90%20/" class="post-title-link" itemprop="url">OTA相关/ext3读写过程分析 .md</a>
+            <a href="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E5%8A%A0%E5%AF%86%E6%96%B9%E6%A1%88%E6%95%B4%E7%90%86/" class="post-title-link" itemprop="url">Android 加密方案整理</a>
         </h2>
 
         <div class="post-meta">
@@ -209,541 +209,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2019-07-12 18:15:54" itemprop="dateCreated datePublished" datetime="2019-07-12T18:15:54+08:00">2019-07-12</time>
+              <time title="创建时间：2019-10-12 18:15:54" itemprop="dateCreated datePublished" datetime="2019-10-12T18:15:54+08:00">2019-10-12</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-16 18:07:11" itemprop="dateModified" datetime="2024-04-16T18:07:11+08:00">2024-04-16</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">文件系统</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2019/07/12/OTA%E7%9B%B8%E5%85%B3/ext3%E8%AF%BB%E5%86%99%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90%20/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2019/07/12/OTA%E7%9B%B8%E5%85%B3/ext3%E8%AF%BB%E5%86%99%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90%20/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="1-Ext3文件系统读写过程分析"><a href="#1-Ext3文件系统读写过程分析" class="headerlink" title="1. Ext3文件系统读写过程分析"></a>1. Ext3文件系统读写过程分析</h1><h2 id="1-1-Ext3文件读写流程概述"><a href="#1-1-Ext3文件读写流程概述" class="headerlink" title="1.1. Ext3文件读写流程概述"></a>1.1. Ext3文件读写流程概述</h2><p> Ext3文件系统在进行读写操作的时候，首先需要open相应的文件，然后再进行读写操作。在open操作时，Linux kernel会创建一个file对象描述这个文件。File对象和文件的dentry和inode对象建立联系，并且将ext3的文件操作方法、映射处理方法（address space）注册到file对象中。 </p>
-<p>Ext3文件读写过程会涉及到VFS层的<strong>page cache</strong>，并且通常的读写操作都会使用到这层page cache，目的是提高磁盘的IO性能。在Linux中后台会运行writeback线程定时同步pagecache和设备之间的数据。Page cache的方式虽然能够提高IO性能，但是也对数据的安全性带来了潜在影响。 </p>
-<p>本文的目的是分析ext3文件系统读写流程中的关键函数，对于page cache原理以及writeback机制将在后继文章中做深入分析。</p>
-<h2 id="1-2-关键数据结构"><a href="#1-2-关键数据结构" class="headerlink" title="1.2. 关键数据结构"></a>1.2. 关键数据结构</h2><p>File数据结构是Linux用来描述文件的关键数据结构，该对象在一个文件被进程打开的时候被创建。当一个文件被关闭的时候，file对象也会被立即销毁。file数据结构不会被作为元数据信息持久化保存至设备。该数据结构定义如下： </p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">file</span> &#123;</span>  </span><br><span class="line">    <span class="comment">/*  </span></span><br><span class="line"><span class="comment">     * fu_list becomes invalid after file_free is called and queued via  </span></span><br><span class="line"><span class="comment">     * fu_rcuhead for RCU freeing  </span></span><br><span class="line"><span class="comment">     */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">union</span> &#123;</span>  </span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>    <span class="title">fu_list</span>;</span>  </span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">rcu_head</span>     <span class="title">fu_rcuhead</span>;</span>  </span><br><span class="line">    &#125; f_u;  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">path</span>     <span class="title">f_path</span>;</span>     <span class="comment">/* 文件路径，包含文件dentry目录项和vfsmount信息 */</span>  </span><br><span class="line"><span class="meta">#<span class="keyword">define</span> f_dentry    f_path.dentry  </span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> f_vfsmnt    f_path.mnt  </span></span><br><span class="line">    <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">file_operations</span>    *<span class="title">f_op</span>;</span>  <span class="comment">/* 文件操作函数集 */</span>  </span><br><span class="line"> </span><br><span class="line">    <span class="comment">/*  </span></span><br><span class="line"><span class="comment">     * Protects f_ep_links, f_flags, f_pos vs i_size in lseek SEEK_CUR.  </span></span><br><span class="line"><span class="comment">     * Must not be taken from IRQ context.  </span></span><br><span class="line"><span class="comment">     */</span>  </span><br><span class="line">    <span class="type">spinlock_t</span>      f_lock;  </span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_SMP  </span></span><br><span class="line">    <span class="type">int</span>         f_sb_list_cpu;  </span><br><span class="line"><span class="meta">#<span class="keyword">endif</span>  </span></span><br><span class="line">    <span class="type">atomic_long_t</span>       f_count;  </span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span>        f_flags;  </span><br><span class="line">    <span class="type">fmode_t</span>         f_mode; <span class="comment">/* 文件操作模式 */</span>  </span><br><span class="line">    <span class="type">loff_t</span>          f_pos;  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">fown_struct</span>  <span class="title">f_owner</span>;</span>  </span><br><span class="line">    <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">cred</span>   *<span class="title">f_cred</span>;</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">file_ra_state</span>    <span class="title">f_ra</span>;</span>  </span><br><span class="line"> </span><br><span class="line">    u64         f_version;  </span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_SECURITY  </span></span><br><span class="line">    <span class="type">void</span>            *f_security;  </span><br><span class="line"><span class="meta">#<span class="keyword">endif</span>  </span></span><br><span class="line">    <span class="comment">/* needed for tty driver, and maybe others */</span>  </span><br><span class="line">    <span class="type">void</span>            *private_data;  </span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_EPOLL  </span></span><br><span class="line">    <span class="comment">/* Used by fs/eventpoll.c to link all the hooks to this file */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>    <span class="title">f_ep_links</span>;</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>    <span class="title">f_tfile_llink</span>;</span>  </span><br><span class="line"><span class="meta">#<span class="keyword">endif</span> <span class="comment">/* #ifdef CONFIG_EPOLL */</span>  </span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">address_space</span>    *<span class="title">f_mapping</span>;</span> <span class="comment">/* address space映射信息，指向inode中的i_mapping */</span>  </span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_DEBUG_WRITECOUNT  </span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span> f_mnt_write_state;  </span><br><span class="line"><span class="meta">#<span class="keyword">endif</span>  </span></span><br><span class="line">&#125;; </span><br></pre></td></tr></table></figure>
-
-<p>每个文件在内存中都会对应一个inode对象。在设备上也会保存每个文件的inode元数据信息，通过inode元数据信息可以找到该文件所占用的所有文件数据块（block）。VFS定义了一个通用的inode数据结构，同时ext3定义了ext3_inode元数据结构。在创建内存inode对象时，需要采用ext3_inode元数据信息初始化inode对象。Inode数据结构定义如下：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br></pre></td><td class="code"><pre><span class="line"> <span class="class"><span class="keyword">struct</span> <span class="title">inode</span> &#123;</span>  </span><br><span class="line">    <span class="type">umode_t</span>         i_mode;  </span><br><span class="line">    <span class="type">unsigned</span> <span class="type">short</span>      i_opflags;  </span><br><span class="line">    <span class="type">uid_t</span>           i_uid;  </span><br><span class="line">    <span class="type">gid_t</span>           i_gid;  </span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span>        i_flags;  </span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_FS_POSIX_ACL  </span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">posix_acl</span>    *<span class="title">i_acl</span>;</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">posix_acl</span>    *<span class="title">i_default_acl</span>;</span>  </span><br><span class="line"><span class="meta">#<span class="keyword">endif</span>  </span></span><br><span class="line"> </span><br><span class="line">    <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">inode_operations</span>   *<span class="title">i_op</span>;</span>  <span class="comment">/* inode操作函数集 */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">super_block</span>  *<span class="title">i_sb</span>;</span>      <span class="comment">/* 指向superblock */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">address_space</span>    *<span class="title">i_mapping</span>;</span> <span class="comment">/* 指向当前使用的页缓存的映射信息 */</span>  </span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_SECURITY  </span></span><br><span class="line">    <span class="type">void</span>            *i_security;  </span><br><span class="line"><span class="meta">#<span class="keyword">endif</span>  </span></span><br><span class="line"> </span><br><span class="line">    <span class="comment">/* Stat data, not accessed from path walking */</span>  </span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>       i_ino;  </span><br><span class="line">    <span class="comment">/*  </span></span><br><span class="line"><span class="comment">     * Filesystems may only read i_nlink directly.  They shall use the  </span></span><br><span class="line"><span class="comment">     * following functions for modification:  </span></span><br><span class="line"><span class="comment">     *  </span></span><br><span class="line"><span class="comment">     *    (set|clear|inc|drop)_nlink  </span></span><br><span class="line"><span class="comment">     *    inode_(inc|dec)_link_count  </span></span><br><span class="line"><span class="comment">     */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">union</span> &#123;</span>  </span><br><span class="line">        <span class="type">const</span> <span class="type">unsigned</span> <span class="type">int</span> i_nlink;  </span><br><span class="line">        <span class="type">unsigned</span> <span class="type">int</span> __i_nlink;  </span><br><span class="line">    &#125;;  </span><br><span class="line">    <span class="type">dev_t</span>           i_rdev;     <span class="comment">/* 设备号，major&amp;minor */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">timespec</span>     <span class="title">i_atime</span>;</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">timespec</span>     <span class="title">i_mtime</span>;</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">timespec</span>     <span class="title">i_ctime</span>;</span>  </span><br><span class="line">    <span class="type">spinlock_t</span>      i_lock; <span class="comment">/* i_blocks, i_bytes, maybe i_size */</span>  </span><br><span class="line">    <span class="type">unsigned</span> <span class="type">short</span>          i_bytes;  </span><br><span class="line">    <span class="type">blkcnt_t</span>        i_blocks;   <span class="comment">/* 文件块数量 */</span>  </span><br><span class="line">    <span class="type">loff_t</span>          i_size;  </span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> __NEED_I_SIZE_ORDERED  </span></span><br><span class="line">    <span class="type">seqcount_t</span>      i_size_seqcount;  </span><br><span class="line"><span class="meta">#<span class="keyword">endif</span>  </span></span><br><span class="line"> </span><br><span class="line">    <span class="comment">/* Misc */</span>  </span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>       i_state;  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">mutex</span>        <span class="title">i_mutex</span>;</span>  </span><br><span class="line"> </span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span>       dirtied_when;   <span class="comment">/* jiffies of first dirtying */</span>  </span><br><span class="line"> </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">hlist_node</span>   <span class="title">i_hash</span>;</span> <span class="comment">/* 连接到inode Hash Table中 */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>    <span class="title">i_wb_list</span>;</span>  <span class="comment">/* backing dev IO list */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>    <span class="title">i_lru</span>;</span>      <span class="comment">/* inode LRU list */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>    <span class="title">i_sb_list</span>;</span>  </span><br><span class="line">    <span class="class"><span class="keyword">union</span> &#123;</span>  </span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>    <span class="title">i_dentry</span>;</span>  </span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">rcu_head</span>     <span class="title">i_rcu</span>;</span>  </span><br><span class="line">    &#125;;  </span><br><span class="line">    <span class="type">atomic_t</span>        i_count;  </span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span>        i_blkbits;  <span class="comment">/* 块大小，通常磁盘块大小为512字节，因此i_blkbits为9 */</span>  </span><br><span class="line">    u64         i_version;  </span><br><span class="line">    <span class="type">atomic_t</span>        i_dio_count;  </span><br><span class="line">    <span class="type">atomic_t</span>        i_writecount;  </span><br><span class="line">    <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">file_operations</span>    *<span class="title">i_fop</span>;</span> <span class="comment">/* former -&gt;i_op-&gt;default_file_ops，文件操作函数集 */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">file_lock</span>    *<span class="title">i_flock</span>;</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">address_space</span>    <span class="title">i_data</span>;</span> <span class="comment">/* 页高速缓存映射信息 */</span>  </span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_QUOTA  </span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">dquot</span>        *<span class="title">i_dquot</span>[<span class="title">MAXQUOTAS</span>];</span>  </span><br><span class="line"><span class="meta">#<span class="keyword">endif</span>  </span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>    <span class="title">i_devices</span>;</span>  </span><br><span class="line">    <span class="class"><span class="keyword">union</span> &#123;</span>  </span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">pipe_inode_info</span>  *<span class="title">i_pipe</span>;</span>        <span class="comment">/* 管道设备 */</span>  </span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">block_device</span> *<span class="title">i_bdev</span>;</span>    <span class="comment">/* block device块设备 */</span>  </span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">cdev</span>     *<span class="title">i_cdev</span>;</span>    <span class="comment">/* 字符设备 */</span>  </span><br><span class="line">    &#125;;  </span><br><span class="line"> </span><br><span class="line">    __u32           i_generation;  </span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_FSNOTIFY  </span></span><br><span class="line">    __u32           i_fsnotify_mask; <span class="comment">/* all events this inode cares about */</span>  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">hlist_head</span>   <span class="title">i_fsnotify_marks</span>;</span>  </span><br><span class="line"><span class="meta">#<span class="keyword">endif</span>  </span></span><br><span class="line"> </span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_IMA  </span></span><br><span class="line">    <span class="type">atomic_t</span>        i_readcount; <span class="comment">/* struct files open RO */</span>  </span><br><span class="line"><span class="meta">#<span class="keyword">endif</span>  </span></span><br><span class="line">    <span class="type">void</span>            *i_private; <span class="comment">/* fs or device private pointer */</span>  </span><br><span class="line">&#125;; </span><br></pre></td></tr></table></figure>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2019/07/12/OTA%E7%9B%B8%E5%85%B3/ext3%E8%AF%BB%E5%86%99%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90%20/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2018/10/21/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/fingerprint%E6%96%B9%E6%A1%88/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2018/10/21/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/fingerprint%E6%96%B9%E6%A1%88/" class="post-title-link" itemprop="url">fingerprint介绍</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2018-10-21 00:00:00" itemprop="dateCreated datePublished" datetime="2018-10-21T00:00:00+08:00">2018-10-21</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-15 17:59:59" itemprop="dateModified" datetime="2024-04-15T17:59:59+08:00">2024-04-15</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/android/" itemprop="url" rel="index"><span itemprop="name">android</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2018/10/21/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/fingerprint%E6%96%B9%E6%A1%88/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2018/10/21/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/fingerprint%E6%96%B9%E6%A1%88/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="1-fingerprint编译过程"><a href="#1-fingerprint编译过程" class="headerlink" title="1. fingerprint编译过程"></a>1. fingerprint编译过程</h1><figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">PRODUCT_BRAND := SPRD</span><br><span class="line">PRODUCT_DEVICE :=   --TARGET_DEVICE</span><br><span class="line">PRODUCT_NAME :=   --TARGET_PRODUCT</span><br><span class="line"><span class="comment"># build_id.mk</span></span><br><span class="line">BUILD_ID :=</span><br><span class="line"><span class="section">TARGET_BUILD_VARIANT:userdebug:user</span></span><br><span class="line"><span class="section">BUILD_VERSION_TAGS:test-keys release-keys</span></span><br><span class="line">BF_BUILD_NUMBER := <span class="variable">$(USER)</span>$$(<span class="variable">$(DATE_FROM_FILE)</span> +%m%d%H%M)</span><br><span class="line"></span><br><span class="line">BUILD_FINGERPRINT := <span class="variable">$(PRODUCT_BRAND)</span>/<span class="variable">$(TARGET_PRODUCT)</span>/<span class="variable">$(TARGET_DEVICE)</span>:<span class="variable">$(PLATFORM_VERSION)</span>/<span class="variable">$(BUILD_ID)</span>/<span class="variable">$(BF_BUILD_NUMBER)</span>:<span class="variable">$(TARGET_BUILD_VARIANT)</span>/<span class="variable">$(BUILD_VERSION_TAGS)</span></span><br></pre></td></tr></table></figure>
-
-<p>SPRD&#x2F;sp9832e_1h10_oversea&#x2F;sp9832e_1h10:9&#x2F;PPR1.180610.021&#x2F;liguang.zhang12111501:userdebug&#x2F;test-keys</p>
-<blockquote>
-<p>fingerprint的变动是跟着<code>BF_BUILD_NUMBER</code>字段变更的, 而<code>BF_BUILD_NUMBER</code>字段只在make时更新, 即执行一次make更新一次.<br>整编时, 一次编译出所有的img, img中所有的fingerprint都是一样的.</p>
-</blockquote>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">@startuml</span><br><span class="line">start</span><br><span class="line">#HotPink:make;</span><br><span class="line">-&gt;system.img\nvendor.img\nproduct.img\nrecovery.img\n;</span><br><span class="line">note right:ro.build.fingerprint\nro.product.build.fingerprint\nro.vendor.build.fingerprint</span><br><span class="line">#pink:pac;</span><br><span class="line">:make productimage;</span><br><span class="line">-&gt;product.img;</span><br><span class="line">note right:ro.product.build.fingerprint</span><br><span class="line">:replace pac;</span><br><span class="line">end</span><br><span class="line">@enduml</span><br></pre></td></tr></table></figure>
-
-<h1 id="2-fingerprint用途"><a href="#2-fingerprint用途" class="headerlink" title="2. fingerprint用途"></a>2. fingerprint用途</h1><h2 id="2-1-ota升级"><a href="#2-1-ota升级" class="headerlink" title="2.1. ota升级"></a>2.1. ota升级</h2><p>差分升级时会校验fingerprint. 升级包中的fingerprint来自ota素材包(target_file)中的system分区的build.prop文件.<br>src recovery分区的fingerprint来自prop.default<br>即进到recovery模式下getprop ro.build.fingerprint 与基础版本和目标版本的ro.build.fingerprint值进行比对, 有一个相等则符合要求.</p>
-<ul>
-<li>prop.default结构:<br>ro.build.fingerprint         -&lt; 来自system编译过程<br>ro.product.build.fingerprint -&lt; 来自product编译过程</li>
-</ul>
-<p>如果只make productimage, 则recovery分区的prop.default不会更新.</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2018/10/21/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/fingerprint%E6%96%B9%E6%A1%88/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2018/10/21/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/incremental%20fs/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2018/10/21/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/incremental%20fs/" class="post-title-link" itemprop="url">Incrementalfs 调研</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2018-10-21 00:00:00" itemprop="dateCreated datePublished" datetime="2018-10-21T00:00:00+08:00">2018-10-21</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-15 19:07:15" itemprop="dateModified" datetime="2024-04-15T19:07:15+08:00">2024-04-15</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/android/" itemprop="url" rel="index"><span itemprop="name">android</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/android/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">文件系统</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2018/10/21/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/incremental%20fs/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2018/10/21/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/incremental%20fs/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="Incremental-File-System"><a href="#Incremental-File-System" class="headerlink" title="Incremental File System"></a>Incremental File System</h1><h1 id="Overview"><a href="#Overview" class="headerlink" title="Overview"></a>Overview</h1><p>Incremental FS is special-purpose Linux virtual file system that allows<br>execution of a program while its binary and resource files are still being<br>lazily downloaded over the network, USB etc. It is focused on incremental<br>delivery for a small number (under 100) of big files (more than 10 megabytes).<br>Incremental FS doesn?t allow direct writes into files and, once loaded, file<br>content never changes. Incremental FS doesn?t use a block device, instead it<br>saves data into a backing file located on a regular file-system.</p>
-<h2 id="But-why"><a href="#But-why" class="headerlink" title="But why?"></a>But why?</h2><p>To allow running <strong>big</strong> Android apps before their binaries and resources are<br>fully downloaded to an Android device. If an app reads something not loaded yet,<br>it needs to wait for the data block to be fetched, but in most cases hot blocks<br>can be loaded in advance.</p>
-<h2 id="Workflow"><a href="#Workflow" class="headerlink" title="Workflow"></a>Workflow</h2><p>A userspace process, called a data loader, mounts an instance of incremental-fs<br>giving it a file descriptor on an underlying file system (like ext4 or f2fs).<br>Incremental-fs reads content (if any) of this backing file and interprets it as<br>a file system image with files, directories and data blocks. At this point<br>the data loader can declare new files to be shown by incremental-fs.</p>
-<p>A process is started from a binary located on incremental-fs.<br>All reads are served directly from the backing file<br>without roundtrips into userspace. If the process accesses a data block that was<br>not originally present in the backing file, the read operation waits.</p>
-<p>Meanwhile the data loader can feed new data blocks to incremental-fs by calling<br>write() on a special .cmd pseudo-file. The data loader can request information<br>about pending reads by calling poll() and read() on the .cmd pseudo-file.<br>This mechanism allows the data loader to serve most urgently needed data first.<br>Once a data block is given to incremental-fs, it saves it to the backing file<br>and unblocks all the reads waiting for this block.</p>
-<p>Eventually all data for all files is uploaded by the data loader, and saved by<br>incremental-fs into the backing file. At that moment the data loader is not<br>needed any longer. The backing file will play the role of a complete<br>filesystem image for all future runs of the program.</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2018/10/21/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/incremental%20fs/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2018/10/21/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E8%BD%AF%E4%BB%B6%E8%AE%BE%E8%AE%A1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2018/10/21/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E8%BD%AF%E4%BB%B6%E8%AE%BE%E8%AE%A1/" class="post-title-link" itemprop="url">软件小设计读书笔记</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2018-10-21 00:00:00" itemprop="dateCreated datePublished" datetime="2018-10-21T00:00:00+08:00">2018-10-21</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-15 18:57:18" itemprop="dateModified" datetime="2024-04-15T18:57:18+08:00">2024-04-15</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">设计模式</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E8%AF%BB%E4%B9%A6/" itemprop="url" rel="index"><span itemprop="name">读书</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2018/10/21/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E8%BD%AF%E4%BB%B6%E8%AE%BE%E8%AE%A1/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2018/10/21/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E8%BD%AF%E4%BB%B6%E8%AE%BE%E8%AE%A1/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="1-设计原则"><a href="#1-设计原则" class="headerlink" title="1. 设计原则"></a>1. 设计原则</h1><h2 id="1-1-通用原则"><a href="#1-1-通用原则" class="headerlink" title="1.1. 通用原则"></a>1.1. 通用原则</h2><h3 id="1-1-1-KISS原则-keep-it-sample-and-stupid"><a href="#1-1-1-KISS原则-keep-it-sample-and-stupid" class="headerlink" title="1.1.1. KISS原则(keep it sample and stupid)"></a>1.1.1. KISS原则(keep it sample and stupid)</h3><ul>
-<li>懒人原则</li>
-<li>注重简约的原则, 逻辑处理上应该用简单直接的设计.</li>
-<li>圈复杂度越小越好, if for case while的数量.</li>
-</ul>
-<p><code>如非必要, 请远离各种设计模式</code></p>
-<h2 id="1-2-核心原则"><a href="#1-2-核心原则" class="headerlink" title="1.2. 核心原则"></a>1.2. 核心原则</h2><h3 id="1-2-1-单一职责原则-SRP"><a href="#1-2-1-单一职责原则-SRP" class="headerlink" title="1.2.1. 单一职责原则(SRP)"></a>1.2.1. 单一职责原则(SRP)</h3><p><code>做一个专一的人</code></p>
-<p>不能存在多于一个导致类变更的原因, 一个类之负责一项职责.</p>
-<blockquote>
-<p>迭代器的实现, 集合只负责存储数据, 迭代器完成遍历数据的功能</p>
-</blockquote>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2018/10/21/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E8%BD%AF%E4%BB%B6%E8%AE%BE%E8%AE%A1/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2018/10/21/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E8%AE%BE%E7%BD%AE%E4%B8%AD%E7%BB%9F%E4%B8%80%E6%90%9C%E7%B4%A2%E6%8E%A5%E5%8F%A3%E5%AE%9E%E7%8E%B0/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2018/10/21/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E8%AE%BE%E7%BD%AE%E4%B8%AD%E7%BB%9F%E4%B8%80%E6%90%9C%E7%B4%A2%E6%8E%A5%E5%8F%A3%E5%AE%9E%E7%8E%B0/" class="post-title-link" itemprop="url">Settings 搜索框架调研</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2018-10-21 00:00:00" itemprop="dateCreated datePublished" datetime="2018-10-21T00:00:00+08:00">2018-10-21</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-15 18:57:25" itemprop="dateModified" datetime="2024-04-15T18:57:25+08:00">2024-04-15</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" itemprop="url" rel="index"><span itemprop="name">设计模式</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E8%AF%BB%E4%B9%A6/" itemprop="url" rel="index"><span itemprop="name">读书</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2018/10/21/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E8%AE%BE%E7%BD%AE%E4%B8%AD%E7%BB%9F%E4%B8%80%E6%90%9C%E7%B4%A2%E6%8E%A5%E5%8F%A3%E5%AE%9E%E7%8E%B0/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2018/10/21/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E8%AE%BE%E7%BD%AE%E4%B8%AD%E7%BB%9F%E4%B8%80%E6%90%9C%E7%B4%A2%E6%8E%A5%E5%8F%A3%E5%AE%9E%E7%8E%B0/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>主要调研下Settings对应的通用搜索框架的实现.</p>
-<h1 id="1-自定义fragment支持search扩展"><a href="#1-自定义fragment支持search扩展" class="headerlink" title="1. 自定义fragment支持search扩展"></a>1. 自定义fragment支持search扩展</h1><p>需要继承com.android.settings.search.Indexable接口, 定义SearchIndexProvider的实例, 并需要将自己加到SearchIndexableResources的sProviders中</p>
-<h2 id="1-1-接口定义"><a href="#1-1-接口定义" class="headerlink" title="1.1. 接口定义"></a>1.1. 接口定义</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 嵌套接口的用法</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="title class_">Indexable</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">interface</span> <span class="title class_">SearchIndexProvider</span> &#123;</span><br><span class="line">        <span class="comment">/**</span></span><br><span class="line"><span class="comment">         * Return a list of references for indexing.</span></span><br><span class="line"><span class="comment">         *</span></span><br><span class="line"><span class="comment">         * See &#123;<span class="doctag">@link</span> android.provider.SearchIndexableResource&#125;</span></span><br><span class="line"><span class="comment">         *</span></span><br><span class="line"><span class="comment">         *</span></span><br><span class="line"><span class="comment">         * <span class="doctag">@param</span> context the context.</span></span><br><span class="line"><span class="comment">         * <span class="doctag">@param</span> enabled hint telling if the data needs to be considered into the search results</span></span><br><span class="line"><span class="comment">         *                or not.</span></span><br><span class="line"><span class="comment">         * <span class="doctag">@return</span> a list of &#123;<span class="doctag">@link</span> android.provider.SearchIndexableResource&#125; references.</span></span><br><span class="line"><span class="comment">         *         Can be null.</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        List&lt;SearchIndexableResource&gt; <span class="title function_">getXmlResourcesToIndex</span><span class="params">(Context context, <span class="type">boolean</span> enabled)</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/**</span></span><br><span class="line"><span class="comment">         * Return a list of raw data for indexing. See &#123;<span class="doctag">@link</span> SearchIndexableRaw&#125;</span></span><br><span class="line"><span class="comment">         *</span></span><br><span class="line"><span class="comment">         * <span class="doctag">@param</span> context the context.</span></span><br><span class="line"><span class="comment">         * <span class="doctag">@param</span> enabled hint telling if the data needs to be considered into the search results</span></span><br><span class="line"><span class="comment">         *                or not.</span></span><br><span class="line"><span class="comment">         * <span class="doctag">@return</span> a list of &#123;<span class="doctag">@link</span> SearchIndexableRaw&#125; references. Can be null.</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        List&lt;SearchIndexableRaw&gt; <span class="title function_">getRawDataToIndex</span><span class="params">(Context context, <span class="type">boolean</span> enabled)</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/**</span></span><br><span class="line"><span class="comment">         * Return a list of data keys that cannot be indexed. See &#123;<span class="doctag">@link</span> SearchIndexableRaw&#125;</span></span><br><span class="line"><span class="comment">         *</span></span><br><span class="line"><span class="comment">         * <span class="doctag">@param</span> context the context.</span></span><br><span class="line"><span class="comment">         * <span class="doctag">@return</span> a list of &#123;<span class="doctag">@link</span> SearchIndexableRaw&#125; references. Can be null.</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        List&lt;String&gt; <span class="title function_">getNonIndexableKeys</span><span class="params">(Context context)</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/**</span></span><br><span class="line"><span class="comment">         * <span class="doctag">@param</span> context</span></span><br><span class="line"><span class="comment">         * <span class="doctag">@return</span> a list of &#123;<span class="doctag">@link</span> AbstractPreferenceController&#125; for ResultPayload data during</span></span><br><span class="line"><span class="comment">         * Indexing.</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        List&lt;AbstractPreferenceController&gt; <span class="title function_">getPreferenceControllers</span><span class="params">(Context context)</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="1-2-接口实现"><a href="#1-2-接口实现" class="headerlink" title="1.2. 接口实现"></a>1.2. 接口实现</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 定义SearchIndexProvider的实例</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="type">SearchIndexProvider</span> <span class="variable">SEARCH_INDEX_DATA_PROVIDER</span> <span class="operator">=</span> </span><br><span class="line">        <span class="keyword">new</span> <span class="title class_">BaseSearchIndexProvider</span>() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="keyword">public</span> List&lt;SearchIndexableResource&gt; <span class="title function_">getXmlResourcesToIndex</span><span class="params">(</span></span><br><span class="line"><span class="params">                    Context context, <span class="type">boolean</span> enabled)</span> &#123;</span><br><span class="line">                <span class="keyword">final</span> <span class="type">SearchIndexableResource</span> <span class="variable">sir</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">SearchIndexableResource</span>(context);</span><br><span class="line">                sir.xmlResId = R.xml.tether_prefs;</span><br><span class="line">                <span class="keyword">return</span> Arrays.asList(sir);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">BaseSearchIndexProvider</span> <span class="keyword">implements</span> <span class="title class_">Indexable</span>.SearchIndexProvider</span><br><span class="line"><span class="comment">// 加到sResMap中, 后面遍历时用打</span></span><br><span class="line">addIndex(TetherSettings.class, NO_DATA_RES_ID, <span class="number">0</span>);</span><br></pre></td></tr></table></figure>
-
-<p>定义了通用类, BaseSearchIndexProvider, 实现接口的通用方法, 如果有具体的定制需求, 需要自定义BaseSearchIndexProvider的子类覆盖对应方法.</p>
-<h2 id="1-3-结构图"><a href="#1-3-结构图" class="headerlink" title="1.3. 结构图"></a>1.3. 结构图</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">@startuml</span><br><span class="line">interface Indexable &#123;               </span><br><span class="line">   interface SearchIndexProvider</span><br><span class="line">&#125;</span><br><span class="line">interface SearchIndexProvider &#123;</span><br><span class="line">    getXmlResourcesToIndex(...)</span><br><span class="line">    getRawDataToIndex()</span><br><span class="line">    getNonIndexableKeys()</span><br><span class="line">&#125;</span><br><span class="line">Indexable *-- SearchIndexProvider </span><br><span class="line">class BaseSearchIndexProvider implements SearchIndexProvider &#123;</span><br><span class="line">    getXmlResourcesToIndex(...)</span><br><span class="line">    getRawDataToIndex()</span><br><span class="line">    getNonIndexableKeys()</span><br><span class="line">&#125;</span><br><span class="line">class DemoFragment implements Indexable &#123;</span><br><span class="line">    SearchIndexProvider SEARCH_INDEX_DATA_PROVIDER</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">DemoFragment o-- BaseSearchIndexProvider</span><br><span class="line">@enduml</span><br></pre></td></tr></table></figure>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2018/10/21/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E8%AE%BE%E7%BD%AE%E4%B8%AD%E7%BB%9F%E4%B8%80%E6%90%9C%E7%B4%A2%E6%8E%A5%E5%8F%A3%E5%AE%9E%E7%8E%B0/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2018/10/12/OTA%E7%9B%B8%E5%85%B3/%E7%A1%AC%E4%BB%B6%E5%8A%A0%E5%AF%86%E6%95%B4%E7%90%86/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2018/10/12/OTA%E7%9B%B8%E5%85%B3/%E7%A1%AC%E4%BB%B6%E5%8A%A0%E5%AF%86%E6%95%B4%E7%90%86/" class="post-title-link" itemprop="url">文件加密FBE&DirectBoot模式介绍</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2018-10-12 18:15:54" itemprop="dateCreated datePublished" datetime="2018-10-12T18:15:54+08:00">2018-10-12</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-16 15:15:00" itemprop="dateModified" datetime="2024-04-16T15:15:00+08:00">2024-04-16</time>
+                <time title="修改时间：2024-04-16 15:09:26" itemprop="dateModified" datetime="2024-04-16T15:09:26+08:00">2024-04-16</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -768,8 +241,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2018/10/12/OTA%E7%9B%B8%E5%85%B3/%E7%A1%AC%E4%BB%B6%E5%8A%A0%E5%AF%86%E6%95%B4%E7%90%86/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2018/10/12/OTA%E7%9B%B8%E5%85%B3/%E7%A1%AC%E4%BB%B6%E5%8A%A0%E5%AF%86%E6%95%B4%E7%90%86/" itemprop="commentCount"></span>
+    <a title="valine" href="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E5%8A%A0%E5%AF%86%E6%96%B9%E6%A1%88%E6%95%B4%E7%90%86/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E5%8A%A0%E5%AF%86%E6%96%B9%E6%A1%88%E6%95%B4%E7%90%86/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -784,51 +257,18 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>文件加密FBE&amp;DirectBoot模式介绍</p>
-<h1 id="1-File-based-Encryption"><a href="#1-File-based-Encryption" class="headerlink" title="1. File based Encryption"></a>1. File based Encryption</h1><p>Android 7.0及以上版本提供基于文件的加密方式(FBE). 这种方式允许使用不同的密钥对不同的文件进行加密, 并且可以独立进行解密.<br>Android 7.0为基于文件的加密引入了新的功能, 命名为Direct Boot. 它允许加密设备直接启动至锁定屏幕的状态. 在以前的版本中, 使用全局磁盘加密(FDE)的设备,<br>用户需要在任何数据能够被访问前提供认证凭证(图形&#x2F;密码&#x2F;指纹), 来预防设备可能被进行的任何基本操作.<br>如: 闹钟无法执行, 辅助功能服务无法使用, 电话无法接受通话请求, 除了最基本的紧急通话操作.<br>使用基于文件加密的设备, 应用可以了解当前加密的情况, 同时被允许执行限定范围内的操作. 这些操作能够在用户提供认证凭证前执行, 同时依然能够保护私有用户信息.<br>在使用FBE的设备上, 设备的每个用户对于设备应用均拥有两个存储空间:</p>
-<ul>
-<li>凭证加密存储区间(<code>Credential Encrypted (CE)</code>), 这是缺省的存储空间, 并且只有当用户解锁设备后才可用.</li>
-<li>设备加密存储空间(<code>Device Encrypted (DE)</code>), 该存储空间在Direct Boot模式和用户解锁设备后均可用.</li>
-</ul>
-<h2 id="1-1-FDE-Vs-FBE"><a href="#1-1-FDE-Vs-FBE" class="headerlink" title="1.1. FDE Vs FBE:"></a>1.1. FDE Vs FBE:</h2><ul>
-<li>FBE: FILE BASED ENCRYPTION:<ul>
-<li>每一个用户一个CE key，CE key的加密信息存储在data分区的相应文件夹中。</li>
-<li>每个用户对应一个DE key，除此之外，还有一个全局的DE key用来为与用户非强关联的文件夹设置加密。</li>
-<li>设备未解锁之前，可以使用CE区域以外的文件夹。</li>
-<li>加密针对文件夹级别，加密机制利用了Ext4 文件系统的加密特性。</li>
-<li>这种区分能够使工作模型更为安全, 因为它允许在同一时间能够保护多个用户，并不是基于一个启动时密码。</li>
-</ul>
-</li>
-<li>FDE（FULL DISK ENCTYPTION）<ul>
-<li>只有一个key，key的加密信息存储在磁盘尾部区域。</li>
-<li>设备未解锁之前，data目录是以tmpfs格式挂载的data分区处于完全不可使用状态。</li>
-<li>加密针对的是分区级别，加密机制利用了dm-crypt加密特性。</li>
-</ul>
-</li>
-</ul>
-<h2 id="1-2-Dependencies"><a href="#1-2-Dependencies" class="headerlink" title="1.2. Dependencies"></a>1.2. Dependencies</h2><p>设备必须满足以下的要求来安全使用AOSP的FBE实现:</p>
-<ul>
-<li><p>Kernel支持ext4加密(相关的kernel config为: EXT4_FS_ENCRYPTION)</p>
-</li>
-<li><p>Keymaster支持1.0&#x2F;2.0的HAL版本. 0.3版本的keymaster hal并不提供相关需要的属性支持, 而且不能保证加密密钥的安全保护机制.</p>
-</li>
-<li><p>Keymaster&#x2F;Keystore 和 GateKeeper必须在可信任执行环境(TEE)中实现, 用以提供对DE密钥的保护, 该情况下, 未认证的系统OS(自行输入到设备上的OS)将不能简单的访问DE密钥.</p>
-</li>
-<li><p>kernel中提供的加密性能必须达到使用AES-XTS时最低为50MB&#x2F;s来保证良好的用户体验.</p>
-</li>
-<li><p>Verified Boot机制下 Keymaster root of trust 必须绑定至keymaster的初始化过程中. 这将保证设备加密证书不会被未验证的操作系统访问到</p>
-</li>
-<li><p>bootloader passes the following information to the TEE after boot&#x2F;recovery partition verification and</p>
-<p>TEE initialization to bind the Keymaster root of trust:</p>
-<ul>
-<li>the public key that was used to sign the boot partition</li>
-</ul>
-</li>
-</ul>
-<h2 id="1-3-加密规则-Encryption-policy"><a href="#1-3-加密规则-Encryption-policy" class="headerlink" title="1.3. 加密规则 Encryption policy"></a>1.3. 加密规则 Encryption policy</h2>
+          <h1 id="1-加密方案整理"><a href="#1-加密方案整理" class="headerlink" title="1. 加密方案整理"></a>1. 加密方案整理</h1><h2 id="1-1-简介"><a href="#1-1-简介" class="headerlink" title="1.1. 简介"></a>1.1. 简介</h2><p>Android上加密方案分为全磁盘加密(<code>FDE</code>)&#x2F;文件加密(<code>FBE</code>)&#x2F;元数据加密(<code>METADATA</code>)<br>均是针对userdata分区进行加密, 与其他分区并无关系.<br>本篇主要介绍下这三种加密方式硬件加密的实现框架</p>
+<h2 id="1-2-判断机器采用何种加密方式"><a href="#1-2-判断机器采用何种加密方式" class="headerlink" title="1.2. 判断机器采用何种加密方式"></a>1.2. 判断机器采用何种加密方式</h2><p>最直观的方式是可以通过分区表<code>fstab</code>来区分<br>未加密&#x2F;fde加密&#x2F;fbe加密&#x2F;metadata加密</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">/dev/block/bootdevice/by-name/userdata     /data           ext4    noatime,nosuid,nodev,barrier=1,data=ordered,noauto_da_alloc     wait,check,encryptable=footer</span><br><span class="line">/dev/block/bootdevice/by-name/userdata     /data           ext4    noatime,nosuid,nodev,barrier=1,noauto_da_alloc,discard latemount,wait,check,fileencryption=ice,wrappedkey,quota,reservedsize=128M</span><br><span class="line">/dev/block/bootdevice/by-name/userdata     /data           ext4    noatime,nosuid,nodev,barrier=1,noauto_da_alloc,discard latemount,wait,check,fileencryption=ice,wrappedkey,keydirectory=/metadata/vold/metadata_encryption,quota,reservedsize=128M</span><br></pre></td></tr></table></figure>
+
+<p>当前版本中最常见的是fbe加密的机型.</p>
+<p>代码中判断是否加密:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">StorageManager.isEncrypted()</span><br><span class="line">StorageManager.isFileEncryptedNativeOnly()</span><br><span class="line">StorageManager.isBlockEncrypted()</span><br></pre></td></tr></table></figure>
+
+<p>native 层多是通过FstabEntry来判断是何种加密方式</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2018/10/12/OTA%E7%9B%B8%E5%85%B3/%E7%A1%AC%E4%BB%B6%E5%8A%A0%E5%AF%86%E6%95%B4%E7%90%86/#more" rel="contents">
+              <a class="btn" href="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E5%8A%A0%E5%AF%86%E6%96%B9%E6%A1%88%E6%95%B4%E7%90%86/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -852,7 +292,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2018/10/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/%E4%BD%8E%E5%AD%98%E5%82%A8%E6%9C%BA%E5%88%B6%E8%AF%B4%E6%98%8E/">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E6%9C%BA%E5%9E%8Bfastbootd%E4%BD%BF%E7%94%A8/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -866,7 +306,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2018/10/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/%E4%BD%8E%E5%AD%98%E5%82%A8%E6%9C%BA%E5%88%B6%E8%AF%B4%E6%98%8E/" class="post-title-link" itemprop="url">低存储机制说明</a>
+            <a href="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E6%9C%BA%E5%9E%8Bfastbootd%E4%BD%BF%E7%94%A8/" class="post-title-link" itemprop="url">vab机型fastbootd使用</a>
         </h2>
 
         <div class="post-meta">
@@ -876,14 +316,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2018-10-01 00:00:00" itemprop="dateCreated datePublished" datetime="2018-10-01T00:00:00+08:00">2018-10-01</time>
+              <time title="创建时间：2019-10-12 18:15:54" itemprop="dateCreated datePublished" datetime="2019-10-12T18:15:54+08:00">2019-10-12</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-15 17:59:59" itemprop="dateModified" datetime="2024-04-15T17:59:59+08:00">2024-04-15</time>
+                <time title="修改时间：2024-04-16 15:08:39" itemprop="dateModified" datetime="2024-04-16T15:08:39+08:00">2024-04-16</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -891,11 +331,181 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/SAF/" itemprop="url" rel="index"><span itemprop="name">SAF</span></a>
+                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E6%9C%BA%E5%9E%8Bfastbootd%E4%BD%BF%E7%94%A8/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E6%9C%BA%E5%9E%8Bfastbootd%E4%BD%BF%E7%94%A8/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>vnote_backup_file_826537664 &#x2F;home&#x2F;mi&#x2F;Documents&#x2F;backup&#x2F;VnoteBook&#x2F;OTA相关&#x2F;动态分区机型fastbootd使用.md</p>
+<h1 id="动态分区机型fastbootd使用"><a href="#动态分区机型fastbootd使用" class="headerlink" title="动态分区机型fastbootd使用"></a>动态分区机型fastbootd使用</h1><h2 id="fastbootd简介"><a href="#fastbootd简介" class="headerlink" title="fastbootd简介"></a>fastbootd简介</h2><p>在动态分区机型上bootloader的fastboot不能烧写动态分区的镜像, 需要使用<strong>recovery子系统</strong>下的fastbootd来进行用户空间的烧写镜像的工作</p>
+<p>fastbootd是recovery子系统下的一个native进程, 由init fork出来. 具体实现方式类似于adbd.<br>包括进程创建, 驱动通道, 与init的协作都与adbd一致, 是属于借助usb的config配置实现的功能.<br>因此不能同时启用adb和fastboot模式, 因为这两个独占同一个通道.</p>
+<h2 id="fastbootd命令"><a href="#fastbootd命令" class="headerlink" title="fastbootd命令"></a>fastbootd命令</h2><table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Description</th>
+<th>Available when device is OEM locked</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>getvar is-userspace</td>
+<td>Return yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>getvar<br>is-logical:<partition></partition></td>
+<td>Return yes if the given partition is a<br>logical partition, no otherwise</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>getvar super-partition-name</td>
+<td>MUST return super for a device<br>launching with logical partitions</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>create-logical-partition<br><partition> <size></size></partition></td>
+<td>Create a logical partition with the<br>given name and size</td>
+<td>No</td>
+</tr>
+<tr>
+<td>delete-logical-partition<br><partition></partition></td>
+<td>Delete the given logical partition</td>
+<td>No</td>
+</tr>
+<tr>
+<td>resize-logical-partition<br><partition> <size></size></partition></td>
+<td>Resize the logical partition to the new<br>size without changing its contents</td>
+<td>No</td>
+</tr>
+<tr>
+<td>update-super <partition></partition></td>
+<td>Similar to flash super, except rather<br>than flashing raw data to the super<br>partition, this will ensure that all<br>partitions within the downloaded<br>image are created</td>
+<td>No</td>
+</tr>
+<tr>
+<td>getvar max-download-size</td>
+<td>Return the maximum size of an image<br>that can be downloaded in bytes in<br>hex</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>getvar partition-type<br><partition-name></partition-name></td>
+<td>Return file system type: ext4, f2fs,<br>raw</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>flash <em>partition_name</em> filename</td>
+<td>Flash the partition through a series of<br>download and flash fastboot<br>protocol commands</td>
+<td>No</td>
+</tr>
+<tr>
+<td>reboot bootloader</td>
+<td>Reboot into bootloader mode</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>reboot fastboot</td>
+<td>Reboot back into fastbootd mode</td>
+<td>Yes</td>
+</tr>
+</tbody></table>
+<h2 id="安装最新的fastboot工具"><a href="#安装最新的fastboot工具" class="headerlink" title="安装最新的fastboot工具"></a>安装最新的fastboot工具</h2><p>在<a target="_blank" rel="noopener" href="https://developer.android.com/studio/releases/platform-tools">platform-tools</a>获取最新的fastboot和adb的工具</p>
+<ul>
+<li>linux下替换<br>解压后得到platform-tools 目录</li>
+</ul>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E6%9C%BA%E5%9E%8Bfastbootd%E4%BD%BF%E7%94%A8/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E8%AE%BE%E5%A4%87%E4%B8%8A%E9%94%81%E7%8A%B6%E6%80%81%E4%B8%8B1217%E6%97%A0%E6%B3%95%E5%B7%A5%E4%BD%9C%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E8%AE%BE%E5%A4%87%E4%B8%8A%E9%94%81%E7%8A%B6%E6%80%81%E4%B8%8B1217%E6%97%A0%E6%B3%95%E5%B7%A5%E4%BD%9C%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90/" class="post-title-link" itemprop="url">设备bootloader上锁状态下1217无法工作问题分析</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-10-12 18:15:54" itemprop="dateCreated datePublished" datetime="2019-10-12T18:15:54+08:00">2019-10-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 15:10:37" itemprop="dateModified" datetime="2024-04-16T15:10:37+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
                 </span>
                   ，
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/SAF/DeviceStorageMonitor/" itemprop="url" rel="index"><span itemprop="name">DeviceStorageMonitor</span></a>
+                  <a href="/categories/Android/%E5%8A%A0%E5%AF%86/" itemprop="url" rel="index"><span itemprop="name">加密</span></a>
                 </span>
             </span>
 
@@ -908,8 +518,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2018/10/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/%E4%BD%8E%E5%AD%98%E5%82%A8%E6%9C%BA%E5%88%B6%E8%AF%B4%E6%98%8E/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2018/10/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/%E4%BD%8E%E5%AD%98%E5%82%A8%E6%9C%BA%E5%88%B6%E8%AF%B4%E6%98%8E/" itemprop="commentCount"></span>
+    <a title="valine" href="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E8%AE%BE%E5%A4%87%E4%B8%8A%E9%94%81%E7%8A%B6%E6%80%81%E4%B8%8B1217%E6%97%A0%E6%B3%95%E5%B7%A5%E4%BD%9C%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E8%AE%BE%E5%A4%87%E4%B8%8A%E9%94%81%E7%8A%B6%E6%80%81%E4%B8%8B1217%E6%97%A0%E6%B3%95%E5%B7%A5%E4%BD%9C%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -924,28 +534,13 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="1-低存储方案机制部分"><a href="#1-低存储方案机制部分" class="headerlink" title="1. 低存储方案机制部分"></a>1. 低存储方案机制部分</h1><h2 id="1-1-系统通知提示"><a href="#1-1-系统通知提示" class="headerlink" title="1.1. 系统通知提示"></a>1.1. 系统通知提示</h2><p>获得data分区可用存储空间:</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Environment.getDataDirectory().getUsableSpace()</span><br></pre></td></tr></table></figure>
-
-<h3 id="1-1-1-第一档"><a href="#1-1-1-第一档" class="headerlink" title="1.1.1. 第一档"></a>1.1.1. 第一档</h3><p>阈值为<code>100M</code>,   100 *1024 *1024</p>
-<p>弹出系统通知</p>
-<ul>
-<li><p>通知标题</p>
-<p>Insufficient internal storage</p>
-<p>内部存储空间不足</p>
-</li>
-<li><p>通知内容:</p>
-<p>Insufficient internal storage space, some system functions may not work properly, please clean up storage space immediately.</p>
-<p>内部存储空间不足，部分系统功能可能无法正常使用，请立即清理存储空间。</p>
-</li>
-</ul>
-<blockquote>
-<p>点击通知, 进入存储空间清理界面</p>
-</blockquote>
-<h3 id="1-1-2-第二档"><a href="#1-1-2-第二档" class="headerlink" title="1.1.2. 第二档"></a>1.1.2. 第二档</h3>
+          <h1 id="设备bootloader上锁状态下1217无法工作问题分析"><a href="#设备bootloader上锁状态下1217无法工作问题分析" class="headerlink" title="设备bootloader上锁状态下1217无法工作问题分析"></a>设备bootloader上锁状态下1217无法工作问题分析</h1><h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>前面讲到r上6月份升级基线后, 因KM TA date support的升级导致recovery下无法正常使用解密服务.</p>
+<p>当时的方案是配置recovery vbmeta区域的 prop <code>--prop com.android.build.boot.security_patch:2020-06-05</code><br>从而在bootimg_hdr不支持识别date 信息的情况下, 可以在reocovery模式下bootloader能够读到天的信息, 并传给KM TA.</p>
+<h2 id="新问题"><a href="#新问题" class="headerlink" title="新问题"></a>新问题</h2><p>最近测试在复测该问题时, 发现手机bootloader上锁状态下, 无法执行1217功能. 因此需要重新分析下这个问题的原因.</p>
+<h2 id="locked-状态下的调试"><a href="#locked-状态下的调试" class="headerlink" title="locked 状态下的调试"></a>locked 状态下的调试</h2><h3 id="debug-abl的方法"><a href="#debug-abl的方法" class="headerlink" title="debug abl的方法"></a>debug abl的方法</h3><h4 id="locked状态下的限制"><a href="#locked状态下的限制" class="headerlink" title="locked状态下的限制"></a>locked状态下的限制</h4><p>首先, 小米机器locked 状态有如下限制:</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2018/10/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/%E4%BD%8E%E5%AD%98%E5%82%A8%E6%9C%BA%E5%88%B6%E8%AF%B4%E6%98%8E/#more" rel="contents">
+              <a class="btn" href="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E8%AE%BE%E5%A4%87%E4%B8%8A%E9%94%81%E7%8A%B6%E6%80%81%E4%B8%8B1217%E6%97%A0%E6%B3%95%E5%B7%A5%E4%BD%9C%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -969,7 +564,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2018/09/20/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E7%AC%94%E8%AE%B0/">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/10/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/%E5%BC%80%E6%9C%BAlog%E7%9B%B8%E5%85%B3/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -983,7 +578,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2018/09/20/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E7%AC%94%E8%AE%B0/" class="post-title-link" itemprop="url">github 加速</a>
+            <a href="/2019/10/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/%E5%BC%80%E6%9C%BAlog%E7%9B%B8%E5%85%B3/" class="post-title-link" itemprop="url">小米开机log相关</a>
         </h2>
 
         <div class="post-meta">
@@ -993,14 +588,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2018-09-20 10:00:01" itemprop="dateCreated datePublished" datetime="2018-09-20T10:00:01+08:00">2018-09-20</time>
+              <time title="创建时间：2019-10-01 00:00:00" itemprop="dateCreated datePublished" datetime="2019-10-01T00:00:00+08:00">2019-10-01</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-15 18:57:08" itemprop="dateModified" datetime="2024-04-15T18:57:08+08:00">2024-04-15</time>
+                <time title="修改时间：2024-04-15 18:49:09" itemprop="dateModified" datetime="2024-04-15T18:49:09+08:00">2024-04-15</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1008,7 +603,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E8%AF%BB%E4%B9%A6/" itemprop="url" rel="index"><span itemprop="name">读书</span></a>
+                  <a href="/categories/log/" itemprop="url" rel="index"><span itemprop="name">log</span></a>
                 </span>
             </span>
 
@@ -1021,8 +616,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2018/09/20/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E7%AC%94%E8%AE%B0/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2018/09/20/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E7%AC%94%E8%AE%B0/" itemprop="commentCount"></span>
+    <a title="valine" href="/2019/10/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/%E5%BC%80%E6%9C%BAlog%E7%9B%B8%E5%85%B3/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2019/10/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/%E5%BC%80%E6%9C%BAlog%E7%9B%B8%E5%85%B3/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -1037,20 +632,15 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="1-并发编程笔记"><a href="#1-并发编程笔记" class="headerlink" title="1. 并发编程笔记"></a>1. 并发编程笔记</h1><h2 id="1-1-容器加锁注意事项"><a href="#1-1-容器加锁注意事项" class="headerlink" title="1.1. 容器加锁注意事项"></a>1.1. 容器加锁注意事项</h2><ul>
-<li>加锁可以防止容器的迭代溢出.</li>
-<li>迭代期间对容器进行加锁会降低程序的可伸缩性. 降低程序性能及cpu使用率.甚至可能造成死锁.取决于容器的规模.</li>
-<li>替代方法是克隆容器.(克隆过程中仍然需要加锁,会有额外的性能开销)</li>
-<li>使用容器的一些方法时,会隐藏使用迭代器.</li>
-</ul>
-<h2 id="1-2-并发容器"><a href="#1-2-并发容器" class="headerlink" title="1.2. 并发容器"></a>1.2. 并发容器</h2><p>Queue  BlockingQueue  ConcurrentHashMap  ConcurrentMap CopyOnWriteArrayList </p>
-<p>PriorityBlockingQueue SynchronousQueue(put take一直阻塞)</p>
-<h2 id="1-3-模式"><a href="#1-3-模式" class="headerlink" title="1.3. 模式"></a>1.3. 模式</h2><p>生产者消费者模式  (如BlockingQueue 所有消费者有一个共享的工作队列)</p>
-<p>工作密取(对应双端队列 如BlockingDeque, 每个消费者都有各自的工作队列,如果一个消费者完成了自己双端队列上的全部工作,它可以从其它消费者双端队列上秘密的获取工作,适合执行某个工作时发现有更多的工作.)</p>
-<h2 id="1-4-闭锁"><a href="#1-4-闭锁" class="headerlink" title="1.4. 闭锁"></a>1.4. 闭锁</h2>
+          <h1 id="1-开机log相关"><a href="#1-开机log相关" class="headerlink" title="1. 开机log相关"></a>1. 开机log相关</h1><h2 id="1-1-抓取log的方式"><a href="#1-1-抓取log的方式" class="headerlink" title="1.1. 抓取log的方式"></a>1.1. 抓取log的方式</h2><h3 id="1-1-1-通过rec-overy抓取ota的log"><a href="#1-1-1-通过rec-overy抓取ota的log" class="headerlink" title="1.1.1. 通过rec overy抓取ota的log"></a>1.1.1. 通过rec overy抓取ota的log</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">@startuml</span><br><span class="line">-设置</span><br><span class="line">-系统更新</span><br><span class="line">-菜单(重启到recovery)</span><br><span class="line">note right</span><br><span class="line">稳定版本需要连续点击logo</span><br><span class="line">才会出现菜单项</span><br><span class="line">end note</span><br><span class="line">-系统重启到recovery模式</span><br><span class="line">-选择连接小米助手</span><br><span class="line">- pc端执行 adb pull /cache/ .</span><br><span class="line">@enduml</span><br></pre></td></tr></table></figure>
+
+<h4 id="1-1-1-1-抓取的log分析"><a href="#1-1-1-1-抓取的log分析" class="headerlink" title="1.1.1.1. 抓取的log分析"></a>1.1.1.1. 抓取的log分析</h4><p><code>/cache/recovery/</code>下面是ota升级相关的log日志<br><code>/cache/mqsas</code>下是重启到recovery模式前主系统最后保存的日志</p>
+<h3 id="1-1-2-主系统的日志"><a href="#1-1-2-主系统的日志" class="headerlink" title="1.1.2. 主系统的日志"></a>1.1.2. 主系统的日志</h3><p>如果adb 可以连接, 可查看的log信息<br>&#96;adblog</p>
+<p>&#96;cat</p>
+
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2018/09/20/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E7%AC%94%E8%AE%B0/#more" rel="contents">
+              <a class="btn" href="/2019/10/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/%E5%BC%80%E6%9C%BAlog%E7%9B%B8%E5%85%B3/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -1074,7 +664,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2018/09/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/c++%E8%B0%83%E8%AF%95%E5%A4%B4%E6%96%87%E4%BB%B6/">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/09/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/github/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -1088,7 +678,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2018/09/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/c++%E8%B0%83%E8%AF%95%E5%A4%B4%E6%96%87%E4%BB%B6/" class="post-title-link" itemprop="url">Effective Modern C++ 11 笔记</a>
+            <a href="/2019/09/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/github/" class="post-title-link" itemprop="url">github 加速</a>
         </h2>
 
         <div class="post-meta">
@@ -1098,14 +688,14 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2018-09-02 13:47:23" itemprop="dateCreated datePublished" datetime="2018-09-02T13:47:23+08:00">2018-09-02</time>
+              <time title="创建时间：2019-09-20 10:00:01" itemprop="dateCreated datePublished" datetime="2019-09-20T10:00:01+08:00">2019-09-20</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-16 18:09:42" itemprop="dateModified" datetime="2024-04-16T18:09:42+08:00">2024-04-16</time>
+                <time title="修改时间：2024-04-15 18:55:47" itemprop="dateModified" datetime="2024-04-15T18:55:47+08:00">2024-04-15</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1126,8 +716,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2018/09/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/c++%E8%B0%83%E8%AF%95%E5%A4%B4%E6%96%87%E4%BB%B6/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2018/09/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/c++%E8%B0%83%E8%AF%95%E5%A4%B4%E6%96%87%E4%BB%B6/" itemprop="commentCount"></span>
+    <a title="valine" href="/2019/09/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/github/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2019/09/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/github/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -1142,17 +732,14 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="1-本地调试使用C-相关"><a href="#1-本地调试使用C-相关" class="headerlink" title="1. 本地调试使用C++相关"></a>1. 本地调试使用C++相关</h1><p><code>strstr strcmp strcpy</code>的头文件在&lt;string.h&gt;中<br><code>std::string</code>的头文件在<string>中</string></p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;string&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;string.h&gt;</span></span></span><br></pre></td></tr></table></figure>
-<p>编译时需要使用如下命令:</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">g++ -lstdc++ &lt;abc.cpp&gt;</span><br></pre></td></tr></table></figure>
+          <h1 id="github-加速"><a href="#github-加速" class="headerlink" title="github 加速"></a>github 加速</h1><p>git 仓库地址中的<code>github.com</code>变成<span style="color: green"><code>github.com.cnpmjs.org</code></span></p>
+<p>git clone <a target="_blank" rel="noopener" href="https://github.com.cnpmjs.org/SpencerPark/IJava.git">https://github.com.cnpmjs.org/SpencerPark/IJava.git</a></p>
+<h1 id="全局配置"><a href="#全局配置" class="headerlink" title="全局配置"></a>全局配置</h1><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git config --global url.<span class="string">&quot;https://github.com.cnpmjs.org/&quot;</span>.insteadOf <span class="string">&quot;https://github.com/&quot;</span></span><br></pre></td></tr></table></figure>
 
-<p>选择c++11编译的命令为:</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">g++ -g -Wall -std=c++11 &lt;abc.cpp&gt;</span><br></pre></td></tr></table></figure>
 
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2018/09/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/c++%E8%B0%83%E8%AF%95%E5%A4%B4%E6%96%87%E4%BB%B6/#more" rel="contents">
+              <a class="btn" href="/2019/09/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/github/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -1176,7 +763,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2018/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9F%A5%E8%AF%861/">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/09/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/vscode%E8%B0%83%E8%AF%95c++/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -1190,7 +777,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2018/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9F%A5%E8%AF%861/" class="post-title-link" itemprop="url">文件系统结构理解</a>
+            <a href="/2019/09/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/vscode%E8%B0%83%E8%AF%95c++/" class="post-title-link" itemprop="url">vscode 调试 C++</a>
         </h2>
 
         <div class="post-meta">
@@ -1200,14 +787,354 @@
               </span>
               <span class="post-meta-item-text">发表于</span>
 
-              <time title="创建时间：2018-08-02 13:47:23" itemprop="dateCreated datePublished" datetime="2018-08-02T13:47:23+08:00">2018-08-02</time>
+              <time title="创建时间：2019-09-20 10:00:01" itemprop="dateCreated datePublished" datetime="2019-09-20T10:00:01+08:00">2019-09-20</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-16 18:05:59" itemprop="dateModified" datetime="2024-04-16T18:05:59+08:00">2024-04-16</time>
+                <time title="修改时间：2024-04-15 18:56:35" itemprop="dateModified" datetime="2024-04-15T18:56:35+08:00">2024-04-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/debug/" itemprop="url" rel="index"><span itemprop="name">debug</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2019/09/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/vscode%E8%B0%83%E8%AF%95c++/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2019/09/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/vscode%E8%B0%83%E8%AF%95c++/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>添加配置, 设置.<br>launch脚本</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">    <span class="comment">// 使用 IntelliSense 了解相关属性.</span></span><br><span class="line">    <span class="comment">// 悬停以查看现有属性的描述。</span></span><br><span class="line">    <span class="comment">// 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387</span></span><br><span class="line">    <span class="attr">&quot;version&quot;</span><span class="punctuation">:</span> <span class="string">&quot;0.2.0&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;configurations&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">        <span class="punctuation">&#123;</span></span><br><span class="line">            <span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;(gdb) Launch&quot;</span><span class="punctuation">,</span></span><br><span class="line">            <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;cppdbg&quot;</span><span class="punctuation">,</span></span><br><span class="line">            <span class="attr">&quot;request&quot;</span><span class="punctuation">:</span> <span class="string">&quot;launch&quot;</span><span class="punctuation">,</span></span><br><span class="line">            <span class="attr">&quot;program&quot;</span><span class="punctuation">:</span> <span class="string">&quot;$&#123;workspaceRoot&#125;/bin/main&quot;</span><span class="punctuation">,</span></span><br><span class="line">            <span class="attr">&quot;args&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">            <span class="attr">&quot;stopAtEntry&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">false</span></span><span class="punctuation">,</span></span><br><span class="line">            <span class="attr">&quot;cwd&quot;</span><span class="punctuation">:</span> <span class="string">&quot;$&#123;workspaceRoot&#125;&quot;</span><span class="punctuation">,</span></span><br><span class="line">            <span class="attr">&quot;environment&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">            <span class="attr">&quot;externalConsole&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">false</span></span><span class="punctuation">,</span></span><br><span class="line">            <span class="attr">&quot;MIMode&quot;</span><span class="punctuation">:</span> <span class="string">&quot;gdb&quot;</span><span class="punctuation">,</span></span><br><span class="line">            <span class="attr">&quot;preLaunchTask&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Build&quot;</span><span class="punctuation">,</span></span><br><span class="line">            <span class="attr">&quot;setupCommands&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">                <span class="punctuation">&#123;</span></span><br><span class="line">                    <span class="attr">&quot;description&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Enable pretty-printing for gdb&quot;</span><span class="punctuation">,</span></span><br><span class="line">                    <span class="attr">&quot;text&quot;</span><span class="punctuation">:</span> <span class="string">&quot;-enable-pretty-printing&quot;</span><span class="punctuation">,</span></span><br><span class="line">                    <span class="attr">&quot;ignoreFailures&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span></span><br><span class="line">                <span class="punctuation">&#125;</span></span><br><span class="line">            <span class="punctuation">]</span></span><br><span class="line">        <span class="punctuation">&#125;</span></span><br><span class="line">    <span class="punctuation">]</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+<p>其中的task脚本</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">    <span class="comment">// See https://go.microsoft.com/fwlink/?LinkId=733558</span></span><br><span class="line">    <span class="comment">// for the documentation about the tasks.json format</span></span><br><span class="line">    <span class="attr">&quot;version&quot;</span><span class="punctuation">:</span> <span class="string">&quot;2.0.0&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="punctuation">&#123;</span></span><br><span class="line">        <span class="comment">// See https://go.microsoft.com/fwlink/?LinkId=733558</span></span><br><span class="line">        <span class="comment">// for the documentation about the tasks.json format</span></span><br><span class="line">        <span class="attr">&quot;version&quot;</span><span class="punctuation">:</span> <span class="string">&quot;2.0.0&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;tasks&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">            <span class="punctuation">&#123;</span></span><br><span class="line">                <span class="attr">&quot;taskname&quot;</span><span class="punctuation">:</span> <span class="string">&quot;build&quot;</span><span class="punctuation">,</span></span><br><span class="line">                <span class="attr">&quot;label&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Build&quot;</span><span class="punctuation">,</span></span><br><span class="line">                <span class="attr">&quot;command&quot;</span><span class="punctuation">:</span> <span class="string">&quot;g++-5&quot;</span><span class="punctuation">,</span></span><br><span class="line">                <span class="attr">&quot;args&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">                    <span class="string">&quot;-g&quot;</span><span class="punctuation">,</span></span><br><span class="line">                    <span class="string">&quot;-Wall&quot;</span><span class="punctuation">,</span></span><br><span class="line">                    <span class="string">&quot;-std=c++14&quot;</span><span class="punctuation">,</span></span><br><span class="line">                    <span class="string">&quot;$&#123;file&#125;&quot;</span><span class="punctuation">,</span></span><br><span class="line">                    <span class="string">&quot;-lpthread&quot;</span><span class="punctuation">,</span></span><br><span class="line">                    <span class="string">&quot;-o&quot;</span><span class="punctuation">,</span></span><br><span class="line">                    <span class="string">&quot;$&#123;workspaceRoot&#125;/bin/main&quot;</span></span><br><span class="line">                <span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">                <span class="attr">&quot;problemMatcher&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">                    <span class="attr">&quot;owner&quot;</span><span class="punctuation">:</span> <span class="string">&quot;cpp&quot;</span><span class="punctuation">,</span></span><br><span class="line">                    <span class="attr">&quot;fileLocation&quot;</span><span class="punctuation">:</span> <span class="string">&quot;absolute&quot;</span><span class="punctuation">,</span></span><br><span class="line">                    <span class="attr">&quot;pattern&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">                        <span class="attr">&quot;regexp&quot;</span><span class="punctuation">:</span> <span class="string">&quot;^(.*):(\\d+):(\\d+):\\s+(error):\\s+(.*)$&quot;</span><span class="punctuation">,</span></span><br><span class="line">                        <span class="attr">&quot;file&quot;</span><span class="punctuation">:</span> <span class="number">1</span><span class="punctuation">,</span></span><br><span class="line">                        <span class="attr">&quot;line&quot;</span><span class="punctuation">:</span> <span class="number">2</span><span class="punctuation">,</span></span><br><span class="line">                        <span class="attr">&quot;column&quot;</span><span class="punctuation">:</span> <span class="number">3</span><span class="punctuation">,</span></span><br><span class="line">                        <span class="attr">&quot;severity&quot;</span><span class="punctuation">:</span> <span class="number">4</span><span class="punctuation">,</span></span><br><span class="line">                        <span class="attr">&quot;message&quot;</span><span class="punctuation">:</span> <span class="number">5</span></span><br><span class="line">                    <span class="punctuation">&#125;</span></span><br><span class="line">                <span class="punctuation">&#125;</span></span><br><span class="line">            <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">            <span class="punctuation">&#123;</span></span><br><span class="line">                <span class="attr">&quot;label&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Run&quot;</span><span class="punctuation">,</span></span><br><span class="line">                <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;shell&quot;</span><span class="punctuation">,</span></span><br><span class="line">                <span class="attr">&quot;dependsOn&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Build&quot;</span><span class="punctuation">,</span></span><br><span class="line">                <span class="attr">&quot;command&quot;</span><span class="punctuation">:</span> <span class="string">&quot;$&#123;workspaceRoot&#125;/bin/main&quot;</span><span class="punctuation">,</span></span><br><span class="line">                <span class="attr">&quot;args&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">                <span class="attr">&quot;presentation&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">                    <span class="attr">&quot;reveal&quot;</span><span class="punctuation">:</span> <span class="string">&quot;always&quot;</span><span class="punctuation">,</span></span><br><span class="line">                    <span class="attr">&quot;focus&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span></span><br><span class="line">                <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">                <span class="attr">&quot;problemMatcher&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">                <span class="attr">&quot;group&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">                    <span class="attr">&quot;kind&quot;</span><span class="punctuation">:</span> <span class="string">&quot;test&quot;</span><span class="punctuation">,</span></span><br><span class="line">                    <span class="attr">&quot;isDefault&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span></span><br><span class="line">                <span class="punctuation">&#125;</span></span><br><span class="line">            <span class="punctuation">&#125;</span></span><br><span class="line">        <span class="punctuation">]</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>其中build部分可以替换为makefile. 如果是多文件编译, 可以使用make all命令, 编译单一cpp(含main)的文件, 使用make $(file)进行替换.</p>
+<figure class="highlight make"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 描述： multifile 项目 makefile文件</span></span><br><span class="line"><span class="comment"># 版本： v2.0</span></span><br><span class="line"><span class="comment"># 修改记录:  1.先测试普通的cpp文件的编译运行</span></span><br><span class="line"><span class="comment">#           2.使用变量来改进我们的makefile文件</span></span><br><span class="line"><span class="comment">#           3.新加了一个源文件</span></span><br><span class="line"><span class="comment">#           4.使用伪目标，加上clean规则</span></span><br><span class="line"><span class="comment">#           5.使用wildcard函数，自动扫描当前目录下的源文件</span></span><br><span class="line"><span class="comment">#           6.加入了自动规则依赖</span></span><br><span class="line"><span class="comment">#           7.实现了opencv程序的编译</span></span><br><span class="line"><span class="comment"># 定义了可执行文件变量</span></span><br><span class="line">BIN := bin</span><br><span class="line">OUT := out</span><br><span class="line">CFLAGS := -std=c++14</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 传递了文件参数</span></span><br><span class="line">FILE := <span class="variable">$(FILE)</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义了源文件列表变量</span></span><br><span class="line"><span class="keyword">ifeq</span> (<span class="variable">$(<span class="built_in">strip</span> <span class="variable">$(FILE)</span>)</span>, )</span><br><span class="line">sources := <span class="variable">$(<span class="built_in">wildcard</span> *.cpp)</span></span><br><span class="line">target:= all</span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">sources := <span class="variable">$(FILE)</span></span><br><span class="line">target:=<span class="variable">$(<span class="built_in">notdir</span> $(<span class="built_in">basename</span> <span class="variable">$(sources)</span>)</span>)</span><br><span class="line"><span class="keyword">endif</span></span><br><span class="line"></span><br><span class="line">executable  := <span class="variable">$(BIN)</span>/<span class="variable">$(target)</span></span><br><span class="line">executable_main := <span class="variable">$(BIN)</span>/main</span><br><span class="line"></span><br><span class="line">SRC := <span class="variable">$(<span class="built_in">notdir</span> <span class="variable">$(sources)</span>)</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 使用变量的引用替换，定义了object文件列表</span></span><br><span class="line">objects := <span class="variable">$(<span class="built_in">addprefix</span> <span class="variable">$(OUT)</span>/,  $(SRC:.cpp=.o)</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 使用变量引用替换，定义依赖文件列表</span></span><br><span class="line">deps    := $(SRC:.cpp=.d)</span><br><span class="line"><span class="comment"># 定义编译命令变量</span></span><br><span class="line">CC  := g++-5</span><br><span class="line">rm  := rm -rf</span><br><span class="line"></span><br><span class="line"><span class="comment">#需要调用的链接库</span></span><br><span class="line">LIBS := -lpthread</span><br><span class="line"></span><br><span class="line"><span class="comment"># 头文件路径</span></span><br><span class="line">INCLUDE := -I.</span><br><span class="line"></span><br><span class="line"><span class="comment"># 链接库路径</span></span><br><span class="line">LDFLAGS := -L/usr/local/lib</span><br><span class="line"><span class="comment"># 终极目标规则，生成可执行文件</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="variable">$(executable)</span> : <span class="variable">$(objects)</span></span><br><span class="line">	-mkdir bin</span><br><span class="line">	<span class="variable">$(CC)</span> <span class="variable">$(CFLAGS)</span> -o <span class="variable">$@</span> <span class="variable">$^</span> <span class="variable">$(LDFLAGS)</span> <span class="variable">$(LIBS)</span></span><br><span class="line">	mv <span class="variable">$(executable)</span> <span class="variable">$(executable_main)</span></span><br><span class="line"></span><br><span class="line"><span class="variable">$(objects)</span>: %.o: <span class="variable">$(sources)</span></span><br><span class="line">	-mkdir <span class="variable">$(OUT)</span></span><br><span class="line">	<span class="variable">$(CC)</span> <span class="variable">$(CFLAGS)</span> -o <span class="variable">$@</span> -c <span class="variable">$&lt;</span> <span class="variable">$(INCLUDE)</span></span><br><span class="line"></span><br><span class="line">all : <span class="variable">$(executable)</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">#clean规则</span></span><br><span class="line"><span class="meta"><span class="keyword">.PHONY</span>: clean</span></span><br><span class="line"><span class="section">clean:</span></span><br><span class="line"><span class="comment">#清除编译生成的所有文件</span></span><br><span class="line"><span class="comment">#$(RM) $(executable) $(objects) $(deps)</span></span><br><span class="line"><span class="comment">#清除编译生成的所有文件,不包括可执行文件</span></span><br><span class="line">	<span class="variable">$(RM)</span> <span class="variable">$(objects)</span> <span class="variable">$(deps)</span> <span class="variable">$(executable)</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 自动规则依赖</span></span><br><span class="line">deps := <span class="variable">$(<span class="built_in">addprefix</span> <span class="variable">$(OUT)</span>/, $(SRC:.cpp=.d)</span>)</span><br><span class="line"><span class="keyword">sinclude</span> <span class="variable">$(deps)</span></span><br><span class="line"><span class="variable">$(deps)</span>: %.d: <span class="variable">$(sources)</span></span><br><span class="line">	<span class="variable">$(CC)</span> -MM <span class="variable">$(CFLAGS)</span> <span class="variable">$&lt;</span> &gt; <span class="variable">$@</span></span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2019/09/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/vscode%E8%B0%83%E8%AF%95c++/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/09/12/OTA%E7%9B%B8%E5%85%B3/%E7%BC%96%E8%AF%91%E7%9B%B8%E5%85%B3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2019/09/12/OTA%E7%9B%B8%E5%85%B3/%E7%BC%96%E8%AF%91%E7%9B%B8%E5%85%B3/" class="post-title-link" itemprop="url">Android bp 编译相关</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-09-12 18:15:54" itemprop="dateCreated datePublished" datetime="2019-09-12T18:15:54+08:00">2019-09-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 15:07:08" itemprop="dateModified" datetime="2024-04-16T15:07:08+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2019/09/12/OTA%E7%9B%B8%E5%85%B3/%E7%BC%96%E8%AF%91%E7%9B%B8%E5%85%B3/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2019/09/12/OTA%E7%9B%B8%E5%85%B3/%E7%BC%96%E8%AF%91%E7%9B%B8%E5%85%B3/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="1-编译相关"><a href="#1-编译相关" class="headerlink" title="1. 编译相关"></a>1. 编译相关</h1><h2 id="1-1-bp-makefile通用规则"><a href="#1-1-bp-makefile通用规则" class="headerlink" title="1.1. bp makefile通用规则"></a>1.1. bp makefile通用规则</h2><p>编译规则:</p>
+<ul>
+<li>bp 可以引用bp定义的module</li>
+<li>bp不能引用mk定义的module</li>
+<li>mk可以引用mk和bp定义的module</li>
+</ul>
+<p>传统的写法下, bp中不能引用外部的make定义的变量</p>
+<p>可以借助原生文件的写法, 在soong_config.mk中引用mk文件<br>build&#x2F;core&#x2F;soong_config.mk<br>    –include miui&#x2F;build&#x2F;soong&#x2F;import_miui_soong_vars.mk</p>
+<p>在mk文件中可以加bp规则的hook</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">ifeq</span> (true,<span class="variable">$(ENABLE_MIUI_DEBUGGING)</span>)</span><br><span class="line">_adb_local_cflags := -UALLOW_ADBD_ROOT -DALLOW_ADBD_ROOT=1 -DALLOW_ADBD_DISABLE_VERITY -DALLOW_ADBD_NO_AUTH</span><br><span class="line"><span class="variable">$(<span class="built_in">call</span> add_additional_soong_var, adbd_defaults, cflags, <span class="variable">$(_adb_local_cflags)</span>)</span></span><br><span class="line"><span class="keyword">endif</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">cc_defaults &#123;</span><br><span class="line">    name: <span class="string">&quot;adbd_defaults&quot;</span>,</span><br><span class="line">    defaults: [<span class="string">&quot;adb_defaults&quot;</span>],</span><br><span class="line"></span><br><span class="line">    cflags: [<span class="string">&quot;-UADB_HOST&quot;</span>, <span class="string">&quot;-DADB_HOST=0&quot;</span>],</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">cc_library &#123;</span><br><span class="line">    name: <span class="string">&quot;libadbd&quot;</span>,</span><br><span class="line">    defaults: [<span class="string">&quot;adbd_defaults&quot;</span>, <span class="string">&quot;host_adbd_supported&quot;</span>],</span><br><span class="line">    recovery_available: <span class="literal">true</span>,</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>参照上述写法, 可以在bp中引用外部的mk变量</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2019/09/12/OTA%E7%9B%B8%E5%85%B3/%E7%BC%96%E8%AF%91%E7%9B%B8%E5%85%B3/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/08/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/gdb%20stl%E6%94%AF%E6%8C%81/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2019/08/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/gdb%20stl%E6%94%AF%E6%8C%81/" class="post-title-link" itemprop="url">Android AOSP gdb stl 支持</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-08-20 10:00:01" itemprop="dateCreated datePublished" datetime="2019-08-20T10:00:01+08:00">2019-08-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-15 18:55:11" itemprop="dateModified" datetime="2024-04-15T18:55:11+08:00">2024-04-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/debug/" itemprop="url" rel="index"><span itemprop="name">debug</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2019/08/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/gdb%20stl%E6%94%AF%E6%8C%81/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2019/08/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/gdb%20stl%E6%94%AF%E6%8C%81/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="Android-AOSP-gdb-stl-支持"><a href="#Android-AOSP-gdb-stl-支持" class="headerlink" title="Android AOSP gdb stl 支持"></a>Android AOSP gdb stl 支持</h1><p>默认情况下不支持stl 输出, 需要gdb支持python脚本, 一般需要自己编译.</p>
+<ol>
+<li><p>下载编译python3.x 源码:</p>
+ <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">curl -O https://www.python.org/ftp/python/3.8.1/Python-3.8.1.tar.xz</span><br><span class="line">cd Python-3.8.1</span><br><span class="line">mkdir build</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">prefix 是指定安装目录, 也可指到任一目录, 因为这里只用到编译python时生成的临时文件</span></span><br><span class="line">../configure --prefix=~/Programs/python3 --enable-optimizations --enable-shared</span><br><span class="line">make</span><br><span class="line">make install</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>下载编译gdb源码:</p>
+<p> <a target="_blank" rel="noopener" href="https://ftp.gnu.org/gnu/gdb/gdb-9.2.tar.xz">https://ftp.gnu.org/gnu/gdb/gdb-9.2.tar.xz</a></p>
+<p> 这个链接有点慢, 可以直接下附件中的</p>
+ <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">tar gdb-9.2.tar.xz</span><br><span class="line">mkdir build</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">prefix 是安装目录, with-python选项的路径填上一步编译python的build路径</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">arm64</span></span><br><span class="line">../configure --target=aarch64-linux-android --prefix=/home/mi/Programs/gdb --enable-unicode=ucs4 --with-python=/home/mi/Programs/Python-3.8.1/build</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">mips</span></span><br><span class="line">../configure --target=mips-mti-elf --prefix=/home/mi/program/mips-gdb --enable-unicode=ucs4 --with-python=/usr --with-auto-load-dir=$debugdir:$datadir/auto-load --with-auto-load-safe-path=$debugdir:$datadir/auto-load --with-expat --without-libunwind-ia64 --without-lzma --without-babeltrace --without-intel-pt --disable-libmcheck --without-mpfr --without-guile</span><br><span class="line">make</span><br><span class="line">make install</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>切换本地python版本为python3</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo rm /usr/bin/python; sudo ln -s /usr/bin/python3 /usr/bin/python;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>这里注意的点是xiaomi的code环境是依赖python2的, repo可以切到python2上, 将repo的第一行改成<code>#!/usr/bin/env python2 </code>即可, 但代码编译时, 有些模块在python3下会报错, 目前发现的有依赖kernel 模块的, 使用ninja都会报错. 所以最好在编译时将python版本切换到python2.</p>
+</blockquote>
+</li>
+<li><p>定制gdbinit</p>
+<p>android上废弃了stlport和gnustl的支持, 只支持libc++的方式集成stl.</p>
+<p>所以python解析脚本是基于libc++开发的, 这里提供一下github上的一个脚本</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/koutheir/libcxx-pretty-printers">https://github.com/koutheir/libcxx-pretty-printers</a></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git clone https://github.com/koutheir/libcxx-pretty-printers</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">python</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"><span class="comment">#路径填刚才clone到本地的, 指定到第一级src目录</span></span><br><span class="line">sys.path.insert(<span class="number">0</span>, <span class="string">&#x27;/home/mi/program/libcxx-pretty-printers/src&#x27;</span>)</span><br><span class="line"><span class="keyword">from</span> libcxx.v1.printers <span class="keyword">import</span> register_libcxx_printers</span><br><span class="line">register_libcxx_printers (<span class="literal">None</span>)</span><br><span class="line">end</span><br></pre></td></tr></table></figure>
+
+
+
+</li>
+<li><p>android编译module修改, Android.bp修改</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"># 添加stl支持</span><br><span class="line">cflags<span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">        <span class="string">&quot;-O0&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">stl<span class="punctuation">:</span> <span class="string">&quot;c++_static&quot;</span><span class="punctuation">,</span> 或</span><br><span class="line">stl<span class="punctuation">:</span> <span class="string">&quot;c++_shared&quot;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>vscode 中使用gdb</p>
+<p>vscode的launch.json也要配置打开 pretty-printers, 对于remote调试感兴趣的可以看另一篇文档中的介绍</p>
+</li>
+</ol>
+  <figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;version&quot;</span><span class="punctuation">:</span> <span class="string">&quot;0.2.0&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;configurations&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">      <span class="punctuation">&#123;</span></span><br><span class="line">          <span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;(gdb) Remote Launch&quot;</span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;cppdbg&quot;</span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;request&quot;</span><span class="punctuation">:</span> <span class="string">&quot;launch&quot;</span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;miDebuggerServerAddress&quot;</span><span class="punctuation">:</span> <span class="string">&quot;127.0.0.1:8888&quot;</span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;program&quot;</span><span class="punctuation">:</span> <span class="string">&quot;/home/mi/work_space/miui-r-umi-dev/out/target/product/cmi/symbols/system/bin/test_code_aaaaaaa&quot;</span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;args&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;stopAtEntry&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;cwd&quot;</span><span class="punctuation">:</span> <span class="string">&quot;$&#123;workspaceFolder&#125;&quot;</span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;environment&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;externalConsole&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;sourceFileMap&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">              <span class="attr">&quot;system/core/crypto_test&quot;</span><span class="punctuation">:</span> <span class="string">&quot;/home/mi/work_space/miui-r-umi-dev/system/core/test_code&quot;</span></span><br><span class="line">          <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;logging&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">              <span class="attr">&quot;trace&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">              <span class="attr">&quot;traceResponse&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">              <span class="attr">&quot;engineLogging&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">          <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;MIMode&quot;</span><span class="punctuation">:</span> <span class="string">&quot;gdb&quot;</span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;miDebuggerPath&quot;</span><span class="punctuation">:</span> <span class="string">&quot;/home/mi/Programs/gdb/bin/aarch64-linux-android-gdb&quot;</span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;setupCommands&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">            <span class="punctuation">&#123;</span></span><br><span class="line">            <span class="attr">&quot;description&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Enable pretty-printing for gdb&quot;</span><span class="punctuation">,</span></span><br><span class="line">            <span class="attr">&quot;text&quot;</span><span class="punctuation">:</span> <span class="string">&quot;-enable-pretty-printing&quot;</span><span class="punctuation">,</span></span><br><span class="line">            <span class="attr">&quot;ignoreFailures&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span></span><br><span class="line">            <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">          <span class="punctuation">]</span><span class="punctuation">,</span></span><br><span class="line">      <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">]</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2019/08/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/gdb%20stl%E6%94%AF%E6%8C%81/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/08/12/OTA%E7%9B%B8%E5%85%B3/f2fs%20gc/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2019/08/12/OTA%E7%9B%B8%E5%85%B3/f2fs%20gc/" class="post-title-link" itemprop="url">f2fs gc</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-08-12 18:15:54" itemprop="dateCreated datePublished" datetime="2019-08-12T18:15:54+08:00">2019-08-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 18:07:15" itemprop="dateModified" datetime="2024-04-16T18:07:15+08:00">2024-04-16</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1228,8 +1155,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2018/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9F%A5%E8%AF%861/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2018/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9F%A5%E8%AF%861/" itemprop="commentCount"></span>
+    <a title="valine" href="/2019/08/12/OTA%E7%9B%B8%E5%85%B3/f2fs%20gc/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2019/08/12/OTA%E7%9B%B8%E5%85%B3/f2fs%20gc/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -1244,16 +1171,124 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="1-文件系统知识1"><a href="#1-文件系统知识1" class="headerlink" title="1. 文件系统知识1"></a>1. 文件系统知识1</h1><h2 id="1-1-文件相关数据结构"><a href="#1-1-文件相关数据结构" class="headerlink" title="1.1. 文件相关数据结构"></a>1.1. 文件相关数据结构</h2><p>每个进程的task_struct结构体中, 包含一个<code>struct files_struct* files</code>结构体指针,指向该进程所有已经打开的文件&#x2F;目录对应的相关信息的结构体.<br>files内部又包含<code>struct file fd_array[]</code>数组, 每一个都是<code>struct file</code>结构体(又被称作fd, 文件描述符), 每个<code>file</code>结构体中记录了被打开文件的基本信息, 如记录该文件对应的目录项<code>dentry</code>,<br>用于操作该文件的<code>file_operations</code>回调函数等, 从<code>dentry</code>中可以找到该文件对应的<code>inode</code>结构体, 从而得到该文件的各种属性信息.</p>
-<p>fd_array数组的长度存放在max_fds字段中, linux系统中，一个进程打开的文件数是有初步限制的，即其文件描述符数初始时有最大化定量，即一个进程一般只能打开<code>NR_OPEN_DEFAULT</code>个文件，该值在32位机上为32个，在64位机上为64个<br>init fork一个子进程时, 也是如此.</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">do_fork======-&gt;copy_process</span><br><span class="line">    |======-&gt;dup_task_struct======-&gt;alloc_task_struct</span><br><span class="line">    |======-&gt;copy_files======-&gt;dup_fd======-&gt;alloc_files</span><br></pre></td></tr></table></figure>
-<h3 id="1-1-1-struct-files-struct扩充"><a href="#1-1-1-struct-files-struct扩充" class="headerlink" title="1.1.1. struct  files_struct扩充"></a>1.1.1. struct  files_struct扩充</h3><p>进程打开的fd数目超过<code>NR_OPEN_DEFAULT</code>时, 对已经初始化的files_struct进行扩充<br>当进行struct files_struct扩充时，会分配一个新的struct fdtable, 分配并初始化新的struct fdtable变量后，原先指向fdtab的struct files_struct指针成员<code>fdt</code>，会指向新分配的struct fdtable变量。这时，struct files_struct实例变量中就包含两个struct fdtable存储区：一个是其自身的，一个新分配的，用fdt指向。执行完上述的操作后，还要<em>将旧的结构存储区的内容拷贝到新的存储区</em>，这包括files_struct自身所包含的close_on_exec，open_fds，fd到新分配的close_on_exec，open_fds，fd的拷贝。<br>执行完上述拷贝之后，就要释放旧的struct fdtable，但这里并不执行执行该项释放操作. (需要时机触发)<br>struct files_struct扩充使用内核源码中的expand_files来实现，<code>expand_files</code>会调用<code>expand_fdtable</code>：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">expand_fdtable</span><span class="params">(<span class="keyword">struct</span> files_struct *files, <span class="type">int</span> nr)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">fdtable</span> *<span class="title">new_fdt</span>, *<span class="title">cur_fdt</span>;</span></span><br><span class="line">    new_fdt = alloc_fdtable(nr);      <span class="comment">//分配了一个fdtable</span></span><br><span class="line">    cur_fdt = files_fdtable(files);   <span class="comment">//files-&gt;fdt</span></span><br><span class="line">    <span class="keyword">if</span> (nr &gt;= cur_fdt-&gt;max_fds) &#123;</span><br><span class="line">        <span class="comment">/* Continue as planned */</span></span><br><span class="line">        copy_fdtable(new_fdt, cur_fdt);   <span class="comment">//拷贝了其中的3个变量:fd,open_fds,close_on_exec</span></span><br><span class="line">        rcu_assign_pointer(files-&gt;fdt, new_fdt);  <span class="comment">//将新分配的fdtable赋值给files的fdt</span></span><br><span class="line">          <span class="keyword">if</span> (cur_fdt-&gt;max_fds &gt; NR_OPEN_DEFAULT)  <span class="comment">//注意它第一次初始化为NR_OPEN_DEFAULT</span></span><br><span class="line">            free_fdtable(cur_fdt);</span><br><span class="line">     &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>扩充后, 内核会同时更新<code>max_fds</code>字段值.</p>
-<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/metersun/article/details/80513702">files_struct扩充</a></p>
+          <p>vnote_backup_file_826537664 &#x2F;home&#x2F;mi&#x2F;Documents&#x2F;backup&#x2F;VnoteBook&#x2F;OTA相关&#x2F;f2fs gc.md</p>
+<h1 id="1-f2fs-gc"><a href="#1-f2fs-gc" class="headerlink" title="1. f2fs gc"></a>1. f2fs gc</h1><p>do_garbage_collect<br>    -&gt; gc_data_segment<br>        -&gt; move_data_page<br>           -&gt; f2fs_pin_file_control<br>    -&gt; stat_inc_seg_count</p>
+<p>解密map</p>
+<p>umi:&#x2F;data&#x2F;media&#x2F;0&#x2F;downloaded_rom # sha1sum &#x2F;cache&#x2F;recovery&#x2F;block.map<br>a31f2e057e6a02fc64f55dedd3e69ed71c2c4821  &#x2F;cache&#x2F;recovery&#x2F;block.map</p>
+<p>初次解密后</p>
+<p>umi:&#x2F;data&#x2F;media&#x2F;0&#x2F;downloaded_rom # sha1sum miui_UMI_9.11.18_6d674ad5a9_10.0.zip<br>631b3f61f9ea85911d354c277c98f9fcdb56b0bc  miui_UMI_9.11.18_6d674ad5a9_10.0.zip</p>
+<p>recovery会更改?<br>-rw-rw-r– 1 media_rw media_rw 2594048280 2019-11-18 10:14 miui_UMI_9.11.18_6d674ad5a9_10.0.zip<br>sha1sum miui_UMI_9.11.18_6d674ad5a9_10.0.zip<br>parse_ld_lib_path (null)<br>6fcdd51f751fe1a19af20c70302575b3fdb70086  miui_UMI_9.11.18_6d674ad5a9_10.0.zip</p>
+<p>原始</p>
+<p>[$] -&gt; sha1sum ~&#x2F;Downloads&#x2F;miui_UMI_9.11.18_6d674ad5a9_10.0.zip<br>88abea31fe641216b7a2659a6e63f5c4d619efaa  &#x2F;home&#x2F;mi&#x2F;Downloads&#x2F;miui_UMI_9.11.18_6d674ad5a9_10.0.zip</p>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2018/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9F%A5%E8%AF%861/#more" rel="contents">
+              <a class="btn" href="/2019/08/12/OTA%E7%9B%B8%E5%85%B3/f2fs%20gc/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/08/12/OTA%E7%9B%B8%E5%85%B3/fbe%E4%B8%8E%E7%94%A8%E6%88%B7%E5%AE%89%E5%85%A8%E5%AF%86%E7%A0%81/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2019/08/12/OTA%E7%9B%B8%E5%85%B3/fbe%E4%B8%8E%E7%94%A8%E6%88%B7%E5%AE%89%E5%85%A8%E5%AF%86%E7%A0%81/" class="post-title-link" itemprop="url">fbe与用户安全密码</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-08-12 18:15:54" itemprop="dateCreated datePublished" datetime="2019-08-12T18:15:54+08:00">2019-08-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 18:07:29" itemprop="dateModified" datetime="2024-04-16T18:07:29+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">文件系统</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/%E5%8A%A0%E5%AF%86/" itemprop="url" rel="index"><span itemprop="name">加密</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2019/08/12/OTA%E7%9B%B8%E5%85%B3/fbe%E4%B8%8E%E7%94%A8%E6%88%B7%E5%AE%89%E5%85%A8%E5%AF%86%E7%A0%81/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2019/08/12/OTA%E7%9B%B8%E5%85%B3/fbe%E4%B8%8E%E7%94%A8%E6%88%B7%E5%AE%89%E5%85%A8%E5%AF%86%E7%A0%81/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>[TOC]</p>
+<h1 id="1-fbe与用户安全密码"><a href="#1-fbe与用户安全密码" class="headerlink" title="1. fbe与用户安全密码"></a>1. fbe与用户安全密码</h1><p>之前介绍了fde与用户安全密码的关系，发现其是相对简单的。而对fbe和metadata加密的方式，在调研过程中发现密码的存储与文件ce区的密钥的关系则复杂的多。</p>
+<h2 id="1-1-用户ce区文件解密"><a href="#1-1-用户ce区文件解密" class="headerlink" title="1.1. 用户ce区文件解密"></a>1.1. 用户ce区文件解密</h2><p>这个过程伴随着一个函数向下执行的，即<code>unlockUserKey</code><em><strong>函数</strong></em>，首先看下伴随这个过程的密钥来自哪里</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">unlockUserKey(userId, <span class="literal">null</span>, auth.deriveDiskEncryptionKey());</span><br><span class="line">    <span class="comment">/** Unlock disk encryption */</span></span><br><span class="line"><span class="number">1712</span>     <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">unlockUserKey</span><span class="params">(<span class="type">int</span> userId, <span class="type">byte</span>[] token, <span class="type">byte</span>[] secret)</span> <span class="keyword">throws</span> RemoteException &#123;</span><br><span class="line"><span class="number">1713</span>         <span class="keyword">final</span> <span class="type">UserInfo</span> <span class="variable">userInfo</span> <span class="operator">=</span> mUserManager.getUserInfo(userId);</span><br><span class="line"><span class="number">1714</span>         mStorageManager.unlockUserKey(userId, userInfo.serialNumber, token, secret);</span><br><span class="line"><span class="number">1715</span>     &#125;</span><br></pre></td></tr></table></figure>
+<p>以机主用户为例， 上述参数中userID为0， token 为空， serialNumber为0，未知的只有secret，来自<code>deriveDiskEncryptionKey</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">      <span class="keyword">public</span> <span class="type">byte</span>[] deriveDiskEncryptionKey() &#123;</span><br><span class="line"><span class="number">179</span>             <span class="keyword">return</span> derivePassword(PERSONALIZATION_FBE_KEY);</span><br><span class="line"><span class="number">180</span>         &#125;</span><br><span class="line"></span><br><span class="line"><span class="number">160</span>         <span class="keyword">private</span> <span class="type">byte</span>[] derivePassword(<span class="type">byte</span>[] personalization) &#123;</span><br><span class="line"><span class="number">161</span>             <span class="keyword">if</span> (mVersion == SYNTHETIC_PASSWORD_VERSION_V3) &#123;</span><br><span class="line"><span class="number">162</span>                 <span class="keyword">return</span> (<span class="keyword">new</span> <span class="title class_">SP800Derive</span>(syntheticPassword.getBytes()))</span><br><span class="line"><span class="number">163</span>                     .withContext(personalization, PERSONALISATION_CONTEXT);</span><br><span class="line"><span class="number">164</span>             &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"><span class="number">165</span>                 <span class="keyword">return</span> SyntheticPasswordCrypto.personalisedHash(personalization,</span><br><span class="line"><span class="number">166</span>                         syntheticPassword.getBytes());</span><br><span class="line"><span class="number">167</span>             &#125;</span><br><span class="line"><span class="number">168</span>         &#125;</span><br></pre></td></tr></table></figure>
+<p>关键参数只有一个<code>syntheticPassword</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">        <span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">initialize</span><span class="params">(<span class="type">byte</span>[] P0, <span class="type">byte</span>[] P1)</span> &#123;</span><br><span class="line"><span class="number">191</span>             <span class="built_in">this</span>.P1 = P1;</span><br><span class="line"><span class="number">192</span>             <span class="built_in">this</span>.syntheticPassword = String.valueOf(HexEncoding.encode(</span><br><span class="line"><span class="number">193</span>                     SyntheticPasswordCrypto.personalisedHash(</span><br><span class="line"><span class="number">194</span>                             PERSONALIZATION_SP_SPLIT, P0, P1)));</span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2019/08/12/OTA%E7%9B%B8%E5%85%B3/fbe%E4%B8%8E%E7%94%A8%E6%88%B7%E5%AE%89%E5%85%A8%E5%AF%86%E7%A0%81/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -1276,7 +1311,7 @@
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/11/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/11/">11</a><span class="page-number current">12</span><a class="page-number" href="/page/13/">13</a><span class="space">&hellip;</span><a class="page-number" href="/page/15/">15</a><a class="extend next" rel="next" href="/page/13/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+    <a class="extend prev" rel="prev" href="/page/11/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/11/">11</a><span class="page-number current">12</span><a class="page-number" href="/page/13/">13</a><span class="space">&hellip;</span><a class="page-number" href="/page/16/">16</a><a class="extend next" rel="next" href="/page/13/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
   </nav>
 
 
@@ -1342,20 +1377,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">147</span>
+          <span class="site-state-item-count">158</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">90</span>
+        <span class="site-state-item-count">93</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">102</span>
+        <span class="site-state-item-count">109</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>

@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=LXGW WenKai:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":{"valine":{"order":-1}},"activeClass":"valine"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
+  </script>
+
+  <meta name="description" content="本文由 简悦 SimpRead 转码， 原文地址 zhuanlan.zhihu.com  对于没有接触过底层技术的朋友来说，或许从未听说过cache。毕竟cache的存在对程序员来说是透明的。在接触cache之前，先为你准备段code分析。 12345int arr[10][128];for (i &#x3D; 0; i &lt; 10; i++)        for (j &#x3D; 0; j &lt; 12">
+<meta property="og:type" content="article">
+<meta property="og:title" content="cache 基本原理">
+<meta property="og:url" content="https://liguangzhang.github.io/2022/11/11/hxd_new/riscv%E8%B0%83%E7%A0%94/Cache%E7%9A%84%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86%20-%20%E7%9F%A5%E4%B9%8E/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="本文由 简悦 SimpRead 转码， 原文地址 zhuanlan.zhihu.com  对于没有接触过底层技术的朋友来说，或许从未听说过cache。毕竟cache的存在对程序员来说是透明的。在接触cache之前，先为你准备段code分析。 12345int arr[10][128];for (i &#x3D; 0; i &lt; 10; i++)        for (j &#x3D; 0; j &lt; 12">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://liguangzhang.github.io/attachments/v2-1aa0caac22aec470dd15d0a7ca1f4c80_b.jpg">
+<meta property="og:image" content="https://liguangzhang.github.io/attachments/v2-cce58cab829ecc2755f6797b41bea821_b.jpg">
+<meta property="og:image" content="https://liguangzhang.github.io/attachments/v2-bc15d8c0612599fc3de51c4382e07aa5_b.jpg">
+<meta property="og:image" content="https://liguangzhang.github.io/attachments/v2-0910f3308b1d0e425c308307869a3f68_b.jpg">
+<meta property="og:image" content="https://liguangzhang.github.io/attachments/v2-155a251f204f87982b21b742002ef136_b.jpg">
+<meta property="og:image" content="https://liguangzhang.github.io/attachments/v2-4974c1f109f00f887fceda68b37bd3f5_b.jpg">
+<meta property="og:image" content="https://liguangzhang.github.io/attachments/v2-3e0de5f8b95e27dbd41328c9d089224c_b.jpg">
+<meta property="og:image" content="https://liguangzhang.github.io/attachments/v2-e8deb539258684ad9d4dffef08b02c09_b.jpg">
+<meta property="og:image" content="https://liguangzhang.github.io/attachments/v2-f6fdf760d314f146941e2192957f1a81_b.jpg">
+<meta property="og:image" content="https://liguangzhang.github.io/attachments/v2-b3d111caabc93c638bb08bde5026d711_b.jpg">
+<meta property="og:image" content="https://liguangzhang.github.io/attachments/v2-4653656ec3d4d5942bae805df6723690_b.jpg">
+<meta property="og:image" content="https://liguangzhang.github.io/attachments/v2-9db10cd5b86e5a10f08980ab1d1cfc07_b.jpg">
+<meta property="og:image" content="https://liguangzhang.github.io/attachments/v2-1e61e8d13030ed4f0b42c2d1a854ffce_b.jpg">
+<meta property="og:image" content="https://liguangzhang.github.io/attachments/v2-ad47fa00875dcca7ea3e58b828edaeef_b.jpg">
+<meta property="og:image" content="https://liguangzhang.github.io/attachments/v2-ff2a4d78af3ff8d411e092a96941fd6a_b.jpg">
+<meta property="og:image" content="https://liguangzhang.github.io/attachments/v2-1630dc6c3c099fdc1b92c8f33f1eea32_b.jpg">
+<meta property="article:published_time" content="2022-11-11T10:15:54.000Z">
+<meta property="article:modified_time" content="2024-04-18T03:12:53.795Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="cache">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://liguangzhang.github.io/attachments/v2-1aa0caac22aec470dd15d0a7ca1f4c80_b.jpg">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2022/11/11/hxd_new/riscv%E8%B0%83%E7%A0%94/Cache%E7%9A%84%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86%20-%20%E7%9F%A5%E4%B9%8E/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+<link rel="stylesheet" href="https://npm.elemecdn.com/lxgw-wenkai-screen-webfont/style.css" media="print" onload="this.media='all'" />
+
+  <title>cache 基本原理 | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2022/11/11/hxd_new/riscv%E8%B0%83%E7%A0%94/Cache%E7%9A%84%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86%20-%20%E7%9F%A5%E4%B9%8E/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          cache 基本原理
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-11-11 18:15:54" itemprop="dateCreated datePublished" datetime="2022-11-11T18:15:54+08:00">2022-11-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-18 11:12:53" itemprop="dateModified" datetime="2024-04-18T11:12:53+08:00">2024-04-18</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/cache/" itemprop="url" rel="index"><span itemprop="name">cache</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/11/11/hxd_new/riscv%E8%B0%83%E7%A0%94/Cache%E7%9A%84%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86%20-%20%E7%9F%A5%E4%B9%8E/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/11/11/hxd_new/riscv%E8%B0%83%E7%A0%94/Cache%E7%9A%84%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86%20-%20%E7%9F%A5%E4%B9%8E/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>本文由 <a target="_blank" rel="noopener" href="http://ksria.com/simpread/">简悦 SimpRead</a> 转码， 原文地址 <a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/102293437">zhuanlan.zhihu.com</a></p>
+</blockquote>
+<p>对于没有接触过底层技术的朋友来说，或许从未听说过cache。毕竟cache的存在对程序员来说是透明的。在接触cache之前，先为你准备段code分析。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> arr[<span class="number">10</span>][<span class="number">128</span>];</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; <span class="number">10</span>; i++)</span><br><span class="line">        <span class="keyword">for</span> (j = <span class="number">0</span>; j &lt; <span class="number">128</span>; j++)</span><br><span class="line">                arr[i][j] = <span class="number">1</span>;</span><br></pre></td></tr></table></figure>
+
+<p>如果你曾经学习过C&#x2F;C++语言，这段code自然不会陌生。如此简单的将<code>arr</code>数组所有元素置1。 你有没有想过这段code还有下面的一种写法。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> arr[<span class="number">10</span>][<span class="number">128</span>];</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; <span class="number">128</span>; i++)</span><br><span class="line">        <span class="keyword">for</span> (j = <span class="number">0</span>; j &lt; <span class="number">10</span>; j++)</span><br><span class="line">                arr[j][i] = <span class="number">1</span>;</span><br></pre></td></tr></table></figure>
+
+<p>功能完全一样，但是我们一直在重复着第一种写法（或许很多的书中也是建议这么编码），你是否想过这其中的缘由？文章的主角是cache，所以你一定猜到了答案。那么cache是如何影响这2段code的呢？</p>
+<h2 id="为什么需要cache"><a href="#为什么需要cache" class="headerlink" title="为什么需要cache"></a>为什么需要cache</h2><p>在思考为什么需要cache之前，我们首先先来思考另一个问题：我们的程序是如何运行起来的？</p>
+<p>我们应该知道程序是运行在 RAM之中，RAM 就是我们常说的DDR（例如： DDR3、DDR4等）。我们称之为main memory（主存）。当我们需要运行一个进程的时候，首先会从磁盘设备（例如，eMMC、UFS、SSD等）中将可执行程序load到主存中，然后开始执行。在CPU内部存在一堆的通用寄存器（register）。如果CPU需要将一个变量（假设地址是A）加1，一般分为以下3个步骤：</p>
+<ol>
+<li>CPU 从主存中读取地址A的数据到内部通用寄存器 x0（ARM64架构的通用寄存器之一）。</li>
+<li>通用寄存器 x0 加1。</li>
+<li>CPU 将通用寄存器 x0 的值写入主存。</li>
+</ol>
+<p>我们将这个过程可以表示如下：</p>
+<p><img src="/attachments/v2-1aa0caac22aec470dd15d0a7ca1f4c80_b.jpg"></p>
+<p>其实现实中，CPU通用寄存器的速度和主存之间存在着太大的差异。两者之间的速度大致如下关系：</p>
+<p><img src="/attachments/v2-cce58cab829ecc2755f6797b41bea821_b.jpg"></p>
+<p>CPU register的速度一般小于1ns，主存的速度一般是65ns左右。速度差异近百倍。因此，上面举例的3个步骤中，步骤1和步骤3实际上速度很慢。当CPU试图从主存中load&#x2F;store 操作时，由于主存的速度限制，CPU不得不等待这漫长的65ns时间。如果我们可以提升主存的速度，那么系统将会获得很大的性能提升。如今的DDR存储设备，动不动就是几个GB，容量很大。如果我们采用更快材料制作更快速度的主存，并且拥有几乎差不多的容量。其成本将会大幅度上升。我们试图提升主存的速度和容量，又期望其成本很低，这就有点难为人了。因此，我们有一种折中的方法，那就是制作一块速度极快但是容量极小的存储设备。那么其成本也不会太高。这块存储设备我们称之为cache memory。在硬件上，我们将cache放置在CPU和主存之间，作为主存数据的缓存。 当CPU试图从主存中load&#x2F;store数据的时候， CPU会首先从cache中查找对应地址的数据是否缓存在cache 中。如果其数据缓存在cache中，直接从cache中拿到数据并返回给CPU。当存在cache的时候，以上程序如何运行的例子的流程将会变成如下：</p>
+<p><img src="/attachments/v2-bc15d8c0612599fc3de51c4382e07aa5_b.jpg"></p>
+<p>CPU和主存之间直接数据传输的方式转变成CPU和cache之间直接数据传输。cache负责和主存之间数据传输。</p>
+<h2 id="多级cache存储结构"><a href="#多级cache存储结构" class="headerlink" title="多级cache存储结构"></a>多级cache存储结构</h2><p>cahe的速度在一定程度上同样影响着系统的性能。一般情况cache的速度可以达到1ns，几乎可以和CPU寄存器速度媲美。但是，这就满足人们对性能的追求了吗？并没有。当cache中没有缓存我们想要的数据的时候，依然需要漫长的等待从主存中load数据。为了进一步提升性能，引入多级cache。前面提到的cache，称之为L1 cache（第一级cache）。我们在L1 cache 后面连接L2 cache，在L2 cache 和主存之间连接L3 cache。等级越高，速度越慢，容量越大。但是速度相比较主存而言，依然很快。不同等级cache速度之间关系如下：</p>
+<p><img src="/attachments/v2-0910f3308b1d0e425c308307869a3f68_b.jpg"></p>
+<p>经过3级cache的缓冲，各级cache和主存之间的速度最萌差也逐级减小。在一个真实的系统上，各级cache之间硬件上是如何关联的呢？我们看下Cortex-A53架构上各级cache之间的硬件抽象框图如下：</p>
+<p><img src="/attachments/v2-155a251f204f87982b21b742002ef136_b.jpg"></p>
+<p>在Cortex-A53架构上，L1 cache分为单独的instruction cache（ICache）和data cache（DCache）。L1 cache是CPU私有的，每个CPU都有一个L1 cache。一个cluster 内的所有CPU共享一个L2 cache，L2 cache不区分指令和数据，都可以缓存。所有cluster之间共享L3 cache。L3 cache通过总线和主存相连。</p>
+<h2 id="多级cache之间的配合工作"><a href="#多级cache之间的配合工作" class="headerlink" title="多级cache之间的配合工作"></a>多级cache之间的配合工作</h2><p>首先引入两个名词概念，命中和缺失。 CPU要访问的数据在cache中有缓存，称为“命中” (hit)，反之则称为“缺失” (miss)。多级cache之间是如何配合工作的呢？我们假设现在考虑的系统只有两级cache。</p>
+<p><img src="/attachments/v2-4974c1f109f00f887fceda68b37bd3f5_b.jpg"></p>
+<p>当CPU试图从某地址load数据时，首先从L1 cache中查询是否命中，如果命中则把数据返回给CPU。如果L1 cache缺失，则继续从L2 cache中查找。当L2 cache命中时，数据会返回给L1 cache以及CPU。如果L2 cache也缺失，很不幸，我们需要从主存中load数据，将数据返回给L2 cache、L1 cache及CPU。这种多级cache的工作方式称之为inclusive cache。某一地址的数据可能存在多级缓存中。与inclusive cache对应的是exclusive cache，这种cache保证某一地址的数据缓存只会存在于多级cache其中一级。也就是说，任意地址的数据不可能同时在L1和L2 cache中缓存。</p>
+<h2 id="直接映射缓存-Direct-mapped-cache"><a href="#直接映射缓存-Direct-mapped-cache" class="headerlink" title="直接映射缓存(Direct mapped cache)"></a>直接映射缓存(Direct mapped cache)</h2><p>我们继续引入一些cache相关的名词。cache的大小称之为cahe size，代表cache可以缓存最大数据的大小。我们将cache平均分成相等的很多块，每一个块大小称之为cache line，其大小是cache line size。例如一个64 Bytes大小的cache。如果我们将64 Bytes平均分成64块，那么cache line就是1字节，总共64行cache line。如果我们将64 Bytes平均分成8块，那么cache line就是8字节，总共8行cache line。现在的硬件设计中，一般cache line的大小是4-128 Byts。为什么没有1 byte呢？原因我们后面讨论。</p>
+<p>这里有一点需要注意，cache line是cache和主存之间数据传输的最小单位。什么意思呢？当CPU试图load一个字节数据的时候，如果cache缺失，那么cache控制器会从主存中一次性的load cache line大小的数据到cache中。例如，cache line大小是8字节。CPU即使读取一个byte，在cache缺失后，cache会从主存中load 8字节填充整个cache line。又是因为什么呢？后面说完就懂了。</p>
+<p>我们假设下面的讲解都是针对64 Bytes大小的cache，并且cache line大小是8字节。我们可以类似把这块cache想想成一个数组，数组总共8个元素，每个元素大小是8字节。就像下图这样。</p>
+<p><img src="/attachments/v2-3e0de5f8b95e27dbd41328c9d089224c_b.jpg"></p>
+<p>现在我们考虑一个问题，CPU从0x0654地址读取一个字节，cache控制器是如何判断数据是否在cache中命中呢？cache大小相对于主存来说，可谓是小巫见大巫。所以cache肯定是只能缓存主存中极小一部分数据。我们如何根据地址在有限大小的cache中查找数据呢？现在硬件采取的做法是对地址进行散列（可以理解成地址取模操作）。我们接下来看看是如何做到的？</p>
+<p><img src="/attachments/v2-e8deb539258684ad9d4dffef08b02c09_b.jpg"></p>
+<p>我们一共有8行cache line，cache line大小是8 Bytes。所以我们可以利用地址低3 bits（如上图地址蓝色部分）用来寻址8 bytes中某一字节，我们称这部分bit组合为offset。同理，8行cache line，为了覆盖所有行。我们需要3 bits（如上图地址黄色部分）查找某一行，这部分地址部分称之为index。现在我们知道，如果两个不同的地址，其地址的bit3-bit5如果完全一样的话，那么这两个地址经过硬件散列之后都会找到同一个cache line。所以，当我们找到cache line之后，只代表我们访问的地址对应的数据可能存在这个cache line中，但是也有可能是其他地址对应的数据。所以，我们又引入tag array区域，tag array和data array一一对应。每一个cache line都对应唯一一个tag，tag中保存的是整个地址位宽去掉index和offset使用的bit剩余部分（如上图地址绿色部分）。tag、index和offset三者组合就可以唯一确定一个地址了。因此，当我们根据地址中index位找到cache line后，取出当前cache line对应的tag，然后和地址中的tag进行比较，如果相等，这说明cache命中。如果不相等，说明当前cache line存储的是其他地址的数据，这就是cache缺失。在上述图中，我们看到tag的值是0x19，和地址中的tag部分相等，因此在本次访问会命中。由于tag的引入，因此解答了我们之前的一个疑问“为什么硬件cache line不做成一个字节？”。这样会导致硬件成本的上升，因为原本8个字节对应一个tag，现在需要8个tag，占用了很多内存。</p>
+<p>我们可以从图中看到tag旁边还有一个valid bit，这个bit用来表示cache line中数据是否有效（例如：1代表有效；0代表无效）。当系统刚启动时，cache中的数据都应该是无效的，因为还没有缓存任何数据。cache控制器可以根据valid bit确认当前cache line数据是否有效。所以，上述比较tag确认cache line是否命中之前还会检查valid bit是否有效。只有在有效的情况下，比较tag才有意义。如果无效，直接判定cache缺失。</p>
+<p>上面的例子中，cache size是64 Bytes并且cache line size是8 bytes。offset、index和tag分别使用3 bits、3 bits和42 bits（假设地址宽度是48 bits）。我们现在再看一个例子：512 Bytes cache size，64 Bytes cache line size。根据之前的地址划分方法，offset、index和tag分别使用6 bits、3 bits和39 bits。如下图所示。</p>
+<p><img src="/attachments/v2-f6fdf760d314f146941e2192957f1a81_b.jpg"></p>
+<h2 id="直接映射缓存的优缺点"><a href="#直接映射缓存的优缺点" class="headerlink" title="直接映射缓存的优缺点"></a>直接映射缓存的优缺点</h2><p>直接映射缓存在硬件设计上会更加简单，因此成本上也会较低。根据直接映射缓存的工作方式，我们可以画出主存地址0x00-0x88地址对应的cache分布图。</p>
+<p><img src="/attachments/v2-b3d111caabc93c638bb08bde5026d711_b.jpg"></p>
+<p>我们可以看到，地址0x00-0x3f地址处对应的数据可以覆盖整个cache。0x40-0x7f地址的数据也同样是覆盖整个cache。我们现在思考一个问题，如果一个程序试图依次访问地址0x00、0x40、0x80，cache中的数据会发生什么呢？首先我们应该明白0x00、0x40、0x80地址中index部分是一样的。因此，这3个地址对应的cache line是同一个。所以，当我们访问0x00地址时，cache会缺失，然后数据会从主存中加载到cache中第0行cache line。当我们访问0x40地址时，依然索引到cache中第0行cache line，由于此时cache line中存储的是地址0x00地址对应的数据，所以此时依然会cache缺失。然后从主存中加载0x40地址数据到第一行cache line中。同理，继续访问0x80地址，依然会cache缺失。这就相当于每次访问数据都要从主存中读取，所以cache的存在并没有对性能有什么提升。访问0x40地址时，就会把0x00地址缓存的数据替换。这种现象叫做cache颠簸（cache thrashing）。针对这个问题，我们引入多路组相连缓存。我们首先研究下最简单的两路组相连缓存的工作原理。</p>
+<h2 id="两路组相连缓存-Two-way-set-associative-cache"><a href="#两路组相连缓存-Two-way-set-associative-cache" class="headerlink" title="两路组相连缓存(Two-way set associative cache)"></a>两路组相连缓存(Two-way set associative cache)</h2><p>我们依然假设64 Bytes cache size，cache line size是8 Bytes。什么是路（way）的概念。我们将cache平均分成多份，每一份就是一路。因此，两路组相连缓存就是将cache平均分成2份，每份32 Bytes。如下图所示。</p>
+<p><img src="/attachments/v2-4653656ec3d4d5942bae805df6723690_b.jpg"></p>
+<p>cache被分成2路，每路包含4行cache line。我们将所有索引一样的cache line组合在一起称之为组。例如，上图中一个组有两个cache line，总共4个组。我们依然假设从地址0x0654地址读取一个字节数据。由于cache line size是8 Bytes，因此offset需要3 bits，这和之前直接映射缓存一样。不一样的地方是index，在两路组相连缓存中，index只需要2 bits，因为一路只有4行cache line。上面的例子根据index找到第2行cache line（从0开始计算），第2行对应2个cache line，分别对应way 0和way 1。因此index也可以称作set index（组索引）。先根据index找到set，然后将组内的所有cache line对应的tag取出来和地址中的tag部分对比，如果其中一个相等就意味着命中。</p>
+<p>因此，两路组相连缓存较直接映射缓存最大的差异就是：第一个地址对应的数据可以对应2个cache line，而直接映射缓存一个地址只对应一个cache line。那么这究竟有什么好处呢？</p>
+<h2 id="两路组相连缓存优缺点"><a href="#两路组相连缓存优缺点" class="headerlink" title="两路组相连缓存优缺点"></a>两路组相连缓存优缺点</h2><p>两路组相连缓存的硬件成本相对于直接映射缓存更高。因为其每次比较tag的时候需要比较多个cache line对应的tag（某些硬件可能还会做并行比较，增加比较速度，这就增加了硬件设计复杂度）。为什么我们还需要两路组相连缓存呢？因为其可以有助于降低cache颠簸可能性。那么是如何降低的呢？根据两路组相连缓存的工作方式，我们可以画出主存地址0x00-0x4f地址对应的cache分布图。</p>
+<p><img src="/attachments/v2-9db10cd5b86e5a10f08980ab1d1cfc07_b.jpg"></p>
+<p>我们依然考虑直接映射缓存一节的问题“如果一个程序试图依次访问地址0x00、0x40、0x80，cache中的数据会发生什么呢？”。现在0x00地址的数据可以被加载到way 1，0x40可以被加载到way 0。这样是不是就在一定程度上避免了直接映射缓存的尴尬境地呢？在两路组相连缓存的情况下，0x00和0x40地址的数据都缓存在cache中。试想一下，如果我们是4路组相连缓存，后面继续访问0x80，也可能被被缓存。</p>
+<p>因此，当cache size一定的情况下，组相连缓存对性能的提升最差情况下也和直接映射缓存一样，在大部分情况下组相连缓存效果比直接映射缓存好。同时，其降低了cache颠簸的频率。从某种程度上来说，直接映射缓存是组相连缓存的一种特殊情况，每个组只有一个cache line而已。因此，直接映射缓存也可以称作单路组相连缓存。</p>
+<h2 id="全相连缓存-Full-associative-cache"><a href="#全相连缓存-Full-associative-cache" class="headerlink" title="全相连缓存(Full associative cache)"></a>全相连缓存(Full associative cache)</h2><p>既然组相连缓存那么好，如果所有的cache line都在一个组内。岂不是性能更好。是的，这种缓存就是全相连缓存。我们依然以64 Byts大小cache为例说明。</p>
+<p><img src="/attachments/v2-1e61e8d13030ed4f0b42c2d1a854ffce_b.jpg"></p>
+<p>由于所有的cache line都在一个组内，因此地址中不需要set index部分。因为，只有一个组让你选择，间接来说就是你没得选。我们根据地址中的tag部分和所有的cache line对应的tag进行比较（硬件上可能并行比较也可能串行比较）。哪个tag比较相等，就意味着命中某个cache line。因此，在全相连缓存中，任意地址的数据可以缓存在任意的cache line中。所以，这可以最大程度的降低cache颠簸的频率。但是硬件成本上也是更高。</p>
+<h2 id="一个四路组相连缓存实例问题"><a href="#一个四路组相连缓存实例问题" class="headerlink" title="一个四路组相连缓存实例问题"></a>一个四路组相连缓存实例问题</h2><p>考虑这么一个问题，32 KB大小4路组相连cache，cache line大小是32 Bytes。请思考以下2个问题：</p>
+<ol>
+<li>多少个组？</li>
+<li>假设地址宽度是48 bits，index、offset以及tag分别占用几个bit？</li>
+</ol>
+<p>总共4路，因此每路大小是8 KB。cache line size是32 Bytes，因此一共有256组（8 KB &#x2F; 32 Bytes）。由于cache line size是32 Bytes，所以offset需要5位。一共256组，所以index需要8位，剩下的就是tag部分，占用35位。这个cache可以绘制下图表示。</p>
+<p><img src="/attachments/v2-ad47fa00875dcca7ea3e58b828edaeef_b.jpg"></p>
+<h2 id="Cache分配策略-Cache-allocation-policy"><a href="#Cache分配策略-Cache-allocation-policy" class="headerlink" title="Cache分配策略(Cache allocation policy)"></a>Cache分配策略(Cache allocation policy)</h2><p>cache的分配策略是指我们什么情况下应该为数据分配cache line。cache分配策略分为读和写两种情况。</p>
+<h3 id="读分配-read-allocation"><a href="#读分配-read-allocation" class="headerlink" title="读分配(read allocation)"></a>读分配(read allocation)</h3><p>当CPU读数据时，发生cache缺失，这种情况下都会分配一个cache line缓存从主存读取的数据。默认情况下，cache都支持读分配。</p>
+<h3 id="写分配-write-allocation"><a href="#写分配-write-allocation" class="headerlink" title="写分配(write allocation)"></a>写分配(write allocation)</h3><p>当CPU写数据发生cache缺失时，才会考虑写分配策略。当我们不支持写分配的情况下，写指令只会更新主存数据，然后就结束了。当支持写分配的时候，我们首先从主存中加载数据到cache line中（相当于先做个读分配动作），然后会更新cache line中的数据。</p>
+<h2 id="Cache更新策略-Cache-update-policy"><a href="#Cache更新策略-Cache-update-policy" class="headerlink" title="Cache更新策略(Cache update policy)"></a>Cache更新策略(Cache update policy)</h2><p>cache更新策略是指当发生cache命中时，写操作应该如何更新数据。cache更新策略分成两种：写直通和回写。</p>
+<h3 id="写直通-write-through"><a href="#写直通-write-through" class="headerlink" title="写直通(write through)"></a>写直通(write through)</h3><p>当CPU执行store指令并在cache命中时，我们更新cache中的数据并且更新主存中的数据。<strong>cache和主存的数据始终保持一致</strong>。</p>
+<h3 id="写回-write-back"><a href="#写回-write-back" class="headerlink" title="写回(write back)"></a>写回(write back)</h3><p>当CPU执行store指令并在cache命中时，我们只更新cache中的数据。并且每个cache line中会有一个bit位记录数据是否被修改过，称之为dirty bit（翻翻前面的图片，cache line旁边有一个D就是dirty bit）。我们会将dirty bit置位。主存中的数据只会在cache line被替换或者显示的clean操作时更新。因此，主存中的数据可能是未修改的数据，而修改的数据躺在cache中。<strong>cache和主存的数据可能不一致。</strong></p>
+<p>同时思考个问题，为什么cache line大小是cache控制器和主存之间数据传输的最小单位呢？这也是因为每个cache line只有一个dirty bit。这一个dirty bit代表着整个cache line是否被修改的状态。</p>
+<h2 id="实例"><a href="#实例" class="headerlink" title="实例"></a>实例</h2><p>假设我们有一个64 Bytes大小直接映射缓存，cache line大小是8 Bytes，采用写分配和写回机制。当CPU从地址0x2a读取一个字节，cache中的数据将会如何变化呢？假设当前cache状态如下图所示(tag旁边valid一栏的数字1代表合法。0代表非法。后面Dirty的1代表dirty，0代表没有写过数据，即非dirty)。</p>
+<p><img src="/attachments/v2-ff2a4d78af3ff8d411e092a96941fd6a_b.jpg"></p>
+<p>根据index找到对应的cache line，对应的tag部分valid bit是合法的，但是tag的值不相等，因此发生缺失。此时我们需要从地址0x28地址加载8字节数据到该cache line中。但是，我们发现当前cache line的dirty bit置位。因此，cache line里面的数据不能被简单的丢弃，由于采用写回机制，所以我们需要将cache中的数据0x11223344写到地址0x0128地址（这个地址根据tag中的值及所处的cache line行计算得到）。这个过程如下图所示。</p>
+<p><img src="/attachments/v2-1630dc6c3c099fdc1b92c8f33f1eea32_b.jpg"></p>
+<p>当写回操作完成，我们将主存中0x28地址开始的8个字节加载到该cache line中，并清除dirty bit。然后根据offset找到0x52返回给CPU。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/cache/" rel="tag"># cache</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/10/25/hxd_new/TI%20crypto/" rel="prev" title="TI crypto">
+      <i class="fa fa-chevron-left"></i> TI crypto
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/11/13/hxd_new/riscv%E8%B0%83%E7%A0%94/Cache%E7%BB%84%E7%BB%87%E6%96%B9%E5%BC%8F%20-%20%E7%9F%A5%E4%B9%8E/" rel="next" title="cache 组织方式">
+      cache 组织方式 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81cache"><span class="nav-number">1.</span> <span class="nav-text">为什么需要cache</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%9A%E7%BA%A7cache%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84"><span class="nav-number">2.</span> <span class="nav-text">多级cache存储结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%9A%E7%BA%A7cache%E4%B9%8B%E9%97%B4%E7%9A%84%E9%85%8D%E5%90%88%E5%B7%A5%E4%BD%9C"><span class="nav-number">3.</span> <span class="nav-text">多级cache之间的配合工作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9B%B4%E6%8E%A5%E6%98%A0%E5%B0%84%E7%BC%93%E5%AD%98-Direct-mapped-cache"><span class="nav-number">4.</span> <span class="nav-text">直接映射缓存(Direct mapped cache)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9B%B4%E6%8E%A5%E6%98%A0%E5%B0%84%E7%BC%93%E5%AD%98%E7%9A%84%E4%BC%98%E7%BC%BA%E7%82%B9"><span class="nav-number">5.</span> <span class="nav-text">直接映射缓存的优缺点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%A4%E8%B7%AF%E7%BB%84%E7%9B%B8%E8%BF%9E%E7%BC%93%E5%AD%98-Two-way-set-associative-cache"><span class="nav-number">6.</span> <span class="nav-text">两路组相连缓存(Two-way set associative cache)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%A4%E8%B7%AF%E7%BB%84%E7%9B%B8%E8%BF%9E%E7%BC%93%E5%AD%98%E4%BC%98%E7%BC%BA%E7%82%B9"><span class="nav-number">7.</span> <span class="nav-text">两路组相连缓存优缺点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%A8%E7%9B%B8%E8%BF%9E%E7%BC%93%E5%AD%98-Full-associative-cache"><span class="nav-number">8.</span> <span class="nav-text">全相连缓存(Full associative cache)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E4%B8%AA%E5%9B%9B%E8%B7%AF%E7%BB%84%E7%9B%B8%E8%BF%9E%E7%BC%93%E5%AD%98%E5%AE%9E%E4%BE%8B%E9%97%AE%E9%A2%98"><span class="nav-number">9.</span> <span class="nav-text">一个四路组相连缓存实例问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Cache%E5%88%86%E9%85%8D%E7%AD%96%E7%95%A5-Cache-allocation-policy"><span class="nav-number">10.</span> <span class="nav-text">Cache分配策略(Cache allocation policy)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AF%BB%E5%88%86%E9%85%8D-read-allocation"><span class="nav-number">10.1.</span> <span class="nav-text">读分配(read allocation)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%86%99%E5%88%86%E9%85%8D-write-allocation"><span class="nav-number">10.2.</span> <span class="nav-text">写分配(write allocation)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Cache%E6%9B%B4%E6%96%B0%E7%AD%96%E7%95%A5-Cache-update-policy"><span class="nav-number">11.</span> <span class="nav-text">Cache更新策略(Cache update policy)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%86%99%E7%9B%B4%E9%80%9A-write-through"><span class="nav-number">11.1.</span> <span class="nav-text">写直通(write through)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%86%99%E5%9B%9E-write-back"><span class="nav-number">11.2.</span> <span class="nav-text">写回(write back)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E4%BE%8B"><span class="nav-number">12.</span> <span class="nav-text">实例</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">93</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">109</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
+    Chat
+  </a>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'VrGRp2q7WwXjxsCNmlDIZYbC-gzGzoHsz',
+      appKey     : 'JgMXmmB7yKQf2zm80TaBp3JT',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : 'zh-cn' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>
