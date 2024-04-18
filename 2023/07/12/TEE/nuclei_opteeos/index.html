@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=LXGW WenKai:300,300italic,400,400italic,700,700italic|LXGW WenKai Mono, Source Code Pro:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":{"valine":{"order":-1}},"activeClass":"valine"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
+  </script>
+
+  <meta name="description" content="OPTEE 说明本文档是说明RISC-V架构相关的OPTEE实现，不讲OPTEE的工作原理，OPTEE的工作原理请参考官方文档(http:&#x2F;&#x2F;optee.readthedocs.io&#x2F;). 我们基于RISC-V实现的OPTEE和ARM基本类似，也分为两个世界：安全世界(TEE)，非安全世界(REE)。两个世界彼此隔离，包括代码执行隔离，中断隔离。目前单核多核都已支持，当CPU在TEE执行时，不能被">
+<meta property="og:type" content="article">
+<meta property="og:title" content="nuclei optee_os">
+<meta property="og:url" content="https://liguangzhang.github.io/2023/07/12/TEE/nuclei_opteeos/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="OPTEE 说明本文档是说明RISC-V架构相关的OPTEE实现，不讲OPTEE的工作原理，OPTEE的工作原理请参考官方文档(http:&#x2F;&#x2F;optee.readthedocs.io&#x2F;). 我们基于RISC-V实现的OPTEE和ARM基本类似，也分为两个世界：安全世界(TEE)，非安全世界(REE)。两个世界彼此隔离，包括代码执行隔离，中断隔离。目前单核多核都已支持，当CPU在TEE执行时，不能被">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-07-12T10:15:54.000Z">
+<meta property="article:modified_time" content="2024-04-18T10:25:56.511Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="optee">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2023/07/12/TEE/nuclei_opteeos/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+<link rel="stylesheet" href="https://npm.elemecdn.com/lxgw-wenkai-screen-webfont/style.css" media="print" onload="this.media='all'" />
+
+  <title>nuclei optee_os | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2023/07/12/TEE/nuclei_opteeos/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          nuclei optee_os
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-07-12 18:15:54" itemprop="dateCreated datePublished" datetime="2023-07-12T18:15:54+08:00">2023-07-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-18 18:25:56" itemprop="dateModified" datetime="2024-04-18T18:25:56+08:00">2024-04-18</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AE%89%E5%85%A8/" itemprop="url" rel="index"><span itemprop="name">安全</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AE%89%E5%85%A8/TEE/" itemprop="url" rel="index"><span itemprop="name">TEE</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AE%89%E5%85%A8/TEE/RISCV/" itemprop="url" rel="index"><span itemprop="name">RISCV</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2023/07/12/TEE/nuclei_opteeos/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2023/07/12/TEE/nuclei_opteeos/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="OPTEE-说明"><a href="#OPTEE-说明" class="headerlink" title="OPTEE 说明"></a>OPTEE 说明</h1><p>本文档是说明RISC-V架构相关的OPTEE实现，不讲OPTEE的工作原理，OPTEE的工作原理请参考官方文档(<a target="_blank" rel="noopener" href="http://optee.readthedocs.io/">http://optee.readthedocs.io/</a>).</p>
+<p>我们基于RISC-V实现的OPTEE和ARM基本类似，也分为两个世界：安全世界(TEE)，非安全世界(REE)。<br>两个世界彼此隔离，包括代码执行隔离，中断隔离。目前单核多核都已支持，当CPU在TEE执行时，不能被非安全中断打断；CPU在REE执行时，可以被安全中断打断。另外_wg后缀的分支已支持CPU硬件安全状态位，世界切换时，状态位会改变。目前TEE系统需要M模式下PLIC中断控制器pending可写，需要支持shartid csr。</p>
+<h2 id="启动过程"><a href="#启动过程" class="headerlink" title="启动过程"></a>启动过程</h2><p>optee-os 会被freeloader从flash介质加载到内存，由opensbi来初始化optee，初始化完成后opensbi继续启动uboot，直到linux启动完成。</p>
+<h2 id="运行过程"><a href="#运行过程" class="headerlink" title="运行过程"></a>运行过程</h2><p>RISC-V OPTEE系统的运行架构如下图：</p>
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAWIAAAEQCAYAAACKtn6wAAAAAXNSR0IArs4c6QAABvl0RVh0bXhmaWxlACUzQ214ZmlsZSUyMGhvc3QlM0QlMjJFbGVjdHJvbiUyMiUyMG1vZGlmaWVkJTNEJTIyMjAyMy0wMy0yN1QwOCUzQTAyJTNBMjYuNDM3WiUyMiUyMGFnZW50JTNEJTIyNS4wJTIwKFdpbmRvd3MlMjBOVCUyMDEwLjAlM0IlMjBXaW42NCUzQiUyMHg2NCklMjBBcHBsZVdlYktpdCUyRjUzNy4zNiUyMChLSFRNTCUyQyUyMGxpa2UlMjBHZWNrbyklMjBkcmF3LmlvJTJGMjAuOC4xMCUyMENocm9tZSUyRjEwNi4wLjUyNDkuMTk5JTIwRWxlY3Ryb24lMkYyMS4zLjUlMjBTYWZhcmklMkY1MzcuMzYlMjIlMjBldGFnJTNEJTIyWF9PanZTSWdEbnEzdkdMUDFhN2glMjIlMjB2ZXJzaW9uJTNEJTIyMjAuOC4xMCUyMiUyMHR5cGUlM0QlMjJkZXZpY2UlMjIlM0UlM0NkaWFncmFtJTIwbmFtZSUzRCUyMiVFNyVBQyVBQyUyMDElMjAlRTklQTElQjUlMjIlMjBpZCUzRCUyMktDZXVYdzE3ZWQwZjZDdW9XLThNJTIyJTNFN1ZsYmI1c3dHUDAxU050REpiQkRMbzhOeVRacDYwVkxwJTJCN1ZCU2RZTlRneXBrbjY2MmNIY3pWUlVpMEpxZG84Uk9ZQUglMkZpY1kzJTJGJTJCakFXOWFQMmRvMlY0d3dKTUxXQUhhd3RPTEFCY09KVCUyRkN0aGtBT3hwWU1GSmtFRk9DY3pJSzlhZ3JkR1VCRGlwWFNnWW80SXM2NkRQNGhqN29vWWh6dG1xZnRtYzBmcFRsMmlCRFdEbUkycWlqeVFRWVlZT3dhREVmMkN5Q1BNbk8lMkYxUmRpWkMlMkJjVzZKMG1JQXJhcVFIQnFRWTh6SnJKV3RQWXdWZHpsdkdUM2ZkdHh0bmd4am1OeHlBM0J6N2wzZDlWN29nJTJGUDd0UDRlZndxUFBmS3phSzhJSnJxRHYlMkJlVGlWd04lMkZ2eWk4VHAlMkJxdCUyQmQ3SEpDZUVzalFPc1l0b1dISzlDSXZCc2lYeDFkaVVkSUxGUVJGUWVPYktwbzJNdThIcm5henNGR2RKRW1FVlk4STI4Uk44QWJNMmZOaENBJTJCbmhWeXVIa0hJY1ZLZm9hUTlvQml5SjBTWkpzYUo3ZXdGbmY0T3doNSUyQnp1WGphNzV3eUNTJTJCTnNZSERXT1VtR3NVWW1TYUIzVHBLR0Jra2VKYW8zd0w1ZUxpbnhrU0FzdmpqaW5FSFg3aHFaSTVLbnlhWHgxaHlWM2ZPV0o5a0tjVGNHVGJMRG9zNEZvbVFSeTdZdk80NjVCQlF0a21WNnJVOUVKQWpVN1dPT0UlMkZLS25yYWhGTWxMUm1LeDdZVTd0dHlKaXBVS2xtUlpYNFZPQkdmUDJHT1V5YmlUbU1VcXlweFEyb0NPSUlmVHI4c0JiZGVRQTdhb0FVJTJCbWhtT29NZnV3YW9CZTEyb0FRNDAlMkZIMVlOWjlpMUduRCUyRkFnTEh3YlZhOFpkTUJDZ0p0eE84VXhkSjRmZElTSUhpTFFKc1dQQ2JyJTJGS0JrcWlXSWVyOFc3S3oyMSUyRkJPQTZNVW1JdjN4VSUyQjNSWSUyQmM0eGpLblBZU3oxOEc4bjZDZmZLUzZXY3ZjR09wVTRlSW1FcDk3RyUyQnExcEROQUlaS1F3MEFnbkVGMWdZZ2FRdWFGTzVUSHQ5NXdzYkM5aFJyYmFSalN4aWFhaUMwJTJGJTJGd21Ga01uZGhqMFBCWWRUaExoMkhYNmRtdDNodURkJTJCSzl2Wlk1MUh0N1RYd2s3eldmNDRCemVNOHNLbWZZVHptVzJDUGpOTGphMXBpWGszNnFGdHhsMmptTFJRV2ZiMzlIV2t0RHR5N1NvUlh1NlRMVUFTVnVkeG1xSVpGdHV6YWV2NFBadzFnV2ZtYXVOdSUyQlpPd2RkWjY3Q1lTMmVkQ1pqNzlON3glMkZlZXNXbyUyRlMlMkJZeU4xOXVHWThRTFRMWDc0dkxYSVVGZDVuMmhKbkxHUnlRdWM1YVclMkJWdXJDcjRLSSUyQjloNyUyQkdibWZmYTJ6ayUyQmJaTm1yWXBvRG5DamtlV3VTMHd1eFN5WUdOanRudXl6S3I5VmczOEM2RnJzSiUyQnUlMkZsbnBNb3VBaU1WRXlHbG8lMkYlMkZ4NTZPN1E0Zk5zbXdKMWpZNHhIWTVBWFlUOGclMkZFZUVaeTNpeUFQeTYlMkJ0V2ZvclAx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" alt="OpTEE RISC-V Architecture"></p>
+<p>由opensbi 负责安全世界和非安全世界上下文的管理，opensbi实现和ARM ATF类似功能。与ARM不同的是当前cpu的安全状态由软件负责管理，<br>系统从上电运行，不同阶段上下文的切换如下:</p>
+<ul>
+<li>optee os初始化阶段，opensbi在平台初始化阶段，通过mret进入optee os，optee os完成初始化后ecall返回opensbi，此时opensbi保存optee os的cpu上下文，即保存安全世界上下文。</li>
+<li>ree os 运行阶段，当需要optee服务时，ree os通过ecall发出optee请求，opensbi收到请求后，保存当前cpu状态到非安全状态上下文，然后恢复安全状态上下文及转发请求给optee os处理，optee os处理完成后ecall返回到opensbi，opensbi 保存当前cpu状态到安全状态上下文，然后保存optee返回值，恢复非安全状态上下文到ree os继续执行。</li>
+</ul>
+<p>通过PMP将TEE与REE的运行地址空间隔离开，通过PLIC中断使能模式的切换实现中断隔离，即安全中断在安全世界处理，非安全中断在非安全世界处理，碰到不属于本世界处理的中断，需要经过M模式转发到另一个世界处理。目前cpu在安全世界执行时，M模式中断被禁止，不能被非安全中断打断。</p>
+<p>下图是一般tee服务请求流程，图中switch CTX 包括PMP运行地址空间切换，中断使能模式切换，cpu安全状态的更新等</p>
+<pre class="mermaid">sequenceDiagram
+    autonumber
+    participant Ree
+    participant Monitor
+    participant Tee
+    Ree ->> Ree: process
+    Ree ->> Monitor: request tee service
+    Monitor ->> Monitor: save REE CTX
+    Monitor ->> Monitor: restore TEE CTX
+    Monitor ->> Monitor: switch CTX
+    Monitor -->> Tee: mret
+    Tee ->> Tee: process request
+    Tee -->> Monitor: ecall with result
+    Monitor ->> Monitor: save TEE CTX
+    Monitor ->> Monitor: restore REE CTX
+    Monitor ->> Monitor: switch CTX
+    Monitor -->> Ree: mret
+    Ree ->> Ree: continue to process</pre>
+
+<h2 id="中断处理"><a href="#中断处理" class="headerlink" title="中断处理"></a>中断处理</h2><p>目前安全世界执行时，M模式中断被关闭(包括Timer，Software，PLIC)，S模式中断使能(此时是安全中断PLIC中断，因为切换到tee执行前，Monitor 把非安全PLIC中断设置为M模式使能)。安全世界能响应本世界的PLIC中断，非安全中断不能打断其执行。<br>安全中断打断非安全世界执行，其流程图如下：<br>REE对应Linux os，Monitor对应opensbi，TEE对应optee_os</p>
+<pre class="mermaid">sequenceDiagram
+    autonumber
+    participant Ree
+    participant Monitor
+    participant Tee
+    note over Ree,Tee : running in NSecure World
+    Ree ->> Ree: process
+    note over Ree,Tee : M recv SIntr, masked. NSInt to S, unmasked.
+    Monitor ->> Monitor: save REE CTX
+    Monitor ->> Monitor: restore TEE CTX
+    Monitor ->> Monitor: M disable Intr, SIntr to S
+    Monitor ->> Monitor: switch CTX
+    Monitor -->> Tee: mret to fiq_entry
+    note over Ree,Tee: M Intr masked, SInt to S, unmasked
+    Tee ->> Tee: process received fiq interrupt
+    Tee -->> Monitor: ecall with fiq_done
+
+    Monitor ->> Monitor: restore REE CTX
+    Monitor ->> Monitor: SIntr to M, unmasked. NSIntr to S, unmasked.
+    Monitor ->> Monitor: switch CTX
+    Monitor -->> Ree: mret
+    note over Ree,Tee: SIntr to M, unmasked. NSInt to S, unmasked.
+    Ree ->> Ree: continue to process</pre>
+
+
+<h2 id="中断安全设置"><a href="#中断安全设置" class="headerlink" title="中断安全设置"></a>中断安全设置</h2><p>我们使用了一个表来记录哪些中断是安全中断。Monitor在切换世界前，根据进入的world来决定安全中断应该设置成S还是M模式响应，同时将M模式中断代理打开。例如在进入REE世界前，Monitor会设置安全中断为M模式响应，非安全中断设置为S模式响应，在进入TEE世界前，M模式软件会设置安全中断为S模式响应，非安全中断设置为M模式响应。安全中断在opensbi中由plic_secure_int数组记录,目前配置最大安全中断个数为16个，plic_secure_int数组中每个元素是由hartid和中断号组成，各占16bit，plic_secure_int[0]是个特殊值记录安全中断总个数。</p>
+<ul>
+<li>plic_secure_int[0]：表示有plic_secure_int[0] &amp; 0xFFFF个安全中断</li>
+<li>plic_secure_int[x]：表示plic_secure_int[x] &amp; 0xFFFF 这个安全中断绑定到了hartid为plic_secure_int[x] &gt;&gt; 16 的core上</li>
+</ul>
+<p>optee-os 中使用void sbi_register_secure_intr(int intr) 这个函数ecall到opensbi来注册安全中断，安全中断和非安全中断号，<br>需要在系统层面规划好，以免产生冲突。下面是注册一个安全timer中断的例子：</p>
+<p>optee_os&#x2F;core&#x2F;pta&#x2F;nuclei&#x2F;timer.c </p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> TEE_Result <span class="title function_">pta_timer_set_timeout</span><span class="params">(<span class="type">uint32_t</span> param_types,</span></span><br><span class="line"><span class="params">				     TEE_Param params[TEE_NUM_PARAMS])</span></span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">	<span class="type">uint32_t</span> timeout1 = <span class="number">0</span>;</span><br><span class="line">	<span class="type">uint32_t</span> exp_param_types;</span><br><span class="line">	<span class="type">static</span> <span class="type">int</span> flag = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* register secure timer interrupt int38*/</span></span><br><span class="line">	<span class="keyword">if</span> (flag == <span class="number">0</span>) &#123;</span><br><span class="line">		flag = <span class="number">1</span>;</span><br><span class="line">		sbi_register_secure_intr(<span class="number">38</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	exp_param_types = TEE_PARAM_TYPES(TEE_PARAM_TYPE_VALUE_INPUT,</span><br><span class="line">						   TEE_PARAM_TYPE_VALUE_INPUT,</span><br><span class="line">						   TEE_PARAM_TYPE_NONE,</span><br><span class="line">						   TEE_PARAM_TYPE_NONE);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (exp_param_types != param_types) &#123;</span><br><span class="line">		EMSG(<span class="string">&quot;Invalid Param types&quot;</span>);</span><br><span class="line">		<span class="keyword">return</span> TEE_ERROR_BAD_PARAMETERS;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	timeout1 = params[<span class="number">0</span>].value.a;</span><br><span class="line">	<span class="keyword">if</span> (timer_base == <span class="number">0</span>)</span><br><span class="line">		timer_base = core_mmu_get_va(SEC_TIMER_BASE, MEM_AREA_IO_SEC,</span><br><span class="line">	                   SEC_TIMER_SIZE);</span><br><span class="line"></span><br><span class="line">	*(<span class="keyword">volatile</span> <span class="type">unsigned</span> <span class="type">int</span>*)timer_base = timeout1;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> TEE_SUCCESS;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="特殊配置"><a href="#特殊配置" class="headerlink" title="特殊配置"></a>特殊配置</h2><p>Nuclei某些硬件版本引入了shart csr，能在S模式获取hartid。如果硬件不支持这个特性，可在optee_os&#x2F;core&#x2F;arch&#x2F;riscv&#x2F;plat-nuclei&#x2F;conf.mk文件中设置CFG_SHART_FEATURE为n。默认情况下CFG_SHART_FEATURE 开启。</p>
+<h2 id="编译部署"><a href="#编译部署" class="headerlink" title="编译部署"></a>编译部署</h2><p>optee 仓库包括optee-os，optee-client，optee-test，optee-example编译和部署已集成到顶层Makefile中，编译SDK时会默认编译optee各部分，典型的编译如下：</p>
+<figure class="highlight makefile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">make SOC=evalsoc CORE=ux900fd BOOT_MODE=sd freeloader</span><br><span class="line">make SOC=evalsoc CORE=ux900fd BOOT_MODE=sd bootimages</span><br></pre></td></tr></table></figure>
+<p>optee-client编译后的tee-supplicant, libteec会安装到rootfs。</p>
+<p>optee-test 编译产生的ta，ca，plugin 会安装到rootfs。</p>
+<p>具体编译过程及安装可以参考Makefile 文件</p>
+<p>linux系统需要配置TEE driver，dts需要配置optee节点，以便启动时加载OPTEE驱动。</p>
+<blockquote>
+<p>如编译optee 碰到错误，请检查错误提示的模块是否安装，例如python3的 pyelftools cryptography等模块，编译optee需要的基础环境可参考(<a target="_blank" rel="noopener" href="https://optee.readthedocs.io/en/latest/building/prerequisites.html">https://optee.readthedocs.io/en/latest/building/prerequisites.html</a>)</p>
+</blockquote>
+<h2 id="移植新平台"><a href="#移植新平台" class="headerlink" title="移植新平台"></a>移植新平台</h2><h3 id="移植前提假设"><a href="#移植前提假设" class="headerlink" title="移植前提假设"></a>移植前提假设</h3><p>软件假设：</p>
+<ul>
+<li>假设linux 5.10(opensbi v0.9)系统可以在新平台上运行到控制台，假定从SD卡加载kernel rootfs。</li>
+<li>linux 系统的移植请参考：<code>linux_sdk/README.md</code>。</li>
+<li>假设移植optee时，linux_sdk&#x2F;conf 下的用户配置文件为custsoc，其内容可参考linux optee_5.10 分支中的conf&#x2F;evalsoc。</li>
+</ul>
+<p>硬件假设：</p>
+<ul>
+<li><p>cpu：900系列。</p>
+</li>
+<li><p>device：spi_xip, uart, norflash。</p>
+</li>
+<li><p>pmp entry 框架至少需要4个（opensbi，optee_os, optee_shmem, linux os），相比没有optee的linux sdk多了两个pmp entry，目前nuclei demo中有6个pmp entry。</p>
+</li>
+<li><p>shartid 在optee os中默认使用，如果cpu core 版本低于v2.8.0 则可以在optee对应的platform下修改conf.mk。</p>
+  <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$(call force,CFG_SHART_FEATURE,n)  --&gt;不使用shartid</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>plic 中断控制器，在M模式中断源pending 位可写，S模式不能修改M 模式使能的中断。</p>
+</li>
+<li><p>如果硬件支持WG安全特性，对应的linux sdk 分支是optee_5.10_wg, 不支持这一特性的linux sdk 是optee_5.10。</p>
+</li>
+</ul>
+<h3 id="linux-sdk-主要镜像在ddr内存中布局"><a href="#linux-sdk-主要镜像在ddr内存中布局" class="headerlink" title="linux sdk 主要镜像在ddr内存中布局"></a>linux sdk 主要镜像在ddr内存中布局</h3><p>文件：<code>linux_sdk/freeloader/freeloader.S</code></p>
+<p>该文件描述各镜像的内存布局，这一布局用于纯norflash启动方式，如果是sd卡启动，则kernel，rootfs的加载地址会有差别，其定义在conf&#x2F;custsoc&#x2F;uboot.cmd。不管哪种启动方式，opensbi，optee，uboot的内存位置是相同的。移植optee os需要先规划好各镜像的加载地址，evalsoc 主要镜像加载地址如下：</p>
+<p>ddr_base: 0xa0000000</p>
+<table>
+<thead>
+<tr>
+<th>image name</th>
+<th>base addr</th>
+<th>maxsize(byte)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>opensbi</td>
+<td>ddr_base + 0x0</td>
+<td>2M</td>
+</tr>
+<tr>
+<td>optee_os_shmem</td>
+<td>ddr_base + 0x200000</td>
+<td>2M</td>
+</tr>
+<tr>
+<td>optee_os_tzdram</td>
+<td>ddr_base + 0x800000</td>
+<td>8M</td>
+</tr>
+<tr>
+<td>uboot</td>
+<td>ddr_base + 0x1000000</td>
+<td>4M</td>
+</tr>
+<tr>
+<td>kernel</td>
+<td>ddr_base + 0x1400000</td>
+<td>50M</td>
+</tr>
+<tr>
+<td>fdt</td>
+<td>ddr_base + 0x8000000</td>
+<td>1M</td>
+</tr>
+<tr>
+<td>rootfs</td>
+<td>ddr_base + 0x8300000</td>
+<td>up to mem top</td>
+</tr>
+</tbody></table>
+<p>opensbi：常驻内存运行在M模式</p>
+<p>optee_os_shmem: optee os 与 linux os的共享内存区域</p>
+<p>optee_os_tzdram: optee os 镜像，常驻内存运行在S模式</p>
+<p>uboot：运行在S模式，启动内核前运行，内核启动完成后，其内存可被占用</p>
+<p>kernel：运行在S模式，常驻内存，此区域只是内核的加载区域，运行地址在conf&#x2F;evalsoc&#x2F;build.mk中配置</p>
+<p>fdt：设备树，供uboot，kernel使用的设备信息数据。</p>
+<p>rootfs：根文件系统，运行在U模式</p>
+<h3 id="配置optee-编译参数"><a href="#配置optee-编译参数" class="headerlink" title="配置optee 编译参数"></a>配置optee 编译参数</h3><p><strong>文件</strong>：<code>linux_sdk/Makefile</code></p>
+<p>该文件定义了optee platform及optee os 的编译地址，用户可以根据SOC地址修改以下配置，其他默认不用修改。</p>
+<ul>
+<li><p>配置optee os platform</p>
+  <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">optee_os_platform := nuclei</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p>对应linux_sdk&#x2F;optee&#x2F;optee_os&#x2F;core&#x2F;arch&#x2F;riscv&#x2F;plat-nuclei 文件夹中nuclei的名字。</p>
+<p>比如在linux_sdk&#x2F;optee&#x2F;optee_os&#x2F;core&#x2F;arch&#x2F;riscv&#x2F; 目录下<br>porting 新platfrom : plat-cust，则optee_os_platform :&#x3D; cust，此处的名字与conf 目录下的配置文件名没有关系。</p>
+<ul>
+<li>配置optee os 及share memory的编译地址</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">optee_os_tzdram_start := 0xA0800000</span><br><span class="line">optee_os_tzdram_size := 0x800000</span><br><span class="line">optee_os_shmem_start := 0xA0200000</span><br><span class="line">optee_os_shmem_size := 0x200000</span><br></pre></td></tr></table></figure>
+
+<p>编译地址会覆盖<code>linux_sdk/optee/optee_os/core/arch/riscv/plat-nuclei/conf.mk</code>中的配置</p>
+<p><strong>文件</strong>：<code>linux_sdk/conf/custsoc/build.mk</code></p>
+<p>根据optee 规划的内存配置kernel运行地址，下面是evalsoc的配置</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">UIMAGE_AE_CMD := -a 0xA1200000 -e 0xA1200000</span><br></pre></td></tr></table></figure>
+
+<p><strong>文件</strong>：<code>conf/custsoc/linux_rv64xx_defconfig</code></p>
+<p>添加内核配置项</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">CONFIG_TEE=y</span><br><span class="line">CONFIG_OPTEE=y</span><br></pre></td></tr></table></figure>
+
+<p><strong>文件</strong>：<code>conf/custsoc/nuclei_rv64xx.dts</code></p>
+<ul>
+<li>修改memory dts 节点，将opensbi、optee 内存区域不包含在memory节点中，不接受内核管理。<br>下面是evalsoc的配置值</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">memory@A0000000 &#123;</span><br><span class="line">    device_type = &quot;memory&quot;;</span><br><span class="line">    reg = &lt;0x0 0xA1000000 0x0 0x5D000000&gt;;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>增加optee dts 节点</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">firmware &#123;</span><br><span class="line">    optee &#123;</span><br><span class="line">    compatible = &quot;linaro,optee-tz&quot;;</span><br><span class="line">    method = &quot;smc&quot;;</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p><strong>文件</strong>：<code>conf/custsoc/opensbi/config.mk</code></p>
+<p>该文件定义了opensbi payload的地址，optee运行地址，参考evalsoc及镜像内存布局修改以下配置</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">FW_JUMP_ADDR</span><br><span class="line">FW_JUMP_FDT_ADDR</span><br><span class="line">FW_OPTEE_TZDRAM_BASE</span><br><span class="line">FW_OPTEE_TZDRAM_SIZE</span><br><span class="line">FW_OPTEE_SHMEM_BASE</span><br><span class="line">FW_OPTEE_SHMEM_SIZE</span><br></pre></td></tr></table></figure>
+
+<p><strong>文件</strong>： <code>conf/custsoc/uboot.cmd</code></p>
+<p>sd卡加载kernel时，该文件定义了kernel，rootfs加载到内存的位置，参考evalsoc修改。</p>
+<p><strong>文件</strong>： <code>conf/custsoc/uboot_rv64xx_config</code></p>
+<p>该文件定义了uboot 编译配置，主要参考用户内存布局修改uboot的运行地址，下面是evalsoc的配置</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CONFIG_SYS_TEXT_BASE=0xA1000000</span><br></pre></td></tr></table></figure>
+
+<p><strong>文件</strong>：<code>linux_sdk/freeloader/freeloader.S</code></p>
+<p>该文件定义了optee os的运行地址，用户按需修改，此地址和前面的memory mapping及 optee 编译地址保持一致。下面是evalsoc的配置</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#define OPTEEOS_START_BASE  (DDR_BASE + 0x800000)</span><br></pre></td></tr></table></figure>
+
+<h3 id="支持安全特性的内存区域配置"><a href="#支持安全特性的内存区域配置" class="headerlink" title="支持安全特性的内存区域配置"></a>支持安全特性的内存区域配置</h3><p><strong>此章节仅针对支持安全功能的cpu core，不支持这个硬件特性的可跳过</strong>，配合的linux sdk 分支是optee_5.10_wg。通过mattri_base, mattri_mask csr寄存器，配置安全与非安全的内存共享区域。<br>mattri_base 用例设置基地址，mattri_mask用来设置区域大小，具体用法参考Nuclei_RISC-V_ISA_Spec.pdf 文档。</p>
+<p><strong>文件</strong>：<code>freeloader/freeloader.S</code></p>
+<p>设置uboot，fdt 加载的内存为安全与非安全共享区域，这里0xA0000000 就是opensbi的基地址，也是DDR的基地址，用户根据具体情况修改。<br>mattri_base地址需要以共享区域大小对齐，比如共享区域为0xa0000000~0xb0000000,大小为0x10000000，mattri_base 就要256MB对齐<br>和前面的<a href="#linux-sdk-%E4%B8%BB%E8%A6%81%E9%95%9C%E5%83%8F%E5%9C%A8ddr%E5%86%85%E5%AD%98%E4%B8%AD%E5%B8%83%E5%B1%80">镜像内存布局有关</a>，用户根据具体情况修改。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">li a0, 0xF0000000</span><br><span class="line">csrw CSR_MATTRI3_MASK, a0</span><br><span class="line">li a0, 0xA0000000</span><br><span class="line">addi a0, a0, SECSHARE_REGION_ATTR</span><br><span class="line">csrw CSR_MATTRI3_BASE, a0</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">li a0, 0xFFF00000</span><br><span class="line">csrw CSR_MATTRI3_MASK, a0</span><br><span class="line">li a0, FDT_START_BASE</span><br><span class="line">addi a0, a0, SECSHARE_REGION_ATTR</span><br><span class="line">csrw CSR_MATTRI3_BASE, a0</span><br></pre></td></tr></table></figure>
+
+<p><strong>文件</strong>：<code>opensbi/firmware/fw_base.S</code></p>
+<p>配置非boot hart的安全非安全共享区域,0xA1000000 是uboot 的加载地址，和前面的<a href="#linux-sdk-%E4%B8%BB%E8%A6%81%E9%95%9C%E5%83%8F%E5%9C%A8ddr%E5%86%85%E5%AD%98%E4%B8%AD%E5%B8%83%E5%B1%80">镜像内存布局有关</a>，用户根据具体情况修改。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line"> * Config share memory for other harts,</span><br><span class="line"> * hart0 have been config by freeloader.</span><br><span class="line"> */</span><br><span class="line">li a4, 0xFF000000</span><br><span class="line">csrw CSR_MATTRI0_MASK, a4</span><br><span class="line">li a4, 0xA1000000</span><br><span class="line">addi a4, a4, SECSHARE_REGION_ATTR</span><br><span class="line">csrw CSR_MATTRI0_BASE, a4</span><br></pre></td></tr></table></figure>
+
+<p><strong>文件</strong>：<code>lib/sbi/optee/opteed_common.c</code></p>
+<p>设置shmem的安全非安全共享区域0xA0200000~0xA0400000，和前面的<a href="#linux-sdk-%E4%B8%BB%E8%A6%81%E9%95%9C%E5%83%8F%E5%9C%A8ddr%E5%86%85%E5%AD%98%E4%B8%AD%E5%B8%83%E5%B1%80">镜像内存布局有关</a>，用户根据具体情况修改。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">csr_write(CSR_MATTRI1_MASK, 0xFFF00000);</span><br><span class="line">csr_write(CSR_MATTRI1_BASE, 0xA0200000 | SECSHARE_REGION_ATTR);</span><br><span class="line">csr_write(CSR_MATTRI2_MASK, 0xFFF00000);</span><br><span class="line">csr_write(CSR_MATTRI2_BASE, 0xA0300000 | SECSHARE_REGION_ATTR);</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="移植一个plat"><a href="#移植一个plat" class="headerlink" title="移植一个plat"></a>移植一个plat</h3><p>plat 移植和arm的基本一致，以移植plat-cust 为例。</p>
+<p>在 <code>linux_sdk/optee/optee_os/core/arch/riscv/</code> 下创建plat-cust, 可参考plat-nuclei。</p>
+<p>1). 根据<a href="#%E9%85%8D%E7%BD%AEoptee-%E7%BC%96%E8%AF%91%E5%8F%82%E6%95%B0">optee编译配置</a>中的说明，修改参数</p>
+<p>2). 创建如下文件结构</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">.</span><br><span class="line">├── conf.mk</span><br><span class="line">├── drivers</span><br><span class="line">│   └── sub.mk</span><br><span class="line">├── kern.ld.S</span><br><span class="line">├── main.c</span><br><span class="line">├── platform_config.h</span><br><span class="line">└── sub.mk</span><br></pre></td></tr></table></figure>
+
+<p>main.c 主要是用户客制化的函数，conf.mk 是optee os编译选项配置文件，platform_config.h 中定义了RISCV MTIME的速率，客制化时候需要加上此文件中的内容。本例中是做了timer设备中断处理，这个例子只是内部测试用，main.c 实现的功能可以参考ARM的其他方案。</p>
+<h2 id="启动运行日志"><a href="#启动运行日志" class="headerlink" title="启动运行日志"></a>启动运行日志</h2><p>下面的打印包括SMP系统的启动过程及运行的应用程序，运行了2个CA(client application)应用程序：optee_example_hello_world，optee_example_demo.</p>
+<ul>
+<li><p>登录用户名：root</p>
+</li>
+<li><p>登录密码：nuclei</p>
+</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br><span class="line">262</span><br><span class="line">263</span><br><span class="line">264</span><br><span class="line">265</span><br><span class="line">266</span><br><span class="line">267</span><br><span class="line">268</span><br><span class="line">269</span><br><span class="line">270</span><br><span class="line">271</span><br><span class="line">272</span><br><span class="line">273</span><br><span class="line">274</span><br><span class="line">275</span><br><span class="line">276</span><br><span class="line">277</span><br><span class="line">278</span><br><span class="line">279</span><br><span class="line">280</span><br><span class="line">281</span><br><span class="line">282</span><br></pre></td><td class="code"><pre><span class="line">[2023/06/16-12:05:50:699] </span><br><span class="line">[2023/06/16-12:05:50:699] OpenSBI v0.9</span><br><span class="line">[2023/06/16-12:05:50:699]    ____                    _____ ____ _____</span><br><span class="line">[2023/06/16-12:05:50:699]   / __ \                  / ____|  _ \_   _|</span><br><span class="line">[2023/06/16-12:05:50:721]  | |  | |_ __   ___ _ __ | (___ | |_) || |</span><br><span class="line">[2023/06/16-12:05:50:721]  | |  | | &#x27;_ \ / _ \ &#x27;_ \ \___ \|  _ &lt; | |</span><br><span class="line">[2023/06/16-12:05:50:721]  | |__| | |_) |  __/ | | |____) | |_) || |_</span><br><span class="line">[2023/06/16-12:05:50:736]   \____/| .__/ \___|_| |_|_____/|____/_____|</span><br><span class="line">[2023/06/16-12:05:50:736]         | |</span><br><span class="line">[2023/06/16-12:05:50:736]         |_|</span><br><span class="line">[2023/06/16-12:05:50:736] </span><br><span class="line">[2023/06/16-12:05:50:954] Platform Name             : Nuclei Evaluation SoC</span><br><span class="line">[2023/06/16-12:05:50:954] Platform Features         : timer,mfdeleg</span><br><span class="line">[2023/06/16-12:05:50:954] Platform HART Count       : 8</span><br><span class="line">[2023/06/16-12:05:50:970] Firmware Base             : 0xa0000000</span><br><span class="line">[2023/06/16-12:05:50:970] Firmware Size             : 188 KB</span><br><span class="line">[2023/06/16-12:05:50:970] Runtime SBI Version       : 0.2</span><br><span class="line">[2023/06/16-12:05:50:970] </span><br><span class="line">[2023/06/16-12:05:50:976] Domain0 Name              : root</span><br><span class="line">[2023/06/16-12:05:50:976] Domain0 Boot HART         : 0</span><br><span class="line">[2023/06/16-12:05:50:976] Domain0 HARTs             : 0*,1*,2*,3*,4*,5*,6*,7*</span><br><span class="line">[2023/06/16-12:05:50:991] Domain0 Region00          : 0x00000000a0000000-0x00000000a003ffff ()</span><br><span class="line">[2023/06/16-12:05:50:991] Domain0 Region01          : 0x0000000000000000-0xffffffffffffffff (R,W,X)</span><br><span class="line">[2023/06/16-12:05:50:997] Domain0 Next Address      : 0x00000000a1000000</span><br><span class="line">[2023/06/16-12:05:50:997] Domain0 Next Arg1         : 0x00000000a8000000</span><br><span class="line">[2023/06/16-12:05:50:997] Domain0 Next Mode         : S-mode</span><br><span class="line">[2023/06/16-12:05:51:013] Domain0 SysReset          : yes</span><br><span class="line">[2023/06/16-12:05:51:013] </span><br><span class="line">[2023/06/16-12:05:51:040] [SM] Initializing ... hart [0]</span><br><span class="line">[2023/06/16-12:05:51:040] I/TC: </span><br><span class="line">[2023/06/16-12:05:51:056] I/TC: OP-TEE version: 80ac73cea-dev (gcc version 10.2.0 (GCC)) #1 Fri Jun 16 03:59:20 UTC 2023 riscv</span><br><span class="line">[2023/06/16-12:05:51:056] I/TC: WARNING: This OP-TEE configuration might be insecure!</span><br><span class="line">[2023/06/16-12:05:51:061] I/TC: WARNING: Please check https://optee.readthedocs.io/en/latest/architecture/porting_guidelines.html</span><br><span class="line">[2023/06/16-12:05:51:061] I/TC: Primary CPU initializing</span><br><span class="line">[2023/06/16-12:05:51:061] I/TC: Primary CPU switching to normal world boot</span><br><span class="line">[2023/06/16-12:05:51:077] [SM] security monitor has been initialized!</span><br><span class="line">[2023/06/16-12:05:51:077] Boot HART ID              : 0</span><br><span class="line">[2023/06/16-12:05:51:077] Boot HART Domain          : root</span><br><span class="line">[2023/06/16-12:05:51:082] Boot HART ISA             : rv64imafdcbsu</span><br><span class="line">[2023/06/16-12:05:51:082] Boot HART Features        : scounteren,mcounteren,time</span><br><span class="line">[2023/06/16-12:05:51:082] Boot HART PMP Count       : 16</span><br><span class="line">[2023/06/16-12:05:51:098] Boot HART PMP Granularity : 4096</span><br><span class="line">[2023/06/16-12:05:51:104] Boot HART PMP Address Bits: 30</span><br><span class="line">[2023/06/16-12:05:51:104] Boot HART MHPM Count      : 0</span><br><span class="line">[2023/06/16-12:05:51:104] Boot HART MHPM Count      : 0</span><br><span class="line">[2023/06/16-12:05:51:104] Boot HART MIDELEG         : 0x0000000000000222</span><br><span class="line">[2023/06/16-12:05:51:119] Boot HART MEDELEG         : 0x000000000000b109</span><br><span class="line">[2023/06/16-12:05:51:226] </span><br><span class="line">[2023/06/16-12:05:51:226] </span><br><span class="line">[2023/06/16-12:05:51:226] U-Boot 2021.01-gb9162c6c (Jun 16 2023 - 12:04:19 +0800)</span><br><span class="line">[2023/06/16-12:05:51:226] </span><br><span class="line">[2023/06/16-12:05:51:226] CPU:   rv64imafdc</span><br><span class="line">[2023/06/16-12:05:51:226] Model: nuclei,evalsoc</span><br><span class="line">[2023/06/16-12:05:51:226] DRAM:  1.5 GiB</span><br><span class="line">[2023/06/16-12:05:51:311] Board: Initialized</span><br><span class="line">[2023/06/16-12:05:51:353] MMC:   Nuclei SPI version 0xee010102</span><br><span class="line">[2023/06/16-12:05:51:353] spi@10034000:mmc@0: 0</span><br><span class="line">[2023/06/16-12:05:51:380] In:    serial@10013000</span><br><span class="line">[2023/06/16-12:05:51:380] Out:   serial@10013000</span><br><span class="line">[2023/06/16-12:05:51:380] Err:   serial@10013000</span><br><span class="line">[2023/06/16-12:05:51:380] Net:   No ethernet found.</span><br><span class="line">[2023/06/16-12:05:53:445] Hit any key to stop autoboot:  0 </span><br><span class="line">[2023/06/16-12:05:53:445] switch to partitions #0, OK</span><br><span class="line">[2023/06/16-12:05:53:445] mmc0 is current device</span><br><span class="line">[2023/06/16-12:05:53:481] Scanning mmc 0:1...</span><br><span class="line">[2023/06/16-12:05:53:972] Found U-Boot script /boot.scr</span><br><span class="line">[2023/06/16-12:05:54:305] 725 bytes read in 306 ms (2 KiB/s)</span><br><span class="line">[2023/06/16-12:05:54:305] ## Executing script at a1000000</span><br><span class="line">[2023/06/16-12:05:54:305] Boot images located in .</span><br><span class="line">[2023/06/16-12:05:54:305] Loading kernel: ./uImage.lz4</span><br><span class="line">[2023/06/16-12:06:12:026] 4014329 bytes read in 17574 ms (222.7 KiB/s)</span><br><span class="line">[2023/06/16-12:06:12:026] Loading ramdisk: ./uInitrd.lz4</span><br><span class="line">[2023/06/16-12:06:46:381] 7860656 bytes read in 34118 ms (224.6 KiB/s)</span><br><span class="line">[2023/06/16-12:06:46:529] ./kernel.dtb not found, ignore it</span><br><span class="line">[2023/06/16-12:06:46:529] Starts booting from SD</span><br><span class="line">[2023/06/16-12:06:46:529] ## Booting kernel from Legacy Image at a2000000 ...</span><br><span class="line">[2023/06/16-12:06:46:545]    Image Name:   Linux</span><br><span class="line">[2023/06/16-12:06:46:545]    Image Type:   RISC-V Linux Kernel Image (lz4 compressed)</span><br><span class="line">[2023/06/16-12:06:46:545]    Data Size:    4014265 Bytes = 3.8 MiB</span><br><span class="line">[2023/06/16-12:06:46:587]    Load Address: a1200000</span><br><span class="line">[2023/06/16-12:06:46:587]    Entry Point:  a1200000</span><br><span class="line">[2023/06/16-12:06:47:317]    Verifying Checksum ... OK</span><br><span class="line">[2023/06/16-12:06:47:317] ## Loading init Ramdisk from Legacy Image at a9300000 ...</span><br><span class="line">[2023/06/16-12:06:47:317]    Image Name:   Initrd</span><br><span class="line">[2023/06/16-12:06:47:338]    Image Type:   RISC-V Linux RAMDisk Image (lz4 compressed)</span><br><span class="line">[2023/06/16-12:06:47:338]    Data Size:    7860592 Bytes = 7.5 MiB</span><br><span class="line">[2023/06/16-12:06:47:338]    Load Address: 00000000</span><br><span class="line">[2023/06/16-12:06:47:338]    Entry Point:  00000000</span><br><span class="line">[2023/06/16-12:06:48:914]    Verifying Checksum ... OK</span><br><span class="line">[2023/06/16-12:06:48:914] ## Flattened Device Tree blob at a8000000</span><br><span class="line">[2023/06/16-12:06:48:914]    Booting using the fdt blob at 0xa8000000</span><br><span class="line">[2023/06/16-12:06:48:914]    Uncompressing Kernel Image</span><br><span class="line">[2023/06/16-12:06:53:394]    Using Device Tree in place at 00000000a8000000, end 00000000a80046bb</span><br><span class="line">[2023/06/16-12:06:53:394] </span><br><span class="line">[2023/06/16-12:06:53:394] Starting kernel ...</span><br><span class="line">[2023/06/16-12:06:53:394] </span><br><span class="line">[2023/06/16-12:06:53:402] [    0.000000] Linux version 5.10.0+ (guibing@whml1.corp.nucleisys.com) (riscv-nuclei-linux-gnu-gcc (GCC) 10.2.0, GNU ld (GNU Binutils) 2.36.1) #3 SMP Fri Jun 16 12:01:57 CST 2023</span><br><span class="line">[2023/06/16-12:06:53:423] [    0.000000] OF: fdt: Ignoring memory range 0xa1000000 - 0xa1200000</span><br><span class="line">[2023/06/16-12:06:53:423] [    0.000000] earlycon: sbi0 at I/O port 0x0 (options &#x27;&#x27;)</span><br><span class="line">[2023/06/16-12:06:53:439] [    0.000000] printk: bootconsole [sbi0] enabled</span><br><span class="line">[2023/06/16-12:06:53:439] [    0.000000] efi: UEFI not found.</span><br><span class="line">[2023/06/16-12:06:53:439] [    0.000000] Initial ramdisk at: 0x(____ptrval____) (7864320 bytes)</span><br><span class="line">[2023/06/16-12:06:53:439] [    0.000000] Zone ranges:</span><br><span class="line">[2023/06/16-12:06:53:444] [    0.000000]   DMA32    [mem 0x00000000a1200000-0x00000000fdffffff]</span><br><span class="line">[2023/06/16-12:06:53:444] [    0.000000]   Normal   empty</span><br><span class="line">[2023/06/16-12:06:53:444] [    0.000000] Movable zone start for each node</span><br><span class="line">[2023/06/16-12:06:53:460] [    0.000000] Early memory node ranges</span><br><span class="line">[2023/06/16-12:06:53:502] [    0.000000]   node   0: [mem 0x00000000a1200000-0x00000000fdffffff]</span><br><span class="line">[2023/06/16-12:06:53:502] [    0.000000] Initmem setup node 0 [mem 0x00000000a1200000-0x00000000fdffffff]</span><br><span class="line">[2023/06/16-12:06:53:979] [    0.000000] software IO TLB: mapped [mem 0x00000000f8b9f000-0x00000000fcb9f000] (64MB)</span><br><span class="line">[2023/06/16-12:06:53:995] [    0.000000] SBI specification v0.2 detected</span><br><span class="line">[2023/06/16-12:06:53:998] [    0.000000] SBI implementation ID=0x1 Version=0x9</span><br><span class="line">[2023/06/16-12:06:53:998] [    0.000000] SBI v0.2 TIME extension detected</span><br><span class="line">[2023/06/16-12:06:53:998] [    0.000000] SBI v0.2 IPI extension detected</span><br><span class="line">[2023/06/16-12:06:54:013] [    0.000000] SBI v0.2 RFENCE extension detected</span><br><span class="line">[2023/06/16-12:06:54:013] [    0.000000] SBI v0.2 HSM extension detected</span><br><span class="line">[2023/06/16-12:06:54:013] [    0.000000] riscv: ISA extensions acdfim</span><br><span class="line">[2023/06/16-12:06:54:034] [    0.000000] riscv: ELF capabilities acdfim</span><br><span class="line">[2023/06/16-12:06:54:034] [    0.000000] percpu: Embedded 16 pages/cpu s25112 r8192 d32232 u65536</span><br><span class="line">[2023/06/16-12:06:54:034] [    0.000000] Built 1 zonelists, mobility grouping on.  Total pages: 375215</span><br><span class="line">[2023/06/16-12:06:54:061] [    0.000000] Kernel command line: earlycon=sbi console=ttyNUC0</span><br><span class="line">[2023/06/16-12:06:54:061] [    0.000000] Dentry cache hash table entries: 262144 (order: 9, 2097152 bytes, linear)</span><br><span class="line">[2023/06/16-12:06:54:061] [    0.000000] Inode-cache hash table entries: 131072 (order: 8, 1048576 bytes, linear)</span><br><span class="line">[2023/06/16-12:06:54:120] [    0.000000] Sorting __ex_table...</span><br><span class="line">[2023/06/16-12:06:54:120] [    0.000000] mem auto-init: stack:off, heap alloc:off, heap free:off</span><br><span class="line">[2023/06/16-12:06:54:353] [    0.000000] Memory: 1410268K/1521664K available (4712K kernel code, 4139K rwdata, 2048K rodata, 188K init, 328K bss, 111396K reserved, 0K cma-reserved)</span><br><span class="line">[2023/06/16-12:06:54:353] [    0.000000] SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=8, Nodes=1</span><br><span class="line">[2023/06/16-12:06:54:353] [    0.000000] rcu: Hierarchical RCU implementation.</span><br><span class="line">[2023/06/16-12:06:54:359] [    0.000000] rcu: RCU calculated value of scheduler-enlistment delay is 10 jiffies.</span><br><span class="line">[2023/06/16-12:06:54:359] [    0.000000] NR_IRQS: 64, nr_irqs: 64, preallocated irqs: 0</span><br><span class="line">[2023/06/16-12:06:54:375] [    0.000000] riscv-intc: 64 local interrupts mapped</span><br><span class="line">[2023/06/16-12:06:54:402] [    0.000000] plic: interrupt-controller@1c000000: mapped 53 interrupts with 8 handlers for 16 contexts.</span><br><span class="line">[2023/06/16-12:06:54:402] [    0.000000] random: get_random_bytes called from 0xffffffe00000296a with crng_init=0</span><br><span class="line">[2023/06/16-12:06:54:417] [    0.000000] riscv_timer_init_dt: Registering clocksource cpuid [0] hartid [0]</span><br><span class="line">[2023/06/16-12:06:54:423] [    0.000000] clocksource: riscv_clocksource: mask: 0xffffffffffffffff max_cycles: 0x1ef4687b1, max_idle_ns: 112843571739654 ns</span><br><span class="line">[2023/06/16-12:06:54:423] [    0.000061] sched_clock: 64 bits at 32kHz, resolution 30517ns, wraps every 70368744171142ns</span><br><span class="line">[2023/06/16-12:06:54:439] [    0.009521] Calibrating delay loop (skipped), value calculated using timer frequency.. 0.06 BogoMIPS (lpj=327)</span><br><span class="line">[2023/06/16-12:06:54:444] [    0.019256] pid_max: default: 32768 minimum: 301</span><br><span class="line">[2023/06/16-12:06:54:460] [    0.025878] Mount-cache hash table entries: 4096 (order: 3, 32768 bytes, linear)</span><br><span class="line">[2023/06/16-12:06:54:481] [    0.033050] Mountpoint-cache hash table entries: 4096 (order: 3, 32768 bytes, linear)</span><br><span class="line">[2023/06/16-12:06:54:481] [    0.058105] rcu: Hierarchical SRCU implementation.</span><br><span class="line">[2023/06/16-12:06:54:508] [    0.064422] EFI services will not be available.</span><br><span class="line">[2023/06/16-12:06:54:508] [    0.072326] smp: Bringing up secondary CPUs ...</span><br><span class="line">[2023/06/16-12:06:54:524] I/TC: Secondary CPU 1 initializing</span><br><span class="line">[2023/06/16-12:06:54:524] I/TC: Secondary CPU 1 switching to normal world boot</span><br><span class="line">[2023/06/16-12:06:54:545] I/TC: Secondary CPU 2 initializing</span><br><span class="line">[2023/06/16-12:06:54:545] I/TC: Secondary CPU 2 switching to normal world boot</span><br><span class="line">[2023/06/16-12:06:54:587] I/TC: Secondary CPU 3 initializing</span><br><span class="line">[2023/06/16-12:06:54:587] I/TC: Secondary CPU 3 switching to normal world boot</span><br><span class="line">[2023/06/16-12:06:55:611] [    1.148345] CPU4: failed to come online</span><br><span class="line">[2023/06/16-12:06:56:647] [    2.191925] CPU5: failed to come online</span><br><span class="line">[2023/06/16-12:06:57:705] [    3.236206] CPU6: failed to come online</span><br><span class="line">[2023/06/16-12:06:58:754] [    4.280517] CPU7: failed to come online</span><br><span class="line">[2023/06/16-12:06:58:754] [    4.284393] smp: Brought up 1 node, 4 CPUs</span><br><span class="line">[2023/06/16-12:06:58:785] [    4.296234] devtmpfs: initialized</span><br><span class="line">[2023/06/16-12:06:58:785] [    4.319610] clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 19112604462750000 ns</span><br><span class="line">[2023/06/16-12:06:58:800] [    4.329193] futex hash table entries: 2048 (order: 5, 131072 bytes, linear)</span><br><span class="line">[2023/06/16-12:06:58:843] [    4.339294] pinctrl core: initialized pinctrl subsystem</span><br><span class="line">[2023/06/16-12:06:58:843] [    4.347503] NET: Registered protocol family 16</span><br><span class="line">[2023/06/16-12:06:58:955] [    4.481170] clocksource: Switched to clocksource riscv_clocksource</span><br><span class="line">[2023/06/16-12:06:58:955] [    4.501708] NET: Registered protocol family 2</span><br><span class="line">[2023/06/16-12:06:58:976] [    4.514434] tcp_listen_portaddr_hash hash table entries: 1024 (order: 2, 16384 bytes, linear)</span><br><span class="line">[2023/06/16-12:06:58:992] [    4.523101] TCP established hash table entries: 16384 (order: 5, 131072 bytes, linear)</span><br><span class="line">[2023/06/16-12:06:58:992] [    4.533325] TCP bind hash table entries: 16384 (order: 6, 262144 bytes, linear)</span><br><span class="line">[2023/06/16-12:06:58:997] [    4.545257] TCP: Hash tables configured (established 16384 bind 16384)</span><br><span class="line">[2023/06/16-12:06:58:997] [    4.553039] UDP hash table entries: 1024 (order: 3, 32768 bytes, linear)</span><br><span class="line">[2023/06/16-12:06:59:040] [    4.560058] UDP-Lite hash table entries: 1024 (order: 3, 32768 bytes, linear)</span><br><span class="line">[2023/06/16-12:06:59:040] [    4.569976] NET: Registered protocol family 1</span><br><span class="line">[2023/06/16-12:06:59:040] [    4.579040] RPC: Registered named UNIX socket transport module.</span><br><span class="line">[2023/06/16-12:06:59:040] [    4.584686] RPC: Registered udp transport module.</span><br><span class="line">[2023/06/16-12:06:59:040] [    4.589172] RPC: Registered tcp transport module.</span><br><span class="line">[2023/06/16-12:06:59:098] [    4.594238] RPC: Registered tcp NFSv4.1 backchannel transport module.</span><br><span class="line">[2023/06/16-12:06:59:098] [    4.603820] Trying to unpack rootfs image as initramfs...</span><br><span class="line">[2023/06/16-12:07:03:203] [    8.693206] Freeing initrd memory: 7672K</span><br><span class="line">[2023/06/16-12:07:03:203] [    8.706329] workingset: timestamp_bits=62 max_order=19 bucket_order=0</span><br><span class="line">[2023/06/16-12:07:03:311] [    8.788848] jffs2: version 2.2. (NAND) 漏 2001-2006 Red Hat, Inc.</span><br><span class="line">[2023/06/16-12:07:03:311] [    8.800598] JFS: nTxBlock = 8192, nTxLock = 65536</span><br><span class="line">[2023/06/16-12:07:04:693] [   10.209747] NET: Registered protocol family 38</span><br><span class="line">[2023/06/16-12:07:04:693] [   10.213958] io scheduler mq-deadline registered</span><br><span class="line">[2023/06/16-12:07:04:708] [   10.218261] io scheduler kyber registered</span><br><span class="line">[2023/06/16-12:07:05:247] [   10.747100] 10013000.serial: ttyNUC0 at MMIO 0x10013000 (irq = 1, base_baud = 3125000) is a Nuclei UART/USART</span><br><span class="line">[2023/06/16-12:07:05:253] [   10.756896] printk: console [ttyNUC0] enabled</span><br><span class="line">[2023/06/16-12:07:05:253] [   10.756896] printk: console [ttyNUC0] enabled</span><br><span class="line">[2023/06/16-12:07:05:269] [   10.765350] printk: bootconsole [sbi0] disabled</span><br><span class="line">[2023/06/16-12:07:05:269] [   10.765350] printk: bootconsole [sbi0] disabled</span><br><span class="line">[2023/06/16-12:07:05:418] [   10.876007] brd: module loaded</span><br><span class="line">[2023/06/16-12:07:05:444] [   10.945983] loop: module loaded</span><br><span class="line">[2023/06/16-12:07:05:444] [   10.952514] nuclei_spi 10014000.spi: mapped; irq=2, cs=4</span><br><span class="line">[2023/06/16-12:07:05:460] [   10.963775] spi-nor spi0.0: w25q128 (16384 Kbytes)</span><br><span class="line">[2023/06/16-12:07:05:545] [   11.016571] random: fast init done</span><br><span class="line">[2023/06/16-12:07:06:427] [   11.887207] ftl_cs: FTL header not found.</span><br><span class="line">[2023/06/16-12:07:06:427] [   11.900482] nuclei_spi 10034000.spi: mapped; irq=4, cs=4</span><br><span class="line">[2023/06/16-12:07:06:466] [   11.951629] mmc_spi spi1.0: SD/MMC host mmc0, no DMA, no WP, no poweroff, cd polling</span><br><span class="line">[2023/06/16-12:07:06:481] [   11.960540] optee: probing for conduit method.</span><br><span class="line">[2023/06/16-12:07:06:508] [   11.971893] optee: initialized driver</span><br><span class="line">[2023/06/16-12:07:06:508] [   11.979522] ipip: IPv4 and MPLS over IPv4 tunneling driver</span><br><span class="line">[2023/06/16-12:07:06:508] [   11.996337] NET: Registered protocol family 10</span><br><span class="line">[2023/06/16-12:07:06:524] [   12.012023] Segment Routing with IPv6</span><br><span class="line">[2023/06/16-12:07:06:524] [   12.015960] sit: IPv6, IPv4 and MPLS over IPv4 tunneling driver</span><br><span class="line">[2023/06/16-12:07:06:545] [   12.028320] NET: Registered protocol family 17</span><br><span class="line">[2023/06/16-12:07:06:545] [   12.041412] Freeing unused kernel memory: 188K</span><br><span class="line">[2023/06/16-12:07:06:551] [   12.046142] mmc0: host does not support reading read-only switch, assuming write-enable</span><br><span class="line">[2023/06/16-12:07:06:551] [   12.053741] mmc0: new SDHC card on SPI</span><br><span class="line">[2023/06/16-12:07:06:567] [   12.064392] mmcblk0: mmc0:0000 SD 7.39 GiB </span><br><span class="line">[2023/06/16-12:07:06:609] [   12.072631] Run /init as init process</span><br><span class="line">[2023/06/16-12:07:06:651] [   12.111114]  mmcblk0: p1</span><br><span class="line">[2023/06/16-12:07:07:290] Starting syslogd: OK</span><br><span class="line">[2023/06/16-12:07:07:439] Starting klogd: OK</span><br><span class="line">[2023/06/16-12:07:07:694] Running sysctl: OK</span><br><span class="line">[2023/06/16-12:07:07:843] Starting mdev... OK</span><br><span class="line">[2023/06/16-12:07:12:250] modprobe: can&#x27;t change directory to &#x27;/lib/modules&#x27;: No such file or directory</span><br><span class="line">[2023/06/16-12:07:12:545] Saving random seed: [   17.964752] random: dd: uninitialized urandom read (512 bytes read)</span><br><span class="line">[2023/06/16-12:07:12:545] OK</span><br><span class="line">[2023/06/16-12:07:12:651] Starting tee-supplicant...</span><br><span class="line">[2023/06/16-12:07:12:800] </span><br><span class="line">[2023/06/16-12:07:12:800] Welcome to Nuclei System Technology</span><br><span class="line">[2023/06/16-12:07:17:481] nucleisys login: root</span><br><span class="line">[2023/06/16-12:07:18:864] Password: </span><br><span class="line">[2023/06/16-12:07:21:640] # </span><br><span class="line">[2023/06/16-12:07:25:629] # optee_example_hello_world </span><br><span class="line">[2023/06/16-12:07:26:178] D/TA:  TA_CreateEntryPoint:39 has been called</span><br><span class="line">[2023/06/16-12:07:26:178] D/TA:  TA_OpenSessionEntryPoint:68 has been called</span><br><span class="line">[2023/06/16-12:07:26:178] I/TA: Hello World!</span><br><span class="line">[2023/06/16-12:07:26:178] Invoking TA to iD/TA:  inc_value:105 has been called</span><br><span class="line">[2023/06/16-12:07:26:179] I/TA: Got value: 42 from NW</span><br><span class="line">[2023/06/16-12:07:26:179] I/TA: Increase value to: 43</span><br><span class="line">[2023/06/16-12:07:26:179] ncrement 42</span><br><span class="line">[2023/06/16-12:07:26:214] TA incremenI/TA: Goodbye!</span><br><span class="line">[2023/06/16-12:07:26:215] D/TA:  TA_DestroyEntryPoint:50 has been called</span><br><span class="line">[2023/06/16-12:07:26:215] ted value to 43</span><br><span class="line">[2023/06/16-12:07:27:013] # </span><br><span class="line">[2023/06/16-12:07:27:209] # </span><br><span class="line">[2023/06/16-12:07:32:243] # optee_example_hello_world </span><br><span class="line">[2023/06/16-12:07:32:547] D/TA:  TA_CreateEntryPoint:39 has been called</span><br><span class="line">[2023/06/16-12:07:32:547] D/TA:  TA_OpenSessionEntryPoint:68 has been called</span><br><span class="line">[2023/06/16-12:07:32:547] I/TA: Hello World!</span><br><span class="line">[2023/06/16-12:07:32:558] Invoking TA to iD/TA:  inc_value:105 has been called</span><br><span class="line">[2023/06/16-12:07:32:559] I/TA: Got value: 42 from NW</span><br><span class="line">[2023/06/16-12:07:32:559] I/TA: Increase value to: 43</span><br><span class="line">[2023/06/16-12:07:32:590] ncrement 42</span><br><span class="line">[2023/06/16-12:07:32:590] TA I/TA: Goodbye!</span><br><span class="line">[2023/06/16-12:07:32:590] D/TA:  TA_DestroyEntryPoint:50 has been called</span><br><span class="line">[2023/06/16-12:07:32:590] incremented value to 43</span><br><span class="line">[2023/06/16-12:07:36:056] # optee_example_demo        </span><br><span class="line">[2023/06/16-12:07:36:519] I/TA: open session!</span><br><span class="line">[2023/06/16-12:07:36:519] CA:Invoking TA tI/TA: Got value: 42 from NW</span><br><span class="line">[2023/06/16-12:07:36:519] o increment 42 to 50</span><br><span class="line">[2023/06/16-12:07:42:526] 1@</span><br><span class="line">[2023/06/16-12:07:44:545] I/TA: Increase value to: 43</span><br><span class="line">[2023/06/16-12:07:44:588] CA:incremented vI/TA: Got value: 43 from NW</span><br><span class="line">[2023/06/16-12:07:44:588] alue to 43</span><br><span class="line">[2023/06/16-12:07:48:524] 1@</span><br><span class="line">[2023/06/16-12:07:52:586] I/TA: Increase value to: 44</span><br><span class="line">[2023/06/16-12:07:52:631] CA:incremented vI/TA: Got value: 44 from NW</span><br><span class="line">[2023/06/16-12:07:52:631] alue to 44</span><br><span class="line">[2023/06/16-12:07:54:524] 1@</span><br><span class="line">[2023/06/16-12:08:00:524] 1@</span><br><span class="line">[2023/06/16-12:08:00:662] I/TA: Increase value to: 45</span><br><span class="line">[2023/06/16-12:08:00:662] CA:incremented vI/TA: Got value: 45 from NW</span><br><span class="line">[2023/06/16-12:08:00:662] alue to 45</span><br><span class="line">[2023/06/16-12:08:06:521] 1@</span><br><span class="line">[2023/06/16-12:08:08:677] I/TA: Increase value to: 46</span><br><span class="line">[2023/06/16-12:08:08:709] CA:incremented vI/TA: Got value: 46 from NW</span><br><span class="line">[2023/06/16-12:08:08:709] alue to 46</span><br><span class="line">[2023/06/16-12:08:12:521] 1@</span><br><span class="line">[2023/06/16-12:08:16:756] I/TA: Increase value to: 47</span><br><span class="line">[2023/06/16-12:08:16:756] CA:incremented vI/TA: Got value: 47 from NW</span><br><span class="line">[2023/06/16-12:08:16:756] alue to 47</span><br><span class="line">[2023/06/16-12:08:18:521] 1@</span><br><span class="line">[2023/06/16-12:08:24:521] 1@</span><br><span class="line">[2023/06/16-12:08:24:771] I/TA: Increase value to: 48</span><br><span class="line">[2023/06/16-12:08:24:818] CA:incremented vI/TA: Got value: 48 from NW</span><br><span class="line">[2023/06/16-12:08:24:818] alue to 48</span><br><span class="line">[2023/06/16-12:08:30:521] 1@</span><br><span class="line">[2023/06/16-12:08:32:818] I/TA: Increase value to: 49</span><br><span class="line">[2023/06/16-12:08:32:849] CA:incremented vI/TA: Got value: 49 from NW</span><br><span class="line">[2023/06/16-12:08:32:849] alue to 49</span><br><span class="line">[2023/06/16-12:08:36:521] 1@</span><br><span class="line">[2023/06/16-12:08:40:865] I/TA: Increase value to: 50</span><br><span class="line">[2023/06/16-12:08:40:896] CA:incremented value to I/TA: close session!</span><br><span class="line">[2023/06/16-12:08:40:896] 50</span><br><span class="line">[2023/06/16-14:32:16:433] #  </span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/optee/" rel="tag"># optee</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/07/11/hxd_new/riscv%E8%B0%83%E7%A0%94/riscv%20%E6%B5%8B%E8%AF%95/" rel="prev" title="nuclei riscv isa 测试">
+      <i class="fa fa-chevron-left"></i> nuclei riscv isa 测试
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/07/18/hxd_new/%E5%AE%89%E5%85%A8/nuclei%20opensbi%20optee%20%E6%96%B9%E6%A1%88/" rel="next" title="nuclei opensbi optee 方案">
+      nuclei opensbi optee 方案 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#OPTEE-%E8%AF%B4%E6%98%8E"><span class="nav-number">1.</span> <span class="nav-text">OPTEE 说明</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B"><span class="nav-number">1.1.</span> <span class="nav-text">启动过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%90%E8%A1%8C%E8%BF%87%E7%A8%8B"><span class="nav-number">1.2.</span> <span class="nav-text">运行过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%AD%E6%96%AD%E5%A4%84%E7%90%86"><span class="nav-number">1.3.</span> <span class="nav-text">中断处理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%AD%E6%96%AD%E5%AE%89%E5%85%A8%E8%AE%BE%E7%BD%AE"><span class="nav-number">1.4.</span> <span class="nav-text">中断安全设置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%89%B9%E6%AE%8A%E9%85%8D%E7%BD%AE"><span class="nav-number">1.5.</span> <span class="nav-text">特殊配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%96%E8%AF%91%E9%83%A8%E7%BD%B2"><span class="nav-number">1.6.</span> <span class="nav-text">编译部署</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A7%BB%E6%A4%8D%E6%96%B0%E5%B9%B3%E5%8F%B0"><span class="nav-number">1.7.</span> <span class="nav-text">移植新平台</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A7%BB%E6%A4%8D%E5%89%8D%E6%8F%90%E5%81%87%E8%AE%BE"><span class="nav-number">1.7.1.</span> <span class="nav-text">移植前提假设</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#linux-sdk-%E4%B8%BB%E8%A6%81%E9%95%9C%E5%83%8F%E5%9C%A8ddr%E5%86%85%E5%AD%98%E4%B8%AD%E5%B8%83%E5%B1%80"><span class="nav-number">1.7.2.</span> <span class="nav-text">linux sdk 主要镜像在ddr内存中布局</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AEoptee-%E7%BC%96%E8%AF%91%E5%8F%82%E6%95%B0"><span class="nav-number">1.7.3.</span> <span class="nav-text">配置optee 编译参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%94%AF%E6%8C%81%E5%AE%89%E5%85%A8%E7%89%B9%E6%80%A7%E7%9A%84%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F%E9%85%8D%E7%BD%AE"><span class="nav-number">1.7.4.</span> <span class="nav-text">支持安全特性的内存区域配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A7%BB%E6%A4%8D%E4%B8%80%E4%B8%AAplat"><span class="nav-number">1.7.5.</span> <span class="nav-text">移植一个plat</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E8%BF%90%E8%A1%8C%E6%97%A5%E5%BF%97"><span class="nav-number">1.8.</span> <span class="nav-text">启动运行日志</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">94</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">110</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'dark',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'VrGRp2q7WwXjxsCNmlDIZYbC-gzGzoHsz',
+      appKey     : 'JgMXmmB7yKQf2zm80TaBp3JT',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : 'zh-cn' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

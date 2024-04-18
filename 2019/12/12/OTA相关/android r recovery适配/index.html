@@ -12,12 +12,12 @@
 
 <link rel="stylesheet" href="/css/main.css">
 
-<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=LXGW WenKai:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=LXGW WenKai:300,300italic,400,400italic,700,700italic|LXGW WenKai Mono, Source Code Pro:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
 <link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":{"valine":{"order":-1}},"activeClass":"valine"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":{"valine":{"order":-1}},"activeClass":"valine"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
   </script>
 
   <meta name="description" content="遇到的问题 抓kernel log fastboot oem uart-enable，重启后，会吐出kernel log， 否则只有kernel之前的log  提前设置好启动模式，misc不要清除   关掉avb校验 fastboot flash vbmeta --disable-verification  export ANDROID_PRODUCT_OUT&#x3D;&#x2F;home&#x2F;mi&#x2F;work_spac">
@@ -176,6 +176,7 @@
     <i class="fa fa-arrow-up"></i>
     <span>0%</span>
   </div>
+  <div class="reading-progress-bar"></div>
   <a role="button" class="book-mark-link book-mark-link-fixed"></a>
 
 
@@ -283,7 +284,7 @@
 <li><p>hidl 出错</p>
 <p>等待进一步调试，manifest是正常的，需要加log调试</p>
 <blockquote>
-<p>HidlServiceManagement: Waited one second for <a href="mailto:&#97;&#x6e;&#100;&#114;&#111;&#105;&#x64;&#46;&#x68;&#x61;&#x72;&#x64;&#119;&#97;&#114;&#x65;&#x2e;&#x6b;&#x65;&#121;&#109;&#x61;&#115;&#116;&#x65;&#114;&#x40;&#52;&#x2e;&#x30;">&#97;&#x6e;&#100;&#114;&#111;&#105;&#x64;&#46;&#x68;&#x61;&#x72;&#x64;&#119;&#97;&#114;&#x65;&#x2e;&#x6b;&#x65;&#121;&#109;&#x61;&#115;&#116;&#x65;&#114;&#x40;&#52;&#x2e;&#x30;</a>::IKeymasterDevice&#x2F;default</p>
+<p>HidlServiceManagement: Waited one second for <a href="mailto:&#x61;&#110;&#100;&#x72;&#x6f;&#105;&#100;&#46;&#104;&#x61;&#114;&#x64;&#119;&#97;&#x72;&#x65;&#x2e;&#x6b;&#x65;&#x79;&#x6d;&#97;&#x73;&#x74;&#x65;&#x72;&#x40;&#52;&#x2e;&#x30;">&#x61;&#110;&#100;&#x72;&#x6f;&#105;&#100;&#46;&#104;&#x61;&#114;&#x64;&#119;&#97;&#x72;&#x65;&#x2e;&#x6b;&#x65;&#x79;&#x6d;&#97;&#x73;&#x74;&#x65;&#x72;&#x40;&#52;&#x2e;&#x30;</a>::IKeymasterDevice&#x2F;default</p>
 </blockquote>
 <p>stop hwservicemanager后， 自动重启到recovery</p>
 <p>这个是vdc命令触发的，先关掉<code>reboot_into_recovery</code></p>
@@ -399,28 +400,24 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">157</span>
+          <span class="site-state-item-count">158</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">93</span>
+        <span class="site-state-item-count">94</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">109</span>
+        <span class="site-state-item-count">110</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
 </div>
-  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
-    Chat
-  </a>
-  </div>
 
 
 
@@ -503,6 +500,19 @@
 
 
 
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'dark',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
 
 
   

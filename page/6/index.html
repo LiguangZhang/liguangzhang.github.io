@@ -12,12 +12,12 @@
 
 <link rel="stylesheet" href="/css/main.css">
 
-<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=LXGW WenKai:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=LXGW WenKai:300,300italic,400,400italic,700,700italic|LXGW WenKai Mono, Source Code Pro:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
 <link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":{"valine":{"order":-1}},"activeClass":"valine"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":{"valine":{"order":-1}},"activeClass":"valine"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
   </script>
 
   <meta property="og:type" content="website">
@@ -171,6 +171,7 @@
     <i class="fa fa-arrow-up"></i>
     <span>0%</span>
   </div>
+  <div class="reading-progress-bar"></div>
   <a role="button" class="book-mark-link book-mark-link-fixed"></a>
 
 
@@ -181,6 +182,116 @@
 
           <div class="content index posts-expand">
             
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv%20%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B8%AD%E6%96%AD%E7%9B%B8%E5%85%B3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv%20%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B8%AD%E6%96%AD%E7%9B%B8%E5%85%B3/" class="post-title-link" itemprop="url">riscv 虚拟化中断相关</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-10-11 18:15:54" itemprop="dateCreated datePublished" datetime="2022-10-11T18:15:54+08:00">2022-10-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 14:06:51" itemprop="dateModified" datetime="2024-04-16T14:06:51+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%99%9A%E6%8B%9F%E5%8C%96/" itemprop="url" rel="index"><span itemprop="name">虚拟化</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%99%9A%E6%8B%9F%E5%8C%96/RISCV/" itemprop="url" rel="index"><span itemprop="name">RISCV</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%99%9A%E6%8B%9F%E5%8C%96/RISCV/%E4%B8%AD%E6%96%AD/" itemprop="url" rel="index"><span itemprop="name">中断</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv%20%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B8%AD%E6%96%AD%E7%9B%B8%E5%85%B3/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv%20%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B8%AD%E6%96%AD%E7%9B%B8%E5%85%B3/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h4 id="Hypervisor-Status-Register-hstatus"><a href="#Hypervisor-Status-Register-hstatus" class="headerlink" title="Hypervisor Status Register (hstatus)"></a>Hypervisor Status Register (hstatus)</h4><p><img src="https://gitee.com/zhangliguang1/tuchuang/raw/master/img/20221124162340.png"></p>
+<p>When VTSR&#x3D;1, an attempt in VS-mode to execute SRET raises a virtual instruction exception.<br>When VTW&#x3D;1 (and assuming <code>mstatus</code>.TW&#x3D;0), an attempt in VS-mode to execute WFI raises a virtual instruction exception if the WFI does not complete within an implementation-specific, bounded time limit.<br>When VTVM&#x3D;1, an attempt in VS-mode to execute SFENCE.VMA or to access CSR <code>satp</code> raises a virtual instruction exception.</p>
+<p>The VGEIN (Virtual Guest External Interrupt Number) field selects a guest external interrupt source for VS-level external interrupts. VGEIN is a <strong>WLRL</strong> field that must be able to hold values between zero and the maximum guest external interrupt number (known as GEILEN), inclusive.<br>When VGEIN&#x3D;0, no guest external interrupt source is selected for VS-level external interrupts. GEILEN may be zero, in which case VGEIN may be hardwired to zero.<br>Guest external interrupts are explained in Section <a target="_blank" rel="noopener" href="https://five-embeddev.com/riscv-isa-manual/latest/hypervisor.html#sec:hgeinterruptregs">1.2.4</a>, and the use of VGEIN is covered further in Section <a target="_blank" rel="noopener" href="https://five-embeddev.com/riscv-isa-manual/latest/hypervisor.html#sec:hinterruptregs">1.2.3</a>.</p>
+<p>Field HU (Hypervisor User mode) controls whether the virtual-machine load&#x2F;store instructions, HLV, HLVX, and HSV, can be used also in U-mode. When HU&#x3D;1, these instructions can be executed in U-mode the same as in HS-mode. When HU&#x3D;0, all hypervisor instructions cause an illegal instruction trap in U-mode.</p>
+<h4 id="hip-hie"><a href="#hip-hie" class="headerlink" title="hip &amp; hie"></a>hip &amp; hie</h4><p>Registers <code>hip</code> and <code>hie</code> are HSXLEN-bit read&#x2F;write registers that supplement HS-level’s <code>sip</code> and <code>sie</code> respectively. The <code>hip</code> register indicates pending VS-level and hypervisor-specific interrupts, while <code>hie</code> contains enable bits for the same interrupts. As with <code>sip</code> and <code>sie</code>, an interrupt <em>i</em> will be taken in HS-mode if bit <em>i</em> is set in both <code>hip</code> and <code>hie</code>, and if supervisor-level interrupts are globally enabled.</p>
+<p><img src="https://gitee.com/zhangliguang1/tuchuang/raw/master/img/20221124162341.png"></p>
+<p>Bits <code>hip</code>.SGEIP and <code>hie</code>.SGEIE are the interrupt-pending and interrupt-enable bits for guest external interrupts at supervisor level (HS-level).<br>SGEIP is read-only in <code>hip</code>, and is 1 if and only if the bitwise logical-AND of CSRs <code>hgeip</code> and <code>hgeie</code> is nonzero in any bit.</p>
+<p>Bits <code>hip</code>.VSEIP and <code>hie</code>.VSEIE are the interrupt-pending and interrupt-enable bits for VS-level external interrupts. VSEIP is read-only in <code>hip</code>, and is the logical-OR of these interrupt sources:</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv%20%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B8%AD%E6%96%AD%E7%9B%B8%E5%85%B3/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
       
   
   
@@ -1164,106 +1275,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2022/04/18/hxd_new/%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3/%E6%99%BA%E8%83%BD%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E6%94%BB%E9%98%B2/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/04/18/hxd_new/%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3/%E6%99%BA%E8%83%BD%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E6%94%BB%E9%98%B2/" class="post-title-link" itemprop="url">智能汽车安全攻防.md</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2022-04-18 18:15:54" itemprop="dateCreated datePublished" datetime="2022-04-18T18:15:54+08:00">2022-04-18</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-16 10:46:26" itemprop="dateModified" datetime="2024-04-16T10:46:26+08:00">2024-04-16</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%AE%89%E5%85%A8/" itemprop="url" rel="index"><span itemprop="name">安全</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2022/04/18/hxd_new/%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3/%E6%99%BA%E8%83%BD%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E6%94%BB%E9%98%B2/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/04/18/hxd_new/%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3/%E6%99%BA%E8%83%BD%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E6%94%BB%E9%98%B2/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="基础概念"><a href="#基础概念" class="headerlink" title="基础概念"></a>基础概念</h1><h2 id="V2X"><a href="#V2X" class="headerlink" title="V2X"></a>V2X</h2><p>V2X（Vehicle to X）通信：表示车与X通信，X可以是车（Vehicle）、路（Road）或者其他相关基础设施，相应地也就有了<strong>V2V</strong>（Vehicle to Vehicle，车与车通信）、<strong>V2I</strong>（Vehicle to Infrastructure，车与基础设施如道路、服务器等通信）、<strong>V2P</strong>（Vehicle to Pedestrian，汽车与行人通信）等概念。V2X的典型应用有<strong>左转辅助、紧急刹车提示、闯红灯警告、过弯速度警告、施工路段提醒、实时天气信息提醒</strong>等。</p>
-<h2 id="高级辅助驾驶系统"><a href="#高级辅助驾驶系统" class="headerlink" title="高级辅助驾驶系统"></a>高级辅助驾驶系统</h2><p>高级辅助驾驶系统（ADAS，Advanced Driver Assistance System）：<strong>ADAS</strong>是在驾驶过程中辅助驾驶员的系统，它的功能包括<strong>安全告警功能、自适应控制功能、信息提示功能</strong>等，可在通过传感器检测到可能的危险时对驾驶员<strong>发出告警或者接管汽车某些控制功能（比如紧急刹车功能）</strong>，以及<strong>根据环境自动对汽车的某些功能进行控制，比如根据环境亮度自动调节车灯亮度、自适应巡航控制、盲点警告、自动变道</strong>等。ADAS 技术通常依赖于各种传感器和通信技术，例如依赖雷达或者摄像头检测与前车的距离，依赖V2V获取附近车辆信息，依赖摄像头检测车道等。</p>
-<p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220705173824.png"></p>
-<h2 id="自动驾驶级别"><a href="#自动驾驶级别" class="headerlink" title="自动驾驶级别"></a>自动驾驶级别</h2><p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220705173825.png"></p>
-<p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220705173826.png"></p>
-<h1 id="汽车网络安全"><a href="#汽车网络安全" class="headerlink" title="汽车网络安全"></a>汽车网络安全</h1>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/04/18/hxd_new/%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3/%E6%99%BA%E8%83%BD%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E6%94%BB%E9%98%B2/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1333,28 +1344,24 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">157</span>
+          <span class="site-state-item-count">158</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">93</span>
+        <span class="site-state-item-count">94</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">109</span>
+        <span class="site-state-item-count">110</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
 </div>
-  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
-    Chat
-  </a>
-  </div>
 
 
 
@@ -1437,6 +1444,19 @@
 
 
 
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'dark',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
 
 
   

@@ -12,12 +12,12 @@
 
 <link rel="stylesheet" href="/css/main.css">
 
-<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=LXGW WenKai:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=LXGW WenKai:300,300italic,400,400italic,700,700italic|LXGW WenKai Mono, Source Code Pro:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
 <link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
 
 <script id="hexo-configurations">
     var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":{"valine":{"order":-1}},"activeClass":"valine"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":{"valine":{"order":-1}},"activeClass":"valine"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
   </script>
 
   <meta property="og:type" content="website">
@@ -171,6 +171,7 @@
     <i class="fa fa-arrow-up"></i>
     <span>0%</span>
   </div>
+  <div class="reading-progress-bar"></div>
   <a role="button" class="book-mark-link book-mark-link-fixed"></a>
 
 
@@ -181,6 +182,205 @@
 
           <div class="content index posts-expand">
             
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2023/01/11/hxd_new/riscv%E8%B0%83%E7%A0%94/xv6-riscv/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2023/01/11/hxd_new/riscv%E8%B0%83%E7%A0%94/xv6-riscv/" class="post-title-link" itemprop="url">xv6-riscv调研</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-01-11 18:15:54" itemprop="dateCreated datePublished" datetime="2023-01-11T18:15:54+08:00">2023-01-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 14:19:46" itemprop="dateModified" datetime="2024-04-16T14:19:46+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/os/" itemprop="url" rel="index"><span itemprop="name">os</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2023/01/11/hxd_new/riscv%E8%B0%83%E7%A0%94/xv6-riscv/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2023/01/11/hxd_new/riscv%E8%B0%83%E7%A0%94/xv6-riscv/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p><a target="_blank" rel="noopener" href="https://github.com/mit-pdos/xv6-riscv/">https://github.com/mit-pdos/xv6-riscv/</a><br>一个简单，类UNIX的 MIT(麻省理工) 教学用操作系统</p>
+<h1 id="用户态-syscall"><a href="#用户态-syscall" class="headerlink" title="用户态 syscall"></a>用户态 syscall</h1><p>Xv6内核提供了Unix内核传统上提供的服务和系统调用的子集</p>
+<table>
+<thead>
+<tr>
+<th><strong>系统调用</strong></th>
+<th><strong>描述</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>int fork()</code></td>
+<td>创建一个进程，返回子进程的PID</td>
+</tr>
+<tr>
+<td><code>int exit(int status)</code></td>
+<td>终止当前进程，并将状态报告给wait()函数。无返回</td>
+</tr>
+<tr>
+<td><code>int wait(int *status)</code></td>
+<td>等待一个子进程退出; 将退出状态存入*status; 返回子进程PID。</td>
+</tr>
+<tr>
+<td><code>int kill(int pid)</code></td>
+<td>终止对应PID的进程，返回0，或返回-1表示错误</td>
+</tr>
+<tr>
+<td><code>int getpid()</code></td>
+<td>返回当前进程的PID</td>
+</tr>
+<tr>
+<td><code>int sleep(int n)</code></td>
+<td>暂停n个时钟节拍</td>
+</tr>
+<tr>
+<td><code>int exec(char *file, char *argv[])</code></td>
+<td>加载一个文件并使用参数执行它; 只有在出错时才返回</td>
+</tr>
+<tr>
+<td><code>char *sbrk(int n)</code></td>
+<td>按n 字节增长进程的内存。返回新内存的开始</td>
+</tr>
+<tr>
+<td><code>int open(char *file, int flags)</code></td>
+<td>打开一个文件；flags表示read&#x2F;write；返回一个fd（文件描述符）</td>
+</tr>
+<tr>
+<td><code>int write(int fd, char *buf, int n)</code></td>
+<td>从buf 写n 个字节到文件描述符fd; 返回n</td>
+</tr>
+<tr>
+<td><code>int read(int fd, char *buf, int n)</code></td>
+<td>将n 个字节读入buf；返回读取的字节数；如果文件结束，返回0</td>
+</tr>
+<tr>
+<td><code>int close(int fd)</code></td>
+<td>释放打开的文件fd</td>
+</tr>
+<tr>
+<td><code>int dup(int fd)</code></td>
+<td>返回一个新的文件描述符，指向与fd 相同的文件</td>
+</tr>
+<tr>
+<td><code>int pipe(int p[])</code></td>
+<td>创建一个管道，把read&#x2F;write文件描述符放在p[0]和p[1]中</td>
+</tr>
+<tr>
+<td><code>int chdir(char *dir)</code></td>
+<td>改变当前的工作目录</td>
+</tr>
+<tr>
+<td><code>int mkdir(char *dir)</code></td>
+<td>创建一个新目录</td>
+</tr>
+<tr>
+<td><code>int mknod(char *file, int, int)</code></td>
+<td>创建一个设备文件</td>
+</tr>
+<tr>
+<td><code>int fstat(int fd, struct stat *st)</code></td>
+<td>将打开文件fd的信息放入*st</td>
+</tr>
+<tr>
+<td><code>int stat(char *file, struct stat *st)</code></td>
+<td>将指定名称的文件信息放入*st</td>
+</tr>
+<tr>
+<td><code>int link(char *file1, char *file2)</code></td>
+<td>为文件file1创建另一个名称(file2)</td>
+</tr>
+<tr>
+<td><code>int unlink(char *file)</code></td>
+<td>删除一个文件</td>
+</tr>
+</tbody></table>
+<p>用户态的基础接口</p>
+<ul>
+<li>文件操作 open read write close link unlink stat fstat mkdir chdir</li>
+<li>进程相关 fork dup wait pipe getpid exit kill</li>
+<li>log相关 printf</li>
+<li>内存  malloc free</li>
+<li>时间相关 uptime(获取当前的tick) sleep</li>
+</ul>
+<h1 id="文件系统"><a href="#文件系统" class="headerlink" title="文件系统"></a>文件系统</h1><p>提供了一个精简版的文件系统, 支持ramdisk, 支持文件读写</p>
+<p>可改code, 将用户态程序打包进文件系统, 将文件系统镜像融入到 kernel, 使之成为 kernel .rodata段的内容, 作为ramdisk使用</p>
+<p>不依赖加载器, 可以将用户态应用程序和 <code>little kernel</code> 打包到一起</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/01/11/hxd_new/riscv%E8%B0%83%E7%A0%94/xv6-riscv/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
       
   
   
@@ -323,7 +523,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-18 11:12:53" itemprop="dateModified" datetime="2024-04-18T11:12:53+08:00">2024-04-18</time>
+                <time title="修改时间：2024-04-18 11:23:26" itemprop="dateModified" datetime="2024-04-18T11:23:26+08:00">2024-04-18</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -620,6 +820,109 @@
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2022/10/21/hxd_new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/qemu%20%E6%96%B0%E5%A2%9E%20riscv%20machine%20%E5%8F%82%E8%80%83/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/TLB%E5%8E%9F%E7%90%86%20-%20%E7%9F%A5%E4%B9%8E/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/TLB%E5%8E%9F%E7%90%86%20-%20%E7%9F%A5%E4%B9%8E/" class="post-title-link" itemprop="url">TLB调研</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-10-11 18:15:54" itemprop="dateCreated datePublished" datetime="2022-10-11T18:15:54+08:00">2022-10-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-18 11:07:45" itemprop="dateModified" datetime="2024-04-18T11:07:45+08:00">2024-04-18</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/cache/" itemprop="url" rel="index"><span itemprop="name">cache</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/TLB%E5%8E%9F%E7%90%86%20-%20%E7%9F%A5%E4%B9%8E/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/TLB%E5%8E%9F%E7%90%86%20-%20%E7%9F%A5%E4%B9%8E/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <blockquote>
+<p>本文由 <a target="_blank" rel="noopener" href="http://ksria.com/simpread/">简悦 SimpRead</a> 转码， 原文地址 <a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/108425561">zhuanlan.zhihu.com</a></p>
+</blockquote>
+<p>TLB是translation lookaside buffer的简称。首先，我们知道MMU的作用是把虚拟地址转换成物理地址。虚拟地址和物理地址的映射关系存储在页表中，而现在页表又是分级的。64位系统一般都是3~5级。常见的配置是4级页表，就以4级页表为例说明。分别是PGD、PUD、PMD、PTE四级页表。在硬件上会有一个叫做页表基地址寄存器，它存储PGD页表的首地址。MMU就是根据页表基地址寄存器从PGD页表一路查到PTE，最终找到物理地址(PTE页表中存储物理地址)。这就像在地图上显示你的家在哪一样，我为了找到你家的地址，先确定你是中国，再确定你是某个省，继续往下某个市，最后找到你家是一样的原理。一级一级找下去。这个过程你也看到了，非常繁琐。如果第一次查到你家的具体位置，我如果记下来你的姓名和你家的地址。下次查找时，是不是只需要跟我说你的姓名是什么，我就直接能够告诉你地址，而不需要一级一级查找。四级页表查找过程需要四次内存访问。延时可想而知，非常影响性能。页表查找过程的示例如下图所示。以后有机会详细展开，这里了解下即可。</p>
+<p><img src="/attachments/v2-70f03a91b02fe51cced8cb57fa30d84b_b.jpg#height=2805&id=IT4Dg&originHeight=2805&originWidth=5725&originalType=binary&ratio=1&rotation=0&showTitle=false&status=done&style=none&title=&width=5725"></p>
+<h2 id="TLB的本质是什么"><a href="#TLB的本质是什么" class="headerlink" title="TLB的本质是什么"></a>TLB的本质是什么</h2><p>TLB其实就是一块高速缓存。数据cache缓存地址(虚拟地址或者物理地址)和数据。TLB缓存虚拟地址和其映射的物理地址。TLB根据虚拟地址查找cache，它没得选，只能根据虚拟地址查找。所以TLB是一个虚拟高速缓存。硬件存在TLB后，虚拟地址到物理地址的转换过程发生了变化。虚拟地址首先发往TLB确认是否命中cache，如果cache hit直接可以得到物理地址。否则，一级一级查找页表获取物理地址。并将虚拟地址和物理地址的映射关系缓存到TLB中。既然TLB是虚拟高速缓存（VIVT），是否存在别名和歧义问题呢？如果存在，软件和硬件是如何配合解决这些问题呢？</p>
+<h2 id="TLB的特殊"><a href="#TLB的特殊" class="headerlink" title="TLB的特殊"></a>TLB的特殊</h2><p>虚拟地址映射物理地址的最小单位是4KB。所以TLB其实不需要存储虚拟地址和物理地址的低12位(因为低12位是一样的，根本没必要存储)。另外，我们如果命中cache，肯定是一次性从cache中拿出整个数据。所以虚拟地址不需要offset域。index域是否需要呢？这取决于cache的组织形式。如果是全相连高速缓存。那么就不需要index。如果使用多路组相连高速缓存，依然需要index。下图就是一个四路组相连TLB的例子。现如今64位CPU寻址范围并没有扩大到64位。64位地址空间很大，现如今还用不到那么大。因此硬件为了设计简单或者解决成本，实际虚拟地址位数只使用了一部分。这里以48位地址总线为了例说明。</p>
+<p><img src="/attachments/v2-e075e5bebbf84c4ec15789d1fb1f7f55_b.jpg#height=619&id=JVewg&originHeight=619&originWidth=720&originalType=binary&ratio=1&rotation=0&showTitle=false&status=done&style=none&title=&width=720"></p>
+<h2 id="TLB的别名问题"><a href="#TLB的别名问题" class="headerlink" title="TLB的别名问题"></a>TLB的别名问题</h2><p>我先来思考第一个问题，别名是否存在。我们知道PIPT的数据cache不存在别名问题。物理地址是唯一的，一个物理地址一定对应一个数据。但是不同的物理地址可能存储相同的数据。也就是说，物理地址对应数据是一对一关系，反过来是多对一关系。由于TLB的特殊性，存储的是虚拟地址和物理地址的对应关系。因此，对于单个进程来说，同一时间一个虚拟地址对应一个物理地址，一个物理地址可以被多个虚拟地址映射。将PIPT数据cache类比TLB，我们可以知道TLB不存在别名问题。而VIVT Cache存在别名问题，原因是VA需要转换成PA，PA里面才存储着数据。中间多经传一手，所以引入了些问题。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/TLB%E5%8E%9F%E7%90%86%20-%20%E7%9F%A5%E4%B9%8E/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -1073,219 +1376,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv%20%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B8%AD%E6%96%AD%E7%9B%B8%E5%85%B3/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv%20%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B8%AD%E6%96%AD%E7%9B%B8%E5%85%B3/" class="post-title-link" itemprop="url">riscv 虚拟化中断相关</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2022-10-11 18:15:54" itemprop="dateCreated datePublished" datetime="2022-10-11T18:15:54+08:00">2022-10-11</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-16 14:06:51" itemprop="dateModified" datetime="2024-04-16T14:06:51+08:00">2024-04-16</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E8%99%9A%E6%8B%9F%E5%8C%96/" itemprop="url" rel="index"><span itemprop="name">虚拟化</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E8%99%9A%E6%8B%9F%E5%8C%96/RISCV/" itemprop="url" rel="index"><span itemprop="name">RISCV</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E8%99%9A%E6%8B%9F%E5%8C%96/RISCV/%E4%B8%AD%E6%96%AD/" itemprop="url" rel="index"><span itemprop="name">中断</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv%20%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B8%AD%E6%96%AD%E7%9B%B8%E5%85%B3/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv%20%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B8%AD%E6%96%AD%E7%9B%B8%E5%85%B3/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h4 id="Hypervisor-Status-Register-hstatus"><a href="#Hypervisor-Status-Register-hstatus" class="headerlink" title="Hypervisor Status Register (hstatus)"></a>Hypervisor Status Register (hstatus)</h4><p><img src="https://gitee.com/zhangliguang1/tuchuang/raw/master/img/20221124162340.png"></p>
-<p>When VTSR&#x3D;1, an attempt in VS-mode to execute SRET raises a virtual instruction exception.<br>When VTW&#x3D;1 (and assuming <code>mstatus</code>.TW&#x3D;0), an attempt in VS-mode to execute WFI raises a virtual instruction exception if the WFI does not complete within an implementation-specific, bounded time limit.<br>When VTVM&#x3D;1, an attempt in VS-mode to execute SFENCE.VMA or to access CSR <code>satp</code> raises a virtual instruction exception.</p>
-<p>The VGEIN (Virtual Guest External Interrupt Number) field selects a guest external interrupt source for VS-level external interrupts. VGEIN is a <strong>WLRL</strong> field that must be able to hold values between zero and the maximum guest external interrupt number (known as GEILEN), inclusive.<br>When VGEIN&#x3D;0, no guest external interrupt source is selected for VS-level external interrupts. GEILEN may be zero, in which case VGEIN may be hardwired to zero.<br>Guest external interrupts are explained in Section <a target="_blank" rel="noopener" href="https://five-embeddev.com/riscv-isa-manual/latest/hypervisor.html#sec:hgeinterruptregs">1.2.4</a>, and the use of VGEIN is covered further in Section <a target="_blank" rel="noopener" href="https://five-embeddev.com/riscv-isa-manual/latest/hypervisor.html#sec:hinterruptregs">1.2.3</a>.</p>
-<p>Field HU (Hypervisor User mode) controls whether the virtual-machine load&#x2F;store instructions, HLV, HLVX, and HSV, can be used also in U-mode. When HU&#x3D;1, these instructions can be executed in U-mode the same as in HS-mode. When HU&#x3D;0, all hypervisor instructions cause an illegal instruction trap in U-mode.</p>
-<h4 id="hip-hie"><a href="#hip-hie" class="headerlink" title="hip &amp; hie"></a>hip &amp; hie</h4><p>Registers <code>hip</code> and <code>hie</code> are HSXLEN-bit read&#x2F;write registers that supplement HS-level’s <code>sip</code> and <code>sie</code> respectively. The <code>hip</code> register indicates pending VS-level and hypervisor-specific interrupts, while <code>hie</code> contains enable bits for the same interrupts. As with <code>sip</code> and <code>sie</code>, an interrupt <em>i</em> will be taken in HS-mode if bit <em>i</em> is set in both <code>hip</code> and <code>hie</code>, and if supervisor-level interrupts are globally enabled.</p>
-<p><img src="https://gitee.com/zhangliguang1/tuchuang/raw/master/img/20221124162341.png"></p>
-<p>Bits <code>hip</code>.SGEIP and <code>hie</code>.SGEIE are the interrupt-pending and interrupt-enable bits for guest external interrupts at supervisor level (HS-level).<br>SGEIP is read-only in <code>hip</code>, and is 1 if and only if the bitwise logical-AND of CSRs <code>hgeip</code> and <code>hgeie</code> is nonzero in any bit.</p>
-<p>Bits <code>hip</code>.VSEIP and <code>hie</code>.VSEIE are the interrupt-pending and interrupt-enable bits for VS-level external interrupts. VSEIP is read-only in <code>hip</code>, and is the logical-OR of these interrupt sources:</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv%20%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B8%AD%E6%96%AD%E7%9B%B8%E5%85%B3/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/TLB%E5%8E%9F%E7%90%86%20-%20%E7%9F%A5%E4%B9%8E/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/TLB%E5%8E%9F%E7%90%86%20-%20%E7%9F%A5%E4%B9%8E/" class="post-title-link" itemprop="url">TLB调研</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2022-10-11 18:15:54" itemprop="dateCreated datePublished" datetime="2022-10-11T18:15:54+08:00">2022-10-11</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-18 11:07:45" itemprop="dateModified" datetime="2024-04-18T11:07:45+08:00">2024-04-18</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/cache/" itemprop="url" rel="index"><span itemprop="name">cache</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/TLB%E5%8E%9F%E7%90%86%20-%20%E7%9F%A5%E4%B9%8E/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/TLB%E5%8E%9F%E7%90%86%20-%20%E7%9F%A5%E4%B9%8E/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <blockquote>
-<p>本文由 <a target="_blank" rel="noopener" href="http://ksria.com/simpread/">简悦 SimpRead</a> 转码， 原文地址 <a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/108425561">zhuanlan.zhihu.com</a></p>
-</blockquote>
-<p>TLB是translation lookaside buffer的简称。首先，我们知道MMU的作用是把虚拟地址转换成物理地址。虚拟地址和物理地址的映射关系存储在页表中，而现在页表又是分级的。64位系统一般都是3~5级。常见的配置是4级页表，就以4级页表为例说明。分别是PGD、PUD、PMD、PTE四级页表。在硬件上会有一个叫做页表基地址寄存器，它存储PGD页表的首地址。MMU就是根据页表基地址寄存器从PGD页表一路查到PTE，最终找到物理地址(PTE页表中存储物理地址)。这就像在地图上显示你的家在哪一样，我为了找到你家的地址，先确定你是中国，再确定你是某个省，继续往下某个市，最后找到你家是一样的原理。一级一级找下去。这个过程你也看到了，非常繁琐。如果第一次查到你家的具体位置，我如果记下来你的姓名和你家的地址。下次查找时，是不是只需要跟我说你的姓名是什么，我就直接能够告诉你地址，而不需要一级一级查找。四级页表查找过程需要四次内存访问。延时可想而知，非常影响性能。页表查找过程的示例如下图所示。以后有机会详细展开，这里了解下即可。</p>
-<p><img src="/attachments/v2-70f03a91b02fe51cced8cb57fa30d84b_b.jpg#height=2805&id=IT4Dg&originHeight=2805&originWidth=5725&originalType=binary&ratio=1&rotation=0&showTitle=false&status=done&style=none&title=&width=5725"></p>
-<h2 id="TLB的本质是什么"><a href="#TLB的本质是什么" class="headerlink" title="TLB的本质是什么"></a>TLB的本质是什么</h2><p>TLB其实就是一块高速缓存。数据cache缓存地址(虚拟地址或者物理地址)和数据。TLB缓存虚拟地址和其映射的物理地址。TLB根据虚拟地址查找cache，它没得选，只能根据虚拟地址查找。所以TLB是一个虚拟高速缓存。硬件存在TLB后，虚拟地址到物理地址的转换过程发生了变化。虚拟地址首先发往TLB确认是否命中cache，如果cache hit直接可以得到物理地址。否则，一级一级查找页表获取物理地址。并将虚拟地址和物理地址的映射关系缓存到TLB中。既然TLB是虚拟高速缓存（VIVT），是否存在别名和歧义问题呢？如果存在，软件和硬件是如何配合解决这些问题呢？</p>
-<h2 id="TLB的特殊"><a href="#TLB的特殊" class="headerlink" title="TLB的特殊"></a>TLB的特殊</h2><p>虚拟地址映射物理地址的最小单位是4KB。所以TLB其实不需要存储虚拟地址和物理地址的低12位(因为低12位是一样的，根本没必要存储)。另外，我们如果命中cache，肯定是一次性从cache中拿出整个数据。所以虚拟地址不需要offset域。index域是否需要呢？这取决于cache的组织形式。如果是全相连高速缓存。那么就不需要index。如果使用多路组相连高速缓存，依然需要index。下图就是一个四路组相连TLB的例子。现如今64位CPU寻址范围并没有扩大到64位。64位地址空间很大，现如今还用不到那么大。因此硬件为了设计简单或者解决成本，实际虚拟地址位数只使用了一部分。这里以48位地址总线为了例说明。</p>
-<p><img src="/attachments/v2-e075e5bebbf84c4ec15789d1fb1f7f55_b.jpg#height=619&id=JVewg&originHeight=619&originWidth=720&originalType=binary&ratio=1&rotation=0&showTitle=false&status=done&style=none&title=&width=720"></p>
-<h2 id="TLB的别名问题"><a href="#TLB的别名问题" class="headerlink" title="TLB的别名问题"></a>TLB的别名问题</h2><p>我先来思考第一个问题，别名是否存在。我们知道PIPT的数据cache不存在别名问题。物理地址是唯一的，一个物理地址一定对应一个数据。但是不同的物理地址可能存储相同的数据。也就是说，物理地址对应数据是一对一关系，反过来是多对一关系。由于TLB的特殊性，存储的是虚拟地址和物理地址的对应关系。因此，对于单个进程来说，同一时间一个虚拟地址对应一个物理地址，一个物理地址可以被多个虚拟地址映射。将PIPT数据cache类比TLB，我们可以知道TLB不存在别名问题。而VIVT Cache存在别名问题，原因是VA需要转换成PA，PA里面才存储着数据。中间多经传一手，所以引入了些问题。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/TLB%E5%8E%9F%E7%90%86%20-%20%E7%9F%A5%E4%B9%8E/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1355,28 +1445,24 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">157</span>
+          <span class="site-state-item-count">158</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">93</span>
+        <span class="site-state-item-count">94</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">109</span>
+        <span class="site-state-item-count">110</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
 </div>
-  <div class="sidebar-button motion-element"><i class="fa fa-comment"></i>
-    Chat
-  </a>
-  </div>
 
 
 
@@ -1459,6 +1545,19 @@
 
 
 
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'dark',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
 
 
   
