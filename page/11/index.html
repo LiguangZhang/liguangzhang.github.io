@@ -185,117 +185,6 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/signal%20%E7%9B%B8%E5%85%B3/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/signal%20%E7%9B%B8%E5%85%B3/" class="post-title-link" itemprop="url">signal 相关整理</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-07-18 18:15:54" itemprop="dateCreated datePublished" datetime="2020-07-18T18:15:54+08:00">2020-07-18</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-16 15:57:54" itemprop="dateModified" datetime="2024-04-16T15:57:54+08:00">2024-04-16</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Android/%E7%A8%B3%E5%AE%9A%E6%80%A7/" itemprop="url" rel="index"><span itemprop="name">稳定性</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/signal%20%E7%9B%B8%E5%85%B3/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/signal%20%E7%9B%B8%E5%85%B3/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <blockquote>
-<p>android r base</p>
-</blockquote>
-<h1 id="信号相关流程梳理"><a href="#信号相关流程梳理" class="headerlink" title="信号相关流程梳理"></a>信号相关流程梳理</h1><p>程序分为两种：<br> <strong>1.<code>静态链接</code>:</strong> 由链接器在链接时将库的内容添加到可执行程序中的做法，最大缺点是生成的可执行文件太大，需要更多的系统资源，在装入内存也会消耗更多的时间。<br> <strong>2.<code>动态链接</code>:</strong> 将独立的模块先编译成动态库，程序运行有需要它们时才加载，最大缺点是可执行程序依赖分别存储的库文件才能正确执行。<br> 在Android中，大部分都是动态链接，而只有init等少部分是静态链接，因此native程序也是动态链接程序，动态链接程序是需要链接器才能跑起来，<span style="color: green">liner</span>就是Android的链接器。<br> liner也是在程序的进程空间内，当内核将应用程序加载起来后，并不是先跑应用程序代码，而是先跑liner。<code>linker</code>负责将应用程序所需的库加载到进程空间内，之后才跑应用程序代码。</p>
-<p>绝大多数的native app都是以linker为入口(<span style="color: red">动态连接的程序</span>),在启动时先由汇编跳转到__link_init函数.</p>
-<p>[-&gt; arch&#x2F;arm64&#x2F;begin.S]</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">ENTRY(_start)</span><br><span class="line">  // Force unwinds to end in this function.</span><br><span class="line">  .cfi_undefined x30</span><br><span class="line"></span><br><span class="line">  mov x0, sp</span><br><span class="line">  bl __linker_init</span><br><span class="line"></span><br><span class="line">  /* linker init returns the _entry address in the main image */</span><br><span class="line">  br x0</span><br><span class="line">END(_start)</span><br></pre></td></tr></table></figure>
-
-<h2 id="到debuggerd-init的调用链"><a href="#到debuggerd-init的调用链" class="headerlink" title="到debuggerd_init的调用链"></a>到debuggerd_init的调用链</h2><figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">-- bl __linker_init</span><br><span class="line">| - extern &quot;C&quot; ElfW<span class="params">(Addr)</span> __linker_init<span class="params">(void* raw_args)</span> % bionic/linker/linker_main.cpp</span><br><span class="line">   \ - __linker_init_post_relocation(KernelArgumentBlock&amp; args, soinfo&amp; tmp_linker_so)</span><br><span class="line">         \ - return start_address = linker_main(args, exe_to_load); </span><br><span class="line">		 \ - ElfW(Addr) linker_main(KernelArgumentBlock&amp; args, const char* exe_to_load)</span><br><span class="line">			\ - linker_debuggerd_init(); <span class="comment">% Register the debuggerd signal handler. [ linker_debuggerd_android.cpp ]</span></span><br><span class="line">				\ - debuggerd_init(debuggerd_callbacks_t* callbacks) <span class="comment">%  [debuggerd/handler/debuggerd_handler.cpp ]</span></span><br></pre></td></tr></table></figure>
-
-<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">linker_debuggerd_init</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  <span class="type">debuggerd_callbacks_t</span> callbacks = &#123;</span><br><span class="line">    .get_abort_message = []() &#123;</span><br><span class="line">      <span class="keyword">return</span> __libc_shared_globals()-&gt;abort_msg;</span><br><span class="line">    &#125;,</span><br><span class="line">    .post_dump = &amp;notify_gdb_of_libraries,</span><br><span class="line">    .get_gwp_asan_state = []() &#123;</span><br><span class="line">      <span class="keyword">return</span> __libc_shared_globals()-&gt;gwp_asan_state;</span><br><span class="line">    &#125;,</span><br><span class="line">    .get_gwp_asan_metadata = []() &#123;</span><br><span class="line">      <span class="keyword">return</span> __libc_shared_globals()-&gt;gwp_asan_metadata;</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;;</span><br><span class="line">  <span class="built_in">debuggerd_init</span>(&amp;callbacks);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="debuggerd-init"><a href="#debuggerd-init" class="headerlink" title="debuggerd_init"></a>debuggerd_init</h2>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/signal%20%E7%9B%B8%E5%85%B3/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/%E6%90%AD%E5%BB%BAgdb%20python%20%E8%84%9A%E6%9C%AC%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1285,6 +1174,113 @@
   
   
 
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E5%8A%A0%E5%AF%86%E6%96%B9%E6%A1%88%E6%95%B4%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E5%8A%A0%E5%AF%86%E6%96%B9%E6%A1%88%E6%95%B4%E7%90%86/" class="post-title-link" itemprop="url">Android 加密方案整理</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-10-12 18:15:54" itemprop="dateCreated datePublished" datetime="2019-10-12T18:15:54+08:00">2019-10-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 15:09:26" itemprop="dateModified" datetime="2024-04-16T15:09:26+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/%E5%8A%A0%E5%AF%86/" itemprop="url" rel="index"><span itemprop="name">加密</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E5%8A%A0%E5%AF%86%E6%96%B9%E6%A1%88%E6%95%B4%E7%90%86/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E5%8A%A0%E5%AF%86%E6%96%B9%E6%A1%88%E6%95%B4%E7%90%86/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="1-加密方案整理"><a href="#1-加密方案整理" class="headerlink" title="1. 加密方案整理"></a>1. 加密方案整理</h1><h2 id="1-1-简介"><a href="#1-1-简介" class="headerlink" title="1.1. 简介"></a>1.1. 简介</h2><p>Android上加密方案分为全磁盘加密(<code>FDE</code>)&#x2F;文件加密(<code>FBE</code>)&#x2F;元数据加密(<code>METADATA</code>)<br>均是针对userdata分区进行加密, 与其他分区并无关系.<br>本篇主要介绍下这三种加密方式硬件加密的实现框架</p>
+<h2 id="1-2-判断机器采用何种加密方式"><a href="#1-2-判断机器采用何种加密方式" class="headerlink" title="1.2. 判断机器采用何种加密方式"></a>1.2. 判断机器采用何种加密方式</h2><p>最直观的方式是可以通过分区表<code>fstab</code>来区分<br>未加密&#x2F;fde加密&#x2F;fbe加密&#x2F;metadata加密</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">/dev/block/bootdevice/by-name/userdata     /data           ext4    noatime,nosuid,nodev,barrier=1,data=ordered,noauto_da_alloc     wait,check,encryptable=footer</span><br><span class="line">/dev/block/bootdevice/by-name/userdata     /data           ext4    noatime,nosuid,nodev,barrier=1,noauto_da_alloc,discard latemount,wait,check,fileencryption=ice,wrappedkey,quota,reservedsize=128M</span><br><span class="line">/dev/block/bootdevice/by-name/userdata     /data           ext4    noatime,nosuid,nodev,barrier=1,noauto_da_alloc,discard latemount,wait,check,fileencryption=ice,wrappedkey,keydirectory=/metadata/vold/metadata_encryption,quota,reservedsize=128M</span><br></pre></td></tr></table></figure>
+
+<p>当前版本中最常见的是fbe加密的机型.</p>
+<p>代码中判断是否加密:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">StorageManager.isEncrypted()</span><br><span class="line">StorageManager.isFileEncryptedNativeOnly()</span><br><span class="line">StorageManager.isBlockEncrypted()</span><br></pre></td></tr></table></figure>
+
+<p>native 层多是通过FstabEntry来判断是何种加密方式</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2019/10/12/OTA%E7%9B%B8%E5%85%B3/%E5%8A%A0%E5%AF%86%E6%96%B9%E6%A1%88%E6%95%B4%E7%90%86/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
 
   
   <nav class="pagination">
@@ -1354,7 +1350,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-count">157</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>

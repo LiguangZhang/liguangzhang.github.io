@@ -185,114 +185,6 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2021/10/16/freertos/freertos%E4%BB%BB%E5%8A%A1%E5%88%87%E6%8D%A2%E5%88%86%E6%9E%90/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/10/16/freertos/freertos%E4%BB%BB%E5%8A%A1%E5%88%87%E6%8D%A2%E5%88%86%E6%9E%90/" class="post-title-link" itemprop="url">freertos 任务切换</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-10-16 18:15:54" itemprop="dateCreated datePublished" datetime="2021-10-16T18:15:54+08:00">2021-10-16</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-18 10:58:35" itemprop="dateModified" datetime="2024-04-18T10:58:35+08:00">2024-04-18</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/MIPS/" itemprop="url" rel="index"><span itemprop="name">MIPS</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/MIPS/os/" itemprop="url" rel="index"><span itemprop="name">os</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2021/10/16/freertos/freertos%E4%BB%BB%E5%8A%A1%E5%88%87%E6%8D%A2%E5%88%86%E6%9E%90/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2021/10/16/freertos/freertos%E4%BB%BB%E5%8A%A1%E5%88%87%E6%8D%A2%E5%88%86%E6%9E%90/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>FreeRTOS有两种方法触发任务切换：</p>
-<ul>
-<li>执行系统调用，比如普通任务可以使用taskYIELD()强制任务切换，中断服务程序中使用<code>portYIELD_FROM_ISR()</code>强制任务切换；</li>
-<li>系统节拍时钟中断</li>
-</ul>
-<h2 id="PendSV-中断"><a href="#PendSV-中断" class="headerlink" title="PendSV 中断"></a>PendSV 中断</h2><p>对于第一种任务切换方法，不管是使用<code>taskYIELD()</code>还是<code>portYIELD_FROM_ISR()</code>，最终都会执行宏<code>portYIELD()</code></p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> portYIELD()      do &#123; \</span></span><br><span class="line"><span class="meta">							  <span class="comment">// status pending sw0 mask 位置1, 与cause 协处理器中的pending位配合, 即触发sw0 上的中断</span></span></span><br><span class="line">                              mips_biscr( SR_SINT0 ); \</span><br><span class="line">                             &#125; <span class="keyword">while</span> (<span class="number">0</span>)</span><br></pre></td></tr></table></figure>
-<h2 id="SysTick-中断，-系统时钟节拍"><a href="#SysTick-中断，-系统时钟节拍" class="headerlink" title="SysTick 中断， 系统时钟节拍"></a>SysTick 中断， 系统时钟节拍</h2><p>对于第二种任务切换方法，在系统节拍时钟中断服务函数中，首先会更新tick计数器的值、查看是否有任务解除阻塞，如果有任务解除阻塞的话，则使能PandSV中断</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 上一章中调度器创建中讲过 xPortStartScheduler 会初始化timer</span></span><br><span class="line">__attribute__(( weak )) <span class="type">void</span> <span class="title function_">vApplicationSetupTickTimerInterrupt</span><span class="params">( <span class="type">void</span> )</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">/* Install interrupt handler */</span></span><br><span class="line">    <span class="comment">// 安装tick中断处理函数 vPortTickInterruptHandler</span></span><br><span class="line">    pvPortInstallISR( HW5, vPortTickInterruptHandler );</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* Set Compare to Count as a starting point */</span> <span class="comment">// 初始化compare</span></span><br><span class="line">    mips_setcompare( mips_getcount() );</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* Set the interrupt to fire 1us from now */</span>  <span class="comment">//systick + 1</span></span><br><span class="line">    prvSetNextTick( <span class="number">1</span> );</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 来了tick中断, 会进入 vPortTickInterruptHandler</span></span><br><span class="line">vPortTickInterruptHandler:</span><br><span class="line">	<span class="comment">// 保存任务上下文 保存寄存器</span></span><br><span class="line">	portSAVE_CONTEXT</span><br><span class="line">    <span class="comment">// 跳转到 vPortIncrementTick</span></span><br><span class="line">	jal 		vPortIncrementTick</span><br><span class="line">	nop</span><br><span class="line"><span class="type">void</span> <span class="title function_">vPortIncrementTick</span><span class="params">( <span class="type">void</span> )</span></span><br><span class="line">&#123;</span><br><span class="line">    UBaseType_t uxSavedStatus;</span><br><span class="line">    <span class="comment">// 暂存status寄存器, 清 status 的 8-15 的mask </span></span><br><span class="line">	uxSavedStatus = uxPortSetInterruptMaskFromISR();</span><br><span class="line">	&#123;</span><br><span class="line">        <span class="comment">// 任务delay到期或者任务的时间片用完了, 这个函数会返回true</span></span><br><span class="line">		<span class="keyword">if</span>( xTaskIncrementTick() != pdFALSE )</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="comment">// 触发pendsv 中断, 因为前面清了mask,因此这里只有sw0的mask置位了</span></span><br><span class="line">			portYIELD();</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">    <span class="comment">// 恢复status寄存器</span></span><br><span class="line">	vPortClearInterruptMaskFromISR( uxSavedStatus );</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Look for the ISR stack getting near or past its limit. */</span></span><br><span class="line">	portCHECK_ISR_STACK();</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Clear timer interrupt. */</span> <span class="comment">// 清除timer cause hw5 pending位</span></span><br><span class="line">	configCLEAR_TICK_TIMER_INTERRUPT();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="xTaskIncrementTick"><a href="#xTaskIncrementTick" class="headerlink" title="xTaskIncrementTick"></a>xTaskIncrementTick</h2><p>tick中断到的时候, 什么条件下要触发pendsv中断的问题:</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/10/16/freertos/freertos%E4%BB%BB%E5%8A%A1%E5%88%87%E6%8D%A2%E5%88%86%E6%9E%90/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2021/10/15/freertos/freertos%20%E4%BB%BB%E5%8A%A1%E9%80%9A%E4%BF%A1%E8%B0%83%E7%A0%94/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1257,6 +1149,127 @@
   
   
 
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2021/09/11/hxd_new/%E5%AE%89%E5%85%A8%E6%89%8B%E5%86%8C%E7%9B%B8%E5%85%B3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/09/11/hxd_new/%E5%AE%89%E5%85%A8%E6%89%8B%E5%86%8C%E7%9B%B8%E5%85%B3/" class="post-title-link" itemprop="url">MIPS 杂项</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-09-11 18:15:54" itemprop="dateCreated datePublished" datetime="2021-09-11T18:15:54+08:00">2021-09-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 14:52:51" itemprop="dateModified" datetime="2024-04-16T14:52:51+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/linux/" itemprop="url" rel="index"><span itemprop="name">linux</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/linux/MIPS/" itemprop="url" rel="index"><span itemprop="name">MIPS</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2021/09/11/hxd_new/%E5%AE%89%E5%85%A8%E6%89%8B%E5%86%8C%E7%9B%B8%E5%85%B3/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2021/09/11/hxd_new/%E5%AE%89%E5%85%A8%E6%89%8B%E5%86%8C%E7%9B%B8%E5%85%B3/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="MIPS-相关理解"><a href="#MIPS-相关理解" class="headerlink" title="MIPS 相关理解"></a>MIPS 相关理解</h1><h2 id="协处理器"><a href="#协处理器" class="headerlink" title="协处理器"></a>协处理器</h2><p>在MIPS体系结构中，最多支持4个协处理器(Co-Processor)。其中，协处理器<code>CP0</code>是体系结构中必须实现的。它起到控制CPU的作用。MMU、异常处理、乘除法等功能，都依赖于协处理器CP0来实现。它是MIPS的精髓之一，也是打开MIPS特权级模式的大门。</p>
+<pre><code>   - Register 0: Index，作为MMU的索引用。将来讨论MMU和TLB时会详解之。
+   - Register 2, EntryLo0，访问TLB Entry偶数页中的地址低32Bit用。同上，在MMU和TLB的相关章节中详解。
+   - Register 3, EntryLo1，访问TLB Entry奇数页中的地址低32Bit用。
+   - Register 4, Context，用以加速TLB Miss异常的处理。
+   - Register 5, PageMask，用以在MMU中分配可变大小的内存页。
+   - Register 8, BadVAddr，在系统捕获到TLB Miss或Address Error这两种Exception时，发生错误的虚拟地址会储存在该寄存器中。对于引发Exception的Bug的定位来说，这个寄存器非常重要。
+   - `Register 9`, Count，这个寄存器是R4000以后的MIPS系统引入的。它是一个计数器，`计数频率是系统主频的1/2`。BCM1125/1250，RMI XLR系列以及Octeon的Cavium处理器均支持该寄存器。对于操作系统来说，`可以通过读取该寄存器的值来获取tick的时基`。`在系统性能测试中，利用该寄存器也可以实现打点计数`。
+   - Register 10，EntryHi，这个寄存器同EntryLo0/1一样，用于MMU中。以后会详述。
+   - Register 11，Compare，配合Count使用。当Compare和Count的值相等的时候，会触发一个硬件中断(Hardware Interrupt)，并且总是使用Cause寄存器的IP7位。　　
+   - Register 12，Status，用于处理器状态的控制。
+   - Register 13，Cause，这个寄存器体现了处理器异常发生的原因。
+   - 　　Register 14，EPC，这个寄存器存放异常发生时，系统正在执行的指令的地址。
+   - 　　Register 15，PRID，这个寄存器是只读的，标识处理器的版本信息。向其中写入无意义。
+</code></pre>
+<ul>
+<li>　　Register 18&#x2F;19，WatchLo&#x2F;WatchHi，这对寄存器用于设置硬件数据断点(Hardware Data Breakpoint)。该断点一旦设定，当CPU存取这个地址时，系统就会发生一个异常。这个功能广泛应用于调试定位内存写坏的错误。<br> 　　Register 28&#x2F;29，TagLo和TagHi，用于高速缓存(Cache)管理。</li>
+</ul>
+<p>相关链接 <a target="_blank" rel="noopener" href="https://blog.csdn.net/jiura/article/details/6645277">协处理器CP0</a></p>
+<h3 id="常用汇编指令"><a href="#常用汇编指令" class="headerlink" title="常用汇编指令"></a>常用汇编指令</h3><p>MFC0、MTC0、DMFC0、DMTC0可以完成通用寄存器和CP0寄存器之间的数据传送。比如我们可以通过下面指令来获取epc寄存器的值。</p>
+<pre><code>             mfc0 t1,$14           # 从CP0 取epc寄存器（$14）数据，存到通用寄存器t0
+</code></pre>
+<p>mfc0完成从cp0寄存器获取一个32位数据（如果cp0寄存器是64位数据则只取其低32位。）到通用寄存器，如果要获取的是64位数据则需要使用dmfc0指令。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/09/11/hxd_new/%E5%AE%89%E5%85%A8%E6%89%8B%E5%86%8C%E7%9B%B8%E5%85%B3/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
 
   
   <nav class="pagination">
@@ -1326,7 +1339,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-count">157</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>

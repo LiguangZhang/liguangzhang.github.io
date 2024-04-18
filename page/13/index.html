@@ -185,107 +185,6 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/07/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/clion%20%E9%98%85%E8%AF%BB%E8%B0%83%E8%AF%95Android%20native%E6%BA%90%E7%A0%81/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2019/07/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/clion%20%E9%98%85%E8%AF%BB%E8%B0%83%E8%AF%95Android%20native%E6%BA%90%E7%A0%81/" class="post-title-link" itemprop="url">clion vscode 阅读Android native源码</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2019-07-20 10:00:01" itemprop="dateCreated datePublished" datetime="2019-07-20T10:00:01+08:00">2019-07-20</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-16 18:16:15" itemprop="dateModified" datetime="2024-04-16T18:16:15+08:00">2024-04-16</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/debug/" itemprop="url" rel="index"><span itemprop="name">debug</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2019/07/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/clion%20%E9%98%85%E8%AF%BB%E8%B0%83%E8%AF%95Android%20native%E6%BA%90%E7%A0%81/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2019/07/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/clion%20%E9%98%85%E8%AF%BB%E8%B0%83%E8%AF%95Android%20native%E6%BA%90%E7%A0%81/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="1-clion-vscode-阅读Android-native源码"><a href="#1-clion-vscode-阅读Android-native源码" class="headerlink" title="1. clion vscode 阅读Android native源码"></a>1. clion vscode 阅读Android native源码</h1><h2 id="1-1-为native源码编译生成cmake文件"><a href="#1-1-为native源码编译生成cmake文件" class="headerlink" title="1.1. 为native源码编译生成cmake文件"></a>1.1. 为native源码编译生成cmake文件</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">export</span> SOONG_GEN_CMAKEFILES=1</span><br><span class="line"><span class="built_in">export</span> SOONG_GEN_CMAKEFILES_DEBUG=1</span><br></pre></td></tr></table></figure>
-<p>将上面两句加入到~&#x2F;.bashrc下, 以后新工程就不用重复export了</p>
-<p>源码source lunch后, 直接make随便一个module即可.<br>cmake文件会生成在源码根目录的out&#x2F;development&#x2F;ide&#x2F;clion下</p>
-<h2 id="1-2-使用clion导入native工程"><a href="#1-2-使用clion导入native工程" class="headerlink" title="1.2. 使用clion导入native工程"></a>1.2. 使用clion导入native工程</h2><p>可以直接看单module,<br>file-&gt;new cmake project from sources</p>
-<p>但多个module 需要手动写cmake 引进子的module, 重复工作量大, 而且soong生成的cmake 同一module包含多个子目标</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">drwxrwxr-x  2 mi mi 4096 3月  13 20:51 librecovery-arm64-android</span><br><span class="line">drwxrwxr-x  2 mi mi 4096 3月  13 20:51 librecovery-arm-android</span><br></pre></td></tr></table></figure>
-<p>手动添加工作量比较大, 而且是重复工作</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2019/07/20/%E5%B7%A5%E4%BD%9C%E7%9B%B8%E5%85%B3/clion%20%E9%98%85%E8%AF%BB%E8%B0%83%E8%AF%95Android%20native%E6%BA%90%E7%A0%81/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/07/12/OTA%E7%9B%B8%E5%85%B3/ext3%E8%AF%BB%E5%86%99%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90%20/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1273,6 +1172,107 @@
   
   
 
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2018/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9F%A5%E8%AF%861/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2018/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9F%A5%E8%AF%861/" class="post-title-link" itemprop="url">文件系统结构理解</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-08-02 13:47:23" itemprop="dateCreated datePublished" datetime="2018-08-02T13:47:23+08:00">2018-08-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 18:05:59" itemprop="dateModified" datetime="2024-04-16T18:05:59+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">文件系统</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2018/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9F%A5%E8%AF%861/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2018/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9F%A5%E8%AF%861/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="1-文件系统知识1"><a href="#1-文件系统知识1" class="headerlink" title="1. 文件系统知识1"></a>1. 文件系统知识1</h1><h2 id="1-1-文件相关数据结构"><a href="#1-1-文件相关数据结构" class="headerlink" title="1.1. 文件相关数据结构"></a>1.1. 文件相关数据结构</h2><p>每个进程的task_struct结构体中, 包含一个<code>struct files_struct* files</code>结构体指针,指向该进程所有已经打开的文件&#x2F;目录对应的相关信息的结构体.<br>files内部又包含<code>struct file fd_array[]</code>数组, 每一个都是<code>struct file</code>结构体(又被称作fd, 文件描述符), 每个<code>file</code>结构体中记录了被打开文件的基本信息, 如记录该文件对应的目录项<code>dentry</code>,<br>用于操作该文件的<code>file_operations</code>回调函数等, 从<code>dentry</code>中可以找到该文件对应的<code>inode</code>结构体, 从而得到该文件的各种属性信息.</p>
+<p>fd_array数组的长度存放在max_fds字段中, linux系统中，一个进程打开的文件数是有初步限制的，即其文件描述符数初始时有最大化定量，即一个进程一般只能打开<code>NR_OPEN_DEFAULT</code>个文件，该值在32位机上为32个，在64位机上为64个<br>init fork一个子进程时, 也是如此.</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">do_fork======-&gt;copy_process</span><br><span class="line">    |======-&gt;dup_task_struct======-&gt;alloc_task_struct</span><br><span class="line">    |======-&gt;copy_files======-&gt;dup_fd======-&gt;alloc_files</span><br></pre></td></tr></table></figure>
+<h3 id="1-1-1-struct-files-struct扩充"><a href="#1-1-1-struct-files-struct扩充" class="headerlink" title="1.1.1. struct  files_struct扩充"></a>1.1.1. struct  files_struct扩充</h3><p>进程打开的fd数目超过<code>NR_OPEN_DEFAULT</code>时, 对已经初始化的files_struct进行扩充<br>当进行struct files_struct扩充时，会分配一个新的struct fdtable, 分配并初始化新的struct fdtable变量后，原先指向fdtab的struct files_struct指针成员<code>fdt</code>，会指向新分配的struct fdtable变量。这时，struct files_struct实例变量中就包含两个struct fdtable存储区：一个是其自身的，一个新分配的，用fdt指向。执行完上述的操作后，还要<em>将旧的结构存储区的内容拷贝到新的存储区</em>，这包括files_struct自身所包含的close_on_exec，open_fds，fd到新分配的close_on_exec，open_fds，fd的拷贝。<br>执行完上述拷贝之后，就要释放旧的struct fdtable，但这里并不执行执行该项释放操作. (需要时机触发)<br>struct files_struct扩充使用内核源码中的expand_files来实现，<code>expand_files</code>会调用<code>expand_fdtable</code>：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">expand_fdtable</span><span class="params">(<span class="keyword">struct</span> files_struct *files, <span class="type">int</span> nr)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">fdtable</span> *<span class="title">new_fdt</span>, *<span class="title">cur_fdt</span>;</span></span><br><span class="line">    new_fdt = alloc_fdtable(nr);      <span class="comment">//分配了一个fdtable</span></span><br><span class="line">    cur_fdt = files_fdtable(files);   <span class="comment">//files-&gt;fdt</span></span><br><span class="line">    <span class="keyword">if</span> (nr &gt;= cur_fdt-&gt;max_fds) &#123;</span><br><span class="line">        <span class="comment">/* Continue as planned */</span></span><br><span class="line">        copy_fdtable(new_fdt, cur_fdt);   <span class="comment">//拷贝了其中的3个变量:fd,open_fds,close_on_exec</span></span><br><span class="line">        rcu_assign_pointer(files-&gt;fdt, new_fdt);  <span class="comment">//将新分配的fdtable赋值给files的fdt</span></span><br><span class="line">          <span class="keyword">if</span> (cur_fdt-&gt;max_fds &gt; NR_OPEN_DEFAULT)  <span class="comment">//注意它第一次初始化为NR_OPEN_DEFAULT</span></span><br><span class="line">            free_fdtable(cur_fdt);</span><br><span class="line">     &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>扩充后, 内核会同时更新<code>max_fds</code>字段值.</p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/metersun/article/details/80513702">files_struct扩充</a></p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2018/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9F%A5%E8%AF%861/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
 
   
   <nav class="pagination">
@@ -1342,7 +1342,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-count">157</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>

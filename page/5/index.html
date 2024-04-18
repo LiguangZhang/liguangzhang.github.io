@@ -185,109 +185,6 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2023/01/11/hxd_new/wave/busybox%20%E4%BB%BB%E6%84%8Ftoolchain%20%E5%88%B6%E4%BD%9C%E5%8A%A8%E6%80%81%E7%89%88%E6%9C%AC/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2023/01/11/hxd_new/wave/busybox%20%E4%BB%BB%E6%84%8Ftoolchain%20%E5%88%B6%E4%BD%9C%E5%8A%A8%E6%80%81%E7%89%88%E6%9C%AC/" class="post-title-link" itemprop="url">busybox 任意toolchain 制作动态版本</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2023-01-11 18:15:54" itemprop="dateCreated datePublished" datetime="2023-01-11T18:15:54+08:00">2023-01-11</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-16 17:48:49" itemprop="dateModified" datetime="2024-04-16T17:48:49+08:00">2024-04-16</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/linux/" itemprop="url" rel="index"><span itemprop="name">linux</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2023/01/11/hxd_new/wave/busybox%20%E4%BB%BB%E6%84%8Ftoolchain%20%E5%88%B6%E4%BD%9C%E5%8A%A8%E6%80%81%E7%89%88%E6%9C%AC/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2023/01/11/hxd_new/wave/busybox%20%E4%BB%BB%E6%84%8Ftoolchain%20%E5%88%B6%E4%BD%9C%E5%8A%A8%E6%80%81%E7%89%88%E6%9C%AC/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">mkdir riscv_build</span><br><span class="line">export CROSS_COMPILE=riscv64-mti-linux-gnu- ARCH=riscv</span><br><span class="line">make defconfig O=riscv_build</span><br><span class="line">make -j12</span><br><span class="line">make install O=riscv_build</span><br></pre></td></tr></table></figure>
-
-<h1 id="上述默认为动态编译"><a href="#上述默认为动态编译" class="headerlink" title="上述默认为动态编译"></a>上述默认为动态编译</h1><h2 id="如果需要静态编译"><a href="#如果需要静态编译" class="headerlink" title="如果需要静态编译"></a>如果需要静态编译</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">make menuconfig O=riscv_build</span><br><span class="line"></span><br><span class="line">Location:                                                           </span><br><span class="line"><span class="meta prompt_">-&gt; </span><span class="language-bash">Busybox Settings</span>                                        </span><br><span class="line"><span class="meta prompt_">   -&gt; </span><span class="language-bash">Build Options</span>     </span><br><span class="line">      [*] Build BusyBox as a static binary (no shared libs)      </span><br></pre></td></tr></table></figure>
-
-<h1 id="融合动态库"><a href="#融合动态库" class="headerlink" title="融合动态库"></a>融合动态库</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">riscv_build/_install 为 busybox 等生成的目录</span></span><br><span class="line">rsync -rl &lt;toolchain_path&gt;/sysroot/riscv/ _install/        #融合系统目录</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">生成 init</span> </span><br><span class="line">cd _install</span><br><span class="line">ln -s bin/busybox init</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">删除 _install 下的所有 *.o *.a 文件, 缩小体积</span></span><br><span class="line">cd _install</span><br><span class="line">find . -type f -name &quot;*. O&quot; | xargs rm -f</span><br><span class="line">find . -type f -name &quot;*. A&quot; | xargs rm -f   </span><br></pre></td></tr></table></figure>
-
-<h1 id="生成-cpiogz-最终文件"><a href="#生成-cpiogz-最终文件" class="headerlink" title="生成 cpiogz 最终文件"></a>生成 cpiogz 最终文件</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">把 install.sh 拷过来放到 riscv_build下</span><br><span class="line">执行 ./install.sh</span><br></pre></td></tr></table></figure>
-
-<h1 id="install-sh-脚本内容"><a href="#install-sh-脚本内容" class="headerlink" title="install.sh 脚本内容"></a>install.sh 脚本内容</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">!/bin/bash</span></span><br><span class="line">sudo rm -rf rootfs</span><br><span class="line">mkdir rootfs</span><br><span class="line">cd rootfs</span><br><span class="line"></span><br><span class="line">cp -r ../_install/* .</span><br><span class="line">mkdir dev usr bin sbin lib etc proc tmp sys var root mnt</span><br><span class="line">cd etc</span><br><span class="line">cat &gt; inittab &lt;&lt;- EOF</span><br><span class="line">::sysinit:/etc/init.d/rcS</span><br><span class="line">::respawn:-/bin/login</span><br><span class="line">::restart:/sbin/init</span><br><span class="line">::ctrlaltdel:/sbin/reboot</span><br><span class="line">::shutdown:/bin/umount -a -r</span><br><span class="line">::shutdown:/sbin/swapoff -a</span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line">cat &gt; profile &lt;&lt;- EOF</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">/etc/profile: system-wide .profile file <span class="keyword">for</span> the Bourne shells</span></span><br><span class="line">echo</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">echo</span> -n <span class="string">&quot;Processing /etc/profile...&quot;</span></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">no-op</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Set search library path</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">echo</span> <span class="string">&quot;Set search library path in /etc/profile&quot;</span></span></span><br><span class="line">export LD_LIBRARY_PATH=/lib:/usr/lib</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Set user path</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">echo</span> <span class="string">&quot;Set user path in /etc/profile&quot;</span></span></span><br><span class="line">PATH=/bin:/sbin:/usr/bin:/usr/sbin</span><br><span class="line">export PATH</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Set PS1</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Note: In addition to the SHELL variable, ash supports \u, \h, \W, \$, \!, \n, \w, \nnn (octal numbers corresponding to ASCII characters)</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">And \e[xx;xxm (color effects), etc.</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Also add an extra <span class="string">&#x27;\&#x27;</span> <span class="keyword">in</span> front of it!</span> </span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">echo</span> <span class="string">&quot;Set PS1 in /etc/profile&quot;</span></span></span><br><span class="line">export PS1=&quot;\\e[00;32m[$USER@\\w\\a]\\$\\e[00;34m&quot;</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">echo</span> <span class="string">&quot;Done&quot;</span></span></span><br><span class="line">alias ll=&#x27;ls -al&#x27;</span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">cat &gt; fstab &lt;&lt;- EOF</span><br><span class="line">proc /proc proc defaults 0 0</span><br><span class="line">none /tmp tmpfs defaults 0 0</span><br><span class="line">mdev /dev tmpfs defaults 0 0</span><br><span class="line">sysfs /sys sysfs defaults 0 0</span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line">cat &gt; passwd &lt;&lt;- EOF</span><br><span class="line">root:x:0:0:root:/root:/bin/sh</span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line">cat &gt; group &lt;&lt;- EOF</span><br><span class="line">root:x:0:root</span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line">cat &gt; shadow &lt;&lt;- EOF</span><br><span class="line">root:4rs6NCNMjYULk:19366:0:99999:7:::</span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line">mkdir init.d</span><br><span class="line">cd init.d</span><br><span class="line"></span><br><span class="line">cat &gt; rcS &lt;&lt;- EOF</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">! /bin/sh</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="built_in">echo</span> <span class="string">&quot;----------mount all&quot;</span></span></span><br><span class="line">/bin/mount -a</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"><span class="built_in">echo</span> <span class="string">&quot;----------Starting mdev......&quot;</span></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">/bin/echo /sbin/mdev &gt; /proc/sys/kernel/hotplug</span></span><br><span class="line">mdev -s</span><br><span class="line">echo &quot;********************************************************&quot;</span><br><span class="line">echo &quot; mini Rootfs&quot;</span><br><span class="line">echo &quot;********************************************************&quot;</span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line">cd ../../dev</span><br><span class="line">sudo mknod -m 666 console c 5 1</span><br><span class="line">sudo mknod -m 666 null c 1 3</span><br><span class="line">cd ../</span><br><span class="line"></span><br><span class="line">sudo chmod 777 etc/init.d/rcS</span><br><span class="line"></span><br><span class="line">ln -s bin/busybox init</span><br><span class="line">cd ../</span><br><span class="line">sudo chown -R root:root rootfs</span><br><span class="line">cd rootfs</span><br><span class="line">find .| cpio -o -H newc | gzip &gt; ../busybox_rootfs.cpio.gz</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2023/01/11/hxd_new/wave/busybox%20%E4%BB%BB%E6%84%8Ftoolchain%20%E5%88%B6%E4%BD%9C%E5%8A%A8%E6%80%81%E7%89%88%E6%9C%AC/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2022/11/13/hxd_new/riscv%E8%B0%83%E7%A0%94/Cache%E7%BB%84%E7%BB%87%E6%96%B9%E5%BC%8F%20-%20%E7%9F%A5%E4%B9%8E/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1286,6 +1183,109 @@
   
   
 
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/TLB%E5%8E%9F%E7%90%86%20-%20%E7%9F%A5%E4%B9%8E/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/TLB%E5%8E%9F%E7%90%86%20-%20%E7%9F%A5%E4%B9%8E/" class="post-title-link" itemprop="url">TLB调研</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-10-11 18:15:54" itemprop="dateCreated datePublished" datetime="2022-10-11T18:15:54+08:00">2022-10-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-18 11:07:45" itemprop="dateModified" datetime="2024-04-18T11:07:45+08:00">2024-04-18</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/cache/" itemprop="url" rel="index"><span itemprop="name">cache</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/TLB%E5%8E%9F%E7%90%86%20-%20%E7%9F%A5%E4%B9%8E/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/TLB%E5%8E%9F%E7%90%86%20-%20%E7%9F%A5%E4%B9%8E/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <blockquote>
+<p>本文由 <a target="_blank" rel="noopener" href="http://ksria.com/simpread/">简悦 SimpRead</a> 转码， 原文地址 <a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/108425561">zhuanlan.zhihu.com</a></p>
+</blockquote>
+<p>TLB是translation lookaside buffer的简称。首先，我们知道MMU的作用是把虚拟地址转换成物理地址。虚拟地址和物理地址的映射关系存储在页表中，而现在页表又是分级的。64位系统一般都是3~5级。常见的配置是4级页表，就以4级页表为例说明。分别是PGD、PUD、PMD、PTE四级页表。在硬件上会有一个叫做页表基地址寄存器，它存储PGD页表的首地址。MMU就是根据页表基地址寄存器从PGD页表一路查到PTE，最终找到物理地址(PTE页表中存储物理地址)。这就像在地图上显示你的家在哪一样，我为了找到你家的地址，先确定你是中国，再确定你是某个省，继续往下某个市，最后找到你家是一样的原理。一级一级找下去。这个过程你也看到了，非常繁琐。如果第一次查到你家的具体位置，我如果记下来你的姓名和你家的地址。下次查找时，是不是只需要跟我说你的姓名是什么，我就直接能够告诉你地址，而不需要一级一级查找。四级页表查找过程需要四次内存访问。延时可想而知，非常影响性能。页表查找过程的示例如下图所示。以后有机会详细展开，这里了解下即可。</p>
+<p><img src="/attachments/v2-70f03a91b02fe51cced8cb57fa30d84b_b.jpg#height=2805&id=IT4Dg&originHeight=2805&originWidth=5725&originalType=binary&ratio=1&rotation=0&showTitle=false&status=done&style=none&title=&width=5725"></p>
+<h2 id="TLB的本质是什么"><a href="#TLB的本质是什么" class="headerlink" title="TLB的本质是什么"></a>TLB的本质是什么</h2><p>TLB其实就是一块高速缓存。数据cache缓存地址(虚拟地址或者物理地址)和数据。TLB缓存虚拟地址和其映射的物理地址。TLB根据虚拟地址查找cache，它没得选，只能根据虚拟地址查找。所以TLB是一个虚拟高速缓存。硬件存在TLB后，虚拟地址到物理地址的转换过程发生了变化。虚拟地址首先发往TLB确认是否命中cache，如果cache hit直接可以得到物理地址。否则，一级一级查找页表获取物理地址。并将虚拟地址和物理地址的映射关系缓存到TLB中。既然TLB是虚拟高速缓存（VIVT），是否存在别名和歧义问题呢？如果存在，软件和硬件是如何配合解决这些问题呢？</p>
+<h2 id="TLB的特殊"><a href="#TLB的特殊" class="headerlink" title="TLB的特殊"></a>TLB的特殊</h2><p>虚拟地址映射物理地址的最小单位是4KB。所以TLB其实不需要存储虚拟地址和物理地址的低12位(因为低12位是一样的，根本没必要存储)。另外，我们如果命中cache，肯定是一次性从cache中拿出整个数据。所以虚拟地址不需要offset域。index域是否需要呢？这取决于cache的组织形式。如果是全相连高速缓存。那么就不需要index。如果使用多路组相连高速缓存，依然需要index。下图就是一个四路组相连TLB的例子。现如今64位CPU寻址范围并没有扩大到64位。64位地址空间很大，现如今还用不到那么大。因此硬件为了设计简单或者解决成本，实际虚拟地址位数只使用了一部分。这里以48位地址总线为了例说明。</p>
+<p><img src="/attachments/v2-e075e5bebbf84c4ec15789d1fb1f7f55_b.jpg#height=619&id=JVewg&originHeight=619&originWidth=720&originalType=binary&ratio=1&rotation=0&showTitle=false&status=done&style=none&title=&width=720"></p>
+<h2 id="TLB的别名问题"><a href="#TLB的别名问题" class="headerlink" title="TLB的别名问题"></a>TLB的别名问题</h2><p>我先来思考第一个问题，别名是否存在。我们知道PIPT的数据cache不存在别名问题。物理地址是唯一的，一个物理地址一定对应一个数据。但是不同的物理地址可能存储相同的数据。也就是说，物理地址对应数据是一对一关系，反过来是多对一关系。由于TLB的特殊性，存储的是虚拟地址和物理地址的对应关系。因此，对于单个进程来说，同一时间一个虚拟地址对应一个物理地址，一个物理地址可以被多个虚拟地址映射。将PIPT数据cache类比TLB，我们可以知道TLB不存在别名问题。而VIVT Cache存在别名问题，原因是VA需要转换成PA，PA里面才存储着数据。中间多经传一手，所以引入了些问题。</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/TLB%E5%8E%9F%E7%90%86%20-%20%E7%9F%A5%E4%B9%8E/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
 
   
   <nav class="pagination">
@@ -1355,7 +1355,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-count">157</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
