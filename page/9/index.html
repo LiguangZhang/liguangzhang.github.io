@@ -186,6 +186,114 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2021/09/11/hxd_new/%E5%8D%9A%E6%B5%81efuse/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2021/09/11/hxd_new/%E5%8D%9A%E6%B5%81efuse/" class="post-title-link" itemprop="url">bl efuse 操作 api</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-09-11 18:15:54" itemprop="dateCreated datePublished" datetime="2021-09-11T18:15:54+08:00">2021-09-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 14:54:31" itemprop="dateModified" datetime="2024-04-16T14:54:31+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%8D%9A%E6%B5%81/" itemprop="url" rel="index"><span itemprop="name">博流</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2021/09/11/hxd_new/%E5%8D%9A%E6%B5%81efuse/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2021/09/11/hxd_new/%E5%8D%9A%E6%B5%81efuse/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/****************************************************************************/</span> <span class="comment">/**</span></span><br><span class="line"><span class="comment"> * @brief  Efuse lock reading for aes key</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * @param  index: index of key slot</span></span><br><span class="line"><span class="comment"> * @param  program: program to efuse entity or not</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * @return None</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment">*******************************************************************************/</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">EF_Ctrl_Readlock_AES_Key</span><span class="params">(<span class="type">uint8_t</span> index, <span class="type">uint8_t</span> program)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">uint32_t</span> tmpVal;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (index &gt; <span class="number">5</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Switch to AHB clock */</span></span><br><span class="line">    EF_Ctrl_Sw_AHB_Clk_0();</span><br><span class="line"></span><br><span class="line">    tmpVal = BL_RD_REG(EF_DATA_BASE, EF_DATA_0_LOCK);</span><br><span class="line">    tmpVal |= (<span class="number">1</span> &lt;&lt; (index + <span class="number">26</span>));</span><br><span class="line">    BL_WR_REG(EF_DATA_BASE, EF_DATA_0_LOCK, tmpVal);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (program) &#123;</span><br><span class="line">        EF_Ctrl_Program_Efuse_0();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/****************************************************************************/</span> <span class="comment">/**</span></span><br><span class="line"><span class="comment"> * @brief  Efuse write AES key</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * @param  index: index of key slot</span></span><br><span class="line"><span class="comment"> * @param  keyData: key data buffer</span></span><br><span class="line"><span class="comment"> * @param  len: key data length in words</span></span><br><span class="line"><span class="comment"> * @param  program: program to efuse entity or not</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * @return None</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment">*******************************************************************************/</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">EF_Ctrl_Write_AES_Key</span><span class="params">(<span class="type">uint8_t</span> index, <span class="type">uint32_t</span> *keyData, <span class="type">uint32_t</span> len, <span class="type">uint8_t</span> program)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">uint32_t</span> *pAESKeyStart0 = (<span class="type">uint32_t</span> *)(EF_DATA_BASE + <span class="number">0x1C</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (index &gt; <span class="number">5</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Switch to AHB clock */</span></span><br><span class="line">    EF_Ctrl_Sw_AHB_Clk_0();</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Every key is 4 words len*/</span></span><br><span class="line">    BL702_MemCpy4(pAESKeyStart0 + index * <span class="number">4</span>, keyData, len);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (program) &#123;</span><br><span class="line">        EF_Ctrl_Program_Efuse_0();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>代码示例:</p>
+<p>假设key为</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">uint32_t</span> *keyData = &#123;</span><br><span class="line">    <span class="number">0x41cb3b9a</span>,</span><br><span class="line">    <span class="number">0x7cf9f7cf</span>,</span><br><span class="line">    <span class="number">0xdc0dd12f</span>,</span><br><span class="line">    <span class="number">0x6c3ed53a</span>,</span><br><span class="line">    <span class="number">0x00a0c824</span>,</span><br><span class="line">    <span class="number">0xc737923e</span>,</span><br><span class="line">    <span class="number">0xe2f055f1</span>,</span><br><span class="line">    <span class="number">0x34afa0f7</span>,</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 写入key_slot2 key_slot3</span></span><br><span class="line">EF_Ctrl_Write_AES_Key(<span class="number">2</span>, keyData, <span class="number">8</span>, <span class="number">1</span>);</span><br></pre></td></tr></table></figure>
+
+<p>先做实验, 验证key_slot2, key_slot3 是否正常写入</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/****************************************************************************/</span> <span class="comment">/**</span></span><br><span class="line"><span class="comment"> * @brief  Efuse read AES key from specified region and index</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * @param  index: index of key slot</span></span><br><span class="line"><span class="comment"> * @param  keyData: key data buffer</span></span><br><span class="line"><span class="comment"> * @param  len: key data length in words</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * @return None</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment">*******************************************************************************/</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">EF_Ctrl_Read_AES_Key</span><span class="params">(<span class="type">uint8_t</span> index, <span class="type">uint32_t</span> *keyData, <span class="type">uint32_t</span> len)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">uint32_t</span> *pAESKeyStart0 = (<span class="type">uint32_t</span> *)(EF_DATA_BASE + <span class="number">0x1C</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (index &gt; <span class="number">5</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Trigger read data from efuse*/</span></span><br><span class="line">    EF_CTRL_LOAD_BEFORE_READ_R0;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Every key is 4 words len*/</span></span><br><span class="line">    BL702_MemCpy4(keyData, pAESKeyStart0 + index * <span class="number">4</span>, len);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>示例代码, 读取key_slot2, key_slot3的key数据</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">uint32_t</span> keyRead[<span class="number">8</span>] = &#123;<span class="number">0</span>&#125;;</span><br><span class="line">EF_Ctrl_Read_AES_Key(<span class="number">2</span>, keyRead, <span class="number">8</span>);</span><br></pre></td></tr></table></figure>
+
+<p>判断keyRead 与 keyData 是否一致</p>
+<p>如果前面写入正常, 最后需要对key_slot2, key_slot3 做读保护</p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2021/09/11/hxd_new/%E5%8D%9A%E6%B5%81efuse/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2021/09/11/hxd_new/%E5%AE%89%E5%85%A8%E6%89%8B%E5%86%8C%E7%9B%B8%E5%85%B3/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1420,159 +1528,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2020/10/25/hxd_new/pack/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/10/25/hxd_new/pack/" class="post-title-link" itemprop="url">mips 打包烧写工具</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-10-25 18:15:54" itemprop="dateCreated datePublished" datetime="2020-10-25T18:15:54+08:00">2020-10-25</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-16 15:01:53" itemprop="dateModified" datetime="2024-04-16T15:01:53+08:00">2024-04-16</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/MIPS/" itemprop="url" rel="index"><span itemprop="name">MIPS</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2020/10/25/hxd_new/pack/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2020/10/25/hxd_new/pack/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="生成从flash启动的文件"><a href="#生成从flash启动的文件" class="headerlink" title="生成从flash启动的文件"></a>生成从flash启动的文件</h1><p>boot模式启动后自动运行</p>
-<h2 id="烧写规范"><a href="#烧写规范" class="headerlink" title="烧写规范"></a>烧写规范</h2><p>目前仅支持烧写spl fdl 和 大核的bin, ua-validation的bin 只能先伪装成spl来测试boot流程.</p>
-<p>romcode 固化的代码中将spl下载到了ahbsram区域, 因此ua的bin也会下载到ahbsram上, 最大只能到128k</p>
-<a name="ua">
-
-  
-
-<h2 id="小核镜像打包"><a href="#小核镜像打包" class="headerlink" title="小核镜像打包"></a>小核镜像打包</h2><p>当前只能做普通非加密模式的bin, ua-validation生成的产物</p>
-<ul>
-<li><p><code>validation/uAptiv_Baremetal.elf</code>  </p>
-</li>
-<li><p><code>validation/uAptiv_Baremetal.bin</code> 未做header包裹的bin, 不能直接用</p>
-</li>
-<li><p><code>validation/spl_non_sec.bin</code> 生成了header, 可以作为spl烧写到flash 中, 给到烧机工具, 填到spl槽位</p>
-</li>
-</ul>
-<a name="ua_pack">
-
-  
-
-<h3 id="单独打包小核镜像"><a href="#单独打包小核镜像" class="headerlink" title="单独打包小核镜像"></a>单独打包小核镜像</h3><blockquote>
-<p>本节没有特殊需求, 可以不用看</p>
-</blockquote>
-<p>如果需要根据<code>uAptiv_Baremetal.elf</code>文件重新打包出能烧写到flash中的符合规范的bin, 请参考下面的步骤:</p>
-<p>在代码根目录下:</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">cd validation;</span><br><span class="line"></span><br><span class="line">mips-mti-elf-objcopy -O binary uAptiv_Baremetal.elf uAptiv_Baremetal.bin</span><br><span class="line"></span><br><span class="line">../tools/sign_tool.py -n --ua --source . --out .</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p>生成的文件spl_non_sec.bin 给到烧机工具即可</p>
-<blockquote>
-<p>如果没有单独打包小核镜像的需求, <a href="#ua_pack">单独打包小核镜像</a> 小节直接忽略就行, 默认编译结果已经包含</p>
-</blockquote>
-<h2 id="大核镜像打包"><a href="#大核镜像打包" class="headerlink" title="大核镜像打包"></a>大核镜像打包</h2><p>当前只能做普通非加密模式的bin, ia-validation生成的产物</p>
-<ul>
-<li><p><code>ia-validation/iAptiv_Baremetal.elf</code></p>
-</li>
-<li><p><code>ia-validation/iAptiv_Baremetal.bin</code>  未做header包裹的bin, 不能直接用</p>
-</li>
-<li><p><code>ia-validation/ia_non_sec.bin</code>        生成了header, 可以作为ia烧写到flash 中, 给到烧机工具, 填到ia槽位</p>
-</li>
-</ul>
-<a name="ia_pack">
-
-  
-
-<h3 id="单独打包大核镜像"><a href="#单独打包大核镜像" class="headerlink" title="单独打包大核镜像"></a>单独打包大核镜像</h3><blockquote>
-<p>本节没有特殊需求, 可以不用看</p>
-</blockquote>
-<p>如果需要根据<code>iAptiv_Baremetal.elf</code>文件重新打包出能烧写到flash中的符合规范的bin, 请参考下面的步骤:</p>
-<p>在代码根目录下:</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="built_in">cd</span> ia-validation;</span><br><span class="line"></span><br><span class="line">mips-mti-elf-objcopy -R .text_init -O binary iAptiv_Baremetal.elf iAptiv_Baremetal_App.bin</span><br><span class="line"></span><br><span class="line">mips-mti-elf-objcopy -j .text_init -O binary iAptiv_Baremetal.elf iAptiv_Baremetal_Boot.bin</span><br><span class="line"></span><br><span class="line"><span class="built_in">cat</span> iAptiv_Baremetal_Boot.bin iAptiv_Baremetal_App.bin &gt; iAptiv_Baremetal.bin</span><br><span class="line"></span><br><span class="line">../tools/sign_tool.py -n --ia --<span class="built_in">source</span> . --out .</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p>生成的文件ia_non_sec.bin 给到烧机工具即可</p>
-<blockquote>
-<p>如果没有单独打包大核镜像的需求,  <a href="#ia_pack">单独打包大核镜像小节</a> 直接忽略就行, 默认编译结果已经包含</p>
-</blockquote>
-<h3 id="烧写大核启动镜像"><a href="#烧写大核启动镜像" class="headerlink" title="烧写大核启动镜像"></a>烧写大核启动镜像</h3><p>启动到大核需要spl转接, 不是上面 <a href="#ua">ua-validation</a>, 下载这里的<a target="_blank" rel="noopener" href="http://172.16.10.114/tool/hxd1901/spl_non_sec_real.bin">spl_non_sec_real.bin</a></p>
-<p>烧写大核时需要同时把 fdl spl (spl_non_sec_real.bin) 和 当前编出的大核的bin(ia_non_sec.bin) 烧入对应槽</p>
-<p><img src="/../gdb/image/2230995-20210517010440573-253963743.png" alt="2230995-20210517010440573-253963743"></p>
-</a></a></a>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2020/10/25/hxd_new/pack/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1642,7 +1597,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-count">159</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>

@@ -186,6 +186,115 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2022/04/19/hxd_new/%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3/HSM%20%E5%9C%A8%E6%99%BA%E8%83%BD%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E4%B8%AD%E7%9A%84%E4%BD%9C%E7%94%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/04/19/hxd_new/%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3/HSM%20%E5%9C%A8%E6%99%BA%E8%83%BD%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E4%B8%AD%E7%9A%84%E4%BD%9C%E7%94%A8/" class="post-title-link" itemprop="url">HSM 在智能汽车安全中的作用.md</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-04-19 18:15:54" itemprop="dateCreated datePublished" datetime="2022-04-19T18:15:54+08:00">2022-04-19</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 10:48:31" itemprop="dateModified" datetime="2024-04-16T10:48:31+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AE%89%E5%85%A8/" itemprop="url" rel="index"><span itemprop="name">安全</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/04/19/hxd_new/%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3/HSM%20%E5%9C%A8%E6%99%BA%E8%83%BD%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E4%B8%AD%E7%9A%84%E4%BD%9C%E7%94%A8/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/04/19/hxd_new/%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3/HSM%20%E5%9C%A8%E6%99%BA%E8%83%BD%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E4%B8%AD%E7%9A%84%E4%BD%9C%E7%94%A8/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="HSM-作用"><a href="#HSM-作用" class="headerlink" title="HSM 作用"></a>HSM 作用</h1><p><img src="https://pic4.zhimg.com/v2-cc6c609c713dab25d187489a6a436cdf_r.jpg" alt="full hsm"></p>
+<p>包含两个部分:</p>
+<ol>
+<li>Security building blocks负责加密&#x2F;解密的硬件操作；</li>
+<li>Logical building blocks负责与Application ECU交互数据以及软件的加密&#x2F;解密操作；</li>
+</ol>
+<p>HSM 最重要的作用是安全边界, 和trustzone的机制类似, 提供安全的物理隔离能力, 安全rom和安全ram 无法被外部cpu 访问, 即使外部cpu 环境被破解, 也能保证hsm 运行的内容无法被探知. 当前的hsm产品中大多是过了FIPS 140-2 level3 标准的.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220630170646.png"></p>
+<p>密钥存储&#x2F;派生&#x2F;权限管控&#x2F;交换机制处于hsm内部(授信环境), 密钥存于安全rom或安全ram中, 无法被外部拿到.</p>
+<h1 id="与-只有硬件安全ip-加-otp-方案的对比"><a href="#与-只有硬件安全ip-加-otp-方案的对比" class="headerlink" title="与 只有硬件安全ip 加 otp 方案的对比"></a>与 只有硬件安全ip 加 otp 方案的对比</h1><ol>
+<li>该方案密钥即使可以通过otp 管控密钥无法被外界拿到, 但也存在无法灵活配置, 很难做到密钥派生&#x2F;密钥交换类似的需求,  在main域或其他域上的密钥更换是非常频繁的, 频繁的更换密钥能够保证前向安全(即如果密钥被泄露, 那hack 监听到的以往的数据都会变得不再安全)和重放攻击等.  比如https中使用的ssl&#x2F;tls 加密机制, 每次建立连接后都是使用的新的密钥</li>
+<li>芯片的安全ip采用的算法往往是对外公开的, 没有秘密可言. 相当于说是这种方案其实只有硬解加速的作用, 一旦密钥被探知, 那整个安全链路系统是非常脆弱的.</li>
+<li>hsm上执行的程序, 中间过程会锁在安全rom 安全ram内, 这种hsm 上跑的软件上层的机制其实也是安全的. 而只有安全ip的方案, 无论是做驱动还是什么都可以被探知破解.</li>
+</ol>
+<h1 id="HSM在智能汽车中应用的场景"><a href="#HSM在智能汽车中应用的场景" class="headerlink" title="HSM在智能汽车中应用的场景"></a>HSM在智能汽车中应用的场景</h1>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2022/04/19/hxd_new/%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3/HSM%20%E5%9C%A8%E6%99%BA%E8%83%BD%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E4%B8%AD%E7%9A%84%E4%BD%9C%E7%94%A8/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2022/04/18/hxd_new/%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3/%E6%99%BA%E8%83%BD%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E6%94%BB%E9%98%B2/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1238,176 +1347,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2021/10/17/freertos/mips%20linux%20spinlock%E5%88%86%E6%9E%90/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2021/10/17/freertos/mips%20linux%20spinlock%E5%88%86%E6%9E%90/" class="post-title-link" itemprop="url">mips linux spinlock</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2021-10-17 18:15:54" itemprop="dateCreated datePublished" datetime="2021-10-17T18:15:54+08:00">2021-10-17</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-18 16:11:36" itemprop="dateModified" datetime="2024-04-18T16:11:36+08:00">2024-04-18</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/MIPS/" itemprop="url" rel="index"><span itemprop="name">MIPS</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/MIPS/os/" itemprop="url" rel="index"><span itemprop="name">os</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2021/10/17/freertos/mips%20linux%20spinlock%E5%88%86%E6%9E%90/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2021/10/17/freertos/mips%20linux%20spinlock%E5%88%86%E6%9E%90/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="spinlock结构"><a href="#spinlock结构" class="headerlink" title="spinlock结构"></a>spinlock结构</h1><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">arch_spinlock_t</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">union</span> &#123;</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> lock;    </span><br><span class="line">    <span class="comment">// union结构, 总共占用一个word</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">        <span class="comment">// 正在服务的号  bit 0-15</span></span><br><span class="line">		<span class="type">unsigned</span> <span class="type">short</span> serving_now;</span><br><span class="line">        <span class="comment">// 等待取的号    bit 16-31</span></span><br><span class="line">		<span class="type">unsigned</span> <span class="type">short</span> ticket;</span><br><span class="line">	&#125; h;</span><br><span class="line">&#125; <span class="type">arch_spinlock_t</span>;</span><br></pre></td></tr></table></figure>
-<h1 id="api"><a href="#api" class="headerlink" title="api"></a>api</h1><h2 id="arch-spin-is-locked"><a href="#arch-spin-is-locked" class="headerlink" title="arch_spin_is_locked"></a>arch_spin_is_locked</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="keyword">inline</span> <span class="type">int</span> <span class="title function_">arch_spin_is_locked</span><span class="params">(<span class="type">arch_spinlock_t</span> *lock)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span> counters = ACCESS_ONCE(lock-&gt;lock);</span><br><span class="line">    <span class="comment">// 取高16位和低16位做异或运算, 如果其他的 thread 已经获取了该 lock，那么返回非零值，即ticket 和 serving_now不相同时, 返回非0, 否则返回 0, 返回0时表明没上锁或者是本thread获取了锁.</span></span><br><span class="line">	<span class="keyword">return</span> ((counters &gt;&gt; <span class="number">16</span>) ^ counters) &amp; <span class="number">0xffff</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h1 id="自旋锁的变体"><a href="#自旋锁的变体" class="headerlink" title="自旋锁的变体"></a>自旋锁的变体</h1><table>
-<thead>
-<tr>
-<th>接口 API 的类型</th>
-<th>spinlock 中的定义</th>
-<th>raw_spinlock 的定义</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>定义 spin lock 并初始化</td>
-<td>DEFINE_SPINLOCK</td>
-<td>DEFINE_RAW_SPINLOCK</td>
-</tr>
-<tr>
-<td>动态初始化 spin lock</td>
-<td>spin_lock_init</td>
-<td>raw_spin_lock_init</td>
-</tr>
-<tr>
-<td>获取指定的 spin lock</td>
-<td>spin_lock</td>
-<td>raw_spin_lock</td>
-</tr>
-<tr>
-<td>获取指定的 spin lock 同时 disable 本 CPU 中断</td>
-<td>spin_lock_irq</td>
-<td>raw_spin_lock_irq</td>
-</tr>
-<tr>
-<td>保存本 CPU 当前的 irq 状态，disable 本 CPU 中断并获取指定的 spin lock</td>
-<td>spin_lock_irqsave</td>
-<td>raw_spin_lock_irqsave</td>
-</tr>
-<tr>
-<td>获取指定的 spin lock 同时 disable 本 CPU 的 bottom half</td>
-<td>spin_lock_bh</td>
-<td>raw_spin_lock_bh</td>
-</tr>
-<tr>
-<td>释放指定的 spin lock</td>
-<td>spin_unlock</td>
-<td>raw_spin_unlock</td>
-</tr>
-<tr>
-<td>释放指定的 spin lock 同时 enable 本 CPU 中断</td>
-<td>spin_unlock_irq</td>
-<td>raw_spin_unock_irq</td>
-</tr>
-<tr>
-<td>释放指定的 spin lock 同时恢复本 CPU 的中断状态</td>
-<td>spin_unlock_irqstore</td>
-<td>raw_spin_unlock_irqstore</td>
-</tr>
-<tr>
-<td>获取指定的 spin lock 同时 enable 本 CPU 的 bottom half</td>
-<td>spin_unlock_bh</td>
-<td>raw_spin_unlock_bh</td>
-</tr>
-<tr>
-<td>尝试去获取 spin lock，如果失败，不会 spin，而是返回非零值</td>
-<td>spin_trylock</td>
-<td>raw_spin_trylock</td>
-</tr>
-<tr>
-<td>判断 spin lock 是否是 locked，如果其他的 thread 已经获取了该 lock，那么返回非零值，否则返回 0</td>
-<td>spin_is_locked</td>
-<td>raw_spin_is_locked</td>
-</tr>
-</tbody></table>
-<h1 id="mips-体系加锁分析"><a href="#mips-体系加锁分析" class="headerlink" title="mips 体系加锁分析"></a>mips 体系加锁分析</h1><h2 id="arch-spin-lock"><a href="#arch-spin-lock" class="headerlink" title="arch_spin_lock"></a>arch_spin_lock</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="keyword">inline</span> <span class="type">void</span> <span class="title function_">arch_spin_lock</span><span class="params">(<span class="type">arch_spinlock_t</span> *lock)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="type">int</span> my_ticket;</span><br><span class="line">	<span class="type">int</span> tmp;</span><br><span class="line">	<span class="type">int</span> inc = <span class="number">0x10000</span>;</span><br><span class="line">    __asm__ __volatile__ (</span><br><span class="line">        <span class="string">&quot;	.set push		# arch_spin_lock	\n&quot;</span></span><br><span class="line">        <span class="string">&quot;	.set noreorder					\n&quot;</span></span><br><span class="line">        <span class="string">&quot;							\n&quot;</span></span><br><span class="line">        <span class="string">&quot;1:	ll	%[ticket], %[ticket_ptr]		\n&quot;</span>                      # ticket_ptr(lock-&gt;lock), 取出lock-&gt;lock 到 ticket(tmp) ll 原子操作, 取出一个word</span><br><span class="line">        <span class="string">&quot;	addu	%[my_ticket], %[ticket], %[inc]		\n&quot;</span>              # my_ticket &lt;- ticket(tmp) + <span class="number">0x10000</span>  这里应该是ticket + <span class="number">1</span>的意思, ticket自增,即当前的调用取的号+<span class="number">1</span>,  </span><br><span class="line">        <span class="string">&quot;	sc	%[my_ticket], %[ticket_ptr]		\n&quot;</span>                      <span class="meta"># lock-&gt;lock <span class="string">&lt;- my_ticket      # 把ticket + 1后存回到 lock-&gt;</span>ticket, 这个代表更新当前发的所有号, 来了一个新调用, 说明这个调用要抢资源, 给它分一个号</span></span><br><span class="line">        <span class="string">&quot;	beqz	%[my_ticket], 1b			\n&quot;</span>                      <span class="meta"># sc失败, 返回结果0, 跳转回1b, 说明有其他cpu或中断在该指令执行前偷偷调用sc 把 tick_ptr给修改了, 这时sc会失败, 返回1b 重新来这个操作</span></span><br><span class="line">        <span class="string">&quot;	 srl	%[my_ticket], %[ticket], 16		\n&quot;</span>                  # my_ticket &lt;- ticket(tmp) &gt;&gt; <span class="number">16</span>      my_ticket &lt;- lock-&gt;ticket  换算ticket + <span class="number">1</span></span><br><span class="line">        <span class="string">&quot;	andi	%[ticket], %[ticket], 0xffff		\n&quot;</span>              <span class="meta"># ticket(tmp) = ticket(tmp) &amp; 0xffff  tmp<span class="string">&lt;- lock-&gt;</span>serving_now</span></span><br><span class="line">        <span class="string">&quot;	bne	%[ticket], %[my_ticket], 4f		\n&quot;</span>                      <span class="meta"># lock-&gt;ticket 与 lock-&gt;serving_now 不相等, 调转到 4f, 说明不是本上下文上的锁, 需要等待, 如相等,往下走    !!!!</span></span><br><span class="line">        <span class="string">&quot;	 subu	%[ticket], %[my_ticket], %[ticket]	\n&quot;</span>              <span class="meta"># tmp <span class="string">&lt;- lock-&gt;</span>serving_now - lock-&gt;ticket, 相等的, tmp变成0了, 因为在延迟槽里,不相等的话 tmp <span class="string">&lt;-  lock-&gt;</span>serving_now - lock-&gt;ticket</span></span><br><span class="line">        <span class="string">&quot;2:							\n&quot;</span></span><br><span class="line">        <span class="string">&quot;	.subsection 2					\n&quot;</span>                          # # 程序后半段, !!!! 拼在函数jr ra 后面,正常情况下走不到这里, 注意跳转前 subu	%[ticket], %[my_ticket], %[ticket] 在延迟槽里, 总是会执行</span><br><span class="line">        <span class="string">&quot;4:	andi	%[ticket], %[ticket], 0x1fff		\n&quot;</span>              <span class="meta"># lock-&gt;ticket 与 lock-&gt;serving_now 不相等时,走到这, tmp <span class="string">&lt;- tmp &amp; 0x1fff 取(lock-&gt;</span>serving_now)0-12位</span></span><br><span class="line">        <span class="string">&quot;	sll	%[ticket], 5				\n&quot;</span>                          <span class="meta"># tmp &lt;&lt; 5</span></span><br><span class="line">        <span class="string">&quot;							\n&quot;</span></span><br><span class="line">        <span class="string">&quot;6:	bnez	%[ticket], 6b				\n&quot;</span>                      <span class="meta"># tmp 不为0 , 循环tmp-1, 直到tmp 变成0</span></span><br><span class="line">        <span class="string">&quot;	 subu	%[ticket], 1				\n&quot;</span>                      # 循环体, 每次tmp<span class="number">-1</span></span><br><span class="line">        <span class="string">&quot;							\n&quot;</span></span><br><span class="line">        <span class="string">&quot;	lhu	%[ticket], %[serving_now_ptr]		\n&quot;</span>                  <span class="meta"># tmp <span class="string">&lt;- lock-&gt;</span>h.serving_now, 这个地方会从内存中更新serving_now, 别的调用方可能会放锁,导致serving_now变化, 因此这里需要更新</span></span><br><span class="line">        <span class="string">&quot;	beq	%[ticket], %[my_ticket], 2b		\n&quot;</span>                      # my_ticket 与 lock-&gt;serving_now 相等,则跳到<span class="number">2b</span>, 调到<span class="number">2b</span>后,函数就可以马上出去了</span><br><span class="line">        <span class="string">&quot;	 subu	%[ticket], %[my_ticket], %[ticket]	\n&quot;</span>              <span class="meta"># tmp <span class="string">&lt;-    lock-&gt;</span>h.serving_now - lock-&gt;ticket</span></span><br><span class="line">        <span class="string">&quot;	b	4b					\n&quot;</span>                                  # 回到<span class="number">4b</span>, 重新等</span><br><span class="line">        <span class="string">&quot;	 subu	%[ticket], %[ticket], 1			\n&quot;</span>                  <span class="meta"># tmp - 1</span></span><br><span class="line">        <span class="string">&quot;	.previous					\n&quot;</span></span><br><span class="line">        <span class="string">&quot;	.set pop					\n&quot;</span></span><br><span class="line">        : [ticket_ptr] <span class="string">&quot;+m&quot;</span> (lock-&gt;lock),</span><br><span class="line">        [serving_now_ptr] <span class="string">&quot;+m&quot;</span> (lock-&gt;h.serving_now),</span><br><span class="line">        [ticket] <span class="string">&quot;=&amp;r&quot;</span> (tmp),</span><br><span class="line">        [my_ticket] <span class="string">&quot;=&amp;r&quot;</span> (my_ticket)</span><br><span class="line">        : [inc] <span class="string">&quot;r&quot;</span> (inc));</span><br><span class="line">	smp_llsc_mb(); <span class="comment">// 调用sync. 内存屏障, 保证cache同步 </span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2021/10/17/freertos/mips%20linux%20spinlock%E5%88%86%E6%9E%90/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1477,7 +1416,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-count">159</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>

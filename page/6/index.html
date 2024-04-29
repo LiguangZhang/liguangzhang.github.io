@@ -186,6 +186,128 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv%20imsic%20%E7%9B%B8%E5%85%B3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv%20imsic%20%E7%9B%B8%E5%85%B3/" class="post-title-link" itemprop="url">riscv imsic 相关</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-10-11 18:15:54" itemprop="dateCreated datePublished" datetime="2022-10-11T18:15:54+08:00">2022-10-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 14:07:40" itemprop="dateModified" datetime="2024-04-16T14:07:40+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%99%9A%E6%8B%9F%E5%8C%96/" itemprop="url" rel="index"><span itemprop="name">虚拟化</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%99%9A%E6%8B%9F%E5%8C%96/RISCV/" itemprop="url" rel="index"><span itemprop="name">RISCV</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%99%9A%E6%8B%9F%E5%8C%96/RISCV/%E4%B8%AD%E6%96%AD/" itemprop="url" rel="index"><span itemprop="name">中断</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv%20imsic%20%E7%9B%B8%E5%85%B3/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv%20imsic%20%E7%9B%B8%E5%85%B3/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>参考文档<br>Documentation&#x2F;devicetree&#x2F;bindings&#x2F;interrupt-controller&#x2F;riscv,imsics.yaml</p>
+<h1 id="dts-信息"><a href="#dts-信息" class="headerlink" title="dts 信息"></a>dts 信息</h1><p>ex:<br>提供了两个interrupt file M-mode 和 S-mode的.</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">imsic_mlevel: interrupt-controller@<span class="number">24000000</span> &#123;</span><br><span class="line">  compatible = <span class="string">&quot;riscv,qemu-imsics&quot;</span>, <span class="string">&quot;riscv,imsics&quot;</span>;</span><br><span class="line">  interrupts-extended = &lt;&amp;cpu1_intc <span class="number">11</span>&gt;,</span><br><span class="line">                        &lt;&amp;cpu2_intc <span class="number">11</span>&gt;,</span><br><span class="line">                        &lt;&amp;cpu3_intc <span class="number">11</span>&gt;,</span><br><span class="line">                        &lt;&amp;cpu4_intc <span class="number">11</span>&gt;;</span><br><span class="line">  reg = &lt;<span class="number">0x28000000</span> <span class="number">0x4000</span>&gt;;</span><br><span class="line">  interrupt-controller;</span><br><span class="line">  <span class="meta">#interrupt-cells = <span class="string">&lt;0&gt;</span>;</span></span><br><span class="line">  msi-controller;</span><br><span class="line">  riscv,num-ids = &lt;<span class="number">127</span>&gt;;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">imsic_slevel: interrupt-controller@<span class="number">28000000</span> &#123;</span><br><span class="line">  compatible = <span class="string">&quot;riscv,qemu-imsics&quot;</span>, <span class="string">&quot;riscv,imsics&quot;</span>;</span><br><span class="line">  interrupts-extended = &lt;&amp;cpu1_intc <span class="number">9</span>&gt;,</span><br><span class="line">                        &lt;&amp;cpu2_intc <span class="number">9</span>&gt;,</span><br><span class="line">                        &lt;&amp;cpu3_intc <span class="number">9</span>&gt;,</span><br><span class="line">                        &lt;&amp;cpu4_intc <span class="number">9</span>&gt;;</span><br><span class="line">  reg = &lt;<span class="number">0x28000000</span> <span class="number">0x2000</span>&gt;, <span class="comment">/* Group0 IMSICs */</span></span><br><span class="line">        &lt;<span class="number">0x29000000</span> <span class="number">0x2000</span>&gt;; <span class="comment">/* Group1 IMSICs */</span></span><br><span class="line">  interrupt-controller;</span><br><span class="line">  <span class="meta">#interrupt-cells = <span class="string">&lt;0&gt;</span>;</span></span><br><span class="line">  msi-controller;</span><br><span class="line">  riscv,num-ids = &lt;<span class="number">127</span>&gt;;</span><br><span class="line">  riscv,group-index-bits = &lt;<span class="number">1</span>&gt;;</span><br><span class="line">  riscv,group-index-shift = &lt;<span class="number">24</span>&gt;;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>下面对上述dts的相关属性做一个大概的介绍</p>
+<ol>
+<li>interrupts-extended<br>对应cpu1-4, 每个cpu都有这两个interrupt file M-mode和S-mode的<br>M的对应中断位为11,  代表 Machine external interrupt<br>S的对应中断位为9, 代表 Supervisor external interrupt</li>
+<li>riscv,num-ids<br>Number of interrupt identities supported by IMSIC interrupt file.<br>外部中断数量, 反映到eip和eie中, 最小63 最大 2047</li>
+<li>riscv,group-index-bits<br>Number of group index bits in the MSI target address. When not specified it is assumed to be 0.<br>总的group index bits</li>
+<li>riscv,group-index-shift<br>The least significant bit position of the group index bits in the MSI target address. When not specified it is assumed to be 24.</li>
+<li>reg<br>Base address of each IMSIC group.<br>关于MSI target address:<br>从第24 bit 开始, 上述group-index-bits 表示在Group Index中总共有几个bit 被使用<br>riscv,group-index-shift 表示Group Index中当前interrupt file 占位开始的那个bit位, 如其占了两个bit位 26-27, shift表示最开始的bit位 26.</li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">XLEN<span class="number">-1</span>           &gt;=<span class="number">24</span>                                 <span class="number">12</span>    <span class="number">0</span></span><br><span class="line">|                  |                                  |     |</span><br><span class="line">-------------------------------------------------------------</span><br><span class="line">|xxxxxx|Group Index|xxxxxxxxxxx|HART Index|Guest Index|  <span class="number">0</span>  |</span><br><span class="line">-------------------------------------------------------------</span><br></pre></td></tr></table></figure>
+
+<h2 id="guest-os相关"><a href="#guest-os相关" class="headerlink" title="guest os相关"></a>guest os相关</h2><p>guest external interrupt 相关的dts信息</p>
+<ol>
+<li>riscv,num-guest-ids<br>Number of interrupt identities are supported by IMSIC guest interrupt<br>file. When not specified it is assumed to be same as specified by the<br>riscv,num-ids property.<br>guest external 硬件中断号 最小63 最大2047</li>
+<li>riscv,hart-index-bits<br>Number of HART index bits in the MSI target address. When not<br>specified it is estimated based on the interrupts-extended property.<br>MSI target address 中 Hart Index 总共使用了几个bit位.<br>最小0 最大 15</li>
+<li>riscv,guest-index-bits<br>Number of HART index bits in the MSI target address. When not<br>specified it is estimated based on the interrupts-extended property.<br>MSI target address 中 Guest Index 总共使用了几个bit位.<br>最小0 最大 7</li>
+</ol>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv%20imsic%20%E7%9B%B8%E5%85%B3/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2022/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv%20%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B8%AD%E6%96%AD%E7%9B%B8%E5%85%B3/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1166,115 +1288,6 @@
   
   
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2022/04/19/hxd_new/%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3/HSM%20%E5%9C%A8%E6%99%BA%E8%83%BD%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E4%B8%AD%E7%9A%84%E4%BD%9C%E7%94%A8/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/04/19/hxd_new/%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3/HSM%20%E5%9C%A8%E6%99%BA%E8%83%BD%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E4%B8%AD%E7%9A%84%E4%BD%9C%E7%94%A8/" class="post-title-link" itemprop="url">HSM 在智能汽车安全中的作用.md</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2022-04-19 18:15:54" itemprop="dateCreated datePublished" datetime="2022-04-19T18:15:54+08:00">2022-04-19</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-16 10:48:31" itemprop="dateModified" datetime="2024-04-16T10:48:31+08:00">2024-04-16</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E5%AE%89%E5%85%A8/" itemprop="url" rel="index"><span itemprop="name">安全</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2022/04/19/hxd_new/%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3/HSM%20%E5%9C%A8%E6%99%BA%E8%83%BD%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E4%B8%AD%E7%9A%84%E4%BD%9C%E7%94%A8/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2022/04/19/hxd_new/%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3/HSM%20%E5%9C%A8%E6%99%BA%E8%83%BD%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E4%B8%AD%E7%9A%84%E4%BD%9C%E7%94%A8/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="HSM-作用"><a href="#HSM-作用" class="headerlink" title="HSM 作用"></a>HSM 作用</h1><p><img src="https://pic4.zhimg.com/v2-cc6c609c713dab25d187489a6a436cdf_r.jpg" alt="full hsm"></p>
-<p>包含两个部分:</p>
-<ol>
-<li>Security building blocks负责加密&#x2F;解密的硬件操作；</li>
-<li>Logical building blocks负责与Application ECU交互数据以及软件的加密&#x2F;解密操作；</li>
-</ol>
-<p>HSM 最重要的作用是安全边界, 和trustzone的机制类似, 提供安全的物理隔离能力, 安全rom和安全ram 无法被外部cpu 访问, 即使外部cpu 环境被破解, 也能保证hsm 运行的内容无法被探知. 当前的hsm产品中大多是过了FIPS 140-2 level3 标准的.</p>
-<p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220630170646.png"></p>
-<p>密钥存储&#x2F;派生&#x2F;权限管控&#x2F;交换机制处于hsm内部(授信环境), 密钥存于安全rom或安全ram中, 无法被外部拿到.</p>
-<h1 id="与-只有硬件安全ip-加-otp-方案的对比"><a href="#与-只有硬件安全ip-加-otp-方案的对比" class="headerlink" title="与 只有硬件安全ip 加 otp 方案的对比"></a>与 只有硬件安全ip 加 otp 方案的对比</h1><ol>
-<li>该方案密钥即使可以通过otp 管控密钥无法被外界拿到, 但也存在无法灵活配置, 很难做到密钥派生&#x2F;密钥交换类似的需求,  在main域或其他域上的密钥更换是非常频繁的, 频繁的更换密钥能够保证前向安全(即如果密钥被泄露, 那hack 监听到的以往的数据都会变得不再安全)和重放攻击等.  比如https中使用的ssl&#x2F;tls 加密机制, 每次建立连接后都是使用的新的密钥</li>
-<li>芯片的安全ip采用的算法往往是对外公开的, 没有秘密可言. 相当于说是这种方案其实只有硬解加速的作用, 一旦密钥被探知, 那整个安全链路系统是非常脆弱的.</li>
-<li>hsm上执行的程序, 中间过程会锁在安全rom 安全ram内, 这种hsm 上跑的软件上层的机制其实也是安全的. 而只有安全ip的方案, 无论是做驱动还是什么都可以被探知破解.</li>
-</ol>
-<h1 id="HSM在智能汽车中应用的场景"><a href="#HSM在智能汽车中应用的场景" class="headerlink" title="HSM在智能汽车中应用的场景"></a>HSM在智能汽车中应用的场景</h1>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/04/19/hxd_new/%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3/HSM%20%E5%9C%A8%E6%99%BA%E8%83%BD%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E4%B8%AD%E7%9A%84%E4%BD%9C%E7%94%A8/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
 
   
   <nav class="pagination">
@@ -1344,7 +1357,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-count">159</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
