@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=LXGW WenKai:300,300italic,400,400italic,700,700italic|LXGW WenKai Mono, Source Code Pro:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":{"valine":{"order":-1}},"activeClass":"valine"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
+  </script>
+
+  <meta name="description" content="HSM 作用 包含两个部分:  Security building blocks负责加密&#x2F;解密的硬件操作； Logical building blocks负责与Application ECU交互数据以及软件的加密&#x2F;解密操作；  HSM 最重要的作用是安全边界, 和trustzone的机制类似, 提供安全的物理隔离能力, 安全rom和安全ram 无法被外部cpu 访问, 即使外部">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HSM 在智能汽车安全中的作用.md">
+<meta property="og:url" content="https://liguangzhang.github.io/2022/04/19/hxd%20new/%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3/HSM%20%E5%9C%A8%E6%99%BA%E8%83%BD%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E4%B8%AD%E7%9A%84%E4%BD%9C%E7%94%A8/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="HSM 作用 包含两个部分:  Security building blocks负责加密&#x2F;解密的硬件操作； Logical building blocks负责与Application ECU交互数据以及软件的加密&#x2F;解密操作；  HSM 最重要的作用是安全边界, 和trustzone的机制类似, 提供安全的物理隔离能力, 安全rom和安全ram 无法被外部cpu 访问, 即使外部">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://pic4.zhimg.com/v2-cc6c609c713dab25d187489a6a436cdf_r.jpg">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220630170646.png">
+<meta property="og:image" content="http://www.evinchina.com/uploadfile/image/20220209/2022020909124505320.jpg">
+<meta property="og:image" content="http://www.evinchina.com/uploadfile/image/20220209/2022020909125908389.jpg">
+<meta property="og:image" content="http://www.evinchina.com/uploadfile/image/20220209/2022020909131504644.jpg">
+<meta property="og:image" content="http://www.evinchina.com/uploadfile/image/20220209/2022020909132903589.jpg">
+<meta property="og:image" content="http://www.evinchina.com/uploadfile/image/20220209/2022020909134408792.jpg">
+<meta property="og:image" content="http://www.evinchina.com/uploadfile/image/20220209/2022020909135905693.jpg">
+<meta property="og:image" content="http://www.evinchina.com/uploadfile/image/20220209/2022020909141209134.jpg">
+<meta property="og:image" content="http://www.evinchina.com/uploadfile/image/20220209/2022020909142605883.jpg">
+<meta property="og:image" content="http://www.evinchina.com/uploadfile/image/20220209/2022020909144007067.jpg">
+<meta property="og:image" content="http://www.evinchina.com/uploadfile/image/20220209/2022020909145402796.jpg">
+<meta property="article:published_time" content="2022-04-19T10:15:54.000Z">
+<meta property="article:modified_time" content="2024-04-16T02:48:31.701Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="hsm">
+<meta property="article:tag" content="汽车">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://pic4.zhimg.com/v2-cc6c609c713dab25d187489a6a436cdf_r.jpg">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2022/04/19/hxd%20new/%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3/HSM%20%E5%9C%A8%E6%99%BA%E8%83%BD%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E4%B8%AD%E7%9A%84%E4%BD%9C%E7%94%A8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+<link rel="stylesheet" href="https://npm.elemecdn.com/lxgw-wenkai-screen-webfont/style.css" media="print" onload="this.media='all'" />
+
+  <title>HSM 在智能汽车安全中的作用.md | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2022/04/19/hxd%20new/%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3/HSM%20%E5%9C%A8%E6%99%BA%E8%83%BD%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E4%B8%AD%E7%9A%84%E4%BD%9C%E7%94%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          HSM 在智能汽车安全中的作用.md
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-04-19 18:15:54" itemprop="dateCreated datePublished" datetime="2022-04-19T18:15:54+08:00">2022-04-19</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 10:48:31" itemprop="dateModified" datetime="2024-04-16T10:48:31+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E5%AE%89%E5%85%A8/" itemprop="url" rel="index"><span itemprop="name">安全</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/04/19/hxd%20new/%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3/HSM%20%E5%9C%A8%E6%99%BA%E8%83%BD%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E4%B8%AD%E7%9A%84%E4%BD%9C%E7%94%A8/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/04/19/hxd%20new/%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3/HSM%20%E5%9C%A8%E6%99%BA%E8%83%BD%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E4%B8%AD%E7%9A%84%E4%BD%9C%E7%94%A8/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="HSM-作用"><a href="#HSM-作用" class="headerlink" title="HSM 作用"></a>HSM 作用</h1><p><img src="https://pic4.zhimg.com/v2-cc6c609c713dab25d187489a6a436cdf_r.jpg" alt="full hsm"></p>
+<p>包含两个部分:</p>
+<ol>
+<li>Security building blocks负责加密&#x2F;解密的硬件操作；</li>
+<li>Logical building blocks负责与Application ECU交互数据以及软件的加密&#x2F;解密操作；</li>
+</ol>
+<p>HSM 最重要的作用是安全边界, 和trustzone的机制类似, 提供安全的物理隔离能力, 安全rom和安全ram 无法被外部cpu 访问, 即使外部cpu 环境被破解, 也能保证hsm 运行的内容无法被探知. 当前的hsm产品中大多是过了FIPS 140-2 level3 标准的.</p>
+<p><img src="https://cdn.jsdelivr.net/gh/LiguangZhang/tuchuang1@main/images/20220630170646.png"></p>
+<p>密钥存储&#x2F;派生&#x2F;权限管控&#x2F;交换机制处于hsm内部(授信环境), 密钥存于安全rom或安全ram中, 无法被外部拿到.</p>
+<h1 id="与-只有硬件安全ip-加-otp-方案的对比"><a href="#与-只有硬件安全ip-加-otp-方案的对比" class="headerlink" title="与 只有硬件安全ip 加 otp 方案的对比"></a>与 只有硬件安全ip 加 otp 方案的对比</h1><ol>
+<li>该方案密钥即使可以通过otp 管控密钥无法被外界拿到, 但也存在无法灵活配置, 很难做到密钥派生&#x2F;密钥交换类似的需求,  在main域或其他域上的密钥更换是非常频繁的, 频繁的更换密钥能够保证前向安全(即如果密钥被泄露, 那hack 监听到的以往的数据都会变得不再安全)和重放攻击等.  比如https中使用的ssl&#x2F;tls 加密机制, 每次建立连接后都是使用的新的密钥</li>
+<li>芯片的安全ip采用的算法往往是对外公开的, 没有秘密可言. 相当于说是这种方案其实只有硬解加速的作用, 一旦密钥被探知, 那整个安全链路系统是非常脆弱的.</li>
+<li>hsm上执行的程序, 中间过程会锁在安全rom 安全ram内, 这种hsm 上跑的软件上层的机制其实也是安全的. 而只有安全ip的方案, 无论是做驱动还是什么都可以被探知破解.</li>
+</ol>
+<h1 id="HSM在智能汽车中应用的场景"><a href="#HSM在智能汽车中应用的场景" class="headerlink" title="HSM在智能汽车中应用的场景"></a>HSM在智能汽车中应用的场景</h1><ol>
+<li><p>烧写固件&#x2F;ota 升级时对固件的加密及认证, 即secureboot 安全链路; 加密保证了固件的知识产权, 而认证的作用是防篡改。 尤其是对控制网中网关等固件的防护尤为重要。hsm的加入使破解及篡改secureboot防护的安全链路下的固件变得异常困难。</p>
+</li>
+<li><p>现在智能汽车开始向多域集成式发展,  发往核心控制网(汽车控制相关的, 如发动机 踏板 转向)等的消息应该被安全加密认证, 如核心控制网与智能座舱域, 与娱乐系统域等的连接, 而网关作为消息中枢系统, 其上面的消息处理转发重打包的机制更是应该被进行安全的控制, 在这一层上hsm的作用是非常明显的。</p>
+</li>
+<li><p>hsm 的存在也使多个域都可以使用, 如果只是嵌入到一个域上, 如main域可能有类似trustzone的机制, 那其他域是无法利用的。</p>
+</li>
+</ol>
+<h2 id="CAN-FD-消息的防护"><a href="#CAN-FD-消息的防护" class="headerlink" title="CAN FD 消息的防护"></a>CAN FD 消息的防护</h2><p>当前传统CAN消息因为只有crc 的校验, 一个消息只有8个字节, 传统的can 安全是非常脆弱的<br><strong>博世在AutoSAR中补充了全称为Secure Onboard Communication（SecOC）的组件，为传统的CAN总线引入了一套通信认证的方法</strong>。<strong>SecOC的核心思想在于通信认证</strong>，但是不涉及报文加密。这一套通信认证的方案, 保证了报文不能被hack 伪造 重放, 这套方案其实是为CAN FD 准备的, 认证信息的强度和信息长度强相关，可传统CAN报文的负载8个字节，真要搭载SecOC，可以说是既得不到预想的信息安全强度，又牺牲了相当大的CAN通信能力。</p>
+<p>使用hsm 来实现secoc, 保证认证MAC 所需的密钥, 新鲜度值(单调计数器) 在hsm内部, 黑产无法拿到, 加强了防护能力, 进一步保证了hack 即使破解了车厂自定义的 can fd报文, 也无法伪造重放注入can fd消息</p>
+<p>如果不能使用canfd, 或者未实现secoc, 那核心控制网的安全防护会变得更加重要, 如果没有防护好, 一旦通过其他域或控制网本身的漏洞攻入控制系统, 在只有传统can网络下, 控制网会是不设防的状态.</p>
+<h1 id="附录-车载CAN总线网络安全问题"><a href="#附录-车载CAN总线网络安全问题" class="headerlink" title="附录: 车载CAN总线网络安全问题"></a>附录: 车载CAN总线网络安全问题</h1><p>车载CAN总线安全漏洞主要可归纳为以下几个方面:</p>
+<p>(1)缺乏足够的安全保护。目前CAN总线缺乏必要的安全保护, 以确保信息的保密性、完整性、可用性、真实性和不可抵赖性。CAN总线上的消息可以被总线上任意节点读取, 并且没有任何消息认证码(MAC)或数字签名保护。</p>
+<p>(2)弱认证。对ECU进行固件修改时使用口令(Password)等弱认证技术。</p>
+<p>(3)CAN协议滥用。拒绝服务攻击(DoS)可以通过总线仲裁机制进行, 如果攻击者使用最高优先级发送数据, 那么其他ECU将无法使用总线。还有形成恶意的错误帧消息, 也可以使ECU从总线上断开。</p>
+<p>(4)消息泄露。通过常规诊断接口, 如OBDⅡ 、K线或L线即可掌握车辆运行时的信息。随意使用OBD软件也存在潜在的安全隐患, OBD模块通常会存储访问控制ECU的指令。</p>
+<p>目前OBD应用的安全风险尤其值得关注。OBDⅡ 的标准诊断接口中, CAN总线引脚定义非常明确, 黑客很容易找到切入车载CAN总线网络的入口。通常汽车制造商会通过登陆密钥、隐瞒接口、请求验证等方式严格限制OBD口写入命令, 但这些手段仍属于弱认证, 并不能保证网络信息的安全性。国内OBD应用和车联网方案近年来的发展超出预期, OBD应用的安全性也受到质疑。这些OBD应用的功能从可以实现自动升窗、落锁的简单功能, 到可以实时监测车辆信息, 分析后通过手机APP以图形化的形式展示给驾驶员, 甚至直接将车辆信息实时同步到云端存储。而OBD应用这种类型的第三方改装设备的安全性不能得到保障, 很容易出现软硬件漏洞。</p>
+<h2 id="攻击方式"><a href="#攻击方式" class="headerlink" title="攻击方式"></a>攻击方式</h2><p>针对车载CAN总线网络, 攻击者可以丢弃、修改和读取发送至总线上的信息, 在源节点和目标节点间进行欺骗攻击, 此外还可以进行洪泛、重放攻击。</p>
+<p>(1)丢弃(Drop):可用性攻击。例如一个控制了车载总线中某个网关的入侵者可以删除或不转发某些消息, 致使ECU一些功能失效。</p>
+<p>(2)修改(Modify):通过入侵或截断总线中某个网关, 可以修改从该网关转发的消息。</p>
+<p>(3)读取(Read):任何连接到总线的节点都可以读取总线消息, 可以是一个独立的监听装置, 也可能是一个被入侵的节点。一旦有密钥或私人信息在总线上发出, 就会被入侵者读取。</p>
+<p>(4)欺骗(Spoof):任何被入侵的节点都可以发送错误消息、诊断信息, 使总线上ECU对事件进行响应, 消耗ECU的处理器资源。</p>
+<p>(5)洪泛(Flood):入侵者控制任意ECU即可向其所在网络发送高速率洪泛消息报文。</p>
+<p>(6)重放(Replay):入侵者控制任意ECU, 任何被记录的消息和消息发起的事件, 均可以在任意时间重放到网络中。</p>
+<h2 id="应用困难"><a href="#应用困难" class="headerlink" title="应用困难"></a>应用困难</h2><p>尽管研究人员在努力尝试保护汽车信息安全, 但是其中绝大多数方法并不能立刻应用到实际的车辆当中, 主要的障碍有以下几方面:</p>
+<p>(1)认证机制推广阻力大。认证协议对CAN协议包格式进行了重新定义, 这意味着对几乎所有车辆底层系统进行修改, 而OEM对这种改变十分谨慎。并且大部分的研究显示, 对CAN总线通信进行加密后会产生延时, 从而无法满足原有总线的实时需求。</p>
+<p>(2)使用CAN-FD(CAN with flexible data rate)协议进行安全认证的方法, CAN-FD比传统CAN协议拥有更高的传输速率, 更小的控制位开销, 并且每个数据帧可以携带最多64个字节的数据。虽然CAN-FD优势明显, 但是在OEM看来离实际商用的距离还远。</p>
+<p>(3)认证协议适用的网络节点数量不能达到实际车辆应用要求。即使使用16位处理芯片、轻量32位MAC的加密协议, 其在CAN总线上实施的开销仍然巨大, 而实际车载CAN总线网络不论是节点的数量还是网络复杂度都远远超过实验场景。</p>
+<p>(4)新协议在旧车型上的应用问题。由于汽车是一种耐用商品, 通常一辆汽车的寿命可以达到几十年, 这些车辆在出厂时可能没有信息安全方面的防护装置, 而在使用过程中, 新的总线协议也许无法应用于这些车辆。</p>
+<h1 id="附录-hsm-芯片抗物理攻击能力"><a href="#附录-hsm-芯片抗物理攻击能力" class="headerlink" title="附录 hsm 芯片抗物理攻击能力"></a>附录 hsm 芯片抗物理攻击能力</h1><p>针对芯片的安全攻击测试技术，主要包括主动与被动两类：</p>
+<ul>
+<li><p>主动攻击测试：测试者对芯片的输入或运行环境进行控制，使安全芯片运行行为出现异常，在这种情况下，通过分析芯片工作的异常行为，获得芯片内的密钥等关键敏感信息。主动攻击常用故障注入的方式，包括电磁、激光、红外、高电压注入等测试方法。</p>
+</li>
+<li><p>被动攻击测试：测试者令芯片等密码设备大多数情况下按照其规范运行，甚至完全按照其规范运行。在这种情况下，通过观测芯片的物理特性（如执行时间、能量消耗等），测试者可能获得密钥等关键敏感信息。被动测试常用方式为侧信道攻击，包括分析芯片的时序、功率、电磁辐射等信号特征。</p>
+</li>
+</ul>
+<p>芯片的安全测试需要专业设备与专业人员，测试执行方式主要包括非侵入式、半侵入式和侵入式三类，详细情况见表格4：</p>
+<table>
+<thead>
+<tr>
+<th>分类</th>
+<th>描述</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>非侵入式</td>
+<td>使用通用型设备或者工具（如JTAG工具、存储芯片读取工具和逻辑分析仪等），设备价格低廉。需要人员遵照规范性流程测试，并具备基础芯片和电路知识。</td>
+<td>测试对芯片不造成破坏，确保芯片防范非侵入式攻击，现实中受此类安全威胁概率最大。</td>
+</tr>
+<tr>
+<td>半侵入式</td>
+<td>使用专业设备（如研磨器、激光器等），设备价格中等，需要人员具备一定专业芯片设计知识。</td>
+<td>测试可对芯片造成破坏，确保芯片防范半侵入式攻击，现实中受此类安全威胁概率较大。</td>
+</tr>
+<tr>
+<td>侵入式</td>
+<td>使用非常专业的芯片分析工具（如FIB、电镜等），设备价格高昂，对测试人员专业性要求最高</td>
+<td>测试可对芯片造成不可逆转的破坏，确保芯片防范侵入式攻击，现实中受侵入式攻击的安全威胁概率较小。</td>
+</tr>
+</tbody></table>
+<p>​                                             表格4安全芯片安全测试方式</p>
+<h1 id="附录-ADAS-系统功能"><a href="#附录-ADAS-系统功能" class="headerlink" title="附录 ADAS 系统功能"></a>附录 ADAS 系统功能</h1><p>一般，汽车高级辅助驾驶系统通常包括：**车道偏离预警系统LDWS、车道保持系统LKS、自适应巡航系统ACC、前碰撞预防系统FCW 、自动泊车系统APA、盲点监测系统BSD、驾驶员疲劳预警系统DFM、自适应灯光控制ALC、自动紧急制动AEB、夜视系统NVD等常见的十大功能系统。</p>
+<p>除此之外，还包括行人保护系统、电子警察系统ISA、导航与实时交通系统TMC、交通标志识别、下坡控制系统、电动汽车报警系统等等。</p>
+<p><strong>本文主要给大家重点介绍一下ADAS的十大功能系统。</strong></p>
+<h2 id="1、车道偏离预警系统LDWS‍‍‍‍‍"><a href="#1、车道偏离预警系统LDWS‍‍‍‍‍" class="headerlink" title="1、车道偏离预警系统LDWS‍‍‍‍‍"></a>1、车道偏离预警系统LDWS‍‍‍‍‍</h2><p><img src="http://www.evinchina.com/uploadfile/image/20220209/2022020909124505320.jpg"></p>
+<p>车道偏离预警系统LDWS（ Lane departure warning system）是指行车中未打转向灯突然大幅度偏离车道，不正常偏移时，行车记录仪一旦判定行驶路线有异，便会以行车记录仪的显示屏幕提醒驾驶人，并发出声响警告对司机进行警示。这将使司机可以马上采取行动，回到原行车道上。</p>
+<p>车道偏离预警系统主要由HUD抬头显示器、摄像头、控制器以及传感器组成。当车道偏离预警系统开启时，摄像头（一般安置在车身侧面或后视镜位置）会时刻采集行驶车道的标识线，通过图像处理获得汽车在当前车道中的位置参数。</p>
+<p>当检测到汽车偏离车道时，传感器会及时收集车辆数据和驾驶员的操作状态，之后由控制器发出警报信号，整个过程大约在0.5秒完成，为驾驶者提供更多的反应时间。而如果驾驶者打开转向灯，正常进行变线行驶，那么车道偏离预警系统不会做出任何提示。</p>
+<h2 id="2、车道保持系统LKS-Lane-Keeping-System"><a href="#2、车道保持系统LKS-Lane-Keeping-System" class="headerlink" title="2、车道保持系统LKS (Lane Keeping System)"></a>2、车道保持系统LKS (Lane Keeping System)</h2><p><img src="http://www.evinchina.com/uploadfile/image/20220209/2022020909125908389.jpg"></p>
+<p>车道保持辅助系统属于智能驾驶辅助系统中的一种。它可以在车道偏离预警系统（LDWS）的基础上对刹车的控制协调装置进行控制。对车辆行驶时借助一个摄像头识别行驶车道的标识线将车辆保持在车道上提供支持。可检测本车在车道内的位置，并可自动调整转向，使本车保持在车道内行驶。</p>
+<p>如果车辆接近识别到的标记线并可能脱离行驶车道，那么会通过方向盘的振动，或者是声音来提请驾驶员注意，并轻微转动方向盘修正行驶方向，使车辆处于正确的车道上，若方向盘长时间检测到无人主动干预，则发出报警，用来提醒驾驶人员。</p>
+<p>如果车道保持辅助系统识别到本车道两侧的标记线，那么系统处于待命状态。这通过组合仪表盘中的绿色指示灯显示。当系统处于待命状态下，如果在Y过标记线前打了转向灯，警告信号就会被屏蔽，认定驾驶员为有意识地换道。</p>
+<p>该系统主要应用于结构化的道路上，如高速公路和路面条件较好（车道线清晰）的公路上行驶。当车速达到65km&#x2F;h或以上才开始运行。</p>
+<h2 id="3、自适应巡航系统ACC"><a href="#3、自适应巡航系统ACC" class="headerlink" title="3、自适应巡航系统ACC"></a>3、自适应巡航系统ACC</h2><p><img src="http://www.evinchina.com/uploadfile/image/20220209/2022020909131504644.jpg"></p>
+<p>自适应巡航系统ACC（Adaptive Cruise Control）是一项舒适性的辅助驾驶功能。如果车辆前方畅通，自适应巡航（ACC）将保持设定的最大巡航速度向前行驶。如果检测到前方有车辆，自适应巡航（ACC） 将根据需要降低车速，与前车保持基于选定时间的距离，直到达到合适的巡航速度。</p>
+<p>自适应巡航也可称为主动巡航，类似于传统的定速巡航控制，该系统包括雷达传感器、数字信号处理器和控制模块。在自适应巡航系统中，系统利用低功率雷达或红外线光束得到前车的确切位置，如果发现前车减速或监测到新目标，系统就会发送执行信号给发动机或制动系统来降低车速，从而使车辆和前车保持一个安全的行驶距离。</p>
+<p>当前方道路障碍清除后又会加速恢复到设定的车速，雷达系统会自动监测下一个目标。主动巡航控制系统代替司机控制车速，避免了频繁取消和设定巡航控制。当与前车之间的距离过小时，ACC控制单元可以通过与制动防抱死系统、发动机控制系统协调动作，使车轮适当制动，并使发动机的输出功率下降，以使车辆与前方车辆始终保持安全距离。自适应巡航系统适合于多种路况，为驾驶者提供了一种更轻松的驾驶方式。</p>
+<h2 id="4、前碰撞预防系统FCW"><a href="#4、前碰撞预防系统FCW" class="headerlink" title="4、前碰撞预防系统FCW"></a>4、前碰撞预防系统FCW</h2><p><img src="http://www.evinchina.com/uploadfile/image/20220209/2022020909132903589.jpg"></p>
+<p>前碰撞预防系统FCW (Forward Collision Warning)是通过雷达系统来时刻监测前方车辆，判断本车与前车之间的距离、方位及相对速度，当存在潜在碰撞危险时对驾驶者进行警告。FCW系统本身不会采取任何制动措施去避免碰撞或控制车辆。</p>
+<p>通过分析传感器获取的前方道路信息对前方车辆进行识别和跟踪，如果有车辆被识别出来，则对前方车距进行测量。同时利用车速估计，根据安全车距预警模型判断追尾可能，一旦存在追尾危险，便根据预警规则及时给予驾驶人主动预警。</p>
+<h2 id="5、自动泊车系统APA"><a href="#5、自动泊车系统APA" class="headerlink" title="5、自动泊车系统APA"></a>5、自动泊车系统APA</h2><p><img src="http://www.evinchina.com/uploadfile/image/20220209/2022020909134408792.jpg"></p>
+<p>自动泊车系统APA（Automatic Parking Assist）是利用车载传感器（一般为超声波雷达或摄像头）识别有效的泊车空间，并通过控制单元控制车辆进行泊车。相比于传统的倒车辅助功能，如倒车影像以及倒车雷达，自动泊车的功能智能化程度更高，有效的减轻了驾驶员的倒车困难。</p>
+<p>全自动泊车辅助系统APA，通过控制车辆的加减速度和转向角度自动停放车辆。该系统通过AVM（环视）和USS（超声波雷达）感知泊车环境，使用IMU和车轮传感器估计车辆姿态（位置和行驶方向），并根据驾驶员的选择自动或手动设置目标泊车位。然后系统进行自动泊车轨迹计算，并通过精确的车辆定位与车辆控制系统使车辆沿定义的泊车轨迹进行全自动泊车，直至到达最终目标泊车位。</p>
+<h2 id="6、盲点监测系统BSD"><a href="#6、盲点监测系统BSD" class="headerlink" title="6、盲点监测系统BSD"></a>6、盲点监测系统BSD</h2><p><img src="http://www.evinchina.com/uploadfile/image/20220209/2022020909135905693.jpg"></p>
+<p>由于汽车后视镜存在视觉盲区，变道之前就看不到盲区的车辆，如果盲区内有超车车辆，此时变道就会发生碰撞事故。在大雨天气、大雾天气、夜间光线昏暗，更加难以看清后方车辆，此时变道就面临更大的危险，盲点监测系统就是为了解决后视镜的盲区而产生的。</p>
+<p>盲点监测系统BSD（ Blind Spot Detection)，是汽车上的一款安全类的高科技配置，主要功能是扫除后视镜盲区，依赖于车辆尾部两个雷达时刻监测车辆的侧后面和侧面状态，如果车辆位于该区域内，驾驶员将通过后视镜上盲点警告指示灯和组合仪表获得相关警告提示，避免在车道变换过程中由于后视镜盲区而发生事故。</p>
+<h2 id="7、驾驶员疲劳预警系统DFM"><a href="#7、驾驶员疲劳预警系统DFM" class="headerlink" title="7、驾驶员疲劳预警系统DFM"></a>7、驾驶员疲劳预警系统DFM</h2><p><img src="http://www.evinchina.com/uploadfile/image/20220209/2022020909141209134.jpg"></p>
+<p>驾驶员疲劳预警系统DFM（Driver Fatigue Monitor System）主要是通过摄像头获取的图像，通过视觉跟踪、目标检测、动作识别等技术对驾驶员的驾驶行为及生理状态进行检测，当驾驶员发生疲劳、分心、打电话、抽烟等危险情况时在系统设定时间内报警以避免事故发生。DFM系统能有效规范驾驶员的驾驶行为、大大降低交通事故发生的几率。</p>
+<p>通过分析驾驶员的疲劳特征（如打哈欠、闭眼等），对疲劳行为及时发出疲劳驾驶预警。高精准度的算法甚至能做到不受时间段、光照情况、是否戴墨镜等外界条件影响，始终对驾驶员的疲劳状态进行有效管理。当驾驶人员产生生理疲劳状态时，立即发出预警警告，及时唤醒驾驶员，避免严重事故发生。</p>
+<h2 id="8、自适应灯光控制ALC"><a href="#8、自适应灯光控制ALC" class="headerlink" title="8、自适应灯光控制ALC"></a>8、自适应灯光控制ALC</h2><p><img src="http://www.evinchina.com/uploadfile/image/20220209/2022020909142605883.jpg"></p>
+<p>自适应灯光控制ALC（Adaptive Light Control）是一种智能灯光调节系统。通过感知驾驶员操作、车辆行驶状态、路面变化以及天气环境等信息，AFS 自动控制前照灯实时进行上下、左右照明角度的调整，为驾驶员提供最佳道路照明效果。</p>
+<p>自适应前照灯系统共由四部分组成：传感器、ecu、车灯控制系统和前照灯。汽车车速传感器和方向盘转角传感器不断地把检测到的信号传递给ecu，ecu根据传感器检测到的信号进行处理，把处理完后的数据进行判断，输出前照灯转角指令，使前照灯转过相应的角度。</p>
+<p>汽车在转弯时，重点是要提前看到所转方向的障碍物，根据现实驾驶的经验，车灯一般只需转过o～15°即可，只需要所转方向侧的那只前照灯实现智能转向就可，另一侧前照灯还是保持原来的方向。虽简化了控制，仍然能够达到预期的效果。它可以通过控制系统能够显著改善各种路况下的照明效果，提高行车安全。</p>
+<h2 id="9、自动紧急制动AEB"><a href="#9、自动紧急制动AEB" class="headerlink" title="9、自动紧急制动AEB"></a>9、自动紧急制动AEB</h2><p><img src="http://www.evinchina.com/uploadfile/image/20220209/2022020909144007067.jpg"></p>
+<p>自动紧急制动AEB（Autonomous Emergency Braking）是一种汽车主动安全技术，主要由 3 大模块构成，其中测距模块的核心包括微波雷达、激光雷达和视频系统等，它可以提供前方道路安全、准确、实时的图像和路况信息。</p>
+<p>AEB 系统采用雷达测出与前车或者障碍物的距离，然后利用数据分析模块将测出的距离与警报距离、安全距离进行比较，小于警报距离时就进行警报提示，而小于安全距离时即使在驾驶员没有来得及踩制动踏板的情况下，AEB 系统也会启动，使汽车自动制动，从而为安全出行保驾护航。</p>
+<h2 id="10、夜视系统NVD"><a href="#10、夜视系统NVD" class="headerlink" title="10、夜视系统NVD"></a>10、夜视系统NVD</h2><p><img src="http://www.evinchina.com/uploadfile/image/20220209/2022020909145402796.jpg"></p>
+<p>夜视系统NVD（Night Vision Device）是一种源自军事用途的汽车驾驶辅助系统。在这个辅助系统的帮助下，驾驶者在夜间或弱光线的驾驶过程中将获得更高的预见能力，它能够针对潜在危险向驾驶者提供更加全面准确的信息或发出早期警告。</p>
+<p>夜视系统NVD由安置于车前保险杠的（UFPA）侦测传感器和液晶抬头显示器（HUD）组成，主要是通过主动式红外照射、微光夜视技术以及红外热成像技术，来帮助驾驶者看见以汽车远光灯无法清楚辨识的物体，驾驶者可将虚拟影像当作前方视野的一部分，提升了视线不佳时的行车安全性。</p>
+<p>目前ADAS系统的主要功能并非是完全控制汽车，而是为驾驶人提供车辆的工作情形，与车外环境变化等相关信息进行分析，且预先警告可能发生的危险状况，让驾驶人提早采取因应措施，避免交通意外发生。</p>
+<p>至于成为无人驾驶，当然也是ADAS系统目前积极追求的方向，不过这需在不断累积使用经验与盲点克服后，同时加入更多主动侦测系统，甚至是物联网功能后，才有机会进一步实现的目的，毕竟自动驾驶所需具备的汽车技术层面更高、更复杂。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/hsm/" rel="tag"># hsm</a>
+              <a href="/tags/%E6%B1%BD%E8%BD%A6/" rel="tag"># 汽车</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/04/18/hxd%20new/%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3/%E6%99%BA%E8%83%BD%E6%B1%BD%E8%BD%A6%E5%AE%89%E5%85%A8%E6%94%BB%E9%98%B2/" rel="prev" title="智能汽车安全攻防.md">
+      <i class="fa fa-chevron-left"></i> 智能汽车安全攻防.md
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/04/19/hxd%20new/%E6%97%B6%E9%92%9F%E7%AE%A1%E7%90%86/stm32%20%E7%B3%BB%E5%88%97%E6%97%B6%E9%92%9F%E7%9B%B8%E5%85%B3/" rel="next" title="stm32 系列时钟相关.md">
+      stm32 系列时钟相关.md <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#HSM-%E4%BD%9C%E7%94%A8"><span class="nav-number">1.</span> <span class="nav-text">HSM 作用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%8E-%E5%8F%AA%E6%9C%89%E7%A1%AC%E4%BB%B6%E5%AE%89%E5%85%A8ip-%E5%8A%A0-otp-%E6%96%B9%E6%A1%88%E7%9A%84%E5%AF%B9%E6%AF%94"><span class="nav-number">2.</span> <span class="nav-text">与 只有硬件安全ip 加 otp 方案的对比</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#HSM%E5%9C%A8%E6%99%BA%E8%83%BD%E6%B1%BD%E8%BD%A6%E4%B8%AD%E5%BA%94%E7%94%A8%E7%9A%84%E5%9C%BA%E6%99%AF"><span class="nav-number">3.</span> <span class="nav-text">HSM在智能汽车中应用的场景</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#CAN-FD-%E6%B6%88%E6%81%AF%E7%9A%84%E9%98%B2%E6%8A%A4"><span class="nav-number">3.1.</span> <span class="nav-text">CAN FD 消息的防护</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%99%84%E5%BD%95-%E8%BD%A6%E8%BD%BDCAN%E6%80%BB%E7%BA%BF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E9%97%AE%E9%A2%98"><span class="nav-number">4.</span> <span class="nav-text">附录: 车载CAN总线网络安全问题</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%94%BB%E5%87%BB%E6%96%B9%E5%BC%8F"><span class="nav-number">4.1.</span> <span class="nav-text">攻击方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BA%94%E7%94%A8%E5%9B%B0%E9%9A%BE"><span class="nav-number">4.2.</span> <span class="nav-text">应用困难</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%99%84%E5%BD%95-hsm-%E8%8A%AF%E7%89%87%E6%8A%97%E7%89%A9%E7%90%86%E6%94%BB%E5%87%BB%E8%83%BD%E5%8A%9B"><span class="nav-number">5.</span> <span class="nav-text">附录 hsm 芯片抗物理攻击能力</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%99%84%E5%BD%95-ADAS-%E7%B3%BB%E7%BB%9F%E5%8A%9F%E8%83%BD"><span class="nav-number">6.</span> <span class="nav-text">附录 ADAS 系统功能</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1%E3%80%81%E8%BD%A6%E9%81%93%E5%81%8F%E7%A6%BB%E9%A2%84%E8%AD%A6%E7%B3%BB%E7%BB%9FLDWS%E2%80%8D%E2%80%8D%E2%80%8D%E2%80%8D%E2%80%8D"><span class="nav-number">6.1.</span> <span class="nav-text">1、车道偏离预警系统LDWS‍‍‍‍‍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2%E3%80%81%E8%BD%A6%E9%81%93%E4%BF%9D%E6%8C%81%E7%B3%BB%E7%BB%9FLKS-Lane-Keeping-System"><span class="nav-number">6.2.</span> <span class="nav-text">2、车道保持系统LKS (Lane Keeping System)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3%E3%80%81%E8%87%AA%E9%80%82%E5%BA%94%E5%B7%A1%E8%88%AA%E7%B3%BB%E7%BB%9FACC"><span class="nav-number">6.3.</span> <span class="nav-text">3、自适应巡航系统ACC</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4%E3%80%81%E5%89%8D%E7%A2%B0%E6%92%9E%E9%A2%84%E9%98%B2%E7%B3%BB%E7%BB%9FFCW"><span class="nav-number">6.4.</span> <span class="nav-text">4、前碰撞预防系统FCW</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5%E3%80%81%E8%87%AA%E5%8A%A8%E6%B3%8A%E8%BD%A6%E7%B3%BB%E7%BB%9FAPA"><span class="nav-number">6.5.</span> <span class="nav-text">5、自动泊车系统APA</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6%E3%80%81%E7%9B%B2%E7%82%B9%E7%9B%91%E6%B5%8B%E7%B3%BB%E7%BB%9FBSD"><span class="nav-number">6.6.</span> <span class="nav-text">6、盲点监测系统BSD</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7%E3%80%81%E9%A9%BE%E9%A9%B6%E5%91%98%E7%96%B2%E5%8A%B3%E9%A2%84%E8%AD%A6%E7%B3%BB%E7%BB%9FDFM"><span class="nav-number">6.7.</span> <span class="nav-text">7、驾驶员疲劳预警系统DFM</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8%E3%80%81%E8%87%AA%E9%80%82%E5%BA%94%E7%81%AF%E5%85%89%E6%8E%A7%E5%88%B6ALC"><span class="nav-number">6.8.</span> <span class="nav-text">8、自适应灯光控制ALC</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#9%E3%80%81%E8%87%AA%E5%8A%A8%E7%B4%A7%E6%80%A5%E5%88%B6%E5%8A%A8AEB"><span class="nav-number">6.9.</span> <span class="nav-text">9、自动紧急制动AEB</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#10%E3%80%81%E5%A4%9C%E8%A7%86%E7%B3%BB%E7%BB%9FNVD"><span class="nav-number">6.10.</span> <span class="nav-text">10、夜视系统NVD</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">159</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">37</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">131</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'dark',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'VrGRp2q7WwXjxsCNmlDIZYbC-gzGzoHsz',
+      appKey     : 'JgMXmmB7yKQf2zm80TaBp3JT',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : 'zh-cn' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

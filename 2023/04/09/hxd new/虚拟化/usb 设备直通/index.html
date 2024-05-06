@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=LXGW WenKai:300,300italic,400,400italic,700,700italic|LXGW WenKai Mono, Source Code Pro:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":{"valine":{"order":-1}},"activeClass":"valine"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
+  </script>
+
+  <meta name="description" content="USB控制器类型简单地讲，OHCI、UHCI都是USB1.1的接口标准，而EHCI是对应USB2.0的接口标准，最新的xHCI是USB3.0的接口标准。  OHCI（Open Host Controller Interface）是支持USB1.1的标准，但它不仅仅是针对USB，还支持其他的一些接口，比如它还支持Apple的火线（Firewire，IEEE 1394）接口。与UHCI相比，OHCI的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="qemu usb 设备直通">
+<meta property="og:url" content="https://liguangzhang.github.io/2023/04/09/hxd%20new/%E8%99%9A%E6%8B%9F%E5%8C%96/usb%20%E8%AE%BE%E5%A4%87%E7%9B%B4%E9%80%9A/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="USB控制器类型简单地讲，OHCI、UHCI都是USB1.1的接口标准，而EHCI是对应USB2.0的接口标准，最新的xHCI是USB3.0的接口标准。  OHCI（Open Host Controller Interface）是支持USB1.1的标准，但它不仅仅是针对USB，还支持其他的一些接口，比如它还支持Apple的火线（Firewire，IEEE 1394）接口。与UHCI相比，OHCI的">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-04-09T10:15:54.000Z">
+<meta property="article:modified_time" content="2024-04-16T05:55:19.304Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="qemu">
+<meta property="article:tag" content="usb">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2023/04/09/hxd%20new/%E8%99%9A%E6%8B%9F%E5%8C%96/usb%20%E8%AE%BE%E5%A4%87%E7%9B%B4%E9%80%9A/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+<link rel="stylesheet" href="https://npm.elemecdn.com/lxgw-wenkai-screen-webfont/style.css" media="print" onload="this.media='all'" />
+
+  <title>qemu usb 设备直通 | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2023/04/09/hxd%20new/%E8%99%9A%E6%8B%9F%E5%8C%96/usb%20%E8%AE%BE%E5%A4%87%E7%9B%B4%E9%80%9A/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          qemu usb 设备直通
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-04-09 18:15:54" itemprop="dateCreated datePublished" datetime="2023-04-09T18:15:54+08:00">2023-04-09</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 13:55:19" itemprop="dateModified" datetime="2024-04-16T13:55:19+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/usb/" itemprop="url" rel="index"><span itemprop="name">usb</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2023/04/09/hxd%20new/%E8%99%9A%E6%8B%9F%E5%8C%96/usb%20%E8%AE%BE%E5%A4%87%E7%9B%B4%E9%80%9A/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2023/04/09/hxd%20new/%E8%99%9A%E6%8B%9F%E5%8C%96/usb%20%E8%AE%BE%E5%A4%87%E7%9B%B4%E9%80%9A/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="USB控制器类型"><a href="#USB控制器类型" class="headerlink" title="USB控制器类型"></a>USB控制器类型</h3><p>简单地讲，OHCI、UHCI都是USB1.1的接口标准，<strong>而EHCI是对应USB2.0的接口标准</strong>，<strong>最新的xHCI是USB3.0的接口标准</strong>。</p>
+<ul>
+<li>OHCI（Open Host Controller Interface）是支持USB1.1的标准，但它不仅仅是针对USB，还支持其他的一些接口，比如它还支持Apple的火线（Firewire，IEEE 1394）接口。与UHCI相比，OHCI的硬件复杂，硬件做的事情更多，所以实现对应的软件驱动的任务，就相对较简单。主要用于非x86的USB，如扩展卡、嵌入式开发板的USB主控。</li>
+<li>UHCI（Universal Host Controller Interface），是Intel主导的对USB1.0、1.1的接口标准，与OHCI不兼容。UHCI的软件驱动的任务重，需要做得比较复杂，但可以使用较便宜、较简单的硬件的USB控制器。Intel和VIA使用UHCI，而其余的硬件提供商使用OHCI。</li>
+<li>EHCI（Enhanced Host Controller Interface），是Intel主导的USB2.0的接口标准。EHCI仅提供USB2.0的高速功能，而依靠UHCI或OHCI来提供对全速（full-speed）或低速（low-speed）设备的支持。</li>
+<li>xHCI（eXtensible Host Controller Interface），是最新最火的USB3.0的接口标准，它在速度、节能、虚拟化等方面都比前面3中有了较大的提高。xHCI支持所有种类速度的USB设备（USB 3.0 SuperSpeed, USB 2.0 Low-, Full-, and High-speed, USB 1.1 Low- and Full-speed）。xHCI的目的是为了替换前面3中（UHCI&#x2F;OHCI&#x2F;EHCI）。</li>
+</ul>
+<h1 id="usb-层级"><a href="#usb-层级" class="headerlink" title="usb 层级"></a>usb 层级</h1><p>用lsusb -t还可以看到USB设备的层级关系</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">[root@localhost xqk]# lsusb -t</span><br><span class="line">/:  Bus 02.Port 1: Dev 1, Class=root_hub, Driver=ehci-pci/2p, 480M</span><br><span class="line">    |__ Port 1: Dev 2, If 0, Class=Hub, Driver=hub/8p, 480M</span><br><span class="line">        |__ Port 1: Dev 3, If 0, Class=Mass Storage, Driver=usb-storage, 480M</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Bus 02.Port 1</span><br><span class="line">    表示第二个USB主控制器，Port号为1</span><br><span class="line">    </span><br><span class="line">Dev 1, Class=root_hub</span><br><span class="line">    分配的设备号为1，类型是root_hub</span><br><span class="line">    </span><br><span class="line">Driver=ehci-pci/2p</span><br><span class="line">    root_hub的类型是ehci（usb 2.0），总共有两个port</span><br><span class="line">    </span><br><span class="line">|__ Port 1: Dev 2, If 0, Class=Hub, Driver=hub/8p, 480M</span><br><span class="line">    root_hub的其中一个port有个Hub设备，port的id是1，此Hub有8个port。</span><br><span class="line">    </span><br><span class="line">    |__ Port 1: Dev 3, If 0, Class=Mass Storage, Driver=usb-storage, 480M  </span><br><span class="line">    Hub的其中一个port有大容量USB设备，port的id为1.3（树状结构，依次以.作为低一级设备成员）</span><br></pre></td></tr></table></figure>
+
+<h1 id="USB设备直通"><a href="#USB设备直通" class="headerlink" title="USB设备直通"></a>USB设备直通</h1><p>虚拟机使用USB设备可以通过两种方式：</p>
+<ul>
+<li><p>PCI 设备直通</p>
+<p>  PCI usb card, 直接将 usb controller 直通给虚拟机</p>
+</li>
+<li><p>设备直通</p>
+</li>
+</ul>
+<p>这里重点说下非PCI方式的usb 设备直通<br>qemu支持hostaddr，hostport以及vendorid，productid等信息的组合, 相对于libvirt，多了hostport的支持，hostport即是主机usb的port。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">(1) vendorid+productid -- match for a specific device, pass it to</span><br><span class="line">    the guest when it shows up somewhere in the host.</span><br><span class="line"></span><br><span class="line">(2) hostbus+hostport -- match for a specific physical port in the</span><br><span class="line">    host, any device which is plugged in there gets passed to the</span><br><span class="line">    guest.</span><br><span class="line"></span><br><span class="line">(3) hostbus+hostaddr -- most useful for ad-hoc pass through as the</span><br><span class="line">    hostaddr isn&#x27;t stable, the next time you plug in the device it</span><br><span class="line">    gets a new one ...</span><br></pre></td></tr></table></figure>
+
+<h2 id="注意点"><a href="#注意点" class="headerlink" title="注意点"></a>注意点</h2><ul>
+<li><p>devnum会变化<br>在host上同一个USB口上插拔U盘，会导致devnum的变化（增加），而port对应于USB的物理口，不会随着插拔U盘而变化，但是libvirt不支持传入port，只能自己适配开发。</p>
+</li>
+<li><p>是否需要开启vt-d iommu<br>通常情况下，直通物理设备（PCI）时需要开启vt-d，USB设备有些不同，USB设备是由controller控制，而各种类型的控制器都是qemu模拟的，只不过最终直接打开物理机上的USB设备而已，数据还是由qemu控制。因此USB设备直通不需要开启vt-d iommu。</p>
+</li>
+<li><p>No free USB ports<br>模拟的控制器对应的port数量有限，如果要直通多个USB设备，就会造成port数目不够。piix3-uhci有两个port，ehci与nec-xhci有6个port（一般够用）。当数目不够时，可以添加hub设备来增加额外的port。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;hub type=&#x27;usb&#x27;/&gt;</span><br></pre></td></tr></table></figure>
+<p>hub设备包含8个port。</p>
+</li>
+<li><p>不要直通主机hub设备<br>主机上的root_hub以及hub直通给虚拟机没有任何意义，一方面虚拟机中的root_hub是模拟控制器自带的，而hub是需要单独添加hub设备，另一方面直通hub设备，虚拟机占用主机hub，会导致主机上hub下的USB设备不可用。</p>
+</li>
+</ul>
+<h1 id="qemu-usb-非PCI-直通解读"><a href="#qemu-usb-非PCI-直通解读" class="headerlink" title="qemu usb 非PCI 直通解读"></a>qemu usb 非PCI 直通解读</h1><blockquote>
+<p>qemu默认不支持 usb-host, 需要在编译时打开 <code>--enable-libusb</code> 编译, 依赖libusb 库.</p>
+</blockquote>
+<p>按上一章的参数介绍, 简单看下代码结构<br>注意</p>
+<blockquote>
+<p>USB设备是由controller控制，而各种类型的控制器都是qemu模拟的，只不过最终直接打开物理机上的USB设备而已，数据还是由qemu控制</p>
+</blockquote>
+<p>qemu 命令行方式添加usb 直通设备</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">-device usb-host,hostbus=BUS,hostaddr=ADDR,id=[hostdev0]</span><br><span class="line">-device usb-host,vendorid=VID,productid=PRID,id=[hostdev0]</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">对应lsusb的Bus xxx, Device xxx</span></span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>注意上述命令需要以 sudo 运行 qemu 命令, 否则libusb 库无法打开给usb设备.</p>
+</blockquote>
+<p>添加这个设备后, 最终会走到 TYPE_USB_HOST_DEVICE 设备的具现化函数中<br>TYPE_DEVICE -&gt; TYPE_USB_DEVICE -&gt; TYPE_USB_HOST_DEVICE</p>
+<figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">-+ usb_host_realize<span class="params">(USBDevice *udev, Error **errp)</span></span><br><span class="line"> \ -  ldev = usb_host_find_ref<span class="params">(s-&gt;match.bus_num, s-&gt;match.addr)</span>;</span><br><span class="line">      &quot;libusb 库函数查找 hostbus, hostaddr 匹配的usb设备&quot;</span><br><span class="line"> | -+ usb_host_open<span class="params">(s, ldev, <span class="number">0</span>)</span>;</span><br><span class="line">    \ -  bus_num = libusb_get_bus_number<span class="params">(dev)</span>; addr = libusb_get_device_address<span class="params">(dev)</span>;</span><br><span class="line">         s-&gt;dev     = dev;</span><br><span class="line">         s-&gt;bus_num = bus_num;</span><br><span class="line">         s-&gt;addr    = addr;</span><br><span class="line">    \ -+ usb_host_detach_kernel<span class="params">(s)</span>;</span><br><span class="line">       \ -  libusb_detach_kernel_driver<span class="params">(s-&gt;dh, i)</span>; &quot;从主机中解绑&quot;</span><br><span class="line">    | -  USBDevice *udev = USB_DEVICE<span class="params">(s)</span>;</span><br><span class="line">    | -  usb_ep_init<span class="params">(udev)</span>;</span><br><span class="line">    | -+ usb_host_ep_update<span class="params">(s)</span>; &quot;将设备绑定到 qemu 模拟的usb controller 上&quot;</span><br><span class="line">       \ -  libusb_get_active_config_descriptor<span class="params">(s-&gt;dev, &amp;conf)</span>;</span><br><span class="line">       | -+ for i in conf-&gt;bNumInterfaces &quot;遍历接口描述符&quot;</span><br><span class="line">          \ -  intf = &amp;conf-&gt;interface[i].altsetting[<span class="number">0</span>];</span><br><span class="line">	      \ -+ for e in intf-&gt;bNumEndpoints <span class="string">&quot;遍历端点描述符&quot;</span></span><br><span class="line">	         \ -  endp = &amp;intf-&gt;endpoint[e];</span><br><span class="line">	         | -  devep = endp-&gt;bEndpointAddress;</span><br><span class="line">	         | -  pid = (devep &amp; USB_DIR_IN) ? USB_TOKEN_IN : USB_TOKEN_OUT; <span class="string">&quot;是in 端点还是 out端点&quot;</span></span><br><span class="line">	         | -  ep = devep &amp; <span class="number">0</span>xf;</span><br><span class="line">	         | -  </span><br><span class="line">    | -+ usb_device_attach(udev, &amp;local_err);</span><br><span class="line">       \ -  USBPort *port = udev-&gt;port;</span><br><span class="line">       | -+ usb_attach(port);</span><br><span class="line">          \ -  USBDevice *dev = port-&gt;dev;</span><br><span class="line">          | -  port-&gt;ops-&gt;attach(port); <span class="string">&quot;usb controller 注册的port, 如usb2.0 ehci&quot;</span></span><br><span class="line">          | -  dev-&gt;state = USB_STATE_ATTACHED;</span><br><span class="line">          | -+ usb_device_handle_attach(dev);</span><br><span class="line">             \ -  klass-&gt;handle_attach(dev);  <span class="string">&quot;按设备类型进行, 不一定实现了这个方法&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>这里重点说下 <code>port-&gt;ops-&gt;attach(port)</code> , 这个是由 qemu 模拟的usb controller 注册的port, 这里以usb2.0 的ehci 看下注册过程</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">usb_ehci_realize</span><span class="params">(EHCIState *s, DeviceState *dev, Error **errp)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; s-&gt;portnr; i++) &#123;</span><br><span class="line">        usb_register_port(&amp;s-&gt;bus, &amp;s-&gt;ports[i], s, i, &amp;ehci_port_ops,</span><br><span class="line">                          USB_SPEED_MASK_HIGH);</span><br><span class="line">        s-&gt;ports[i].dev = <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="type">static</span> USBPortOps ehci_port_ops = &#123;</span><br><span class="line">    .attach = ehci_attach,</span><br><span class="line">    .detach = ehci_detach,</span><br><span class="line">    .child_detach = ehci_child_detach,</span><br><span class="line">    .wakeup = ehci_wakeup,</span><br><span class="line">    .complete = ehci_async_complete_packet,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>所以 <code>port-&gt;ops-&gt;attach(port)</code> 指向了 <code>ehci_port_ops.ehci_attach</code>, 重点看下这个函数</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">ehci_attach</span><span class="params">(USBPort *port)</span></span><br><span class="line">&#123;</span><br><span class="line">    EHCIState *s = port-&gt;opaque;</span><br><span class="line">    <span class="type">uint32_t</span> *portsc = &amp;s-&gt;portsc[port-&gt;index];</span><br><span class="line">    <span class="type">const</span> <span class="type">char</span> *owner = (*portsc &amp; PORTSC_POWNER) ? <span class="string">&quot;comp&quot;</span> : <span class="string">&quot;ehci&quot;</span>;</span><br><span class="line">    ...</span><br><span class="line">    *portsc |= PORTSC_CONNECT;</span><br><span class="line">    *portsc |= PORTSC_CSC; <span class="comment">//该位表示 bus 上接入usb 设备</span></span><br><span class="line">    -+ ehci_raise_irq(s, USBSTS_PCD); </span><br><span class="line">               <span class="comment">// 给guest 发送中断, 通知guest usb设备接入了, USBSTS_PCD 为usb的特定中断类型</span></span><br><span class="line">     \ ---+ qemu_set_irq(s-&gt;irq, level); </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">usb_ehci_sysbus_realize</span><span class="params">(DeviceState *dev, Error **errp)</span></span><br><span class="line">&#123;</span><br><span class="line">    SysBusDevice *d = SYS_BUS_DEVICE(dev);</span><br><span class="line">    EHCISysBusState *i = SYS_BUS_EHCI(dev);</span><br><span class="line">    EHCIState *s = &amp;i-&gt;ehci;</span><br><span class="line">    usb_ehci_realize(s, dev, errp);</span><br><span class="line">    sysbus_init_irq(d, &amp;s-&gt;irq); <span class="string">&quot;中断的注册在这里&quot;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">    memory_region_init_io(&amp;s-&gt;mem_opreg, OBJECT(dev), &amp;ehci_mmio_opreg_ops, s,</span><br><span class="line">                          <span class="string">&quot;operational&quot;</span>, s-&gt;portscbase);</span><br><span class="line">s-&gt;async_bh = qemu_bh_new(ehci_work_bh, s);</span><br><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">ehci_opreg_write</span><span class="params">(<span class="type">void</span> *ptr, hwaddr addr,</span></span><br><span class="line"><span class="params">                             <span class="type">uint64_t</span> val, <span class="type">unsigned</span> size)</span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    qemu_bh_schedule(s-&gt;async_bh);</span><br><span class="line">&#125;</span><br><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">ehci_work_bh</span><span class="params">(<span class="type">void</span> *opaque)</span> &#123;</span><br><span class="line">   -+ ehci_advance_async_state(ehci);</span><br><span class="line">    \ -+ ehci_advance_state(EHCIState *ehci, <span class="type">int</span> async)</span><br><span class="line">       \ -+ ehci_state_execute(q);</span><br><span class="line">          \ -+ ehci_execute</span><br><span class="line">             \ -+ usb_handle_packet(p-&gt;<span class="built_in">queue</span>-&gt;dev, &amp;p-&gt;packet);</span><br><span class="line">                \ -+ usb_process_one(p);</span><br><span class="line">                   \ -+ usb_device_handle_data(dev, p);</span><br><span class="line">                      \ -+ klass-&gt;handle_data(dev, p);</span><br><span class="line">                         \ -+ usb_host_handle_data(dev, p)</span><br><span class="line">                            \ -  libusb_fill_bulk_transfer()</span><br><span class="line">                            | -  libusb_submit_transfer(r-&gt;xfer);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>从上述过程中可以大概了解到</p>
+<ol>
+<li>传入的usb设备需要先借助libusb 库与host 进行解绑 detach, 此时该usb设备与host就没啥关系了</li>
+<li>与host解绑后, 需要绑定到qemu模拟的usb 控制器上, 由qemu 模拟的usb控制器控制usb设备的行为, usb控制器有MemoryRegion等的设定, 以让 guest 进行io的模拟</li>
+<li>中断相关的仍然是使用的qemu的虚拟的中断控制器进行中断的触发</li>
+<li>数据流中最终起作用的是 usb 设备的ep 端点, 最终数据流通过 <code>libusb_*_transfer</code> 等数据相关的接口以ep参数控制对应的端点进行发送接收数据.</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/qemu/" rel="tag"># qemu</a>
+              <a href="/tags/usb/" rel="tag"># usb</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/04/02/hxd%20new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/%E8%99%9A%E6%8B%9F%E5%8C%96%E6%8A%80%E6%9C%AF%E7%AE%80%E4%BB%8B/" rel="prev" title="虚拟化技术简介.md">
+      <i class="fa fa-chevron-left"></i> 虚拟化技术简介.md
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/04/09/hxd%20new/%E8%99%9A%E6%8B%9F%E5%8C%96/qemu%20%E9%95%9C%E5%83%8F%E5%90%AF%E5%8A%A8%E7%9B%B8%E5%85%B3%E5%AE%9E%E9%AA%8C/" rel="next" title="qemu 镜像启动相关实验">
+      qemu 镜像启动相关实验 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#USB%E6%8E%A7%E5%88%B6%E5%99%A8%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.</span> <span class="nav-text">USB控制器类型</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#usb-%E5%B1%82%E7%BA%A7"><span class="nav-number"></span> <span class="nav-text">usb 层级</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#USB%E8%AE%BE%E5%A4%87%E7%9B%B4%E9%80%9A"><span class="nav-number"></span> <span class="nav-text">USB设备直通</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B3%A8%E6%84%8F%E7%82%B9"><span class="nav-number"></span> <span class="nav-text">注意点</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#qemu-usb-%E9%9D%9EPCI-%E7%9B%B4%E9%80%9A%E8%A7%A3%E8%AF%BB"><span class="nav-number"></span> <span class="nav-text">qemu usb 非PCI 直通解读</span></a></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">159</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">37</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">131</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'dark',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'VrGRp2q7WwXjxsCNmlDIZYbC-gzGzoHsz',
+      appKey     : 'JgMXmmB7yKQf2zm80TaBp3JT',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : 'zh-cn' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

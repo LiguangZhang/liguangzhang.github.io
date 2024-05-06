@@ -512,109 +512,6 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2017/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/Print%E6%A1%86%E6%9E%B6%E6%95%B4%E7%90%86/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2017/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/Print%E6%A1%86%E6%9E%B6%E6%95%B4%E7%90%86/" class="post-title-link" itemprop="url">Print框架整理</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2017-08-02 13:47:23" itemprop="dateCreated datePublished" datetime="2017-08-02T13:47:23+08:00">2017-08-02</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-15 17:59:59" itemprop="dateModified" datetime="2024-04-15T17:59:59+08:00">2024-04-15</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/PrintManagerService/" itemprop="url" rel="index"><span itemprop="name">PrintManagerService</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2017/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/Print%E6%A1%86%E6%9E%B6%E6%95%B4%E7%90%86/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2017/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/Print%E6%A1%86%E6%9E%B6%E6%95%B4%E7%90%86/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="1-开篇"><a href="#1-开篇" class="headerlink" title="1. 开篇"></a>1. 开篇</h1><p>涉及的主要文件:</p>
-<p><code>com.android.server.print</code></p>
-<p>系统打印服务,   打印服务是一种插件（ plug-in components），它能够通过一些标准协议和打印机通讯。这些服务像一座桥，处于系统和打印机之间。因此，打印机和打印协议的具体实现从系统中分离的，能够独立开发和更新。该处讲解的是和打印插件关联的系统服务.</p>
-<p>&#x2F;frameworks&#x2F;base&#x2F;services&#x2F;print&#x2F;java&#x2F;com&#x2F;android&#x2F;server&#x2F;print&#x2F;</p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">/home/newdisk/local/SPREADTRUM/liguang.zhang/remote_disk/sp8.1_trunk/frameworks/base/services/print/java/com/android/server/print$ lltotal 220</span><br><span class="line">drwxr-xr-x 1 2516 2000  4096 Jun 25 14:20 ./</span><br><span class="line">drwxr-xr-x 1 2516 2000  4096 Nov  8  2017 ../</span><br><span class="line"><span class="comment"># PrintService插件管理类.</span></span><br><span class="line">-rw-r--r-- 1 2516 2000 41807 Jun 25 16:21 PrintManagerService.java</span><br><span class="line"><span class="comment"># 负责和PrintService插件进行bind, 以及插件的状态进行关联</span></span><br><span class="line">-rw-r--r-- 1 2516 2000 34039 Jun 25 14:20 RemotePrintService.java</span><br><span class="line"><span class="comment"># 推荐选择默认的打印插件</span></span><br><span class="line">-rw-r--r-- 1 2516 2000  8869 Jun 25 14:20 RemotePrintServiceRecommendationService.java</span><br><span class="line"><span class="comment"># 打印机后台处理程序,打印任务工作状态相关.</span></span><br><span class="line">-rw-r--r-- 1 2516 2000 34260 Nov  8  2017 RemotePrintSpooler.java</span><br><span class="line"><span class="comment"># 和用户安装的打印服务相关的管理,通过userState中转转发和PrintManagerService进行交互</span></span><br><span class="line">-rw-r--r-- 1 2516 2000 85628 Jun 25 15:47 UserState.java</span><br></pre></td></tr></table></figure>
-
-<h1 id="2-PrintManagerService初始化"><a href="#2-PrintManagerService初始化" class="headerlink" title="2. PrintManagerService初始化"></a>2. PrintManagerService初始化</h1><p>PrintManagerService(简写PMS) 初始化</p>
-<p>SystemServer中启动PMS</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">            <span class="keyword">if</span> (mPackageManager.hasSystemFeature(PackageManager.FEATURE_PRINTING)) &#123;</span><br><span class="line">                traceBeginAndSlog(<span class="string">&quot;StartPrintManager&quot;</span>);</span><br><span class="line">                mSystemServiceManager.startService(PRINT_MANAGER_SERVICE_CLASS);</span><br><span class="line">                traceEnd();</span><br><span class="line">            &#125;</span><br><span class="line"><span class="comment">// onStart注册&#x27;print&#x27;的服务</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onStart</span><span class="params">()</span> &#123;</span><br><span class="line">        publishBinderService(Context.PRINT_SERVICE, mPrintManagerImpl);</span><br><span class="line">    &#125;</span><br><span class="line"><span class="comment">// 监听DISABLED_PRINT_SERVICES 字段, 表示禁用的打印服务插件, 如果该字段变化,则需要重新更新UserState的关联的打印插件.</span></span><br><span class="line">            registerContentObservers();</span><br><span class="line"><span class="comment">// 监听PACKAGE ADD/REMOVE/MODIFY等的广播, 用来更新打印插件服务的状态</span></span><br><span class="line">            registerBroadcastReceivers();</span><br></pre></td></tr></table></figure>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2017/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/Print%E6%A1%86%E6%9E%B6%E6%95%B4%E7%90%86/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2017/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/PackageManagerService%E5%90%AF%E5%8A%A8%E7%AF%87%E6%95%B4%E7%90%861/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -695,6 +592,109 @@
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2017/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/PackageManagerService%E5%90%AF%E5%8A%A8%E7%AF%87%E6%95%B4%E7%90%861/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2017/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/Print%E6%A1%86%E6%9E%B6%E6%95%B4%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2017/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/Print%E6%A1%86%E6%9E%B6%E6%95%B4%E7%90%86/" class="post-title-link" itemprop="url">Print框架整理</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2017-08-02 13:47:23" itemprop="dateCreated datePublished" datetime="2017-08-02T13:47:23+08:00">2017-08-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-15 17:59:59" itemprop="dateModified" datetime="2024-04-15T17:59:59+08:00">2024-04-15</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/PrintManagerService/" itemprop="url" rel="index"><span itemprop="name">PrintManagerService</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2017/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/Print%E6%A1%86%E6%9E%B6%E6%95%B4%E7%90%86/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2017/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/Print%E6%A1%86%E6%9E%B6%E6%95%B4%E7%90%86/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="1-开篇"><a href="#1-开篇" class="headerlink" title="1. 开篇"></a>1. 开篇</h1><p>涉及的主要文件:</p>
+<p><code>com.android.server.print</code></p>
+<p>系统打印服务,   打印服务是一种插件（ plug-in components），它能够通过一些标准协议和打印机通讯。这些服务像一座桥，处于系统和打印机之间。因此，打印机和打印协议的具体实现从系统中分离的，能够独立开发和更新。该处讲解的是和打印插件关联的系统服务.</p>
+<p>&#x2F;frameworks&#x2F;base&#x2F;services&#x2F;print&#x2F;java&#x2F;com&#x2F;android&#x2F;server&#x2F;print&#x2F;</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">/home/newdisk/local/SPREADTRUM/liguang.zhang/remote_disk/sp8.1_trunk/frameworks/base/services/print/java/com/android/server/print$ lltotal 220</span><br><span class="line">drwxr-xr-x 1 2516 2000  4096 Jun 25 14:20 ./</span><br><span class="line">drwxr-xr-x 1 2516 2000  4096 Nov  8  2017 ../</span><br><span class="line"><span class="comment"># PrintService插件管理类.</span></span><br><span class="line">-rw-r--r-- 1 2516 2000 41807 Jun 25 16:21 PrintManagerService.java</span><br><span class="line"><span class="comment"># 负责和PrintService插件进行bind, 以及插件的状态进行关联</span></span><br><span class="line">-rw-r--r-- 1 2516 2000 34039 Jun 25 14:20 RemotePrintService.java</span><br><span class="line"><span class="comment"># 推荐选择默认的打印插件</span></span><br><span class="line">-rw-r--r-- 1 2516 2000  8869 Jun 25 14:20 RemotePrintServiceRecommendationService.java</span><br><span class="line"><span class="comment"># 打印机后台处理程序,打印任务工作状态相关.</span></span><br><span class="line">-rw-r--r-- 1 2516 2000 34260 Nov  8  2017 RemotePrintSpooler.java</span><br><span class="line"><span class="comment"># 和用户安装的打印服务相关的管理,通过userState中转转发和PrintManagerService进行交互</span></span><br><span class="line">-rw-r--r-- 1 2516 2000 85628 Jun 25 15:47 UserState.java</span><br></pre></td></tr></table></figure>
+
+<h1 id="2-PrintManagerService初始化"><a href="#2-PrintManagerService初始化" class="headerlink" title="2. PrintManagerService初始化"></a>2. PrintManagerService初始化</h1><p>PrintManagerService(简写PMS) 初始化</p>
+<p>SystemServer中启动PMS</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">            <span class="keyword">if</span> (mPackageManager.hasSystemFeature(PackageManager.FEATURE_PRINTING)) &#123;</span><br><span class="line">                traceBeginAndSlog(<span class="string">&quot;StartPrintManager&quot;</span>);</span><br><span class="line">                mSystemServiceManager.startService(PRINT_MANAGER_SERVICE_CLASS);</span><br><span class="line">                traceEnd();</span><br><span class="line">            &#125;</span><br><span class="line"><span class="comment">// onStart注册&#x27;print&#x27;的服务</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">onStart</span><span class="params">()</span> &#123;</span><br><span class="line">        publishBinderService(Context.PRINT_SERVICE, mPrintManagerImpl);</span><br><span class="line">    &#125;</span><br><span class="line"><span class="comment">// 监听DISABLED_PRINT_SERVICES 字段, 表示禁用的打印服务插件, 如果该字段变化,则需要重新更新UserState的关联的打印插件.</span></span><br><span class="line">            registerContentObservers();</span><br><span class="line"><span class="comment">// 监听PACKAGE ADD/REMOVE/MODIFY等的广播, 用来更新打印插件服务的状态</span></span><br><span class="line">            registerBroadcastReceivers();</span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2017/08/02/%E5%85%B6%E4%BB%96%E8%B0%83%E7%A0%94/Print%E6%A1%86%E6%9E%B6%E6%95%B4%E7%90%86/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>

@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=LXGW WenKai:300,300italic,400,400italic,700,700italic|LXGW WenKai Mono, Source Code Pro:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":{"valine":{"order":-1}},"activeClass":"valine"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
+  </script>
+
+  <meta name="description" content="Hypervisor Status Register (hstatus) When VTSR&#x3D;1, an attempt in VS-mode to execute SRET raises a virtual instruction exception.When VTW&#x3D;1 (and assuming mstatus.TW&#x3D;0), an attempt in VS-m">
+<meta property="og:type" content="article">
+<meta property="og:title" content="riscv 虚拟化中断相关">
+<meta property="og:url" content="https://liguangzhang.github.io/2022/10/11/hxd%20new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv%20%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B8%AD%E6%96%AD%E7%9B%B8%E5%85%B3/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="Hypervisor Status Register (hstatus) When VTSR&#x3D;1, an attempt in VS-mode to execute SRET raises a virtual instruction exception.When VTW&#x3D;1 (and assuming mstatus.TW&#x3D;0), an attempt in VS-m">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/zhangliguang1/tuchuang/raw/master/img/20221124162340.png">
+<meta property="og:image" content="https://gitee.com/zhangliguang1/tuchuang/raw/master/img/20221124162341.png">
+<meta property="og:image" content="https://liguangzhang.github.io/arm%20%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B8%AD%E6%96%AD.md#riscv%20%E7%9B%B4%E9%80%9A%E5%9C%BA%E6%99%AF">
+<meta property="og:image" content="https://liguangzhang.github.io/attachments/Pasted%20image%2020230515151813.png">
+<meta property="article:published_time" content="2022-10-11T10:15:54.000Z">
+<meta property="article:modified_time" content="2024-05-06T07:53:13.039Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="riscv">
+<meta property="article:tag" content="中断">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://gitee.com/zhangliguang1/tuchuang/raw/master/img/20221124162340.png">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2022/10/11/hxd%20new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv%20%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B8%AD%E6%96%AD%E7%9B%B8%E5%85%B3/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+<link rel="stylesheet" href="https://npm.elemecdn.com/lxgw-wenkai-screen-webfont/style.css" media="print" onload="this.media='all'" />
+
+  <title>riscv 虚拟化中断相关 | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2022/10/11/hxd%20new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv%20%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B8%AD%E6%96%AD%E7%9B%B8%E5%85%B3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          riscv 虚拟化中断相关
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2022-10-11 18:15:54" itemprop="dateCreated datePublished" datetime="2022-10-11T18:15:54+08:00">2022-10-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-05-06 15:53:13" itemprop="dateModified" datetime="2024-05-06T15:53:13+08:00">2024-05-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%99%9A%E6%8B%9F%E5%8C%96/" itemprop="url" rel="index"><span itemprop="name">虚拟化</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2022/10/11/hxd%20new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv%20%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B8%AD%E6%96%AD%E7%9B%B8%E5%85%B3/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2022/10/11/hxd%20new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv%20%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B8%AD%E6%96%AD%E7%9B%B8%E5%85%B3/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h4 id="Hypervisor-Status-Register-hstatus"><a href="#Hypervisor-Status-Register-hstatus" class="headerlink" title="Hypervisor Status Register (hstatus)"></a>Hypervisor Status Register (hstatus)</h4><p><img src="https://gitee.com/zhangliguang1/tuchuang/raw/master/img/20221124162340.png"></p>
+<p>When VTSR&#x3D;1, an attempt in VS-mode to execute SRET raises a virtual instruction exception.<br>When VTW&#x3D;1 (and assuming <code>mstatus</code>.TW&#x3D;0), an attempt in VS-mode to execute WFI raises a virtual instruction exception if the WFI does not complete within an implementation-specific, bounded time limit.<br>When VTVM&#x3D;1, an attempt in VS-mode to execute SFENCE.VMA or to access CSR <code>satp</code> raises a virtual instruction exception.</p>
+<p>The VGEIN (Virtual Guest External Interrupt Number) field selects a guest external interrupt source for VS-level external interrupts. VGEIN is a <strong>WLRL</strong> field that must be able to hold values between zero and the maximum guest external interrupt number (known as GEILEN), inclusive.<br>When VGEIN&#x3D;0, no guest external interrupt source is selected for VS-level external interrupts. GEILEN may be zero, in which case VGEIN may be hardwired to zero.<br>Guest external interrupts are explained in Section <a target="_blank" rel="noopener" href="https://five-embeddev.com/riscv-isa-manual/latest/hypervisor.html#sec:hgeinterruptregs">1.2.4</a>, and the use of VGEIN is covered further in Section <a target="_blank" rel="noopener" href="https://five-embeddev.com/riscv-isa-manual/latest/hypervisor.html#sec:hinterruptregs">1.2.3</a>.</p>
+<p>Field HU (Hypervisor User mode) controls whether the virtual-machine load&#x2F;store instructions, HLV, HLVX, and HSV, can be used also in U-mode. When HU&#x3D;1, these instructions can be executed in U-mode the same as in HS-mode. When HU&#x3D;0, all hypervisor instructions cause an illegal instruction trap in U-mode.</p>
+<h4 id="hip-hie"><a href="#hip-hie" class="headerlink" title="hip &amp; hie"></a>hip &amp; hie</h4><p>Registers <code>hip</code> and <code>hie</code> are HSXLEN-bit read&#x2F;write registers that supplement HS-level’s <code>sip</code> and <code>sie</code> respectively. The <code>hip</code> register indicates pending VS-level and hypervisor-specific interrupts, while <code>hie</code> contains enable bits for the same interrupts. As with <code>sip</code> and <code>sie</code>, an interrupt <em>i</em> will be taken in HS-mode if bit <em>i</em> is set in both <code>hip</code> and <code>hie</code>, and if supervisor-level interrupts are globally enabled.</p>
+<p><img src="https://gitee.com/zhangliguang1/tuchuang/raw/master/img/20221124162341.png"></p>
+<p>Bits <code>hip</code>.SGEIP and <code>hie</code>.SGEIE are the interrupt-pending and interrupt-enable bits for guest external interrupts at supervisor level (HS-level).<br>SGEIP is read-only in <code>hip</code>, and is 1 if and only if the bitwise logical-AND of CSRs <code>hgeip</code> and <code>hgeie</code> is nonzero in any bit.</p>
+<p>Bits <code>hip</code>.VSEIP and <code>hie</code>.VSEIE are the interrupt-pending and interrupt-enable bits for VS-level external interrupts. VSEIP is read-only in <code>hip</code>, and is the logical-OR of these interrupt sources:</p>
+<ul>
+<li>bit VSEIP of <code>hvip</code>;</li>
+<li>bit of <code>hgeip</code> selected by <code>hstatus</code>.VGEIN</li>
+<li>any other platform-specific external interrupt signal directed to VS-level.</li>
+</ul>
+<p>Bits <code>hip</code>.VSTIP and <code>hie</code>.VSTIE are the interrupt-pending and interrupt-enable bits for VS-level timer interrupts. VSTIP is read-only in <code>hip</code>, and is the logical-OR of:</p>
+<ul>
+<li><code>hvip</code>.VSTIP</li>
+<li>any other platform-specific timer interrupt signal directed to VS-level.</li>
+</ul>
+<p>Bits <code>hip</code>.VSSIP and <code>hie</code>.VSSIE are the interrupt-pending and interrupt-enable bits for VS-level software interrupts. VSSIP in <code>hip</code> is an alias (writable) of the same bit in <code>hvip</code>.</p>
+<h4 id="Hypervisor-Guest-External-Interrupt-Registers-hgeip-and-hgeie"><a href="#Hypervisor-Guest-External-Interrupt-Registers-hgeip-and-hgeie" class="headerlink" title="Hypervisor Guest External Interrupt Registers (hgeip and hgeie)"></a>Hypervisor Guest External Interrupt Registers (<code>hgeip</code> and <code>hgeie</code>)</h4><p>hgeip indicates pending guest external interrupts for this hart.<br>hgeie contains enable bits for the guest external interrupts at this hart.<br>Guest external interrupts represent interrupts directed to individual virtual machines at VS-level.<br>只有在设备直通场景下使用</p>
+<p>interrupts from the device are intended for a specific virtual machine. Each bit of <code>hgeip</code> summarizes <em>all</em> pending interrupts directed to one virtual hart, as collected and reported by an interrupt controller. To distinguish specific pending interrupts from multiple devices, software must query the interrupt controller.</p>
+<p>Support for guest external interrupts requires an interrupt controller that can collect virtual-machine-directed interrupts separately from other interrupts.</p>
+<p>中断控制器需要收集virtual guest external interrupt, 和 物理cpu的external interrupt 区分开, guest 只能接收virtual external guest interrupt</p>
+<p>The number of bits implemented in <code>hgeip</code> and <code>hgeie</code> for guest external interrupts is GEILEN<br>bits GEILEN:1 shall be writable in <code>hgeie</code>, and all other bit positions shall be hardwired to zeros in both <code>hgeip</code> and <code>hgeie</code>.</p>
+<p>Guest external interrupt number <em>i</em> at one physical hart is typically expected not to be the same as guest external interrupt <em>i</em> at any other hart.<br>For any one physical hart, the maximum number of virtual harts that may directly receive guest external interrupts is limited by GEILEN.</p>
+<p>A hypervisor is always free to <em>emulate</em> devices for any number of virtual harts without being limited by GEILEN. <strong>Only direct pass-through (direct assignment) of interrupts is affected by the GEILEN limit, and the limit is on the number of virtual harts receiving such interrupts, not the number of distinct interrupts received.</strong> The number of distinct interrupts a single virtual hart may receive                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            is determined by the interrupt controller.</p>
+<p>The enable bits in <code>hgeie</code> do not affect the VS-level external interrupt signal selected from <code>hgeip</code> by <code>hstatus</code>.VGEIN.</p>
+<h4 id="vsip-vsie"><a href="#vsip-vsie" class="headerlink" title="vsip &amp; vsie"></a>vsip &amp; vsie</h4><p>hideleg not zero(bit 10&#x2F;6&#x2F;2 不为0时)</p>
+<ul>
+<li><code>vsip</code>.SEIP and <code>vsie</code>.SEIE are aliases of <code>hip</code>.VSEIP and <code>hie</code>.VSEIE.</li>
+<li><code>vsip</code>.STIP and <code>vsie</code>.STIE are aliases of <code>hip</code>.VSTIP and <code>hie</code>.VSTIE.</li>
+<li><code>vsip</code>.SSIP and <code>vsie</code>.SSIE are aliases of <code>hip</code>.VSSIP and <code>hie</code>.VSSIE.</li>
+</ul>
+<h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4><p>hideleg 开启时(bit 10&#x2F;6&#x2F;2 不为0时)</p>
+<ul>
+<li>vsip.SEIP &#x3D; hip.VSEIP  vsip.STIP &#x3D; hip.VSTIP vsip.SSIP &#x3D; hip.VSSIP<ul>
+<li>VSEIP is read-only in <code>hip</code>, and is the logical-OR of these interrupt sources:<ul>
+<li>bit VSEIP of <code>hvip</code>;</li>
+<li>bit of <code>hgeip</code> selected by <code>hstatus</code>.VGEIN</li>
+<li>any other platform-specific external interrupt signal directed to VS-level.</li>
+</ul>
+</li>
+<li>VSTIP is read-only in <code>hip</code>, and is the logical-OR of:<ul>
+<li><code>hvip</code>.VSTIP</li>
+<li>any other platform-specific timer interrupt signal directed to VS-level.</li>
+</ul>
+</li>
+<li>VSSIP in <code>hip</code> is an alias (writable) of the same bit in <code>hvip</code>. <ul>
+<li>即 vsip.SSIP &#x3D; hip.VSSIP &#x3D; hvip.VSSIP</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>vsie.SEIE &#x3D; hie.VSEIE  vsie.STIE &#x3D; hie.VSTIE vsie.SSIE &#x3D; hie.SSIE</li>
+</ul>
+<p>真正影响guest os的是vsip , guest os 运行时处于V&#x3D;1 mode, vsip被替换为sip, </p>
+<ul>
+<li>vsip software 中断来自于hvip (来自于HS hypervisor), 或者guest os 自己.</li>
+<li>vsip timer 中断来自于hvip (来自于 HS hypervisor), 或guest os 自己, 或 platform-specific timer interrupt signal directed to VS-level</li>
+<li>vsip guest external 中断来自于hvip (来自于HS hypervisor), 或hstatus.VGEIN -&gt; hgeip 或 any other platform-specific external interrupt signal directed to VS-level</li>
+</ul>
+<p>下面这两句应该怎么理解?</p>
+<ul>
+<li>Bits <code>hip</code>.SGEIP and <code>hie</code>.SGEIE are the interrupt-pending and interrupt-enable bits for guest external interrupts at supervisor level (HS-level). </li>
+<li>Bits <code>hip</code>.VSEIP and <code>hie</code>.VSEIE are the interrupt-pending and interrupt-enable bits for VS-level external interrupts.</li>
+</ul>
+<p>直译:<br>SGEIP 和 SGEIE 是给HS 用的, 重点看 SGEIP, 这个是hgeip &amp; hgeie and的结果, 代表的有guest external 中断待处理.<br>hip.VSEIP 和 hie.VSEIE 是给VS 用的, 这个好理解, 这两个直接反应到vsip vsie的相应bit上了.</p>
+<p>结合这句:<br>if GEILEN is nonzero, bits GEILEN:1 shall be writable in <code>hgeie</code><br>Only direct pass-through (direct assignment) of interrupts is affected by the GEILEN limit, and the limit is on the number of virtual harts receiving such interrupts, not the number of distinct interrupts received</p>
+<p>背景:<br>不同的vcpu可以运行不同guest os.<br>一个物理cpu 有三套寄存器 </p>
+<ul>
+<li>v 开头的 vsip vsie 等</li>
+<li>h 开头的 hvip hip hie hgeie hgeip 等</li>
+<li>s 开头的 sip sie 等<br>当V&#x3D;0 &#x3D;&gt; V&#x3D;1 时, v开头的寄存器会替换成 s 开头的寄存器, 此时变成vcpu的执行环境<br>V&#x3D;1 时, 只能访问 s 开头的寄存器.</li>
+</ul>
+<p>大概猜测, 在设备直通场景时, 0 &lt; hstatus.VGEIN &lt;&#x3D; GEILEN(物理cpu上托管的vcpu的数量), </p>
+<p>需要HS vmm 对 hgeie hstatus操作, 对应物理cpu上托管的vcpu<br>如当前物理cpu上托管了8个vcpu, 正在运行的是第2个vcpu</p>
+<ul>
+<li>对 hstatus.VGEIN 设置为2</li>
+<li>对 hgeie 的前8个bit 置1, 表示物理cpu 管了8个ready vcpu 的中断状态, 这8个vcpu都要处理guest external interrupt.</li>
+</ul>
+<p>在前面前提下, 硬件需要将hip.VSEIP 与 hgeip的状态区分.<br>前面hip.VSEIP 的来源处说的比较模糊:  “<strong>bit of <code>hgeip</code> selected by <code>hstatus</code>.VGEIN</strong>“</p>
+<p>不太好理解, 大概猜测:</p>
+<p>在设备直通场景(设置了hstatus.VGEIN时), 中断控制器需要判断给哪个vcpu, 导致的直接结果就是要设置hgeip 的哪个bit, 同时硬件应该将 hip.VSEIP 置为hgeip 与 hstatus.VGEIN 逻辑与 的结果. 而hip.SGEIP 置为 hgeip &amp; hgeie 逻辑与的结果.</p>
+<p>假如中断控制器要发给第三个vcpu, 就需要将hgeip 的第三个bit 置1</p>
+<ul>
+<li><p>情景1 : 假设物理cpu的状态 V&#x3D;1 mode 正在运行第二个vcpu, hstatus.VGEIN &#x3D; 2:</p>
+<p>  此时因为正在运行的是第二个vcpu, hstatus.VGEIN&#x3D;2, 则hip.VSEIP &#x3D; 0, 而 hip.SGEIP 为 1, 因为vsip.SEIP-&gt;sip.SEIP &#x3D; hip.VSEIP, 此时vsip.SEIP 没有置位(此时假设只有外部中断, SSIP STIP 都是0), 此时硬件根据vsip penging为无信号, 而hip.SGEIP 有信号, 不能将中断委托给vcpu, 而应将中断给到 host os HS-mode的vmm.</p>
+<p>  从vcpu陷入到hypervisor vmm 后, vmm 需要check hip.SGEIP &amp; hie SGEIE(或hip&amp;hie), 有待处理的虚拟外部中断, 进而查hgeip, 查到是第三个vcpu的, 则切换到第三个vcpu 运行, 切换前将hstatus.VGEIN 设置为3. 此时vsip.SEIP &#x3D; hip.VSEIP 会被置1(hgeip 逻辑与 hstatus.VGEIN) , 第三个vcpu 陷入V&#x3D;1 mode, 处理虚拟外部中断. 如guest os kernel 将sie.SEIE 置过位, 则guest os 会处理external 中断(10号guest external中断会转换成9 号external 中断), guest os 需要查询中断控制器, 判断外部中断是谁的, 该由谁的中断处理函数处理. 处理完后将中断控制器的pending 清0(该操作导致中断控制器把hgeip清0), 返回到 hypervisor vmm 后, vsip.SEIP &#x3D; hip.VSEIP 也会因hgeip 而清0.</p>
+</li>
+<li><p>情景2: 假设物理cpu的状态 V&#x3D;0 mode, 处于host下</p>
+<p>  中断由host os接收<br>  hypervisor vmm 需要check hip.SGEIP &amp; hie SGEIE (或hip&amp;hie), 有待处理的虚拟外部中断, 进而查hgeip, 查到是第三个vcpu的, 则切换到第三个vcpu 运行, 切换前将hstatus.VGEIN 设置为3. 此时vsip.SEIP &#x3D; hip.VSEIP 会被置1(hgeip 逻辑与 hstatus.VGEIN) , 第三个vcpu 陷入V&#x3D;1 mode, 处理虚拟外部中断. 如guest os kernel 将sie.SEIE 置过位, 则guest os 会处理external 中断(10号guest external中断会转换成9 号external 中断), guest os 需要查询中断控制器, 判断外部中断是谁的, 该由谁的中断处理函数处理. 处理完后将中断控制器的pending 清0(该操作导致中断控制器把hgeip清0), 返回到 hypervisor vmm 后, vsip.SEIP &#x3D; hip.VSEIP 也会因hgeip 而清0.</p>
+</li>
+<li><p>情景3: 假设物理cpu的状态 V&#x3D;1 mode 正在运行第三个vcpu, hstatus.VGEIN &#x3D; 3:<br>  hgeip 逻辑与 hstatus.VGEIN 不为0, hip.VSEIP 置1.<br>  因为vsip.SEIP-&gt;sip.SEIP &#x3D; hip.VSEIP, 此时vsip.SEIP 置位, 此时硬件根据vsip penging有信号, hip.SGEIP 有信号, 应将中断给到 vcpu guest os.<br>  vcpu处理虚拟外部中断. 如guest os kernel 将sie.SEIE 置过位, 则guest os 会处理external 中断(10号guest external中断会转换成9 号external 中断), guest os 需要查询中断控制器, 判断外部中断是谁的, 该由谁的中断处理函数处理. 处理完后将中断控制器的pending 清0(该操作导致中断控制器把hgeip清0), 返回到 hypervisor vmm 后, vsip.SEIP &#x3D; hip.VSEIP 也会因hgeip 而清0.</p>
+</li>
+</ul>
+<h4 id="备注"><a href="#备注" class="headerlink" title="备注"></a>备注</h4><p>hgeip read-only csr, 由硬件操作<br>hgeie rw csr, 由软件操作<br>hip.SGEIP read-only bit, 由硬件操作<br>hip.VSEIP read-only bit, 由硬件操作<br>sip.SEIP read-only bit, 由硬件操作, typically through a platform-specific interrupt controller.</p>
+<h1 id="riscv-直通场景-AIA-IMSIC"><a href="#riscv-直通场景-AIA-IMSIC" class="headerlink" title="riscv 直通场景 AIA IMSIC"></a>riscv 直通场景 AIA IMSIC</h1><p><img src="/arm%20%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B8%AD%E6%96%AD.md#riscv%20%E7%9B%B4%E9%80%9A%E5%9C%BA%E6%99%AF" alt="riscv 直通场景"></p>
+<h2 id="IMSIC"><a href="#IMSIC" class="headerlink" title="IMSIC"></a>IMSIC</h2><h3 id="hvictl"><a href="#hvictl" class="headerlink" title="hvictl"></a>hvictl</h3><blockquote>
+<p>Hypervisor Virtual Interrupt Control</p>
+</blockquote>
+<ul>
+<li>触发VS major 中断(hvien 和 hvip 不支持的)</li>
+<li>支持配置VS-mode 中断优先级( hviprio1&#x2F;hviprio2 之外的)</li>
+<li>模拟一个外部中断控制器, 没有使用IMSIC的 guest interrupt file. 同时支持为外部中断和virtual hart的major interrupts 配置中断优先级</li>
+</ul>
+<h3 id="hvien"><a href="#hvien" class="headerlink" title="hvien"></a>hvien</h3><p>guest 不需要配置major 中断的优先级, 除了硬件自定义实现的那些.<br>hvien 保留了低12位(ro 符合SPEC规范的), hvien 和 hvip 配合来表明注入对应的中断, 除了SPEC 规范的低12位外, 低12位由SPEC 定义, 如VSEIP&#x2F;VSTIP&#x2F;VSSIP. 而13:63 位用来实现硬件自定义实现的中断.</p>
+<p>hideleg 开启后, vsip 的位等同于 sip的位</p>
+<ul>
+<li>hideleg 的某 bit位为0时, 而hvien的对应bit位为1, 此时vsip 的该bit位等同于hvip的该bit位</li>
+<li>hideleg 的某 bit位为0时, 而hvien的对应bit位为0, 此时vsip 的该bit位是ro的,</li>
+</ul>
+<p><img src="/attachments/Pasted%20image%2020230515151813.png"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/riscv/" rel="tag"># riscv</a>
+              <a href="/tags/%E4%B8%AD%E6%96%AD/" rel="tag"># 中断</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/09/11/hxd%20new/riscv%E8%B0%83%E7%A0%94/linux%20mmu%20pte%20%E7%9B%B8%E5%85%B3/" rel="prev" title="linux mmu pte 相关">
+      <i class="fa fa-chevron-left"></i> linux mmu pte 相关
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/10/11/hxd%20new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv%20imsic%20%E7%9B%B8%E5%85%B3/" rel="next" title="riscv imsic 相关">
+      riscv imsic 相关 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#Hypervisor-Status-Register-hstatus"><span class="nav-number">1.</span> <span class="nav-text">Hypervisor Status Register (hstatus)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#hip-hie"><span class="nav-number">2.</span> <span class="nav-text">hip &amp; hie</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Hypervisor-Guest-External-Interrupt-Registers-hgeip-and-hgeie"><span class="nav-number">3.</span> <span class="nav-text">Hypervisor Guest External Interrupt Registers (hgeip and hgeie)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#vsip-vsie"><span class="nav-number">4.</span> <span class="nav-text">vsip &amp; vsie</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93"><span class="nav-number">5.</span> <span class="nav-text">小结</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A4%87%E6%B3%A8"><span class="nav-number">6.</span> <span class="nav-text">备注</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#riscv-%E7%9B%B4%E9%80%9A%E5%9C%BA%E6%99%AF-AIA-IMSIC"><span class="nav-number"></span> <span class="nav-text">riscv 直通场景 AIA IMSIC</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#IMSIC"><span class="nav-number"></span> <span class="nav-text">IMSIC</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#hvictl"><span class="nav-number"></span> <span class="nav-text">hvictl</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#hvien"><span class="nav-number"></span> <span class="nav-text">hvien</span></a></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">159</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">37</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">131</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'dark',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'VrGRp2q7WwXjxsCNmlDIZYbC-gzGzoHsz',
+      appKey     : 'JgMXmmB7yKQf2zm80TaBp3JT',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : 'zh-cn' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

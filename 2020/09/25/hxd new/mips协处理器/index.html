@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=LXGW WenKai:300,300italic,400,400italic,700,700italic|LXGW WenKai Mono, Source Code Pro:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":{"valine":{"order":-1}},"activeClass":"valine"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
+  </script>
+
+  <meta name="description" content="MIPS 的协处理器 CP0 (Section 1)在 MIPS 体系结构中，最多支持 4 个协处理器 (Co-Processor)。其中，协处理器 CP0 是体系结构中必须实现的。它起到控制 CPU 的作用。MMU、异常处理、乘除法等功能，都依赖于协处理器 CP0 来实现。它是 MIPS 的精髓之一，也是打开 MIPS 特权级模式的大门。　　MIPS 的 CP0 包含 32 个寄存器。关于它们的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="mips cp0">
+<meta property="og:url" content="https://liguangzhang.github.io/2020/09/25/hxd%20new/mips%E5%8D%8F%E5%A4%84%E7%90%86%E5%99%A8/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="MIPS 的协处理器 CP0 (Section 1)在 MIPS 体系结构中，最多支持 4 个协处理器 (Co-Processor)。其中，协处理器 CP0 是体系结构中必须实现的。它起到控制 CPU 的作用。MMU、异常处理、乘除法等功能，都依赖于协处理器 CP0 来实现。它是 MIPS 的精髓之一，也是打开 MIPS 特权级模式的大门。　　MIPS 的 CP0 包含 32 个寄存器。关于它们的">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-09-25T10:15:54.000Z">
+<meta property="article:modified_time" content="2024-04-16T07:00:09.384Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="cp0">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2020/09/25/hxd%20new/mips%E5%8D%8F%E5%A4%84%E7%90%86%E5%99%A8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+<link rel="stylesheet" href="https://npm.elemecdn.com/lxgw-wenkai-screen-webfont/style.css" media="print" onload="this.media='all'" />
+
+  <title>mips cp0 | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2020/09/25/hxd%20new/mips%E5%8D%8F%E5%A4%84%E7%90%86%E5%99%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          mips cp0
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-09-25 18:15:54" itemprop="dateCreated datePublished" datetime="2020-09-25T18:15:54+08:00">2020-09-25</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 15:00:09" itemprop="dateModified" datetime="2024-04-16T15:00:09+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MIPS/" itemprop="url" rel="index"><span itemprop="name">MIPS</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/09/25/hxd%20new/mips%E5%8D%8F%E5%A4%84%E7%90%86%E5%99%A8/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2020/09/25/hxd%20new/mips%E5%8D%8F%E5%A4%84%E7%90%86%E5%99%A8/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="MIPS-的协处理器-CP0-Section-1"><a href="#MIPS-的协处理器-CP0-Section-1" class="headerlink" title="MIPS 的协处理器 CP0 (Section 1)"></a>MIPS 的协处理器 CP0 (Section 1)</h1><p>在 MIPS 体系结构中，最多支持 4 个协处理器 (Co-Processor)。其中，协处理器 CP0 是体系结构中必须实现的。它起到控制 CPU 的作用。MMU、异常处理、乘除法等功能，都依赖于协处理器 CP0 来实现。它是 MIPS 的精髓之一，也是打开 MIPS 特权级模式的大门。<br>　　MIPS 的 CP0 包含 32 个寄存器。关于它们的资料可以参照 MIPS 官方的资料 MIPS32(R) Architecture For Programmers Volume III: The MIPS32(R) Privileged Resource Architecture 的 Chap7 和 Chap8。本文中，仅讨论常见的一些寄存器。</p>
+<ul>
+<li>Register 0: Index，作为 MMU 的索引用。将来讨论 MMU 和 TLB 时会详解之</li>
+<li>Register 2, EntryLo0，访问 TLB Entry 偶数页中的地址低 32Bit 用。同上，在 MMU 和 TLB 的相关章节中详解。</li>
+<li>Register 3, EntryLo1，访问 TLB Entry 奇数页中的地址低 32Bit 用。</li>
+<li>Register 4, Context，用以加速 TLB Miss 异常的处理。</li>
+<li>Register 5, PageMask，用以在 MMU 中分配可变大小的内存页。</li>
+<li>Register 8, BadVAddr，在系统捕获到 TLB Miss 或 Address Error 这两种 Exception 时，发生错误地址会储存在该的虚拟寄存器中。对于引发 Exception 的 Bug 的定位来说，这个寄存器非常重要。</li>
+<li>Register 9, Count，这个寄存器是 R4000 以后的 MIPS 系统引入的。它是一个计数器，计数频率是系统主频的 1&#x2F;2。BCM1125&#x2F;1250，RMI XLR 系列以及 Octeon 的 Cavium 处理器均支持该寄存器。对于操作系统来说，可以通过读取该寄存器的值来获取 tick 的时基。在系统性能测试中，利用该寄存器也可以实现打点计数。</li>
+<li>Register 10，EntryHi，这个寄存器同 EntryLo0&#x2F;1 一样，用于 MMU 中。以后会详述。</li>
+<li>Register 11，Compare，配合 Count 使用。当 Compare 和 Count 的值相等的时候，会触发一个硬件中断 (Hardware Interrupt)，并且总是使用 Cause 寄存器的 IP7 位。</li>
+<li>Register 12，<code>Status</code>，用于处理器状态的控制。</li>
+<li>Register 13，<code>Cause</code>，这个寄存器体现了处理器异常发生的原因。</li>
+<li>Register 14，<code>EPC，这个寄存器存放异常发生时，系统正在执行的指令的地址</code>。</li>
+<li>Register 15，PRID，这个寄存器是只读的，标识处理器的版本信息。向其中写入无意义。</li>
+<li>Register 18&#x2F;19，WatchLo&#x2F;WatchHi，这对寄存器用于设置硬件数据断点 (Hardware Data Breakpoint)。该断点一旦设定，当 CPU 存取这个地址时，系统就会发生一个异常。这个功能广泛应用于调试定位内存写坏的错误。</li>
+<li>Register 28&#x2F;29，TagLo 和 TagHi，用于高速缓存 (Cache) 管理。</li>
+</ul>
+<blockquote>
+<p><code>#查看cp寄存器（openocd）</code></p>
+<p>mon mips32 cp0</p>
+</blockquote>
+<h2 id="CP0-常用寄存器"><a href="#CP0-常用寄存器" class="headerlink" title="CP0 常用寄存器"></a>CP0 常用寄存器</h2><p>下面，我们来详解 CP0 中常用的几个寄存器，它们是：BadVAddr，Count&#x2F;Compare，Status&#x2F;Cause，EPC，WatchLo&#x2F;WatchHi。</p>
+<h1 id="MIPS-的异常与中断-Section-2"><a href="#MIPS-的异常与中断-Section-2" class="headerlink" title="MIPS 的异常与中断 (Section 2)"></a>MIPS 的异常与中断 (Section 2)</h1><p>![[mips 大核手册#^7a2f66]]<br>其中，Exception <code>0-5, 8-11, 13, 23</code> 这几个异常类型较为常见。</p>
+<ul>
+<li><p>Exception 0：Interrupt，外部中断。</p>
+<p>它是唯一一个异步发生的异常。之所以说中断是异步发生的，是因为相对于其他异常来说，从时序上看，中断的发生是不可预料的，无法确定中断的发生是在流水线的哪一个阶段。MIPS 的五级流水线设计如下：<br>IF, RD, ALU, MEM, WB。</p>
+<p>MIPS 处理器的中断控制部分有这样的设计：</p>
+<p>在中断发生时，如果该指令已经完成了 MEM 阶段的操作，则保证该指令执行完毕。反之，则丢弃流水线对这条指令的工作。除 NMI 外，所有的内部或外部硬件中断 (Hardware Interrupt) 均共用这一个异常向量(Exception Vector)。前面提到的 CP0 中的 Counter&#x2F;Compare 这一对计数寄存器，当 Counter 计数值和 Compare 门限值相等时，即触发一个硬件中断。</p>
+</li>
+<li><p>Exception 1：TLB Modified，内存修改异常。</p>
+<p>如果一块内存在 TLB 映射时，其属性设定为 <code>Read Only</code>，那么，在试图修改这块内存内容时，处理器就会进入这个异常。显然，这个异常是在 Memory 阶段发生的。但是，按 “精确异常” 的原则，在异常发生时，ALU 阶段的操作均无效，也就是说，向内存地址中的写入操作，实际上是不会被真正执行的。这一判断原则，也适用于后面的内存读写相关的异常，包括 TLB Miss&#x2F;Address Error&#x2F;Watch 等。</p>
+</li>
+<li><p>Exception 2&#x2F;3：TLB Miss Load&#x2F;Write，</p>
+<p>如果试图<code>访问没有在 MMU 的 TLB 中映射的内存地址</code>，会触发这个异常。在支持虚拟内存的操作系统中，这会触发内存的页面倒换，系统的 Exception Handler 会将所需要的内存页从虚拟内存中调入物理内存，并更新相应的 TLB 表项。</p>
+</li>
+<li><p>Exception 4&#x2F;5：Address Error Load&#x2F;Write</p>
+<p>如果试图访问一个非对齐的地址，例如 lw&#x2F;sw 指令的地址非 4 字节对齐，或 lh&#x2F;sh 的地址非 2 字节对齐，就会触发这个异常。一般地，操作系统在 Exception Handler 中对这个异常的处理，是分开两次读取 &#x2F; 写入这个地址。虽然一般的操作系统内核都处理了这个异常，最后能够完成期待的操作，但是由于会引起用户态到内核态的切换，以及异常的退出，当这样非对齐操作较多时会严重影响程序的运行效率。因此，编译器在定义局部和全局变量时，都会自动考虑到对齐的情况，而程序员在设计数据结构时，则需要对对齐做特别的斟酌。</p>
+</li>
+<li><p>Exception 6&#x2F;7：Instruction&#x2F;Data Bus Error</p>
+<p>一般地原因是 <code>Cache 尚未初始化</code>的时候访问了 Cached 的内存空间所致。因此，要注意在系统上电后，Cache 初始化之前，只访问 Uncached 的地址空间，也就是 <code>0xA0000000-0xBFFFFFFF</code> 这一段。默认地，上电初始化的入口点 <code>0xBFC00000</code> 就位于这一段。(某些 MIPS 实现中可以通过外部硬线连接修改入口点地址，但为了不引发无法预料的问题，不要将入口点地址修改为 Uncached 段以外的地址)</p>
+</li>
+<li><p>Exception 8：Syscall，系统调用的正规入口，也就是在用户模式下进入内核态的正规方式。</p>
+<p>我们可以类比 x86 下 Linux 的系统调用 0x80 来理解它。它是由一条专用指令 syscall 触发的。</p>
+</li>
+<li><p>Exception 9：Break Point，绝对断点指令。</p>
+<p>和 syscall 指令类似，它也是由专用指令 break 触发的。它指示了系统的一些异常情况，编程人员可以在某些不应当出现的异常分支里面加入这个指令，便于及早发现问题和调试。我们可以用高级语言中的 assert 机制来类比理解它。最常见的 Break 异常的子类型为 0x07，它是编译器在编译除法运算时自动加入的。如果除数为 0 则执行一条 break 0x07 指令。这样，当出现被 0 除的情况时，系统就会抛出一个异常，并执行 Coredump，以便于程序员定位除 0 错误的根因。</p>
+</li>
+<li><p>Exception 10：RI，执行了没有定义的指令，系统就会发生这个异常。</p>
+</li>
+<li><p>Exception 11，Co-Processor Unaviliable，试图访问的协处理器不存在。比如，在没有实现 CP2 的处理器上执行对 CP2 的操作，就会触发这个异常。</p>
+</li>
+<li><p>Exception 12，Overflow，算术溢出。会引起这个异常的指令，仅限于加减法中的带符号运算，如 add&#x2F;addi 这样的指令。因此，一般地，编译器总是将加减法运算编译为 addiu 这样的无符号指令。由于 MIPS 处理异常需要一定的开销，这样可以避免浪费。</p>
+</li>
+<li><p>Exception 13，Trap，条件断点指令。</p>
+<p>它由 trap 系列指令引发。与 Break 指令不同的是，只有满足断点指令中的条件，才会触发这个异常。我们可以类比 x86 下的 int 3 断点异常来理解它。</p>
+</li>
+<li><p>Exception 14，VCEI，（不明白！谁知道是干嘛使的？）</p>
+</li>
+<li><p>Exceotion 15，Float Point Exception，浮点协处理器 1 的异常。它由 CP1 自行定义，与 CP1 的具体实现相关。其实就是专门为 CP1 保留的异常入口。</p>
+</li>
+<li><p>Exception 16，协处理器 2 的异常，和前一个异常一样，是和 CP2 的具体实现相关的。</p>
+</li>
+<li><p>Exception 23，Watch 异常。前面讲到 Watch 寄存器可以监控一段内存，当访问 &#x2F; 修改这段内存时，就会触发这个异常。在异常处理例程中，通过异常栈可以反推出是什么地方对这段内存进行了读 &#x2F; 写操作。这个异常是用来定位内存意外写坏问题的一柄利器。</p>
+</li>
+</ul>
+<h1 id="MIPS-的异常与中断-Section-3"><a href="#MIPS-的异常与中断-Section-3" class="headerlink" title="MIPS 的异常与中断 (Section 3)"></a>MIPS 的异常与中断 (Section 3)</h1><p>异常发生的时候，系统会完成一个从用户态到内核态的切换。我们前面提到，对系统某些资源的访问（如 CP0 等协处理器，Kernel Segment 内存），是必须在内核态进行的。因此，如果希望使系统从用户态进入内核态，那么，就必须产生一个异常。<br>MIPS 的异常处理，通常来说，和其他体系结构的异常 &#x2F; 中断 &#x2F; 陷阱处理，没有太多的区别，总的来说分为三段：</p>
+<ol>
+<li><p>保存现场寄存器组（Register File）。在堆栈中开辟一段区域，将 32 个通用寄存器和 CP0 的相关寄存器，如 Status，BadVaddr，Cause 等，保存在这段内存中。其中尤为重要的是 EPC，EPC 指向引发异常时的指令。<br>在这个步骤中，首先保存的应该是通用寄存器组，随后是 epc&#x2F;cause&#x2F;status&#x2F;badvaddr 这几个 epc0 中的寄存器。从 cp0 到内存的数据传输必须通过通用寄存器。一般地，编程时的约定是使用 k0 和 k1 这两个寄存器暂存。如下例：（适用于 32 位 MIPS 模式）</p>
+ <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">sw zero, 0(sp)</span><br><span class="line">sw at, 4(sp)</span><br><span class="line">sw v0, 8(sp)</span><br><span class="line">...</span><br><span class="line">sw ra, 124(sp) / *先保存通用寄存器组* /</span><br><span class="line">mfc k0, epc</span><br><span class="line">nop / *mfc 太慢，要在延迟槽中加一个 nop* /</span><br><span class="line">sw k0, 128(sp)</span><br><span class="line">mfc k0, cause</span><br><span class="line">nop</span><br><span class="line">sw k0, 132(sp)</span><br><span class="line">...</span><br></pre></td></tr></table></figure></li>
+</ol>
+<p>2，异常处理部分。以 Address Error 异常为例，当异常发生时，根据保存的 <code>BadVaddr</code>，调用两次非对齐加载 &#x2F; 存储指令，对内存地址进行数据的读写操作。<br>3，返回。将保存在堆栈中的寄存器组内容恢复。</p>
+<p>​	从异常状态返回的这个动作，是由硬件完成的。它必须同时完成三个操作：</p>
+<ol>
+<li>将 SR 寄存器恢复；</li>
+<li>返回到 EPC 寄存器所指向的地址继续执行；</li>
+<li>恢复到用户态。</li>
+</ol>
+<p>如《See MIPS Run》提到的，如果这三个过程没有能够 “原子地” 执行完毕，那么将会导致一个安全漏洞，用户有可能在某种情况下僭越 CPU 内核态设定的壁垒，从而非法获得管理员权限。<br>在 MIPS I 和 MIPS II 处理器中，使用 rfe 这条指令，来进行 “从异常中恢复”，也就是恢复 SR 寄存器，并且将系统从内核态恢复到用户态。但这条指令并没有将执行的指令地址返回到异常发生的指令处。这项工作应当由在此之前的一条 JR 指令来执行。这样，从异常中返回的相关汇编代码应当为：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mfc k0, epc</span><br><span class="line">jr k0</span><br><span class="line">rfe / *在上一条 jr 指令的延迟槽中执行，这样可以保证原子性* /</span><br></pre></td></tr></table></figure>
+
+<p>在 MIPS III 及以后的处理器中，从异常中返回不再需要这样的繁文缛节，只需要一条 <code>eret</code> 指令便万事俱备了。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/cp0/" rel="tag"># cp0</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/09/25/hxd%20new/mips%E5%BC%82%E5%B8%B8/" rel="prev" title="mips 异常">
+      <i class="fa fa-chevron-left"></i> mips 异常
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/10/25/hxd%20new/pll%E7%9B%B8%E5%85%B3/" rel="next" title="pll 相关">
+      pll 相关 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#MIPS-%E7%9A%84%E5%8D%8F%E5%A4%84%E7%90%86%E5%99%A8-CP0-Section-1"><span class="nav-number">1.</span> <span class="nav-text">MIPS 的协处理器 CP0 (Section 1)</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#CP0-%E5%B8%B8%E7%94%A8%E5%AF%84%E5%AD%98%E5%99%A8"><span class="nav-number">1.1.</span> <span class="nav-text">CP0 常用寄存器</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#MIPS-%E7%9A%84%E5%BC%82%E5%B8%B8%E4%B8%8E%E4%B8%AD%E6%96%AD-Section-2"><span class="nav-number">2.</span> <span class="nav-text">MIPS 的异常与中断 (Section 2)</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#MIPS-%E7%9A%84%E5%BC%82%E5%B8%B8%E4%B8%8E%E4%B8%AD%E6%96%AD-Section-3"><span class="nav-number">3.</span> <span class="nav-text">MIPS 的异常与中断 (Section 3)</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">159</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">37</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">131</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'dark',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'VrGRp2q7WwXjxsCNmlDIZYbC-gzGzoHsz',
+      appKey     : 'JgMXmmB7yKQf2zm80TaBp3JT',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : 'zh-cn' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

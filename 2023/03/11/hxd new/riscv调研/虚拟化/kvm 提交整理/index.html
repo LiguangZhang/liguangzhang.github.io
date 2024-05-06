@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=LXGW WenKai:300,300italic,400,400italic,700,700italic|LXGW WenKai Mono, Source Code Pro:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":{"valine":{"order":-1}},"activeClass":"valine"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
+  </script>
+
+  <meta name="description" content="1.     RISC-V: Add initial skeletal KVM supportThis patch adds initial skeletal KVM RISC-V support which has: 1. A simple implementation of arch specific VM functions    except kvm_vm_ioctl_get_dirty_">
+<meta property="og:type" content="article">
+<meta property="og:title" content="riscv kvm 提交整理">
+<meta property="og:url" content="https://liguangzhang.github.io/2023/03/11/hxd%20new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/kvm%20%E6%8F%90%E4%BA%A4%E6%95%B4%E7%90%86/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="1.     RISC-V: Add initial skeletal KVM supportThis patch adds initial skeletal KVM RISC-V support which has: 1. A simple implementation of arch specific VM functions    except kvm_vm_ioctl_get_dirty_">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-03-11T10:15:54.000Z">
+<meta property="article:modified_time" content="2024-05-06T06:10:27.598Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="riscv">
+<meta property="article:tag" content="kvm">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2023/03/11/hxd%20new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/kvm%20%E6%8F%90%E4%BA%A4%E6%95%B4%E7%90%86/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+<link rel="stylesheet" href="https://npm.elemecdn.com/lxgw-wenkai-screen-webfont/style.css" media="print" onload="this.media='all'" />
+
+  <title>riscv kvm 提交整理 | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2023/03/11/hxd%20new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/kvm%20%E6%8F%90%E4%BA%A4%E6%95%B4%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          riscv kvm 提交整理
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-03-11 18:15:54" itemprop="dateCreated datePublished" datetime="2023-03-11T18:15:54+08:00">2023-03-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-05-06 14:10:27" itemprop="dateModified" datetime="2024-05-06T14:10:27+08:00">2024-05-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%99%9A%E6%8B%9F%E5%8C%96/" itemprop="url" rel="index"><span itemprop="name">虚拟化</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2023/03/11/hxd%20new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/kvm%20%E6%8F%90%E4%BA%A4%E6%95%B4%E7%90%86/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2023/03/11/hxd%20new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/kvm%20%E6%8F%90%E4%BA%A4%E6%95%B4%E7%90%86/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="1-RISC-V-Add-initial-skeletal-KVM-support"><a href="#1-RISC-V-Add-initial-skeletal-KVM-support" class="headerlink" title="1.     RISC-V: Add initial skeletal KVM support"></a>1.     RISC-V: Add initial skeletal KVM support</h1><pre><code>This patch adds initial skeletal KVM RISC-V support which has:
+1. A simple implementation of arch specific VM functions
+   except kvm_vm_ioctl_get_dirty_log() which will implemeted
+   in-future as part of stage2 page loging.
+2. Stubs of required arch specific VCPU functions except
+   kvm_arch_vcpu_ioctl_run() which is semi-complete and
+   extended by subsequent patches.
+3. Stubs for required arch specific stage2 MMU functions.
+</code></pre>
+<p>这个补丁增加了初始的KVM RISC-V 框架<br>它具有。</p>
+<ol>
+<li>除了kvm_vm_ioctl_get_dirty_log()之外，一个简单的arch特定虚拟机函数的实现，它将作为第二阶段页面记录的一部分在未来实施。</li>
+<li>除了kvm_arch_vcpu_ioctl_run()是半完全的并由后续补丁扩展外，所需的特定arch VCPU函数的stub。</li>
+<li>所需的arch 特定第二阶段MMU功能的 stub 。</li>
+</ol>
+<h1 id="2-RISC-V-KVM-Implement-VCPU-create-init-and-destroy-functions"><a href="#2-RISC-V-KVM-Implement-VCPU-create-init-and-destroy-functions" class="headerlink" title="2.     RISC-V: KVM: Implement VCPU create, init and destroy functions"></a>2.     RISC-V: KVM: Implement VCPU create, init and destroy functions</h1><pre><code>This patch implements VCPU create, init and destroy functions
+required by generic KVM module. We don&#39;t have much dynamic
+resources in struct kvm_vcpu_arch so these functions are quite
+simple for KVM RISC-V.
+</code></pre>
+<p>这个补丁实现了通用KVM模块所需的VCPU创建、启动和销毁功能。我们在结构kvm_vcpu_arch中没有很多动态资源，所以这些函数对于KVM RISC-V来说非常简单。</p>
+<h1 id="3-RISC-V-KVM-Implement-VCPU-interrupts-and-requests-handling"><a href="#3-RISC-V-KVM-Implement-VCPU-interrupts-and-requests-handling" class="headerlink" title="3.         RISC-V: KVM: Implement VCPU interrupts and requests handling"></a>3.         RISC-V: KVM: Implement VCPU interrupts and requests handling</h1><pre><code>This patch implements VCPU interrupts and requests which are both
+asynchronous events.
+
+The VCPU interrupts can be set/unset using KVM_INTERRUPT ioctl from
+user-space. In future, the in-kernel IRQCHIP emulation will use
+kvm_riscv_vcpu_set_interrupt() and kvm_riscv_vcpu_unset_interrupt()
+functions to set/unset VCPU interrupts.
+
+Important VCPU requests implemented by this patch are:
+KVM_REQ_SLEEP       - set whenever VCPU itself goes to sleep state
+KVM_REQ_VCPU_RESET  - set whenever VCPU reset is requested
+
+The WFI trap-n-emulate (added later) will use KVM_REQ_SLEEP request
+and kvm_riscv_vcpu_has_interrupt() function.
+
+The KVM_REQ_VCPU_RESET request will be used by SBI emulation (added
+later) to power-up a VCPU in power-off state. The user-space can use
+the GET_MPSTATE/SET_MPSTATE ioctls to get/set power state of a VCPU.
+</code></pre>
+<p>这个补丁实现了VCPU中断和请求，它们都是异步事件。<br>VCPU中断可以使用用户空间的KVM_INTERRUPT ioctl进行设置&#x2F;取消。<br>在未来，内核IRQCHIP仿真将使用kvm_riscv_vcpu_set_interrupt()和kvm_riscv_vcpu_unset_interrupt()函数来设置&#x2F;取消VCPU中断。<br>这个补丁实现的重要VCPU请求是。<br>KVM_REQ_SLEEP -每当VCPU本身进入睡眠状态时设置<br>KVM_REQ_VCPU_RESET -每当VCPU复位时设置<br>WFI trap-n-emulate（稍后添加）将使用KVM_REQ_SLEEP请求和kvm_riscv_vcpu_has_interrupt()函数。<br>KVM_REQ_VCPU_RESET请求将被SBI仿真使用（稍后添加），以使VCPU处于断电状态。<br>用户空间可以使用GET_MPSTATE&#x2F;SET_MPSTATE ioctls来获取&#x2F;设置VCPU的电源状态。</p>
+<h1 id="4-RISC-V-KVM-Implement-KVM-GET-ONE-REG-KVM-SET-ONE-REG-ioctls"><a href="#4-RISC-V-KVM-Implement-KVM-GET-ONE-REG-KVM-SET-ONE-REG-ioctls" class="headerlink" title="4.     RISC-V: KVM: Implement KVM_GET_ONE_REG&#x2F;KVM_SET_ONE_REG ioctls"></a>4.     RISC-V: KVM: Implement KVM_GET_ONE_REG&#x2F;KVM_SET_ONE_REG ioctls</h1><pre><code>For KVM RISC-V, we use KVM_GET_ONE_REG/KVM_SET_ONE_REG ioctls to access
+VCPU config and registers from user-space.
+
+We have three types of VCPU registers:
+1. CONFIG - these are VCPU config and capabilities
+2. CORE   - these are VCPU general purpose registers
+3. CSR    - these are VCPU control and status registers
+
+The CONFIG register available to user-space is ISA. The ISA register is
+a read and write register where user-space can only write the desired
+VCPU ISA capabilities before running the VCPU.
+
+The CORE registers available to user-space are PC, RA, SP, GP, TP, A0-A7,
+T0-T6, S0-S11 and MODE. Most of these are RISC-V general registers except
+PC and MODE. The PC register represents program counter whereas the MODE
+register represent VCPU privilege mode (i.e. S/U-mode).
+
+The CSRs available to user-space are SSTATUS, SIE, STVEC, SSCRATCH, SEPC,
+SCAUSE, STVAL, SIP, and SATP. All of these are read/write registers.
+
+In future, more VCPU register types will be added (such as FP) for the
+KVM_GET_ONE_REG/KVM_SET_ONE_REG ioctls.
+</code></pre>
+<p>对于KVM RISC-V，我们使用KVM_GET_ONE_REG&#x2F;KVM_SET_ONE_REG ioctls来访问VCPU配置和用户空间的寄存器。<br>我们有三种类型的VCPU寄存器。</p>
+<ol>
+<li>CONFIG - 这些是VCPU配置和能力</li>
+<li>CORE - 这些是VCPU通用寄存器</li>
+<li>CSR–这些是VCPU控制和状态寄存器<br>用户空间可用的CONFIG寄存器是ISA。ISA寄存器是一个读写寄存器，用户空间在运行VCPU之前只能写入所需的VCPU ISA功能。用户空间可用的CORE寄存器是PC、RA、SP、GP、TP、A0-A7、T0-T6、S0-S11和MODE。其中大部分是RISC-V通用寄存器，除了PC和MODE。PC寄存器代表程序计数器，而MODE寄存器代表VCPU的特权模式（即S&#x2F;U模式）。<br>用户空间可用的CSR有SSTATUS、SIE、STVEC、SSCRATCH、SEPC、SCAUSE、STVAL、SIP和SATP。<br>所有这些都是读&#x2F;写寄存器。</li>
+</ol>
+<p>在未来，更多的VCPU寄存器类型将被添加到KVM_GET_ONE_REG&#x2F;KVM_SET_ONE_REG ioctls中（如FP）。</p>
+<h1 id="5-RISC-V-KVM-Implement-VCPU-world-switch"><a href="#5-RISC-V-KVM-Implement-VCPU-world-switch" class="headerlink" title="5.     RISC-V: KVM: Implement VCPU world-switch"></a>5.     RISC-V: KVM: Implement VCPU world-switch</h1><pre><code>This patch implements the VCPU world-switch for KVM RISC-V.
+
+The KVM RISC-V world-switch (i.e. __kvm_riscv_switch_to()) mostly
+switches general purpose registers, SSTATUS, STVEC, SSCRATCH and
+HSTATUS CSRs. Other CSRs are switched via vcpu_load() and vcpu_put()
+interface in kvm_arch_vcpu_load() and kvm_arch_vcpu_put() functions
+respectively.
+</code></pre>
+<p>这个补丁实现了KVM RISC-V的VCPU world 切换。KVM RISC-V世界切换（即__kvm_riscv_switch_to()）大多切换通用寄存器、SSTATUS、STVEC、SSCRATCH和HSTATUS CSR。其他CSR分别通过kvm_arch_vcpu_load()和kvm_arch_vcpu_put()函数中的vcpu_load()和vcpu_put()接口进行切换。</p>
+<h1 id="6-RISC-V-KVM-Handle-MMIO-exits-for-VCPU"><a href="#6-RISC-V-KVM-Handle-MMIO-exits-for-VCPU" class="headerlink" title="6.     RISC-V: KVM: Handle MMIO exits for VCPU"></a>6.     RISC-V: KVM: Handle MMIO exits for VCPU</h1><pre><code>We will get stage2 page faults whenever Guest/VM access SW emulated
+MMIO device or unmapped Guest RAM.
+
+This patch implements MMIO read/write emulation by extracting MMIO
+details from the trapped load/store instruction and forwarding the
+MMIO read/write to user-space. The actual MMIO emulation will happen
+in user-space and KVM kernel module will only take care of register
+updates before resuming the trapped VCPU.
+
+The handling for stage2 page faults for unmapped Guest RAM will be
+implemeted by a separate patch later.
+</code></pre>
+<p>每当Guest&#x2F;VM访问SW模拟的MMIO设备或未映射的Guest RAM时，我们将得到阶段2的page fault。这个补丁通过从被困的加载&#x2F;存储指令中提取MMIO 指令细节并将MMIO读&#x2F;写转发到用户空间来实现MMIO读&#x2F;写仿真。实际的MMIO仿真将发生在用户空间，KVM内核模块将只负责在恢复被困的VCPU之前进行寄存器更新。对未映射的Guest RAM的第2阶段page fault的处理将由一个单独的补丁来实现。</p>
+<h1 id="7-RISC-V-KVM-Handle-WFI-exits-for-VCPU"><a href="#7-RISC-V-KVM-Handle-WFI-exits-for-VCPU" class="headerlink" title="7.     RISC-V: KVM: Handle WFI exits for VCPU"></a>7.     RISC-V: KVM: Handle WFI exits for VCPU</h1><pre><code>We get illegal instruction trap whenever Guest/VM executes WFI
+instruction.
+
+This patch handles WFI trap by blocking the trapped VCPU using
+kvm_vcpu_block() API. The blocked VCPU will be automatically
+resumed whenever a VCPU interrupt is injected from user-space
+or from in-kernel IRQCHIP emulation.
+</code></pre>
+<p>每当Guest&#x2F;VM执行WFI指令时，我们会得到非法指令陷阱。这个补丁通过使用kvm_vcpu_block()API阻塞VCPU来处理WFI陷阱。每当从用户空间或内核IRQCHIP仿真中注入VCPU中断时，被阻塞的VCPU将被自动恢复。</p>
+<h1 id="8-RISC-V-KVM-Implement-VMID-allocator"><a href="#8-RISC-V-KVM-Implement-VMID-allocator" class="headerlink" title="8.     RISC-V: KVM: Implement VMID allocator"></a>8.     RISC-V: KVM: Implement VMID allocator</h1><pre><code>We implement a simple VMID allocator for Guests/VMs which:
+1. Detects number of VMID bits at boot-time
+2. Uses atomic number to track VMID version and increments
+   VMID version whenever we run-out of VMIDs
+3. Flushes Guest TLBs on all host CPUs whenever we run-out
+   of VMIDs
+4. Force updates HW Stage2 VMID for each Guest VCPU whenever
+   VMID changes using VCPU request KVM_REQ_UPDATE_HGATP
+</code></pre>
+<p>我们为guest&#x2F;虚拟机实现了一个简单的VMID分配器</p>
+<ol>
+<li>在启动时检测VMID位的数量。</li>
+<li>使用原子序数来跟踪VMID版本，并在我们用完VMID时增加VMID版本 </li>
+<li>每当我们用完VMID时，就会在所有host CPU上刷新Guest TLB </li>
+<li>每当VMID发生变化时，使用VCPU请求KVM_REQ_UPDATE_HGATP为每个guest VCPU强制更新HW Stage2 VMID</li>
+</ol>
+<h1 id="9-RISC-V-KVM-Implement-stage2-page-table-programming"><a href="#9-RISC-V-KVM-Implement-stage2-page-table-programming" class="headerlink" title="9.     RISC-V: KVM: Implement stage2 page table programming"></a>9.     RISC-V: KVM: Implement stage2 page table programming</h1><pre><code>This patch implements all required functions for programming
+the stage2 page table for each Guest/VM.
+
+At high-level, the flow of stage2 related functions is similar
+from KVM ARM/ARM64 implementation but the stage2 page table
+format is quite different for KVM RISC-V.
+</code></pre>
+<p>这个补丁实现了为每个guest&#x2F;虚拟机的stage2页表编程的所有必要功能。在高层次上，阶段2相关函数的流程与KVM ARM&#x2F;ARM64实现相似，但阶段2页表格式与KVM RISC-V有很大不同。</p>
+<p>提供直接编程 stage-2 页表的接口<br>kvm_riscv_gstage_alloc_pgd&#x2F;kvm_riscv_gstage_free_pgd<br>gstage_get_leaf_entry<br>gstage_pte_page_vaddr 等</p>
+<p>arch&#x2F;riscv&#x2F;kvm&#x2F;mmu.c</p>
+<h1 id="10-RISC-V-KVM-Implement-MMU-notifiers"><a href="#10-RISC-V-KVM-Implement-MMU-notifiers" class="headerlink" title="10.     RISC-V: KVM: Implement MMU notifiers ???"></a>10.     RISC-V: KVM: Implement MMU notifiers ???</h1><pre><code>This patch implements MMU notifiers for KVM RISC-V so that Guest
+physical address space is in-sync with Host physical address space.
+
+This will allow swapping, page migration, etc to work transparently
+with KVM RISC-V.
+</code></pre>
+<p>这个补丁为KVM RISC-V实现了MMU通知器，以便Guest物理地址空间与Host物理地址空间同步。这将允许交换、页面迁移等与KVM RISC-V透明地工作。</p>
+<blockquote>
+<p>当KVM_CAP_SYNC_MMU功能可用时，备份内存区域的变化会自动反映到guest中。例如，一个影响该区域的mmap()将被立即变成可见。另一个例子是madvise(MADV_DROP)。</p>
+</blockquote>
+<h1 id="11-RISC-V-KVM-Add-timer-functionality"><a href="#11-RISC-V-KVM-Add-timer-functionality" class="headerlink" title="11. RISC-V: KVM: Add timer functionality"></a>11. RISC-V: KVM: Add timer functionality</h1><pre><code>The RISC-V hypervisor specification doesn&#39;t have any virtual timer
+feature.
+
+Due to this, the guest VCPU timer will be programmed via SBI calls.
+The host will use a separate hrtimer event for each guest VCPU to
+provide timer functionality. We inject a virtual timer interrupt to
+the guest VCPU whenever the guest VCPU hrtimer event expires.
+
+This patch adds guest VCPU timer implementation along with ONE_REG
+interface to access VCPU timer state from user space.
+</code></pre>
+<p>RISC-V hypervisor 规范没有任何虚拟定时器功能。由于这个原因，guest VCPU定时器将通过SBI调用进行编程。host os将为每个客户VCPU使用一个单独的hrtimer事件来提供定时器功能。每当客体VCPU的hrtimer事件过期时，我们就向客体VCPU注入一个虚拟定时器中断。这个补丁增加了客户VCPU定时器的实现以及ONE_REG接口，以便从用户空间访问VCPU定时器的状态。</p>
+<h1 id="12-RISC-V-KVM-FP-lazy-save-restore"><a href="#12-RISC-V-KVM-FP-lazy-save-restore" class="headerlink" title="12.     RISC-V: KVM: FP lazy save&#x2F;restore"></a>12.     RISC-V: KVM: FP lazy save&#x2F;restore</h1><pre><code>This patch adds floating point (F and D extension) context save/restore
+for guest VCPUs. The FP context is saved and restored lazily only when
+kernel enter/exits the in-kernel run loop and not during the KVM world
+switch. This way FP save/restore has minimal impact on KVM performance.
+</code></pre>
+<p>这个补丁为客户VCPU增加了浮点（F和D扩展）上下文保存&#x2F;恢复。只有在内核进入&#x2F;退出 run-loop 时，才会延迟的保存和恢复FP上下文，而不是在KVM世界切换时。这样，FP保存&#x2F;恢复对KVM性能的影响就很小。</p>
+<h1 id="13-RISC-V-KVM-Implement-ONE-REG-interface-for-FP-registers"><a href="#13-RISC-V-KVM-Implement-ONE-REG-interface-for-FP-registers" class="headerlink" title="13.     RISC-V: KVM: Implement ONE REG interface for FP registers"></a>13.     RISC-V: KVM: Implement ONE REG interface for FP registers</h1><pre><code>Add a KVM_GET_ONE_REG/KVM_SET_ONE_REG ioctl interface for floating
+point registers such as F0-F31 and FCSR. This support is added for
+both &#39;F&#39; and &#39;D&#39; extensions.
+</code></pre>
+<p>为F0-F31和FCSR等浮点寄存器添加一个KVM_GET_ONE_REG&#x2F;KVM_SET_ONE_REG ioctl接口。这个支持是为F和D的扩展添加的。</p>
+<h1 id="14-RISC-V-KVM-Add-SBI-v0-1-support"><a href="#14-RISC-V-KVM-Add-SBI-v0-1-support" class="headerlink" title="14.     RISC-V: KVM: Add SBI v0.1 support"></a>14.     RISC-V: KVM: Add SBI v0.1 support</h1><pre><code>The KVM host kernel is running in HS-mode needs so we need to handle
+the SBI calls coming from guest kernel running in VS-mode.
+
+This patch adds SBI v0.1 support in KVM RISC-V. Almost all SBI v0.1
+calls are implemented in KVM kernel module except GETCHAR and PUTCHART
+calls which are forwarded to user space because these calls cannot be
+implemented in kernel space. In future, when we implement SBI v0.2 for
+Guest, we will forward SBI v0.2 experimental and vendor extension calls
+to user space.
+</code></pre>
+<p>KVM host os 以HS模式运行，所以我们需要处理来自VS模式下运行的 guest os的SBI调用。这个补丁在KVM RISC-V中增加了SBI v0.1支持。除了GETCHAR和PUTCHART调用被转发到用户空间，几乎所有SBI v0.1调用都在KVM内核模块中实现，因为这些调用不能在内核空间中实现。在未来，当我们为Guest实现SBI v0.2时，我们将把SBI v0.2的实验和vendor 扩展调用转发给用户空间。</p>
+<h1 id="16-RISC-V-KVM-Fix-GPA-passed-to-kvm-riscv-hfence-gvma-xyz-functions"><a href="#16-RISC-V-KVM-Fix-GPA-passed-to-kvm-riscv-hfence-gvma-xyz-functions" class="headerlink" title="16.     RISC-V: KVM: Fix GPA passed to __kvm_riscv_hfence_gvma_xyz() functions"></a>16.     RISC-V: KVM: Fix GPA passed to __kvm_riscv_hfence_gvma_xyz() functions</h1><pre><code>The parameter passed to HFENCE.GVMA instruction in rs1 register
+is guest physical address right shifted by 2 (i.e. divided by 4).
+
+Unfortunately, we overlooked the semantics of rs1 registers for
+HFENCE.GVMA instruction and never right shifted guest physical
+address by 2. This issue did not manifest for hypervisors till
+now because:
+  1) Currently, only __kvm_riscv_hfence_gvma_all() and SBI
+     HFENCE calls are used to invalidate TLB.
+  2) All H-extension implementations (such as QEMU, Spike,
+     Rocket Core FPGA, etc) that we tried till now were
+     conservatively flushing everything upon any HFENCE.GVMA
+     instruction.
+
+This patch fixes GPA passed to __kvm_riscv_hfence_gvma_vmid_gpa()
+and __kvm_riscv_hfence_gvma_gpa() functions.
+</code></pre>
+<p>rs1寄存器中传递给HFENCE.GVMA指令的参数是GPA右移2（即除以4）。不幸的是，我们忽略了HFENCE.GVMA指令的rs1寄存器的语义，也没有将客户的物理地址右移2。这个问题直到现在还没有在管理程序中表现出来，<br>因为:<br>1）目前，只有__kvm_riscv_hfence_gvma_all()和SBI HFENCE调用被用来使TLB失效。<br>2）到目前为止，我们尝试的所有H扩展实现（如QEMU、Spike、Rocket Core FPGA等）都是保守地在任何HFENCE.GVMA指令上刷新一切。<br>这个补丁修复了传递给__kvm_riscv_hfence_gvma_vmid_gpa()和__kvm_riscv_hfence_gvma_gpa()函数的GPA。</p>
+<blockquote>
+<p>bug, 不关注</p>
+</blockquote>
+<h1 id="17-KVM-RISC-V-Unmap-stage2-mapping-when-deleting-moving-a-memslot"><a href="#17-KVM-RISC-V-Unmap-stage2-mapping-when-deleting-moving-a-memslot" class="headerlink" title="17.     KVM: RISC-V: Unmap stage2 mapping when deleting&#x2F;moving a memslot"></a>17.     KVM: RISC-V: Unmap stage2 mapping when deleting&#x2F;moving a memslot</h1><pre><code>Unmap stage2 page tables when a memslot is being deleted or moved.  It&#39;s
+the architectures&#39; responsibility to ensure existing mappings are removed
+when kvm_arch_flush_shadow_memslot() returns.
+</code></pre>
+<p>当一个memslot被删除或移动时，unmap stage2页表。当kvm_arch_flush_shadow_memslot()返回时，架构有责任确保现有的映射被移除。</p>
+<h1 id="18-KVM-Let-force-architectures-to-deal-with-arch-specific-memslot-data"><a href="#18-KVM-Let-force-architectures-to-deal-with-arch-specific-memslot-data" class="headerlink" title="18.     KVM: Let&#x2F;force architectures to deal with arch specific memslot data"></a>18.     KVM: Let&#x2F;force architectures to deal with arch specific memslot data</h1><pre><code>Pass the &quot;old&quot; slot to kvm_arch_prepare_memory_region() and force arch
+code to handle propagating arch specific data from &quot;new&quot; to &quot;old&quot; when
+necessary.  This is a baby step towards dynamically allocating &quot;new&quot; from
+the get go, and is a (very) minor performance boost on x86 due to not
+unnecessarily copying arch data.
+
+For PPC HV, copy the rmap in the !CREATE and !DELETE paths, i.e. for MOVE
+and FLAGS_ONLY.  This is functionally a nop as the previous behavior
+would overwrite the pointer for CREATE, and eventually discard/ignore it
+for DELETE.
+
+For x86, copy the arch data only for FLAGS_ONLY changes.  Unlike PPC HV,
+x86 needs to reallocate arch data in the MOVE case as the size of x86&#39;s
+allocations depend on the alignment of the memslot&#39;s gfn.
+
+Opportunistically tweak kvm_arch_prepare_memory_region()&#39;s param order to
+match the &quot;commit&quot; prototype.
+</code></pre>
+<p>将 “old slot “传递给kvm_arch_prepare_memory_region()，必要时强制arch-specific 代码处理从 “new “传播到 “old “的arch 特定数据。这是朝着动态分配 “从头开始的新 “迈出的一小步，也是对x86的一个（非常）小的性能提升，因为没有不必要地复制arch 数据。<br>对于PPC HV，在！CREATE和！DELETE路径中复制rmap，即对于MOVE和FLAGS_ONLY。这在功能上是一个问题，因为之前的行为会覆盖CREATE的指针，并最终丢弃&#x2F;忽略它用于DELETE。对于x86，只复制FLAGS_ONLY变化的档案数据。与PPC HV不同，在MOVE情况下，x86需要重新分配arch 数据，因为x86 分配的大小取决于memslot gfn的排列。<br>机会性地调整kvm_arch_prepare_memory_region() param顺序以匹配 “commit “原型。</p>
+<p>内存memslot 动态分配相关优化 </p>
+<h1 id="19-KVM-RISC-V-Use-“new”-memslot-instead-of-userspace-memory-region"><a href="#19-KVM-RISC-V-Use-“new”-memslot-instead-of-userspace-memory-region" class="headerlink" title="19.     KVM: RISC-V: Use “new” memslot instead of userspace memory region  ???"></a>19.     KVM: RISC-V: Use “new” memslot instead of userspace memory region  ???</h1><pre><code>Get the slot ID, hva, etc... from the &quot;new&quot; memslot instead of the
+userspace memory region when preparing/committing a memory region.  This
+will allow a future commit to drop @mem from the prepare/commit hooks
+once all architectures convert to using &quot;new&quot;.
+
+Opportunistically wait to get the various &quot;new&quot; values until after
+filtering out the DELETE case in anticipation of a future commit passing
+NULL for @new when deleting a memslot.
+</code></pre>
+<p>在准备&#x2F;提交内存区域时，从 “new- memslot “而不是用户空间内存区域获取slot ID、hva等。这将允许未来的提交在所有架构转换为使用 “新 “时，从准备&#x2F;提交的钩子中删除@mem。机会性地等待得到各种 “new 值 ， 直到过滤掉 DELETE 的情况后 ， 以期待未来的提交在删除一个 memslot 时通过 @new 的 NULL</p>
+<h1 id="20-KVM-RISC-V-Use-common-KVM-implementation-of-MMU-memory-caches"><a href="#20-KVM-RISC-V-Use-common-KVM-implementation-of-MMU-memory-caches" class="headerlink" title="20.    KVM: RISC-V: Use common KVM implementation of MMU memory caches"></a>20.    KVM: RISC-V: Use common KVM implementation of MMU memory caches</h1><pre><code>Use common KVM&#39;s implementation of the MMU memory caches, which for all
+intents and purposes is semantically identical to RISC-V&#39;s version, the
+only difference being that the common implementation will fall back to an
+atomic allocation if there&#39;s a KVM bug that triggers a cache underflow.
+
+RISC-V appears to have based its MMU code on arm64 before the conversion
+to the common caches in commit c1a33aebe91d (&quot;KVM: arm64: Use common KVM
+implementation of MMU memory caches&quot;), despite having also copy-pasted
+the definition of KVM_ARCH_NR_OBJS_PER_MEMORY_CACHE in kvm_types.h.
+
+Opportunistically drop the superfluous wrapper
+kvm_riscv_stage2_flush_cache(), whose name is very, very confusing as
+&quot;cache flush&quot; in the context of MMU code almost always refers to flushing
+hardware caches, not freeing unused software objects.
+
+No functional change intended.
+</code></pre>
+<p>使用MMU内存缓存的普通KVM实现，就所有的意图和目的而言，它与RISC-V-s版本在语义上是相同的，唯一的区别是，如果有一个KVM错误触发了缓存下溢，普通实现将退回到原子分配。RISC-V似乎在转换到提交c1a33aebe91d中的普通缓存之前将其MMU代码基于arm64（KVM：arm64：使用MMU内存缓存的普通KVM实现），尽管在kvm_types.h中也复制了KVM_ARCH_NR_OBJS_PER_MEMORY_CACHE的定义。机会性地放弃多余的包装器kvm_riscv_stage2_flush_cache()，其名称非常非常令人困惑，因为在MMU代码的上下文中，缓存刷新 “几乎总是指刷新硬件缓存，而不是释放未使用的软件对象。没有功能变化的意图。</p>
+<h1 id="21-RISC-V-KVM-Add-SBI-v0-2-base-extension"><a href="#21-RISC-V-KVM-Add-SBI-v0-2-base-extension" class="headerlink" title="21.     RISC-V: KVM: Add SBI v0.2 base extension"></a>21.     RISC-V: KVM: Add SBI v0.2 base extension</h1><pre><code>SBI v0.2 base extension defined to allow backward compatibility and
+probing of future extensions. This is also the only mandatory SBI
+extension that must be implemented by SBI implementors.
+</code></pre>
+<p>SBI v0.2基础扩展的定义是允许向后兼容和探测未来的扩展。这也是唯一的强制性SBI扩展，必须由SBI实现者来实现。</p>
+<h1 id="22-RISC-V-KVM-Add-SBI-HSM-extension-in-KVM"><a href="#22-RISC-V-KVM-Add-SBI-HSM-extension-in-KVM" class="headerlink" title="22.     RISC-V: KVM: Add SBI HSM extension in KVM"></a>22.     RISC-V: KVM: Add SBI HSM extension in KVM</h1><pre><code>SBI HSM extension allows OS to start/stop harts any time. It also allows
+ordered booting of harts instead of random booting.
+
+Implement SBI HSM exntesion and designate the vcpu 0 as the boot vcpu id.
+All other non-zero non-booting vcpus should be brought up by the OS
+implementing HSM extension. If the guest OS doesn&#39;t implement HSM
+extension, only single vcpu will be available to OS.
+</code></pre>
+<p>SBI HSM扩展允许操作系统在任何时候开始&#x2F;停止 harts。它还允许有序启动 hart，而不是随机启动。实施SBI HSM exntesion，并将vcpu 0指定为boot vcpu id。所有其他非零的非启动vcpus都应该由实现HSM扩展的操作系统提出。如果guest os 没有实现HSM扩展，那么只有单个vcpu可以被操作系统使用。</p>
+<h1 id="23-RISC-V-KVM-Forward-SBI-experimental-and-vendor-extensions"><a href="#23-RISC-V-KVM-Forward-SBI-experimental-and-vendor-extensions" class="headerlink" title="23.     RISC-V: KVM: Forward SBI experimental and vendor extensions"></a>23.     RISC-V: KVM: Forward SBI experimental and vendor extensions</h1><pre><code>The SBI experimental extension space is for temporary (or experimental)
+stuff whereas SBI vendor extension space is for hardware vendor specific
+stuff. Both these SBI extension spaces won&#39;t be standardized by the SBI
+specification so let&#39;s blindly forward such SBI calls to the userspace.
+</code></pre>
+<p>SBI实验性扩展空间用于临时（或实验性）特性，而SBI vendor 扩展空间用于硬件vendor 特性。这两个SBI扩展空间都不会被SBI规范化，我们可以盲目地将这种SBI调用转发给 kvm的 用户空间。</p>
+<h1 id="24-KVM-RISC-V-Avoid-spurious-virtual-interrupts-after-clearing-hideleg-CSR"><a href="#24-KVM-RISC-V-Avoid-spurious-virtual-interrupts-after-clearing-hideleg-CSR" class="headerlink" title="24. KVM: RISC-V: Avoid spurious virtual interrupts after clearing hideleg CSR"></a>24. KVM: RISC-V: Avoid spurious virtual interrupts after clearing hideleg CSR</h1><p>避免在清除隐藏的CSR后出现虚假的虚拟中断<br>    When the last VM is terminated, the host kernel will invoke function<br>    hardware_disable_nolock() on each CPU to disable the related virtualization<br>    functions. Here, RISC-V currently only clears hideleg CSR and hedeleg CSR.<br>    This behavior will cause the host kernel to receive spurious interrupts if<br>    hvip CSR has pending interrupts and the corresponding enable bits in vsie<br>    CSR are asserted. To avoid it, hvip CSR and vsie CSR must be cleared<br>    before clearing hideleg CSR.</p>
+<p>当最后一个虚拟机被终止时，主机内核将在每个CPU上调用函数hardhard_disable_nolock()来禁用相关的虚拟化函数。在这里，RISC-V目前只清除了hideleg CSR和hedeleg CSR。如果hvip CSR有待定的中断，并且vsie CSR中相应的启用位被断言，这种行为将导致主机内核收到虚假的中断。为了避免这种情况，hvip CSR和vsie CSR必须在清除隐藏的CSR之前被清除。</p>
+<h1 id="25-kvm-riscv-rework-guest-entry-logic"><a href="#25-kvm-riscv-rework-guest-entry-logic" class="headerlink" title="25.     kvm&#x2F;riscv: rework guest entry logic"></a>25.     kvm&#x2F;riscv: rework guest entry logic</h1><pre><code>In kvm_arch_vcpu_ioctl_run() we enter an RCU extended quiescent state
+(EQS) by calling guest_enter_irqoff(), and unmask IRQs prior to exiting
+the EQS by calling guest_exit(). As the IRQ entry code will not wake RCU
+in this case, we may run the core IRQ code and IRQ handler without RCU
+watching, leading to various potential problems.
+
+Additionally, we do not inform lockdep or tracing that interrupts will
+be enabled during guest execution, which caan lead to misleading traces
+and warnings that interrupts have been enabled for overly-long periods.
+
+This patch fixes these issues by using the new timing and context
+entry/exit helpers to ensure that interrupts are handled during guest
+vtime but with RCU watching, with a sequence:
+
+        guest_timing_enter_irqoff();
+
+        guest_state_enter_irqoff();
+        &lt; run the vcpu &gt;
+        guest_state_exit_irqoff();
+
+        &lt; take any pending IRQs &gt;
+
+        guest_timing_exit_irqoff();
+
+Since instrumentation may make use of RCU, we must also ensure that no
+instrumented code is run during the EQS. I&#39;ve split out the critical
+section into a new kvm_riscv_enter_exit_vcpu() helper which is marked
+noinstr.
+</code></pre>
+<p>RCU锁及开关中断相关优化</p>
+<h1 id="26-RISC-V-KVM-Add-common-kvm-riscv-vcpu-sbi-system-reset-function"><a href="#26-RISC-V-KVM-Add-common-kvm-riscv-vcpu-sbi-system-reset-function" class="headerlink" title="26.     RISC-V: KVM: Add common kvm_riscv_vcpu_sbi_system_reset() function"></a>26.     RISC-V: KVM: Add common kvm_riscv_vcpu_sbi_system_reset() function</h1><pre><code>We rename kvm_sbi_system_shutdown() to kvm_riscv_vcpu_sbi_system_reset()
+and move it to vcpu_sbi.c so that it can be shared by SBI v0.1 shutdown
+and SBI v0.3 SRST extension.
+</code></pre>
+<p>我们将kvm_sbi_system_shutdown()重命名为kvm_riscv_vcpu_sbi_system_reset()，并将其移至vcpu_sbi.c，以便它可以被SBI v0.1关闭和SBI v0.3 SRST扩展共享。</p>
+<pre><code>The SBI v0.3 specification defines SRST (System Reset) extension which
+provides a standard poweroff and reboot interface. This patch implements
+SRST extension for the KVM Guest.
+</code></pre>
+<p>SBI v0.3规范定义了SRST（系统重置）扩展，它提供了一个标准的断电和重启接口。这个补丁实现了KVM Guest的SRST扩展。<br>guest os 重启</p>
+<h1 id="27-RISC-V-KVM-Add-common-kvm-riscv-vcpu-wfi-function"><a href="#27-RISC-V-KVM-Add-common-kvm-riscv-vcpu-wfi-function" class="headerlink" title="27.     RISC-V: KVM: Add common kvm_riscv_vcpu_wfi() function"></a>27.     RISC-V: KVM: Add common kvm_riscv_vcpu_wfi() function</h1><pre><code>The wait for interrupt (WFI) instruction emulation can share the VCPU
+halt logic with SBI HSM suspend emulation so this patch adds a common
+kvm_riscv_vcpu_wfi() function for this purpose.
+</code></pre>
+<p>等待中断（WFI）指令仿真可以与SBI HSM暂停仿真共享VCPU停止逻辑，所以这个补丁为此增加了一个通用的kvm_riscv_vcpu_wfi()函数。</p>
+<h1 id="28-RISC-V-KVM-Implement-SBI-HSM-suspend-call"><a href="#28-RISC-V-KVM-Implement-SBI-HSM-suspend-call" class="headerlink" title="28.     RISC-V: KVM: Implement SBI HSM suspend call"></a>28.     RISC-V: KVM: Implement SBI HSM suspend call</h1><pre><code>The SBI v0.3 specification extends SBI HSM extension by adding SBI HSM
+suspend call and related HART states. This patch extends the KVM RISC-V
+HSM implementation to provide KVM guest a minimal SBI HSM suspend call
+which is equivalent to a WFI instruction.
+</code></pre>
+<p>SBI v0.3规范通过添加SBI HSM暂停调用和相关的HART状态扩展了SBI HSM的扩展。这个补丁扩展了KVM RISC-V HSM的实现，为KVM guest os提供了一个最小的SBI HSM暂停调用，相当于一个WFI指令。</p>
+<h1 id="29-RISC-V-KVM-Add-Sv57x4-mode-support-for-G-stage"><a href="#29-RISC-V-KVM-Add-Sv57x4-mode-support-for-G-stage" class="headerlink" title="29.     RISC-V: KVM: Add Sv57x4 mode support for G-stage"></a>29.     RISC-V: KVM: Add Sv57x4 mode support for G-stage</h1><pre><code>Latest QEMU supports G-stage Sv57x4 mode so this patch extends KVM
+RISC-V G-stage handling to detect and use Sv57x4 mode when available.
+</code></pre>
+<p>最新的QEMU支持G阶段的Sv57x4模式，所以这个补丁扩展了KVM RISC-V G阶段的处理，以检测并在可用时使用Sv57x4模式。</p>
+<h1 id="30-RISC-V-KVM-Treat-SBI-HFENCE-calls-as-NOPs"><a href="#30-RISC-V-KVM-Treat-SBI-HFENCE-calls-as-NOPs" class="headerlink" title="30.     RISC-V: KVM: Treat SBI HFENCE calls as NOPs"></a>30.     RISC-V: KVM: Treat SBI HFENCE calls as NOPs</h1><pre><code>We should treat SBI HFENCE calls as NOPs until nested virtualization
+is supported by KVM RISC-V. This will help us test booting a hypervisor
+under KVM RISC-V.
+</code></pre>
+<p>我们应该把SBI HFENCE调用当作NOP，直到KVM RISC-V支持嵌套虚拟化。这将有助于我们在KVM RISC-V下测试启动一个管理程序。</p>
+<h1 id="31-RISC-V-KVM-Add-remote-HFENCE-functions-based-on-VCPU-requests"><a href="#31-RISC-V-KVM-Add-remote-HFENCE-functions-based-on-VCPU-requests" class="headerlink" title="31.     RISC-V: KVM: Add remote HFENCE functions based on VCPU requests"></a>31.     RISC-V: KVM: Add remote HFENCE functions based on VCPU requests</h1><pre><code>The generic KVM has support for VCPU requests which can be used
+to do arch-specific work in the run-loop. We introduce remote
+HFENCE functions which will internally use VCPU requests instead
+of host SBI calls.
+
+Advantages of doing remote HFENCEs as VCPU requests are:
+1) Multiple VCPUs of a Guest may be running on different Host CPUs
+   so it is not always possible to determine the Host CPU mask for
+   doing Host SBI call. For example, when VCPU X wants to do HFENCE
+   on VCPU Y, it is possible that VCPU Y is blocked or in user-space
+   (i.e. vcpu-&gt;cpu &lt; 0).
+2) To support nested virtualization, we will be having a separate
+   shadow G-stage for each VCPU and a common host G-stage for the
+   entire Guest/VM. The VCPU requests based remote HFENCEs helps
+   us easily synchronize the common host G-stage and shadow G-stage
+   of each VCPU without any additional IPI calls.
+
+This is also a preparatory patch for upcoming nested virtualization
+support where we will be having a shadow G-stage page table for
+each Guest VCPU.
+</code></pre>
+<p>通用的KVM支持VCPU请求，可以用来在run-loop中做arch specific工作。我们引入了远程HFENCE函数，它在内部将使用VCPU请求而不是主机SBI调用。</p>
+<p>作为VCPU请求做远程HFENCE的好处是:<br>1）一个guest os的多个VCPU可能在不同的物理 CPU上运行，所以并不总是能够确定物理cpuCPU掩码来做主机SBI调用。例如，当VCPU X想在VCPU Y上做HFENCE时，有可能VCPU Y被阻塞或在用户空间（即vcpu-&gt;cpu &lt; 0）。<br>2）为了支持嵌套虚拟化，我们将为每个VCPU提供一个单独的影子G阶段，为整个Guest&#x2F;VM提供一个通用的G-stage 页表。基于VCPU请求的远程HFENCEs帮助我们轻松地同步每个VCPU的物理的G-stage页表和独立的影子G-stage页表，而不需要任何额外的IPI调用。</p>
+<p>这也是即将到来的嵌套虚拟化支持的一个准备补丁，我们将为每个guest VCPU提供一个影子G阶段的页表。</p>
+<h1 id="32-RISC-V-KVM-Cleanup-stale-TLB-entries-when-host-CPU-changes"><a href="#32-RISC-V-KVM-Cleanup-stale-TLB-entries-when-host-CPU-changes" class="headerlink" title="32.     RISC-V: KVM: Cleanup stale TLB entries when host CPU changes"></a>32.     RISC-V: KVM: Cleanup stale TLB entries when host CPU changes</h1><pre><code>On RISC-V platforms with hardware VMID support, we share same
+VMID for all VCPUs of a particular Guest/VM. This means we might
+have stale G-stage TLB entries on the current Host CPU due to
+some other VCPU of the same Guest which ran previously on the
+current Host CPU.
+
+To cleanup stale TLB entries, we simply flush all G-stage TLB
+entries by VMID whenever underlying Host CPU changes for a VCPU.
+</code></pre>
+<p>VMID 相关. 增加在重新执行vcpu时刷新所有G-stage tlb的功能.</p>
+<p>在支持硬件VMID的RISC-V平台上，我们为一个特定的guest&#x2F;VM的所有VCPU共享相同的VMID。这意味着我们在当前的主机CPU上可能有陈旧的G级TLB条目，这是因为之前在当前的主机CPU上运行的同一guest的其他VCPU。为了清理陈旧的TLB条目，我们只需在底层主机CPU为VCPU改变时，通过VMID刷新所有G级TLB条目。</p>
+<h1 id="33-RISC-V-KVM-Add-extensible-system-instruction-emulation-framework"><a href="#33-RISC-V-KVM-Add-extensible-system-instruction-emulation-framework" class="headerlink" title="33.     RISC-V: KVM: Add extensible system instruction emulation framework"></a>33.     RISC-V: KVM: Add extensible system instruction emulation framework</h1><pre><code>We will be emulating more system instructions in near future with
+upcoming AIA, PMU, Nested and other virtualization features.
+
+To accommodate above, we add an extensible system instruction emulation
+framework in vcpu_insn.c.
+</code></pre>
+<p>我们将在不久的将来用即将到来的AIA、PMU、Nested和其他虚拟化功能模拟更多的系统指令。为了适应上述情况，我们在vcpu_insn.c中增加了一个可扩展的系统指令仿真框架。</p>
+<h1 id="34-RISC-V-KVM-Add-extensible-CSR-emulation-framework"><a href="#34-RISC-V-KVM-Add-extensible-CSR-emulation-framework" class="headerlink" title="34.     RISC-V: KVM: Add extensible CSR emulation framework"></a>34.     RISC-V: KVM: Add extensible CSR emulation framework</h1><pre><code>We add an extensible CSR emulation framework which is based upon the
+existing system instruction emulation. This will be useful to upcoming
+AIA, PMU, Nested and other virtualization features.
+
+The CSR emulation framework also has provision to emulate CSR in user
+space but this will be used only in very specific cases such as AIA
+IMSIC CSR emulation in user space or vendor specific CSR emulation
+in user space.
+
+By default, all CSRs not handled by KVM RISC-V will be redirected back
+to Guest VCPU as illegal instruction trap.
+</code></pre>
+<p>我们增加了一个可扩展的CSR仿真框架，它是基于现有的系统指令仿真的。这对即将到来的AIA、PMU、Nested和其他虚拟化功能很有用。CSR仿真框架也有在用户空间仿真CSR的规定，但这将只用于非常特殊的情况，如AIA IMSIC CSR仿真在用户空间或vendor厂商特定的CSR仿真在用户空间。默认情况下，所有未被KVM RISC-V处理的CSR将被重定向回Guest VCPU作为非法指令陷阱。</p>
+<h1 id="35-RISC-V-KVM-Add-G-stage-ioremap-and-iounmap-functions"><a href="#35-RISC-V-KVM-Add-G-stage-ioremap-and-iounmap-functions" class="headerlink" title="35.     RISC-V: KVM: Add G-stage ioremap() and iounmap() functions"></a>35.     RISC-V: KVM: Add G-stage ioremap() and iounmap() functions</h1><pre><code>The in-kernel AIA IMSIC support requires on-demand mapping / unmapping
+of Guest IMSIC address to Host IMSIC guest files. To help achieve this,
+we add kvm_riscv_stage2_ioremap() and kvm_riscv_stage2_iounmap() functions.
+These new functions for updating G-stage page table mappings will be called
+in atomic context so we have special &quot;in_atomic&quot; parameter for this purpose.
+</code></pre>
+<p>中断AIA IMSIC 相关<br>内核 AIA IMSIC 的支持需要按需将guest os IMSIC 地址映射 &#x2F; 解除映射到主机 IMSIC guest file。为了帮助实现这一点，我们增加了kvm_riscv_stage2_ioremap()和kvm_riscv_stage2_iounmap()函数。这些用于更新G阶段页表映射的新函数将在原子上下文中被调用，因此我们有特殊的in_atomic 参数来实现这一目的。</p>
+<h1 id="36-RISC-V-KVM-Add-support-for-Svpbmt-inside-Guest-VM"><a href="#36-RISC-V-KVM-Add-support-for-Svpbmt-inside-Guest-VM" class="headerlink" title="36.     RISC-V: KVM: Add support for Svpbmt inside Guest&#x2F;VM"></a>36.     RISC-V: KVM: Add support for Svpbmt inside Guest&#x2F;VM</h1><pre><code>The Guest/VM can use Svpbmt in VS-stage page tables when allowed by the
+Hypervisor using the henvcfg.PBMTE bit.
+
+We add Svpbmt support for the KVM Guest/VM which can be enabled/disabled
+by the KVM user-space (QEMU/KVMTOOL) using the ISA extension ONE_REG
+interface.
+</code></pre>
+<p>当Hypervisor使用henvcfg.PBMTE位允许时，Guest&#x2F;VM可以在VS阶段的页表中使用Svpbmt。我们为KVM Guest&#x2F;VM添加了Svpbmt支持，它可以通过KVM用户空间（QEMU&#x2F;KVMTOOL）使用ISA扩展ONE_REG接口启用&#x2F;禁用。</p>
+<h1 id="37-RISC-V-KVM-Support-sstc-extension"><a href="#37-RISC-V-KVM-Support-sstc-extension" class="headerlink" title="37.     RISC-V: KVM: Support sstc extension"></a>37.     RISC-V: KVM: Support sstc extension</h1><pre><code>Sstc extension allows the guest to program the vstimecmp CSR directly
+instead of making an SBI call to the hypervisor to program the next
+event. The timer interrupt is also directly injected to the guest by
+the hardware in this case. To maintain backward compatibility, the
+hypervisors also update the vstimecmp in an SBI set_time call if
+the hardware supports it. Thus, the older kernels in guest also
+take advantage of the sstc extension.
+</code></pre>
+<p>Sstc扩展允许guest os直接对vstimecmp CSR进行编程，而不是对管理程序进行SBI调用来对下一个事件进行编程。在这种情况下，定时器中断也是由硬件直接注入到guest os上的。为了保持向后的兼容性，如果硬件支持，管理程序也会在SBI set_time调用中更新vstimecmp。因此，客户中较早的内核也利用了sstc的扩展。</p>
+<h1 id="38-RISC-V-KVM-Allow-Guest-use-Svinval-extension"><a href="#38-RISC-V-KVM-Allow-Guest-use-Svinval-extension" class="headerlink" title="38.     RISC-V: KVM: Allow Guest use Svinval extension"></a>38.     RISC-V: KVM: Allow Guest use Svinval extension</h1><pre><code>We should advertise Svinval ISA extension to KVM user-space whenever
+host supports it. This will allow KVM user-space (i.e. QEMU or KVMTOOL)
+to pass on this information to Guest via ISA string.
+</code></pre>
+<p>RISC-V: KVM: Allow Guest use Zihintpause extension</p>
+<pre><code>We should advertise Zihintpause ISA extension to KVM user-space whenever
+host supports it. This will allow KVM user-space (i.e. QEMU or KVMTOOL)
+to pass on this information to Guest via ISA string.
+
+Signed-off-by: Mayuresh Chitale &lt;mchitale@ventanamicro.com&gt;
+Reviewed-by: Andrew Jones &lt;ajones@ventanamicro.com&gt;
+Signed-off-by: Anup Patel &lt;anup@brainfault.org&gt;
+</code></pre>
+<p>RISC-V: KVM: Provide UAPI for Zicbom block size</p>
+<pre><code>We&#39;re about to allow guests to use the Zicbom extension. KVM
+userspace needs to know the cache block size in order to
+properly advertise it to the guest. Provide a virtual config
+register for userspace to get it with the GET_ONE_REG API, but
+setting it cannot be supported, so disallow SET_ONE_REG.
+</code></pre>
+<p>RISC-V: KVM: Expose Zicbom to the guest</p>
+<pre><code>Guests may use the cbo.inval,clean,flush instructions when the
+CPU has the Zicbom extension and the hypervisor sets henvcfg.CBIE
+(for cbo.inval) and henvcfg.CBCFE (for cbo.clean,flush).
+
+Add Zicbom support for KVM guests which may be enabled and
+disabled from KVM userspace using the ISA extension ONE_REG API.
+
+Also opportunistically switch the other isa extension checks in
+kvm_riscv_vcpu_update_config() to riscv_isa_extension_available().
+</code></pre>
+<h1 id="39-RISC-V-KVM-Save-mvendorid-marchid-and-mimpid-when-creating-VCPU"><a href="#39-RISC-V-KVM-Save-mvendorid-marchid-and-mimpid-when-creating-VCPU" class="headerlink" title="39.     RISC-V: KVM: Save mvendorid, marchid, and mimpid when creating VCPU"></a>39.     RISC-V: KVM: Save mvendorid, marchid, and mimpid when creating VCPU</h1><pre><code>We should save VCPU mvendorid, marchid, and mimpid at the time
+of creating VCPU so that we don&#39;t have to do host SBI call every
+time Guest/VM ask for these details.
+
+RISC-V: KVM: Add ONE_REG interface for mvendorid, marchid, and mimpid
+
+We add ONE_REG interface for VCPU mvendorid, marchid, and mimpid
+so that KVM user-space can change this details to support migration
+across heterogeneous hosts.
+</code></pre>
+<p>增加 mvendorid marchid mimpid get_reg&#x2F;set_reg qemu相关接口</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><ol>
+<li><p>通用KVM模块所需的VCPU创建、启动和销毁功能</p>
+</li>
+<li><p>实现了VCPU中断和请求, 实现vcpu 设置 睡眠KVM_REQ_SLEEP&#x2F;复位KVM_REQ_VCPU_RESET&#x2F;休眠WFI 请求, 用户空间可以使用GET_MPSTATE&#x2F;SET_MPSTATE ioctls来获取&#x2F;设置VCPU的电源状态。</p>
+</li>
+<li><p>KVM_GET_ONE_REG&#x2F;KVM_SET_ONE_REG ioctls来访问读写VCPU 配置寄存器&#x2F;通用寄存器&#x2F;vcpu 控制和状态寄存器&#x2F;浮点相关寄存器, 及mvendorid mimpid (version of the processor implementation) marchid的读取.</p>
+</li>
+<li><p>实现上下文切换时各寄存器状态的保存恢复, 包括上述的配置寄存器&#x2F;通用寄存器&#x2F;vcpu 控制和状态寄存器&#x2F;浮点相关寄存器, 及host os的相关寄存器的保存恢复</p>
+</li>
+<li><p>实现 MMIO exit 加载&#x2F;存储指令中提取MMIO 指令细节并将MMIO读&#x2F;写转发到用户空间来实现MMIO读&#x2F;写仿真, KVM内核模块将负责提取 guest page fault中的mmio读写指令细节, 将其传达给用户态虚拟机管理程序(如qemu), 并在恢复VCPU之前进行寄存器更新</p>
+</li>
+<li><p>为guest&#x2F;虚拟机实现了VMID分配器&#x2F;管理, 主要功能在VMID发生变化时，使用VCPU请求KVM_REQ_UPDATE_HGATP为每个guest VCPU强制更新HW Stage2 VMID</p>
+</li>
+<li><p>实现了为每个guest&#x2F;虚拟机的stage2页表编程的所有必要功能。在高层次上，阶段2相关函数的流程与KVM ARM&#x2F;ARM64实现相似，但阶段2页表格式与KVM RISC-V有很大不同</p>
+</li>
+<li><p>sbi相关实现, guest 调用sbi ecall相关指令时, 需要陷入到 hypervisor中, 需要kvm 模块实现对应的sbi请求. 相关sbi 规范需支持 v01-&gt;v02-&gt;v03 的演化.</p>
+<p>除了GETCHAR和PUTCHART调用被转发到用户空间，几乎所有SBI v0.1调用都在KVM内核模块中实现, SBI v0.2的实验和vendor 扩展调用转发给用户空间</p>
+<p>SBI HSM扩展允许操作系统在任何时候开始&#x2F;停止 harts。它还允许有序启动 hart，而不是随机启动。实施SBI HSM exntesion，并将vcpu 0指定为boot vcpu id。所有其他非零的非启动vcpus都应该由实现HSM扩展的操作系统提出。如果guest os 没有实现HSM扩展，那么只有单个vcpu可以被操作系统使用。</p>
+<p>实现 SBI v0.3规范中的SRST（系统重置）扩展, hsm暂停调用扩展</p>
+<p>实现hfence 扩展, 为未来的嵌套虚拟化做准备</p>
+</li>
+<li><p>kvm中 hva-&gt;gpa 内存memslot 动态分配相关优化 </p>
+</li>
+<li><p>为即将到来的AIA、PMU、Nested和其他虚拟化功能模拟更多的系统指令。增加了一个可扩展的系统指令仿真框架, CSR仿真框架也有在用户空间仿真CSR的规定，但这将只用于非常特殊的情况. 如AIA IMSIC CSR仿真在用户空间或vendor厂商特定的CSR仿真在用户空间</p>
+</li>
+<li><p>实现 sstc, 允许guest os直接对vstimecmp CSR进行编程，而不是通过hypervisor进行SBI调用来对下一个事件进行编程。在这种情况下，定时器中断也是由硬件直接注入到guest os上的。为了保持向后的兼容性，如果硬件支持，hypervisor也会在SBI set_time调用中更新vstimecmp.</p>
+</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/riscv/" rel="tag"># riscv</a>
+              <a href="/tags/kvm/" rel="tag"># kvm</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/03/11/hxd%20new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/%E7%A1%AC%E4%BB%B6%E8%99%9A%E6%8B%9F%E5%8C%96/" rel="prev" title="riscv 硬件虚拟化概况">
+      <i class="fa fa-chevron-left"></i> riscv 硬件虚拟化概况
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/03/19/hxd%20new/%E8%99%9A%E6%8B%9F%E5%8C%96/arm%20smmuv3%20%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90/" rel="next" title="arm smmuv3 代码分析">
+      arm smmuv3 代码分析 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-RISC-V-Add-initial-skeletal-KVM-support"><span class="nav-number">1.</span> <span class="nav-text">1.     RISC-V: Add initial skeletal KVM support</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-RISC-V-KVM-Implement-VCPU-create-init-and-destroy-functions"><span class="nav-number">2.</span> <span class="nav-text">2.     RISC-V: KVM: Implement VCPU create, init and destroy functions</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-RISC-V-KVM-Implement-VCPU-interrupts-and-requests-handling"><span class="nav-number">3.</span> <span class="nav-text">3.         RISC-V: KVM: Implement VCPU interrupts and requests handling</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-RISC-V-KVM-Implement-KVM-GET-ONE-REG-KVM-SET-ONE-REG-ioctls"><span class="nav-number">4.</span> <span class="nav-text">4.     RISC-V: KVM: Implement KVM_GET_ONE_REG&#x2F;KVM_SET_ONE_REG ioctls</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-RISC-V-KVM-Implement-VCPU-world-switch"><span class="nav-number">5.</span> <span class="nav-text">5.     RISC-V: KVM: Implement VCPU world-switch</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#6-RISC-V-KVM-Handle-MMIO-exits-for-VCPU"><span class="nav-number">6.</span> <span class="nav-text">6.     RISC-V: KVM: Handle MMIO exits for VCPU</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#7-RISC-V-KVM-Handle-WFI-exits-for-VCPU"><span class="nav-number">7.</span> <span class="nav-text">7.     RISC-V: KVM: Handle WFI exits for VCPU</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#8-RISC-V-KVM-Implement-VMID-allocator"><span class="nav-number">8.</span> <span class="nav-text">8.     RISC-V: KVM: Implement VMID allocator</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#9-RISC-V-KVM-Implement-stage2-page-table-programming"><span class="nav-number">9.</span> <span class="nav-text">9.     RISC-V: KVM: Implement stage2 page table programming</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#10-RISC-V-KVM-Implement-MMU-notifiers"><span class="nav-number">10.</span> <span class="nav-text">10.     RISC-V: KVM: Implement MMU notifiers ???</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#11-RISC-V-KVM-Add-timer-functionality"><span class="nav-number">11.</span> <span class="nav-text">11. RISC-V: KVM: Add timer functionality</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#12-RISC-V-KVM-FP-lazy-save-restore"><span class="nav-number">12.</span> <span class="nav-text">12.     RISC-V: KVM: FP lazy save&#x2F;restore</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#13-RISC-V-KVM-Implement-ONE-REG-interface-for-FP-registers"><span class="nav-number">13.</span> <span class="nav-text">13.     RISC-V: KVM: Implement ONE REG interface for FP registers</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#14-RISC-V-KVM-Add-SBI-v0-1-support"><span class="nav-number">14.</span> <span class="nav-text">14.     RISC-V: KVM: Add SBI v0.1 support</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#16-RISC-V-KVM-Fix-GPA-passed-to-kvm-riscv-hfence-gvma-xyz-functions"><span class="nav-number">15.</span> <span class="nav-text">16.     RISC-V: KVM: Fix GPA passed to __kvm_riscv_hfence_gvma_xyz() functions</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#17-KVM-RISC-V-Unmap-stage2-mapping-when-deleting-moving-a-memslot"><span class="nav-number">16.</span> <span class="nav-text">17.     KVM: RISC-V: Unmap stage2 mapping when deleting&#x2F;moving a memslot</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#18-KVM-Let-force-architectures-to-deal-with-arch-specific-memslot-data"><span class="nav-number">17.</span> <span class="nav-text">18.     KVM: Let&#x2F;force architectures to deal with arch specific memslot data</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#19-KVM-RISC-V-Use-%E2%80%9Cnew%E2%80%9D-memslot-instead-of-userspace-memory-region"><span class="nav-number">18.</span> <span class="nav-text">19.     KVM: RISC-V: Use “new” memslot instead of userspace memory region  ???</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#20-KVM-RISC-V-Use-common-KVM-implementation-of-MMU-memory-caches"><span class="nav-number">19.</span> <span class="nav-text">20.    KVM: RISC-V: Use common KVM implementation of MMU memory caches</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#21-RISC-V-KVM-Add-SBI-v0-2-base-extension"><span class="nav-number">20.</span> <span class="nav-text">21.     RISC-V: KVM: Add SBI v0.2 base extension</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#22-RISC-V-KVM-Add-SBI-HSM-extension-in-KVM"><span class="nav-number">21.</span> <span class="nav-text">22.     RISC-V: KVM: Add SBI HSM extension in KVM</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#23-RISC-V-KVM-Forward-SBI-experimental-and-vendor-extensions"><span class="nav-number">22.</span> <span class="nav-text">23.     RISC-V: KVM: Forward SBI experimental and vendor extensions</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#24-KVM-RISC-V-Avoid-spurious-virtual-interrupts-after-clearing-hideleg-CSR"><span class="nav-number">23.</span> <span class="nav-text">24. KVM: RISC-V: Avoid spurious virtual interrupts after clearing hideleg CSR</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#25-kvm-riscv-rework-guest-entry-logic"><span class="nav-number">24.</span> <span class="nav-text">25.     kvm&#x2F;riscv: rework guest entry logic</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#26-RISC-V-KVM-Add-common-kvm-riscv-vcpu-sbi-system-reset-function"><span class="nav-number">25.</span> <span class="nav-text">26.     RISC-V: KVM: Add common kvm_riscv_vcpu_sbi_system_reset() function</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#27-RISC-V-KVM-Add-common-kvm-riscv-vcpu-wfi-function"><span class="nav-number">26.</span> <span class="nav-text">27.     RISC-V: KVM: Add common kvm_riscv_vcpu_wfi() function</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#28-RISC-V-KVM-Implement-SBI-HSM-suspend-call"><span class="nav-number">27.</span> <span class="nav-text">28.     RISC-V: KVM: Implement SBI HSM suspend call</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#29-RISC-V-KVM-Add-Sv57x4-mode-support-for-G-stage"><span class="nav-number">28.</span> <span class="nav-text">29.     RISC-V: KVM: Add Sv57x4 mode support for G-stage</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#30-RISC-V-KVM-Treat-SBI-HFENCE-calls-as-NOPs"><span class="nav-number">29.</span> <span class="nav-text">30.     RISC-V: KVM: Treat SBI HFENCE calls as NOPs</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#31-RISC-V-KVM-Add-remote-HFENCE-functions-based-on-VCPU-requests"><span class="nav-number">30.</span> <span class="nav-text">31.     RISC-V: KVM: Add remote HFENCE functions based on VCPU requests</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#32-RISC-V-KVM-Cleanup-stale-TLB-entries-when-host-CPU-changes"><span class="nav-number">31.</span> <span class="nav-text">32.     RISC-V: KVM: Cleanup stale TLB entries when host CPU changes</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#33-RISC-V-KVM-Add-extensible-system-instruction-emulation-framework"><span class="nav-number">32.</span> <span class="nav-text">33.     RISC-V: KVM: Add extensible system instruction emulation framework</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#34-RISC-V-KVM-Add-extensible-CSR-emulation-framework"><span class="nav-number">33.</span> <span class="nav-text">34.     RISC-V: KVM: Add extensible CSR emulation framework</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#35-RISC-V-KVM-Add-G-stage-ioremap-and-iounmap-functions"><span class="nav-number">34.</span> <span class="nav-text">35.     RISC-V: KVM: Add G-stage ioremap() and iounmap() functions</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#36-RISC-V-KVM-Add-support-for-Svpbmt-inside-Guest-VM"><span class="nav-number">35.</span> <span class="nav-text">36.     RISC-V: KVM: Add support for Svpbmt inside Guest&#x2F;VM</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#37-RISC-V-KVM-Support-sstc-extension"><span class="nav-number">36.</span> <span class="nav-text">37.     RISC-V: KVM: Support sstc extension</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#38-RISC-V-KVM-Allow-Guest-use-Svinval-extension"><span class="nav-number">37.</span> <span class="nav-text">38.     RISC-V: KVM: Allow Guest use Svinval extension</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#39-RISC-V-KVM-Save-mvendorid-marchid-and-mimpid-when-creating-VCPU"><span class="nav-number">38.</span> <span class="nav-text">39.     RISC-V: KVM: Save mvendorid, marchid, and mimpid when creating VCPU</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">39.</span> <span class="nav-text">总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">159</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">37</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">131</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'dark',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'VrGRp2q7WwXjxsCNmlDIZYbC-gzGzoHsz',
+      appKey     : 'JgMXmmB7yKQf2zm80TaBp3JT',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : 'zh-cn' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=LXGW WenKai:300,300italic,400,400italic,700,700italic|LXGW WenKai Mono, Source Code Pro:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":{"valine":{"order":-1}},"activeClass":"valine"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
+  </script>
+
+  <meta name="description" content="问题背景在使用最新版本 qemu (8.0) 搭配 linux kernel (5.19.16) 模拟出的 riscv 主机上, 使用 riscv 版本的 qemu 跑 kvm-mode 的 guest kernel 无法执行.现象为没有 host kernel 的 log, 没有 guest kernel 的 log 输出. 问题初步分析在 kvm_riscv_vcpu_enter_exit 处">
+<meta property="og:type" content="article">
+<meta property="og:title" content="riscv kvm timer bug 问题分析">
+<meta property="og:url" content="https://liguangzhang.github.io/2023/09/11/hxd%20new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv%20kvm%20timer%20bug%20%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="问题背景在使用最新版本 qemu (8.0) 搭配 linux kernel (5.19.16) 模拟出的 riscv 主机上, 使用 riscv 版本的 qemu 跑 kvm-mode 的 guest kernel 无法执行.现象为没有 host kernel 的 log, 没有 guest kernel 的 log 输出. 问题初步分析在 kvm_riscv_vcpu_enter_exit 处">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-09-11T10:15:54.000Z">
+<meta property="article:modified_time" content="2024-05-06T06:12:34.713Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="riscv">
+<meta property="article:tag" content="qemu">
+<meta property="article:tag" content="kvm">
+<meta property="article:tag" content="bug">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2023/09/11/hxd%20new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv%20kvm%20timer%20bug%20%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+<link rel="stylesheet" href="https://npm.elemecdn.com/lxgw-wenkai-screen-webfont/style.css" media="print" onload="this.media='all'" />
+
+  <title>riscv kvm timer bug 问题分析 | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2023/09/11/hxd%20new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv%20kvm%20timer%20bug%20%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          riscv kvm timer bug 问题分析
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2023-09-11 18:15:54" itemprop="dateCreated datePublished" datetime="2023-09-11T18:15:54+08:00">2023-09-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-05-06 14:12:34" itemprop="dateModified" datetime="2024-05-06T14:12:34+08:00">2024-05-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E8%99%9A%E6%8B%9F%E5%8C%96/" itemprop="url" rel="index"><span itemprop="name">虚拟化</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2023/09/11/hxd%20new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv%20kvm%20timer%20bug%20%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2023/09/11/hxd%20new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv%20kvm%20timer%20bug%20%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="问题背景"><a href="#问题背景" class="headerlink" title="问题背景"></a>问题背景</h1><p>在使用最新版本 qemu (8.0) 搭配 linux kernel (5.19.16) 模拟出的 riscv 主机上, 使用 riscv 版本的 qemu 跑 kvm-mode 的 guest kernel 无法执行.<br>现象为没有 host kernel 的 log, 没有 guest kernel 的 log 输出.</p>
+<h1 id="问题初步分析"><a href="#问题初步分析" class="headerlink" title="问题初步分析"></a>问题初步分析</h1><p>在 kvm_riscv_vcpu_enter_exit 处下断点看下 vcpu 的调度情况<br>发现 vcpu 调度是正常的</p>
+<p>但在 kvm_riscv_vcpu_exit 处打 log 发现每次 guest 退出的原因都是因为<br>sbi 设置 timecmp</p>
+<p>通过 qemu 的 command <code>dump-guest-memory</code> 命令导出 guest 的 coredump<br>guest 停在了通过 sbi 设置 timecmp 的地方.</p>
+<p>根据这个现象, guest kernel 一直在处理 timer tick, 却不能走其他的流程, 对比正常的 log, 启动过程中从 guest 退出到 kvm 的原因是多种多样的, 所以可以首先怀疑是 guest timer tick 出了问题.</p>
+<p>对比最新版本 qemu (8.0) 搭配 linux kernel (主线 6.x) 版本, 可以正常运行 guest.<br>对比 linux kernel kvm 中对 guest timer tick 的处理, 发现加入了 sstc 的 feature.</p>
+<h1 id="初步验证"><a href="#初步验证" class="headerlink" title="初步验证"></a>初步验证</h1><p>sstc 可以作为第一个疑点, 需要首先排除下是否是这个 feature 导致的.</p>
+<p>在 host qemu (8.0) 中关掉 sstc 的 feature, 即关掉模拟 riscv 主机的 sstc 的 feature, 再次运行 guest, 发现 guest 正常运行了.</p>
+<p>调研 sstc 的 SPEC 文档, sstc 引入了 vstimecmp 寄存器, guest 可以通过直接设置 vstimecmp 来避免陷入 kvm 来处理 timer tick.</p>
+<p>但调研 SPEC 结束后, 发现不能解释为什么 old kernel (5.19.16) kvm 上不使用 vstimecmp 应该是没问题的, guest 通过 sbi 设置 timecmp 是走了通过 host kvm 来处理 guest timer tick 的逻辑.</p>
+<p>guest os 设置 compare 发 <code>SBI_EXT_0_1_SET_TIMER</code> 的请求<br>导致陷入到 kvm 中, kvm 接收的请求中第一个参数 <code>next_cycle</code> 即为下一轮的 compare 数.</p>
+<p>在 guest 因设置 compare 请求导致陷入到 kvm 中, kvm 处理 <code>SBI_EXT_0_1_SET_TIMER</code>:</p>
+<ul>
+<li>首先清除了 IRQ_VS_TIMER 中断, 确保本轮 tick 中不再有有的 timer 中断产生</li>
+<li>计算下一轮到期的时间 delta_ns (cycle 转换为 host 的纳秒单位)</li>
+<li>启动定时器, 到期时间为当前时间+delta_ns</li>
+<li>退出 kvm, 重返到 vcpu guest</li>
+</ul>
+<p>定时器到期时, 触发中断重新陷入到 kvm 中, 处理函数为 kvm_riscv_vcpu_hrtimer_expired<br>, 通过 hvip 注入 IRQ_VS_TIMER 中断, 让 guest 处理 timer tick, 走到对应的 tick 处理函数, 紧接着通过 sbi SBI_EXT_0_1_SET_TIMER 设置下一轮 compare.</p>
+<p>这套机制的问题只是效率慢 (一次 timer tick 的处理需要两次陷入 kvm), 但机制是没问题的.</p>
+<p>再次深入调研 sstc 的 SPEC, 注意到这个描述:</p>
+<blockquote>
+<p>The interrupt remains posted until vstimecmp becomes<br>Greater than (time + htimedelta) - typically as a result of writing vstimecmp</p>
+</blockquote>
+<p>会不会是 vstimecmp 没处理是默认的 0, 所以 compare 总是比 time 小, 导致一直触发 VSTIP 的中断, guest 一直在处理 VSTIP 中断, 不能让出 cpu 来处理其他的流程.</p>
+<p>想到这一点, 可以简单的验证下:</p>
+<p>在 <code>kvm_arch_vcpu_load</code> 中设置 vstimecmp 为最大值<br><code>csr_write(0x24D, -1UL);</code></p>
+<p>修改后验证 qemu (8.0)+old kernel (5.19.17) 模拟的 riscv 主机上跑 guest, guest 正常运行了, 证明正是这个问题导致的.</p>
+<h1 id="梳理-guest-timer-的流程"><a href="#梳理-guest-timer-的流程" class="headerlink" title="梳理 guest timer 的流程"></a>梳理 guest timer 的流程</h1><p>在找到 root cause 后, 有时间需要对 guest riscv timer tick 的流程做一下梳理.<br>这里直接拿最新的 linux kernel 版本进行分析.</p>
+<p>首先整理 sstc 的 feature.</p>
+<p>guest 在满足上述 <code>[m/h]envcfg.STCE</code> 和 <code>[m/h]counteren.TM</code> 后可以直接操作 stimecmp csr 来设置 timer tick, 就不必再通过 sbi 陷入到 kvm 中设置 compare, 也不需要 kvm 维护定时器, 同时也不需要 kvm 注入 timer 虚拟中断给 vcpu, 减少了两次陷入 kvm, 大大提升了 guest 处理 tick 的效率.<br>Tick 到期后, 由硬件来保证 vcpu 直接收到 timer 的虚拟中断, vcpu 不用陷入到 kvm 就可以处理一轮轮的 tick.</p>
+<blockquote>
+<p>为什么上述问题中, guest os 却是设置 compare 发 <code>SBI_EXT_0_1_SET_TIMER</code> 的请求<br>这是因为这个问题中, guest kernel 用的 old kernel (5.19.17), 并未合入 sstc feature 的相关修改.</p>
+</blockquote>
+<p>可以直接看下 guest kernel 处理 timer tick 的逻辑</p>
+<figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">start_kernel</span><br><span class="line">  +-&gt; time_init</span><br><span class="line">    +-&gt; timer_probe</span><br><span class="line">      +-&gt; cpuhp_setup_state</span><br><span class="line">        +-&gt; __cpuhp_setup_state</span><br><span class="line">          +-&gt; __cpuhp_setup_state_cpuslocked</span><br><span class="line">            +-&gt; cpuhp_issue_call</span><br><span class="line">              +-&gt; cpuhp_invoke_callback</span><br><span class="line">                +-&gt; riscv_timer_starting_cpu</span><br><span class="line">                  +-&gt; clockevents_config_and_register</span><br><span class="line">                    +-&gt; clockevents_register_device</span><br><span class="line">                      +-&gt; tick_check_new_device</span><br><span class="line">                        +-&gt; tick_setup_device</span><br><span class="line">                          +-&gt; tick_setup_periodic</span><br><span class="line">					          /* event_handler回调 */</span><br><span class="line">					         +-&gt; tick_handle_periodic</span><br><span class="line">					           +-&gt; clockevents_program_event</span><br><span class="line">					             +-&gt; dev-&gt;set_next_event</span><br><span class="line">					               +-&gt; riscv_clock_next_event</span><br></pre></td></tr></table></figure>
+
+<p>old kernel (5.19.17)</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">riscv_clock_next_event</span><span class="params">(<span class="type">unsigned</span> <span class="type">long</span> delta,</span></span><br><span class="line"><span class="params">		<span class="keyword">struct</span> clock_event_device *ce)</span></span><br><span class="line">&#123;</span><br><span class="line">	csr_set(CSR_IE, IE_TIE);</span><br><span class="line">	sbi_set_timer(get_cycles64() + delta);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而最新主线上的 kernel (6.x)</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">riscv_clock_next_event</span><span class="params">(<span class="type">unsigned</span> <span class="type">long</span> delta,</span></span><br><span class="line"><span class="params">		<span class="keyword">struct</span> clock_event_device *ce)</span></span><br><span class="line">&#123;</span><br><span class="line">	u64 next_tval = get_cycles64() + delta;</span><br><span class="line"></span><br><span class="line">	csr_set(CSR_IE, IE_TIE);</span><br><span class="line">	<span class="keyword">if</span> (static_branch_likely(&amp;riscv_sstc_available)) &#123;</span><br><span class="line">...</span><br><span class="line">		csr_write(CSR_STIMECMP, next_tval);</span><br><span class="line">	&#125; <span class="keyword">else</span></span><br><span class="line">		sbi_set_timer(next_tval);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>guest kernel 未合入 sstc feature 修改前, guest 只能通过 sbi SBI_EXT_0_1_SET_TIMER 设置 compare.<br>需要陷入到 kvm 中设置 compare.</p>
+<p>guest kernel 合入了 sstc feature 后, guest kernel 可以检测主机是否支持 sstc, </p>
+<ul>
+<li>如支持, guest 通过 stimecmp (vstimecmp) 来设置 compare, 最大化的提高 timer tick 的处理效率.</li>
+<li>不支持, guest 仍通过 sbi SBI_EXT_0_1_SET_TIMER 设置 compare.</li>
+</ul>
+<p>而最新的 linux kvm 版本合入了 sstc 的 feature, 则需要考虑 guest kernel 的兼容性, 同时兼容老的 kernel (不支持 sstc) 和新的 kernel(支持 sstc)</p>
+<p>来看下对应的处理逻辑:</p>
+<ul>
+<li><p>模拟的 riscv 主机支持 sstc 时:</p>
+<ol>
+<li>对于支持 sstc 的新的 guest kernel, 在 guest 运行后, 就不用管 guest 的 timer tick 了, 但是 guest 退出运行后, 处于 block 时, 仍然需要关注 guest 的 timer tick.</li>
+<li>对于不支持 sstc 的旧的 guest kernel, 需要处理 guest 发过来的 sbi SBI_EXT_0_1_SET_TIMER 消息. 但 guest 运行时, 也不需要通过主机定时器来处理 guest 的 timer tick. 因为 host 是支持 sstc 的, 只是 guest kernel 未检测 sstc 而已. 只要 kvm 在收到 sbi SBI_EXT_0_1_SET_TIMER 后直接设置 vstimecmp 就可以了, 这样时间到了后, 硬件会设置 VSTIP, guest 就可以处理 timer tick 中断走到 tick 处理函数了.</li>
+</ol>
+</li>
+<li><p>模拟的 riscv 主机不支持 sstc 时:</p>
+<ol>
+<li>退回到通过 host kvm 设置定时器来处理 guest 的 timer tick.</li>
+</ol>
+</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">kvm_riscv_vcpu_timer_init</span><span class="params">(<span class="keyword">struct</span> kvm_vcpu *vcpu)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">kvm_vcpu_timer</span> *<span class="title">t</span> =</span> &amp;vcpu-&gt;arch.timer;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (t-&gt;init_done)</span><br><span class="line">		<span class="keyword">return</span> -EINVAL;</span><br><span class="line"></span><br><span class="line">	hrtimer_init(&amp;t-&gt;hrt, CLOCK_MONOTONIC, HRTIMER_MODE_REL);</span><br><span class="line">	t-&gt;init_done = <span class="literal">true</span>;</span><br><span class="line">	t-&gt;next_set = <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Enable sstc for every vcpu if available in hardware */</span></span><br><span class="line">	<span class="keyword">if</span> (riscv_isa_extension_available(<span class="literal">NULL</span>, SSTC)) &#123;</span><br><span class="line">		t-&gt;sstc_enabled = <span class="literal">true</span>;</span><br><span class="line">		t-&gt;hrt.function = kvm_riscv_vcpu_vstimer_expired;</span><br><span class="line">		t-&gt;timer_next_event = kvm_riscv_vcpu_update_vstimecmp;</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		t-&gt;sstc_enabled = <span class="literal">false</span>;</span><br><span class="line">		t-&gt;hrt.function = kvm_riscv_vcpu_hrtimer_expired;</span><br><span class="line">		t-&gt;timer_next_event = kvm_riscv_vcpu_update_hrtimer;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="riscv-主机支持-sstc"><a href="#riscv-主机支持-sstc" class="headerlink" title="riscv 主机支持 sstc"></a>riscv 主机支持 sstc</h2><p>看下 riscv 主机支持 sstc 的策略:<br><code>t-&gt;timer_next_event = kvm_riscv_vcpu_update_vstimecmp;</code></p>
+<p>该函数是在处理 guest 发来的 <code>sbi SBI_EXT_0_1_SET_TIMER</code> 的处理函数</p>
+<figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">-+ kvm_sbi_ext_v01_handler</span><br><span class="line"> \ -+ case SBI_EXT_0_1_SET_TIMER:</span><br><span class="line">    \ -  next_cycle = <span class="params">(u64)</span>cp-&gt;a0;</span><br><span class="line">    | -+ kvm_riscv_vcpu_timer_next_event<span class="params">(vcpu, next_cycle)</span>; </span><br><span class="line">       \ -+ t-&gt;timer_next_event<span class="params">(vcpu, ncycles)</span>;</span><br><span class="line">          \ -+ kvm_riscv_vcpu_update_vstimecmp<span class="params">()</span></span><br><span class="line">             \ -  csr_write<span class="params">(CSR_VSTIMECMP, ncycles)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>对应支持 sstc 模拟 riscv 主机的第二种情况.<br>而第一种情况 guest 运行中 guest kernel 自己设置 vstimecmp, 不需要陷入 kvm, 所以 kvm 也不用处理.</p>
+<p>再看下<br><code>t-&gt;hrt.function = kvm_riscv_vcpu_vstimer_expired;</code></p>
+<p>这个是 host kvm 定时器的超期函数, 这个函数是为了处理 guest kernel 因 block 得不到执行时的定时器处理函数, 该定时器是类似于 doorbell 机制, 在 guest kernel 未能调度时, 需要 kvm 设置定时器处理 guest 的 tick. 保证 vcpu 可以有调度的机会.</p>
+<figure class="highlight erlang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">&quot;退出ioctl(KVM_RUN)的小循环时, 调用了 vcpu_put 释放vcpu资源&quot;</span></span><br><span class="line">-+ kvm_arch_vcpu_ioctl_run<span class="params">(vcpu)</span></span><br><span class="line"> \ -+ vcpu_put<span class="params">(vcpu)</span></span><br><span class="line">    \ -+ kvm_arch_vcpu_put<span class="params">(vcpu)</span>;</span><br><span class="line">       \ -+ kvm_riscv_vcpu_timer_save<span class="params">(vcpu)</span>;</span><br><span class="line">          \ -|+ if kvm_vcpu_is_blocking<span class="params">(vcpu)</span></span><br><span class="line">              \ -+ kvm_riscv_vcpu_timer_blocking<span class="params">(vcpu)</span>;</span><br><span class="line">                      &quot;启动定时器&quot;</span><br><span class="line">                 \ -  hrtimer_start<span class="params">(&amp;t-&gt;hrt, ktime_set(<span class="number">0</span>, delta_ns), HRTIMER_MODE_REL)</span>;</span><br><span class="line">&quot;定时器到时处理函数&quot;</span><br><span class="line">-+ kvm_riscv_vcpu_vstimer_expired<span class="params">(struct hrtimer *h)</span></span><br><span class="line"> \ -  kvm_vcpu_kick<span class="params">(vcpu)</span>; &quot;唤醒vcpu&quot;</span><br><span class="line"> | -  return HRTIMER_NORESTART; &quot;不重启定时器&quot;</span><br></pre></td></tr></table></figure>
+
+<h2 id="riscv-主机不支持-sstc"><a href="#riscv-主机不支持-sstc" class="headerlink" title="riscv 主机不支持 sstc"></a>riscv 主机不支持 sstc</h2><p>回退 kvm 主机为 guest timer tick 设置定时器<br><code>t-&gt;timer_next_event = kvm_riscv_vcpu_update_hrtimer;</code></p>
+<p>在 guest 因设置 compare 请求导致陷入到 kvm 中, kvm 处理 <code>SBI_EXT_0_1_SET_TIMER</code>:<br>在 <code>kvm_riscv_vcpu_update_hrtimer</code> 中</p>
+<ul>
+<li>首先清除了 IRQ_VS_TIMER 中断, 确保本轮 tick 中不再有新的 timer 中断产生</li>
+<li>计算下一轮到期的时间 delta_ns (cycle 转换为 host 的纳秒单位)</li>
+<li>启动定时器, 到期时间为当前时间+delta_ns</li>
+<li>退出 kvm, 重返到 vcpu guest</li>
+</ul>
+<p>定时器到期时, 触发中断重新陷入到 kvm 中, 处理函数为 <code>kvm_riscv_vcpu_hrtimer_expired</code><br>, 通过 hvip 注入 IRQ_VS_TIMER 中断, 让 guest 处理 timer tick, 走到对应的 tick 处理函数, 紧接着通过 sbi SBI_EXT_0_1_SET_TIMER 设置下一轮 compare.</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/riscv/" rel="tag"># riscv</a>
+              <a href="/tags/qemu/" rel="tag"># qemu</a>
+              <a href="/tags/kvm/" rel="tag"># kvm</a>
+              <a href="/tags/bug/" rel="tag"># bug</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/09/09/hxd%20new/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv%20kvm%20%E8%B0%83%E7%A0%94/" rel="prev" title="riscv kvm 方案代码调研">
+      <i class="fa fa-chevron-left"></i> riscv kvm 方案代码调研
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/10/11/hxd%20new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/RISCV%20kvm%20qemu%20%E8%99%9A%E6%8B%9F%E5%8C%96%E8%B0%83%E7%A0%94/" rel="next" title="riscv kvm qemu 虚拟化调研">
+      riscv kvm qemu 虚拟化调研 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%97%AE%E9%A2%98%E8%83%8C%E6%99%AF"><span class="nav-number">1.</span> <span class="nav-text">问题背景</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%97%AE%E9%A2%98%E5%88%9D%E6%AD%A5%E5%88%86%E6%9E%90"><span class="nav-number">2.</span> <span class="nav-text">问题初步分析</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%9D%E6%AD%A5%E9%AA%8C%E8%AF%81"><span class="nav-number">3.</span> <span class="nav-text">初步验证</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A2%B3%E7%90%86-guest-timer-%E7%9A%84%E6%B5%81%E7%A8%8B"><span class="nav-number">4.</span> <span class="nav-text">梳理 guest timer 的流程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#riscv-%E4%B8%BB%E6%9C%BA%E6%94%AF%E6%8C%81-sstc"><span class="nav-number">4.1.</span> <span class="nav-text">riscv 主机支持 sstc</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#riscv-%E4%B8%BB%E6%9C%BA%E4%B8%8D%E6%94%AF%E6%8C%81-sstc"><span class="nav-number">4.2.</span> <span class="nav-text">riscv 主机不支持 sstc</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">159</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">37</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">131</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'dark',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'VrGRp2q7WwXjxsCNmlDIZYbC-gzGzoHsz',
+      appKey     : 'JgMXmmB7yKQf2zm80TaBp3JT',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : 'zh-cn' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

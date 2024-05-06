@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=LXGW WenKai:300,300italic,400,400italic,700,700italic|LXGW WenKai Mono, Source Code Pro:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":{"valine":{"order":-1}},"activeClass":"valine"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
+  </script>
+
+  <meta name="description" content="MIPS 相关理解协处理器在MIPS体系结构中，最多支持4个协处理器(Co-Processor)。其中，协处理器CP0是体系结构中必须实现的。它起到控制CPU的作用。MMU、异常处理、乘除法等功能，都依赖于协处理器CP0来实现。它是MIPS的精髓之一，也是打开MIPS特权级模式的大门。    - Register 0: Index，作为MMU的索引用。将来讨论MMU和TLB时会详解之。    -">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MIPS 杂项">
+<meta property="og:url" content="https://liguangzhang.github.io/2021/09/11/hxd%20new/%E5%AE%89%E5%85%A8%E6%89%8B%E5%86%8C%E7%9B%B8%E5%85%B3/index.html">
+<meta property="og:site_name" content="blog">
+<meta property="og:description" content="MIPS 相关理解协处理器在MIPS体系结构中，最多支持4个协处理器(Co-Processor)。其中，协处理器CP0是体系结构中必须实现的。它起到控制CPU的作用。MMU、异常处理、乘除法等功能，都依赖于协处理器CP0来实现。它是MIPS的精髓之一，也是打开MIPS特权级模式的大门。    - Register 0: Index，作为MMU的索引用。将来讨论MMU和TLB时会详解之。    -">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-09-11T10:15:54.000Z">
+<meta property="article:modified_time" content="2024-05-06T06:15:32.863Z">
+<meta property="article:author" content="liguang.zhang">
+<meta property="article:tag" content="MIPS">
+<meta property="article:tag" content="ldscript">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://liguangzhang.github.io/2021/09/11/hxd%20new/%E5%AE%89%E5%85%A8%E6%89%8B%E5%86%8C%E7%9B%B8%E5%85%B3/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+<link rel="stylesheet" href="https://npm.elemecdn.com/lxgw-wenkai-screen-webfont/style.css" media="print" onload="this.media='all'" />
+
+  <title>MIPS 杂项 | blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+  <a role="button" class="book-mark-link book-mark-link-fixed"></a>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2021/09/11/hxd%20new/%E5%AE%89%E5%85%A8%E6%89%8B%E5%86%8C%E7%9B%B8%E5%85%B3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MIPS 杂项
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-09-11 18:15:54" itemprop="dateCreated datePublished" datetime="2021-09-11T18:15:54+08:00">2021-09-11</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-05-06 14:15:32" itemprop="dateModified" datetime="2024-05-06T14:15:32+08:00">2024-05-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/linux/" itemprop="url" rel="index"><span itemprop="name">linux</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2021/09/11/hxd%20new/%E5%AE%89%E5%85%A8%E6%89%8B%E5%86%8C%E7%9B%B8%E5%85%B3/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2021/09/11/hxd%20new/%E5%AE%89%E5%85%A8%E6%89%8B%E5%86%8C%E7%9B%B8%E5%85%B3/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="MIPS-相关理解"><a href="#MIPS-相关理解" class="headerlink" title="MIPS 相关理解"></a>MIPS 相关理解</h1><h2 id="协处理器"><a href="#协处理器" class="headerlink" title="协处理器"></a>协处理器</h2><p>在MIPS体系结构中，最多支持4个协处理器(Co-Processor)。其中，协处理器<code>CP0</code>是体系结构中必须实现的。它起到控制CPU的作用。MMU、异常处理、乘除法等功能，都依赖于协处理器CP0来实现。它是MIPS的精髓之一，也是打开MIPS特权级模式的大门。</p>
+<pre><code>   - Register 0: Index，作为MMU的索引用。将来讨论MMU和TLB时会详解之。
+   - Register 2, EntryLo0，访问TLB Entry偶数页中的地址低32Bit用。同上，在MMU和TLB的相关章节中详解。
+   - Register 3, EntryLo1，访问TLB Entry奇数页中的地址低32Bit用。
+   - Register 4, Context，用以加速TLB Miss异常的处理。
+   - Register 5, PageMask，用以在MMU中分配可变大小的内存页。
+   - Register 8, BadVAddr，在系统捕获到TLB Miss或Address Error这两种Exception时，发生错误的虚拟地址会储存在该寄存器中。对于引发Exception的Bug的定位来说，这个寄存器非常重要。
+   - `Register 9`, Count，这个寄存器是R4000以后的MIPS系统引入的。它是一个计数器，`计数频率是系统主频的1/2`。BCM1125/1250，RMI XLR系列以及Octeon的Cavium处理器均支持该寄存器。对于操作系统来说，`可以通过读取该寄存器的值来获取tick的时基`。`在系统性能测试中，利用该寄存器也可以实现打点计数`。
+   - Register 10，EntryHi，这个寄存器同EntryLo0/1一样，用于MMU中。以后会详述。
+   - Register 11，Compare，配合Count使用。当Compare和Count的值相等的时候，会触发一个硬件中断(Hardware Interrupt)，并且总是使用Cause寄存器的IP7位。　　
+   - Register 12，Status，用于处理器状态的控制。
+   - Register 13，Cause，这个寄存器体现了处理器异常发生的原因。
+   - 　　Register 14，EPC，这个寄存器存放异常发生时，系统正在执行的指令的地址。
+   - 　　Register 15，PRID，这个寄存器是只读的，标识处理器的版本信息。向其中写入无意义。
+</code></pre>
+<ul>
+<li>　　Register 18&#x2F;19，WatchLo&#x2F;WatchHi，这对寄存器用于设置硬件数据断点(Hardware Data Breakpoint)。该断点一旦设定，当CPU存取这个地址时，系统就会发生一个异常。这个功能广泛应用于调试定位内存写坏的错误。<br> 　　Register 28&#x2F;29，TagLo和TagHi，用于高速缓存(Cache)管理。</li>
+</ul>
+<p>相关链接 <a target="_blank" rel="noopener" href="https://blog.csdn.net/jiura/article/details/6645277">协处理器CP0</a></p>
+<h3 id="常用汇编指令"><a href="#常用汇编指令" class="headerlink" title="常用汇编指令"></a>常用汇编指令</h3><p>MFC0、MTC0、DMFC0、DMTC0可以完成通用寄存器和CP0寄存器之间的数据传送。比如我们可以通过下面指令来获取epc寄存器的值。</p>
+<pre><code>             mfc0 t1,$14           # 从CP0 取epc寄存器（$14）数据，存到通用寄存器t0
+</code></pre>
+<p>mfc0完成从cp0寄存器获取一个32位数据（如果cp0寄存器是64位数据则只取其低32位。）到通用寄存器，如果要获取的是64位数据则需要使用dmfc0指令。</p>
+<p>注意：和CP0相关的指令执行都需要特权模式，比如上面的mfc0指令的运行需要root权限或者sudo才可以运行。所以在一般用户程序中很少见到这些CP0相关的控制指令。</p>
+<h2 id="ldscripts-link-ld-语法相关"><a href="#ldscripts-link-ld-语法相关" class="headerlink" title="ldscripts link.ld 语法相关"></a>ldscripts link.ld 语法相关</h2><p>相关理解总结在 <a target="_blank" rel="noopener" href="https://www.yuque.com/huakaibanxia-loogp/simpread/1617787139204"><strong>linux 中链接脚本 ld 文件详解</strong></a></p>
+<p>这里总结下用到的大概率用到的知识点：</p>
+<h3 id="LMA-VMA"><a href="#LMA-VMA" class="headerlink" title="LMA VMA"></a>LMA VMA</h3><p>目标文件的每个 <code>section</code> 至少包含两个信息: 名字和大小. 大部分 section 还包含与它相关联的一块数据, 称为 section contents(section 内容). 一个 section 可被标记为 “loadable(可加载的)” 或“allocatable(可分配的)”.</p>
+<ul>
+<li><p>loadable section: 在输出文件运行时, 相应的 section 内容将被载入进程地址空间中.</p>
+</li>
+<li><p>allocatable section: 内容为空的 section 可被标记为 “可分配的”. 在输出文件运行时, 在进程地址空间中空出大小同 section 指定大小的部分. 某些情况下, 这块内存必须被置零.</p>
+</li>
+</ul>
+<blockquote>
+<p>如果一个 section 不是 “可加载的” 或“可分配的”, 那么该 section 通常包含了调试信息. 可用 objdump -h 命令查看相关信息.</p>
+</blockquote>
+<p>每个 “可加载的” 或“可分配的”输出 section 通常包含两个地址: <code>VMA</code>(virtual memory address 虚拟内存地址或程序地址空间地址)和 <code>LMA</code>(load memory address 加载内存地址或进程地址空间地址). 通常 VMA 和 LMA 是相同的.</p>
+<blockquote>
+<p>在嵌入式系统中, 经常存在加载地址和执行地址不同的情况: 比如将输出文件加载到开发板的 flash 中 (由 LMA 指定), 而在运行时将位于 flash 中的输出文件复制到 SDRAM 中 (由 VMA 指定).</p>
+</blockquote>
+<p>LMA是加载地址(镜像执行之前位于存储器中的地址, 称为加载时地址), 需要将该地址的数据拷贝到对应的VMA段下. VMA是实际映射到内存中的地址, 可以通过map文件查看</p>
+<blockquote>
+<p>-M 或者 -Map 指令指定输出到map文件, map 应该类似于进程执行时 map 内存映射 (刨除基地址)</p>
+</blockquote>
+<h3 id="定位符号"><a href="#定位符号" class="headerlink" title="定位符号 ."></a>定位符号 .</h3><p>. 是一个特殊的符号，它是定位器，一个位置指针,  指向程序地址空间内的某位置 (如果它在 SECTIONS 命令内的某 section 描述内, 指的是在该section 内的偏移)</p>
+<blockquote>
+<p>该符号只能在 SECTIONS 命令内使用   <code>.</code>始终指的是运行时的地址 VMA, 与LMA无关</p>
+</blockquote>
+<h3 id="SECTIONS-命令"><a href="#SECTIONS-命令" class="headerlink" title="SECTIONS 命令"></a>SECTIONS 命令</h3><p>SECTIONS 命令告诉 ld 如何把输入文件的 sections 映射到输出文件的各个 section: 如何将输入 section 合为输出 section; 如何把输出 section 放入程序地址空间 (VMA) 和进程地址空间(LMA). 该命令格式如下:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">SECTIONS</span><br><span class="line">&#123;</span><br><span class="line">SECTIONS-COMMAND</span><br><span class="line">SECTIONS-COMMAND</span><br><span class="line">…</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>SECTION-COMMAND 有四种:</p>
+<ul>
+<li><p>(1) ENTRY 命令</p>
+</li>
+<li><p>(2) 符号赋值语句</p>
+</li>
+<li><p>(3) 一个输出 section 的描述 (output section description)</p>
+</li>
+<li><p>(4) 一个 section 叠加描述 (overlay description)</p>
+</li>
+</ul>
+<blockquote>
+<p>如果整个连接脚本内没有 SECTIONS 命令, 那么 ld 将所有同名输入 section 合成为一个输出 section 内, <code>各输入 section 的顺序为它们被连接器发现的顺序</code>.</p>
+<p>如果某输入 section 没有在 SECTIONS 命令中提到, 那么该 section 将被直接拷贝成输出 section。</p>
+</blockquote>
+<h4 id="输出-section-描述"><a href="#输出-section-描述" class="headerlink" title="输出 section 描述"></a>输出 section 描述</h4><p>输出 section 描述具有如下格式:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">SECTION [ADDRESS] [(TYPE)] : [AT(LMA)]</span><br><span class="line">&#123;</span><br><span class="line">OUTPUT-SECTION-COMMAND</span><br><span class="line">OUTPUT-SECTION-COMMAND</span><br><span class="line">…</span><br><span class="line">&#125; [&gt;REGION] [AT&gt;LMA_REGION] [:PHDR  HDR ...] [=FILLEXP]</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>[ ] 内的内容为可选选项, 一般不需要.</p>
+</blockquote>
+<p>每个<code>OUTPUT-SECTION-COMMAND</code>为以下四种之一，</p>
+<ul>
+<li>符号赋值语句</li>
+<li>一个输入 section 描述</li>
+<li>直接包含的数据值</li>
+<li>一个特殊的输出 section 关键字</li>
+</ul>
+<h5 id="前面部分-SECTION-ADDRESS-TYPE-AT-LMA"><a href="#前面部分-SECTION-ADDRESS-TYPE-AT-LMA" class="headerlink" title="前面部分 SECTION [ADDRESS] [(TYPE)] : [AT(LMA)]"></a>前面部分 SECTION [ADDRESS] [(TYPE)] : [AT(LMA)]</h5><h6 id="输出-section-名字-SECTION"><a href="#输出-section-名字-SECTION" class="headerlink" title="输出 section 名字 (SECTION)"></a>输出 section 名字 (SECTION)</h6><p>输出 section 名字必须符合输出文件格式要求，比如：a.out 格式的文件只允许存在. text、.data 和. bss section 名。而有的格式只允许存在数字名字，那么此时应该用引号将所有名字内的数字组合在一起；另外，还有一些格式允许任何序列的字符存在于 section 名字内，此时如果名字内包含特殊字符 (比如空格、逗号等)，那么需要用引号将其组合在一起。</p>
+<h6 id="输出-section-地址-ADDRESS"><a href="#输出-section-地址-ADDRESS" class="headerlink" title="输出 section 地址 (ADDRESS)"></a>输出 section 地址 (ADDRESS)</h6><p>ADDRESS 是一个表达式，它的值用于设置 <code>VMA</code>。</p>
+<blockquote>
+<ul>
+<li><p>如果没有该选项且有 <code>REGION</code> 选项，那么连接器将根据 REGION 设置 VMA；</p>
+</li>
+<li><p>如果也没有 REGION 选项，那么连接器将根据定位符号 <code>.</code> 的值设置该 section 的 VMA，将定位符号的值调整到满足输出 section 对齐要求后的值，</p>
+</li>
+</ul>
+</blockquote>
+<p>输出 section 的对齐要求为：该输出 section 描述内用到的所有输入 section 的对齐要求中最严格的。</p>
+<p>例子：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1   .text . : &#123;*(.text) &#125;</span><br><span class="line">2   .text : &#123;*(.text) &#125;</span><br></pre></td></tr></table></figure>
+
+<p>第一个 <code>.</code> 定义了输出VMA的地址，说明是根据当前的定位指针的偏移设置 VMA的</p>
+<p>第二个 没有定义 输出DMA，也没有REGION， 则根据定位符号 <code>.</code>　对齐后的值　输出 VMA</p>
+<blockquote>
+<p>ADDRESS 可以是一个任意表达式，比如 ALIGN(0×10) 这将把该 section 的 VMA 设置成定位符号的修调值，满足 16 字节对齐后的。</p>
+</blockquote>
+<blockquote>
+<p>注意：<code>设置 ADDRESS 值，将更改定位符号的值。</code></p>
+</blockquote>
+<h6 id="TYPE"><a href="#TYPE" class="headerlink" title="TYPE"></a>TYPE</h6><p>每个输出 section 都有一个类型，如果没有指定 TYPE 类型，那么连接器根据输出 section 引用的输入 section 的类型设置该输出 section 的类型。</p>
+<p>它可以为以下五种值，</p>
+<ol>
+<li>NOLOAD ：该 section 在程序运行时，不被载入内存。</li>
+<li>DSECT</li>
+<li>COPY</li>
+<li>INFO</li>
+<li>OVERLAY 支持这些类型名称以实现向后兼容，并且很少使用。 它们都具有相同的效果：该段应标记为不可分配，以便在程序运行时不为该段分配内存</li>
+</ol>
+<h6 id="AT-LMA"><a href="#AT-LMA" class="headerlink" title="[AT(LMA)]"></a>[AT(LMA)]</h6><p>默认情况下，LMA 等于 VMA，但可以通过关键字 AT() 指定 LMA。</p>
+<p>用关键字 AT() 指定，括号内包含表达式，表达式的值用于设置 LMA。如果不用 AT() 关键字，那么可用 <code>AT&gt;LMA_REGION</code> 表达式设置指定该 section 加载地址的范围。   这个属性主要用于构件 ROM 境象。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">SECTIONS</span><br><span class="line">&#123;</span><br><span class="line">.text 0×1000 : </span><br><span class="line"> &#123;</span><br><span class="line"> *(.text);</span><br><span class="line"> _etext = . ;  </span><br><span class="line"> &#125;</span><br><span class="line">.mdata 0×2000 : AT (ADDR (.text) + SIZEOF (.text) )</span><br><span class="line">  &#123;</span><br><span class="line">  _data = . ; </span><br><span class="line">  *(.data);</span><br><span class="line">  _edata = . ; </span><br><span class="line">  &#125;</span><br><span class="line">.bss 0×3000 :</span><br><span class="line">  &#123;</span><br><span class="line">  bstart = . ;</span><br><span class="line">  *(.bss) *(COMMON) ;</span><br><span class="line">  _bend = . ;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">extern</span> <span class="type">char</span> etext, data, edata, bstart, _bend;</span><br><span class="line"><span class="type">char</span> *src = &amp;_etext; </span><br><span class="line"><span class="type">char</span> *dst = &amp;_data;  </span><br><span class="line"><span class="keyword">while</span> (dst &lt; &amp;_edata) &#123;</span><br><span class="line">  dst++ = src++;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">for</span> (dst = &amp;bstart; dst&lt; &amp;_bend; dst++)</span><br><span class="line">  *dst = <span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+
+<p>此程序将处于 ROM内的已初始化数据拷贝到 mdata段的相应区域，并将未初始化数据置零</p>
+<h5 id="中间部分-OUTPUT-SECTION-COMMAND"><a href="#中间部分-OUTPUT-SECTION-COMMAND" class="headerlink" title="中间部分 OUTPUT-SECTION-COMMAND"></a>中间部分 <code>OUTPUT-SECTION-COMMAND</code></h5><p>每个<code>OUTPUT-SECTION-COMMAND</code>为以下四种之一，</p>
+<ul>
+<li><p>符号赋值语句</p>
+</li>
+<li><p>一个输入 section 描述</p>
+</li>
+<li><p>直接包含的数据值</p>
+</li>
+<li><h6 id="一个特殊的输出-section-关键字"><a href="#一个特殊的输出-section-关键字" class="headerlink" title="一个特殊的输出 section 关键字"></a>一个特殊的输出 section 关键字</h6></li>
+</ul>
+<h6 id="输入-section-描述"><a href="#输入-section-描述" class="headerlink" title="输入 section 描述"></a>输入 section 描述</h6><p>最常见的输出 section 描述命令是输入 section 描述。</p>
+<p>输入 section 描述是最基本的连接脚本描述。</p>
+<p>语法 <code>FILENAME([EXCLUDE_FILE (FILENAME1 FILENAME2 ...) SECTION1 SECTION2 ...)</code></p>
+<ul>
+<li><p>FILENAME 文件名，可以是一个特定的文件的名字，也可以是一个字符串模式。</p>
+</li>
+<li><p>SECTION 名字，可以是一个特定的 section 名字，也可以是一个字符串模式</p>
+<p>例子:</p>
+<ul>
+<li><p>*(.text) ：表示所有输入文件的. text section</p>
+</li>
+<li><p>(*(EXCLUDE_FILE ( *crtend.o *otherfile.o) .ctors)) ：表示除 crtend.o、otherfile.o 文件外的所有输入文件的. ctors section。</p>
+</li>
+<li><p>data.o(.data) ：表示 data.o 文件的. data section</p>
+</li>
+<li><p>data.o ：表示 data.o 文件的所有 section</p>
+</li>
+<li><p>*(.text .data) ：表示所有文件的. text section 和. data section，顺序是：第一个文件的. text section，第一个文件的. data section，   第二个文件的. text section，第二个文件的. data section，…</p>
+</li>
+<li><p>*(.text)   * (.data) ：表示所有文件的. text section 和. data section，顺序是：第一个文件的. text section，第二个文件的. text section，…，最后一个文件的. text section，第一个文件的. data section，第二个文件的. data section，…，最后一个文件的. data section</p>
+</li>
+</ul>
+</li>
+</ul>
+<h5 id="前面部分-SECTION-ADDRESS-TYPE-AT-LMA-1"><a href="#前面部分-SECTION-ADDRESS-TYPE-AT-LMA-1" class="headerlink" title="前面部分 SECTION [ADDRESS] [(TYPE)] : [AT(LMA)]"></a>前面部分 SECTION [ADDRESS] [(TYPE)] : [AT(LMA)]</h5><h5 id="后半部分-REGION-AT-LMA-REGION-PHDR-FILEHDR-…-FILLEXP"><a href="#后半部分-REGION-AT-LMA-REGION-PHDR-FILEHDR-…-FILLEXP" class="headerlink" title="后半部分 [&gt;REGION] [AT&gt;LMA_REGION] [:PHDR  :FILEHDR …] [&#x3D;FILLEXP]"></a>后半部分 [&gt;REGION] [AT&gt;LMA_REGION] [:PHDR  :FILEHDR …] [&#x3D;FILLEXP]</h5><h6 id="REGION"><a href="#REGION" class="headerlink" title="[&gt;REGION]"></a>[&gt;REGION]</h6><p>可以将输出 section 放入预先定义的内存区域内</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">MEMORY &#123; rom : ORIGIN = 0×1000, LENGTH = 0×1000 &#125;</span><br><span class="line">SECTIONS &#123;ROM : &#123; *(.text) &#125; &gt;rom &#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>这个地方应该是放在VMA中, 注意这里输出到 预定的内存区域后, 连带会把<code> .</code> 改为 预定内存区域的地址(第一次出现), 然后执行section 内的语句</p>
+<p>ld脚本section 是按顺序解析的, 第一次出现时 会将 <code>.</code>定界, 后面的section 如果都放在和该section相同的内存区域时, <code>.</code> 会累加 section的size.</p>
+</blockquote>
+<h6 id="PHDR-FILEHDR-…-这里显示的是段名"><a href="#PHDR-FILEHDR-…-这里显示的是段名" class="headerlink" title="[:PHDR  :FILEHDR … ] 这里显示的是段名"></a>[:PHDR  :FILEHDR … ] 这里显示的是段名</h6><blockquote>
+<p>不需要深究, 详细见<a target="_blank" rel="noopener" href="https://sourceware.org/binutils/docs/ld/PHDRS.html">https://sourceware.org/binutils/docs/ld/PHDRS.html</a></p>
+</blockquote>
+<p>linker脚本中的PHDRS命令需要与SECTIONS命令结合起来看,否则不容易理解.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">PHDRS</span><br><span class="line">&#123;</span><br><span class="line"> text PT_LOAD FILEHDR PHDRS ;</span><br><span class="line"> data PT_LOAD ;</span><br><span class="line">&#125;</span><br><span class="line">SECTIONS</span><br><span class="line">&#123;</span><br><span class="line"> .text : &#123; *(.text) &#125; :text   // :text 是 PHDRS 里定义的段名</span><br><span class="line"> .data : &#123; *(.data) &#125; :data   // :data 是 PHDRS 里定义的段名</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>ld以该脚本对输入文件进行链接,输出文件中将会包含两个section:.text和.data<br>以SECTIONS命令中的第一行为例:  .text : { *(.text) } :text<br>这句话是说将输入文件中所有的.text section (中间的 *(.text)) 都链接到输出文件的.text section中.<br>并将输出文件中的.text section<code>分配到PHDRS命令中定义的名为text的segment中</code>.</p>
+</blockquote>
+<p>PHDRS命令中,<br> text PT_LOAD <code>FILEHDR</code> <code>PHDRS</code> ;<br>该语句定义了名为text的一个segment<br>它的属性为<code>PT_LOAD</code>, 表示它是一个可以被加载的segment<br><code>FILEHDR</code>和<code>PHDRS</code>是它的追加属性,分别表示在这个segment中<code>必须包含ELF文件头</code>和<code>必须包含ELF程序文件头</code></p>
+<blockquote>
+<p>You may use the <code>FILEHDR</code> and <code>PHDRS</code> keywords after the program header type to further describe the contents of the segment. The <code>FILEHDR</code> keyword means that the segment should include the ELF file header. The <code>PHDRS</code> keyword means that the segment should include the ELF program headers themselves. If applied to a loadable segment (<code>PT_LOAD</code>), all prior loadable segments must have one of these keywords.</p>
+</blockquote>
+<p>The ELF object file format uses <em>program headers</em>, also knows as <em>segments</em>. The program headers describe how the program should be loaded into memory. You can print them out by using the <code>objdump -p</code></p>
+<p>The linker will create reasonable program headers by default. However, in some cases, you may need to specify the program headers more precisely. You may use the <code>PHDRS</code> command for this purpose. When the linker sees the <code>PHDRS</code> command in the linker script, it will not create any program headers other than the ones specified.</p>
+<h6 id="FILLEXP-这里显示的是段名"><a href="#FILLEXP-这里显示的是段名" class="headerlink" title="[&#x3D;FILLEXP] 这里显示的是段名"></a>[&#x3D;FILLEXP] 这里显示的是段名</h6><p>&#x3D; FILLEXP 属性作用于整个输出 section 区域</p>
+<p>在当前输出 section 内可能存在未描述的存储区域 (比如由于对齐造成的空隙)，可以用 FILL(EXPRESSION) 命令决定这些存储区域的内容</p>
+<blockquote>
+<p>它的作用如同 FILL()命令，但是 FILL 命令只作用于该 FILL 指令之后的 section 区域，而 &#x3D; FILLEXP 属性作用于整个输出 section 区域，且 FILL 命令的优先级更高！！！</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SECTIONS &#123; .text : &#123; *(.text) &#125; =<span class="number">0x90909090</span> &#125; <span class="comment">// 此处=0x90909090 为 [=FILLEXP]</span></span><br></pre></td></tr></table></figure>
+
+<p>(for example, gaps left due to the required alignment of input sections) will be filled with the value, repeated as necessary. If the fill expression is a simple hex number, ie. a string of hex digit starting with ‘0x’ and without a trailing ‘k’ or ‘M’, then an arbitrarily long sequence of hex digits can be used to specify the fill pattern; Leading zeros become part of the pattern too. For all other cases, including extra parentheses or a unary <code>+</code>, the fill pattern is the four least significant bytes of the value of the expression.</p>
+<blockquote>
+<p>In all cases, the number is big-endian. 见 <a target="_blank" rel="noopener" href="https://sourceware.org/binutils/docs/ld/Output-Section-Fill.html">https://sourceware.org/binutils/docs/ld/Output-Section-Fill.html</a></p>
+</blockquote>
+<h3 id="输入-section-和垃圾回收："><a href="#输入-section-和垃圾回收：" class="headerlink" title="输入 section 和垃圾回收："></a>输入 section 和垃圾回收：</h3><p>在连接命令行内使用了选项<code>–gc-sections</code> 后，连接器可能将某些它认为没用的 section 过滤掉，此时就有必要强制连接器保留一些特定的 section，可用 <code>KEEP()</code> 关键字达此目的。如 KEEP(<em>(.text)) 或 KEEP(SORT(</em>)(.text))</p>
+<h2 id="硬件寄存器"><a href="#硬件寄存器" class="headerlink" title="硬件寄存器"></a>硬件寄存器</h2><p>即使有tlb mmu的情况下, 硬件寄存器地址所在的地址段 就是真实的物理地址, 是一一映射的</p>
+<p>这里注意的一点是 地址的快速运算, 看代码时, 利用gdb 将地址寄存器的内容快速打出, 不需要频繁加log.</p>
+<h1 id="DMA"><a href="#DMA" class="headerlink" title="DMA"></a>DMA</h1><h2 id="流控制器"><a href="#流控制器" class="headerlink" title="流控制器"></a>流控制器</h2><p>决定DMA块传输长度并终止它的设备被称为流控制器(DW_ahb_dmac或源&#x2F;目标外围设备)</p>
+<ul>
+<li>如果在发起传输前就知道传输长度，则dma自己是作为流控制器</li>
+<li>传送长度未知时，源外设或目标外设是流控制器模式。外设需要在流程中主动发起结束请求， 这种情况下只能选择软件握手。</li>
+<li>内存不可能是流控制器， 仅限能够发出传输结束信号的外设支持此功能</li>
+</ul>
+<h2 id="源、目标和传输模式"><a href="#源、目标和传输模式" class="headerlink" title="源、目标和传输模式"></a>源、目标和传输模式</h2><h3 id="存储器到外设模式"><a href="#存储器到外设模式" class="headerlink" title="存储器到外设模式"></a>存储器到外设模式</h3><h4 id="FIFO-模式"><a href="#FIFO-模式" class="headerlink" title="FIFO 模式"></a><strong>FIFO 模式</strong></h4><p>这种模式，只要使能数据流（DMA_SxCR 寄存器中的位 EN 置 1），存储器数据就会传输到 <code>FIFO</code> 中，发生外设请求，FIFO 数据会移出并存储到目标地址。</p>
+<p>当 FIFO 小于阈值，存储器的数据会重新装载 <code>FIFO</code>。</p>
+<blockquote>
+<p>提高带宽的特殊模式。当启用时，通道会等到目标设备的FIFO小于半满时才从源外设获取数据，等到源设备的FIFO大于或等于半满时才会向目的外设发送数据。正因为如此，通道可以使用突发方式传输数据，这样就不需要在每一次AHB传输中对AHB主接口进行仲裁。当不启用该模式时，通道只等待FIFO可以传输或接受单次AHB传输后才会请求主总线接口。</p>
+</blockquote>
+<h4 id="直连模式"><a href="#直连模式" class="headerlink" title="直连模式"></a><strong>直连模式</strong></h4><p>使能数据流时，DMA 传输存储器的第一个数据到内部 FIFO，发生外设请求时，DMA 把预装在值发送的目标地址，然后进行下一个数据的传输。预装载的数据大小为 DMA_SxCR 寄存器中 PSIZE 位字段的值</p>
+<p>传输停止条件，下列满足一条即可:</p>
+<ul>
+<li>DMA_SxNDTR  block_ts 寄存器达到零</li>
+<li>外设请求传输终止</li>
+<li>DMA_SxCR 寄存器中的 EN <code>chen</code> 位由软件清零</li>
+</ul>
+<p>存储器到外设模式和外设到存储器模式一样，同样需要对应数据流赢得仲裁，才会启动传输</p>
+<h2 id="握手接口"><a href="#握手接口" class="headerlink" title="握手接口"></a>握手接口</h2><h3 id="DEST-PER"><a href="#DEST-PER" class="headerlink" title="DEST_PER"></a>DEST_PER</h3><p>HS_SEL_DST字段为0时(即配置的硬件仲裁), 分配一个硬件握手接口(0 - 15)到通道n的目的地。如配置为1(软件仲裁), 该字段将被忽略。</p>
+<p>然后，通道可以通过指定的硬件握手接口与连接到该接口的目标外围设备通信。</p>
+<blockquote>
+<p> 为了正确的DMA操作，只有一个外围设备(源或目标)应该被分配到同一个握手接口。</p>
+</blockquote>
+<h3 id="SRC-PER"><a href="#SRC-PER" class="headerlink" title="SRC_PER"></a>SRC_PER</h3><p>同上, 与<code>HS_SEL_SRC</code>字段配合</p>
+<blockquote>
+<p>? 对于外设来说, 握手接口的类型取决与其是否是流控制器, 如果是流控制器, 是软件握手接口; 不是流控制器, 即在发起dma的传输之前, 已经知道了传输大小, 需要将大小配置给dma 控制器, 此时外设只能选择硬件握手接口. ? XXXXXX 理解错误</p>
+</blockquote>
+<p>参考dma 设计pdf 3.8 章节 3.8.1 3.8.2</p>
+<p>这个地方有疑问， 如果外设不是流控制器，又配置的软件握手， 需要另外的软件逻辑同步外设的状态与dma的传输状态是一致的， 即额外的软件握手通信的流程。否则只配置软件握手， 是无法正常work的。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/MIPS/" rel="tag"># MIPS</a>
+              <a href="/tags/ldscript/" rel="tag"># ldscript</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/07/18/hxd%20new/%E5%AE%89%E5%85%A8/ARM%E6%A0%B8%E5%AE%89%E5%85%A8%E6%80%81%E5%92%8C%E9%9D%9E%E5%AE%89%E5%85%A8%E6%80%81%E7%9A%84%E5%88%87%E6%8D%A2/" rel="prev" title="ARM核安全态和非安全态的切换">
+      <i class="fa fa-chevron-left"></i> ARM核安全态和非安全态的切换
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/09/11/hxd%20new/%E5%8D%9A%E6%B5%81efuse/" rel="next" title="bl efuse 操作 api">
+      bl efuse 操作 api <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#MIPS-%E7%9B%B8%E5%85%B3%E7%90%86%E8%A7%A3"><span class="nav-number">1.</span> <span class="nav-text">MIPS 相关理解</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%8F%E5%A4%84%E7%90%86%E5%99%A8"><span class="nav-number">1.1.</span> <span class="nav-text">协处理器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B8%B8%E7%94%A8%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4"><span class="nav-number">1.1.1.</span> <span class="nav-text">常用汇编指令</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ldscripts-link-ld-%E8%AF%AD%E6%B3%95%E7%9B%B8%E5%85%B3"><span class="nav-number">1.2.</span> <span class="nav-text">ldscripts link.ld 语法相关</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#LMA-VMA"><span class="nav-number">1.2.1.</span> <span class="nav-text">LMA VMA</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9A%E4%BD%8D%E7%AC%A6%E5%8F%B7"><span class="nav-number">1.2.2.</span> <span class="nav-text">定位符号 .</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SECTIONS-%E5%91%BD%E4%BB%A4"><span class="nav-number">1.2.3.</span> <span class="nav-text">SECTIONS 命令</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BE%93%E5%87%BA-section-%E6%8F%8F%E8%BF%B0"><span class="nav-number">1.2.3.1.</span> <span class="nav-text">输出 section 描述</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%89%8D%E9%9D%A2%E9%83%A8%E5%88%86-SECTION-ADDRESS-TYPE-AT-LMA"><span class="nav-number">1.2.3.1.1.</span> <span class="nav-text">前面部分 SECTION [ADDRESS] [(TYPE)] : [AT(LMA)]</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E8%BE%93%E5%87%BA-section-%E5%90%8D%E5%AD%97-SECTION"><span class="nav-number">1.2.3.1.1.1.</span> <span class="nav-text">输出 section 名字 (SECTION)</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E8%BE%93%E5%87%BA-section-%E5%9C%B0%E5%9D%80-ADDRESS"><span class="nav-number">1.2.3.1.1.2.</span> <span class="nav-text">输出 section 地址 (ADDRESS)</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#TYPE"><span class="nav-number">1.2.3.1.1.3.</span> <span class="nav-text">TYPE</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#AT-LMA"><span class="nav-number">1.2.3.1.1.4.</span> <span class="nav-text">[AT(LMA)]</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%B8%AD%E9%97%B4%E9%83%A8%E5%88%86-OUTPUT-SECTION-COMMAND"><span class="nav-number">1.2.3.1.2.</span> <span class="nav-text">中间部分 OUTPUT-SECTION-COMMAND</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E4%B8%80%E4%B8%AA%E7%89%B9%E6%AE%8A%E7%9A%84%E8%BE%93%E5%87%BA-section-%E5%85%B3%E9%94%AE%E5%AD%97"><span class="nav-number">1.2.3.1.2.1.</span> <span class="nav-text">一个特殊的输出 section 关键字</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#%E8%BE%93%E5%85%A5-section-%E6%8F%8F%E8%BF%B0"><span class="nav-number">1.2.3.1.2.2.</span> <span class="nav-text">输入 section 描述</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%89%8D%E9%9D%A2%E9%83%A8%E5%88%86-SECTION-ADDRESS-TYPE-AT-LMA-1"><span class="nav-number">1.2.3.1.3.</span> <span class="nav-text">前面部分 SECTION [ADDRESS] [(TYPE)] : [AT(LMA)]</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%90%8E%E5%8D%8A%E9%83%A8%E5%88%86-REGION-AT-LMA-REGION-PHDR-FILEHDR-%E2%80%A6-FILLEXP"><span class="nav-number">1.2.3.1.4.</span> <span class="nav-text">后半部分 [&gt;REGION] [AT&gt;LMA_REGION] [:PHDR  :FILEHDR …] [&#x3D;FILLEXP]</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#REGION"><span class="nav-number">1.2.3.1.4.1.</span> <span class="nav-text">[&gt;REGION]</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#PHDR-FILEHDR-%E2%80%A6-%E8%BF%99%E9%87%8C%E6%98%BE%E7%A4%BA%E7%9A%84%E6%98%AF%E6%AE%B5%E5%90%8D"><span class="nav-number">1.2.3.1.4.2.</span> <span class="nav-text">[:PHDR  :FILEHDR … ] 这里显示的是段名</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#FILLEXP-%E8%BF%99%E9%87%8C%E6%98%BE%E7%A4%BA%E7%9A%84%E6%98%AF%E6%AE%B5%E5%90%8D"><span class="nav-number">1.2.3.1.4.3.</span> <span class="nav-text">[&#x3D;FILLEXP] 这里显示的是段名</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BE%93%E5%85%A5-section-%E5%92%8C%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%EF%BC%9A"><span class="nav-number">1.2.4.</span> <span class="nav-text">输入 section 和垃圾回收：</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A1%AC%E4%BB%B6%E5%AF%84%E5%AD%98%E5%99%A8"><span class="nav-number">1.3.</span> <span class="nav-text">硬件寄存器</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#DMA"><span class="nav-number">2.</span> <span class="nav-text">DMA</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%81%E6%8E%A7%E5%88%B6%E5%99%A8"><span class="nav-number">2.1.</span> <span class="nav-text">流控制器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%BA%90%E3%80%81%E7%9B%AE%E6%A0%87%E5%92%8C%E4%BC%A0%E8%BE%93%E6%A8%A1%E5%BC%8F"><span class="nav-number">2.2.</span> <span class="nav-text">源、目标和传输模式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AD%98%E5%82%A8%E5%99%A8%E5%88%B0%E5%A4%96%E8%AE%BE%E6%A8%A1%E5%BC%8F"><span class="nav-number">2.2.1.</span> <span class="nav-text">存储器到外设模式</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#FIFO-%E6%A8%A1%E5%BC%8F"><span class="nav-number">2.2.1.1.</span> <span class="nav-text">FIFO 模式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%9B%B4%E8%BF%9E%E6%A8%A1%E5%BC%8F"><span class="nav-number">2.2.1.2.</span> <span class="nav-text">直连模式</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8F%A1%E6%89%8B%E6%8E%A5%E5%8F%A3"><span class="nav-number">2.3.</span> <span class="nav-text">握手接口</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#DEST-PER"><span class="nav-number">2.3.1.</span> <span class="nav-text">DEST_PER</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SRC-PER"><span class="nav-number">2.3.2.</span> <span class="nav-text">SRC_PER</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">liguang.zhang</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">159</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">37</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">131</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">liguang.zhang</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+<script src="/js/bookmark.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'dark',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'VrGRp2q7WwXjxsCNmlDIZYbC-gzGzoHsz',
+      appKey     : 'JgMXmmB7yKQf2zm80TaBp3JT',
+      placeholder: "Just go go",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : 'zh-cn' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

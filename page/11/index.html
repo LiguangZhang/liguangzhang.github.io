@@ -186,7 +186,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/arm64%20%E6%8C%87%E4%BB%A4debug/">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/jemalloc5%20%E8%84%9A%E6%9C%AC%E5%AE%9E%E7%8E%B0/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -200,7 +200,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/arm64%20%E6%8C%87%E4%BB%A4debug/" class="post-title-link" itemprop="url">arm gdb 调试</a>
+            <a href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/jemalloc5%20%E8%84%9A%E6%9C%AC%E5%AE%9E%E7%8E%B0/" class="post-title-link" itemprop="url">jemalloc5 脚本实现.md</a>
         </h2>
 
         <div class="post-meta">
@@ -217,7 +217,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-05-06 13:58:04" itemprop="dateModified" datetime="2024-05-06T13:58:04+08:00">2024-05-06</time>
+                <time title="修改时间：2024-04-16 18:02:56" itemprop="dateModified" datetime="2024-04-16T18:02:56+08:00">2024-04-16</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -238,8 +238,8 @@
       </span>
       <span class="post-meta-item-text">Valine：</span>
     
-    <a title="valine" href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/arm64%20%E6%8C%87%E4%BB%A4debug/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/arm64%20%E6%8C%87%E4%BB%A4debug/" itemprop="commentCount"></span>
+    <a title="valine" href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/jemalloc5%20%E8%84%9A%E6%9C%AC%E5%AE%9E%E7%8E%B0/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/jemalloc5%20%E8%84%9A%E6%9C%AC%E5%AE%9E%E7%8E%B0/" itemprop="commentCount"></span>
     </a>
   </span>
   
@@ -254,66 +254,24 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="1-arm64-寄存器和指令"><a href="#1-arm64-寄存器和指令" class="headerlink" title="1. arm64 寄存器和指令"></a>1. arm64 寄存器和指令</h1><h2 id="1-1-寄存器"><a href="#1-1-寄存器" class="headerlink" title="1.1. 寄存器"></a>1.1. 寄存器</h2><p>arm64 有34个寄存器, 包含31个通用寄存器, SP PC CPSR</p>
+          <h1 id="实现思路"><a href="#实现思路" class="headerlink" title="实现思路"></a>实现思路</h1><p>沿着内存dump的步骤</p>
+<h3 id="small-slab"><a href="#small-slab" class="headerlink" title="small slab"></a>small slab</h3><p>先忽略tcache的话, 需要关注的结构 <code>je_arenas</code>, <code>arena</code>, <code>bins</code> , <code>bin-&gt;slabcur</code>  <code>bin-&gt;slabs_nofull</code>, <code>bin-&gt;slabs_full</code>, <code>je_bin_infos</code> <code>extent_s</code></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">p je_arenas</span><br><span class="line">p (*(struct arena_s*)je_arenas[0])</span><br><span class="line">p (*(struct arena_s*)je_arenas[0]).bins</span><br><span class="line">p (*(struct arena_s*)je_arenas[0]).bins[0]  0-NSIZES</span><br><span class="line">p je_bin_infos</span><br><span class="line">p (*(struct arena_s*)je_arenas[0]).bins[0].slabcur</span><br><span class="line">p *(struct extent_s*)  [p (*(struct arena_s*)je_arenas[0]).bins[0].slabcur] #取slabcur 的slab</span><br><span class="line">p (*(struct arena_s*)je_arenas[0]).extents_dirty</span><br></pre></td></tr></table></figure>
+
 <blockquote>
-<p>寄存器中可以存地址, 也可以存值.</p>
+<p>extent 元信息中关于ind的信息?</p>
+<p>extent_szind_get</p>
+<p>(extent-&gt;e_bits &amp; EXTENT_BITS_SZIND_MASK) &gt;&gt; EXTENT_BITS_SZIND_SHIFT</p>
 </blockquote>
-<table>
-<thead>
-<tr>
-<th>寄存器</th>
-<th>位数</th>
-<th>描述</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>x0-x30</td>
-<td>64</td>
-<td>通用寄存器, 可以作 位使用: w0-w30 (访问寄存器的低位)</td>
-</tr>
-<tr>
-<td>x0-x7</td>
-<td>64</td>
-<td>用于子程序调用时参数传递(形参), x0 还用于返回值传递</td>
-</tr>
-<tr>
-<td>FP(x29)</td>
-<td>64</td>
-<td>当前栈帧的栈底 (android上 向上增长), 栈顶地址 &lt; 栈底</td>
-</tr>
-<tr>
-<td>LR(x30)</td>
-<td>64</td>
-<td>程序链接寄存器, 保存子程序结束后需要执行的下一条指令. <span style="color: green">即谁调用了当前函数.</span></td>
-</tr>
-<tr>
-<td>SP</td>
-<td>64</td>
-<td>保存栈指针, 使用SP&#x2F;WSP来进行对栈寄存器的访问</td>
-</tr>
-<tr>
-<td>PC</td>
-<td>64</td>
-<td>程序计数器, 俗称PC指针, 总是指向即将执行的下一条指令, 在arm64中, 软件不能修改pc寄存器</td>
-</tr>
-<tr>
-<td>CPSR</td>
-<td>64</td>
-<td>状态寄存器,    NZCV是状态寄存器的条件标志位，分别代表运算过程中产生的状态</td>
-</tr>
-</tbody></table>
-<blockquote>
-<p>我们可以根据FP和SP寄存器回溯函数调用过程，通过这两个值，我们可以知道函数的栈起始地址（也就是FP寄存器的值）， 以及栈顶（也就是SP寄存器的值）。得到了m函数的栈帧，就很容易从里面提取LR寄存器的值了（FP向下偏移8个字节即为LR），也就知道了谁调用了当前函数。以此类推，可以得到一个完整的函数调用链（一般回溯到 main函数或者线程入口函数就没必要继续了）。实际上，回溯过程中我们并不需要知道栈顶SP，只要FP就够了</p>
-</blockquote>
-<p><a target="_blank" rel="noopener" href="https://juejin.im/post/6844903923719864333">https://juejin.im/post/6844903923719864333</a></p>
-<h3 id="1-1-1-arm64-约定"><a href="#1-1-1-arm64-约定" class="headerlink" title="1.1.1. arm64 约定"></a>1.1.1. arm64 约定</h3><ul>
-<li><code>x0 ~ x7</code> 分别会存放方法的前 8 个参数；如果参数个数超过了8个，多余的参数会存在栈上，新方法会通过栈来读取。</li>
-<li>方法的返回值一般都在 <code>x0</code> 上；如果方法返回值是一个较大的数据结构时，结果会存在 <code>x8</code> 执行的地址上。</li>
-</ul>
-<h2 id="1-2-虚存地址与elf-段地虚址"><a href="#1-2-虚存地址与elf-段地虚址" class="headerlink" title="1.2. 虚存地址与elf 段地虚址"></a>1.2. 虚存地址与elf 段地虚址</h2>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">EXTENT_BITS_ARENA_WIDTH = <span class="number">12</span> ;</span><br><span class="line">EXTENT_BITS_ARENA_SHIFT =<span class="number">0</span>;</span><br><span class="line">EXTENT_BITS_ARENA_MASK =((((<span class="number">1</span> &lt;&lt; (<span class="number">12</span>)) - <span class="number">1</span>)) &lt;&lt; (<span class="number">0</span>));  <span class="comment">//4095 111111111111    fff</span></span><br><span class="line">EXTENT_BITS_SLAB_WIDTH =<span class="number">1</span>;</span><br><span class="line">EXTENT_BITS_SLAB_SHIFT =(<span class="number">12</span> + <span class="number">0</span>);</span><br><span class="line">EXTENT_BITS_SLAB_MASK =((((<span class="number">1</span> &lt;&lt; (<span class="number">1</span>)) - <span class="number">1</span>)) &lt;&lt; ((<span class="number">12</span> + <span class="number">0</span>))); <span class="comment">//4096 1000000000000     1000</span></span><br><span class="line">EXTENT_BITS_COMMITTED_WIDTH = <span class="number">1</span>;</span><br><span class="line">EXTENT_BITS_COMMITTED_SHIFT = (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>));</span><br><span class="line">EXTENT_BITS_COMMITTED_MASK =((((<span class="number">1</span> &lt;&lt; (<span class="number">1</span>)) - <span class="number">1</span>)) &lt;&lt; ((<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>)))); <span class="comment">//8192  10000000000000   2000</span></span><br><span class="line">EXTENT_BITS_DUMPABLE_WIDTH = <span class="number">1</span>;</span><br><span class="line">EXTENT_BITS_DUMPABLE_SHIFT = (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>))) ;</span><br><span class="line">EXTENT_BITS_DUMPABLE_MASK =((((<span class="number">1</span> &lt;&lt; (<span class="number">1</span>)) - <span class="number">1</span>)) &lt;&lt; ((<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>))))); <span class="comment">//16384 100000000000000 4000</span></span><br><span class="line">EXTENT_BITS_ZEROED_WIDTH =<span class="number">1</span>;</span><br><span class="line">EXTENT_BITS_ZEROED_SHIFT =(<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>))));  <span class="comment">//15   1111 f </span></span><br><span class="line">EXTENT_BITS_ZEROED_MASK = ((((<span class="number">1</span> &lt;&lt; (<span class="number">1</span>)) - <span class="number">1</span>)) &lt;&lt; ((<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>)))))); <span class="comment">//32768  1000000000000000 8000</span></span><br><span class="line">EXTENT_BITS_STATE_WIDTH = <span class="number">2</span>;</span><br><span class="line">EXTENT_BITS_STATE_SHIFT = (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>))))); <span class="comment">//16</span></span><br><span class="line">EXTENT_BITS_STATE_MASK =((((<span class="number">1</span> &lt;&lt; (<span class="number">2</span>)) - <span class="number">1</span>)) &lt;&lt; ((<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>))))))); <span class="comment">//196608  110000000000000000 30000</span></span><br><span class="line">EXTENT_BITS_SZIND_WIDTH =<span class="number">8</span>;</span><br><span class="line">EXTENT_BITS_SZIND_SHIFT =(<span class="number">2</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>))))));  <span class="comment">// 18 10010 12 </span></span><br><span class="line">EXTENT_BITS_SZIND_MASK =((((<span class="number">1</span> &lt;&lt; (<span class="number">8</span>)) - <span class="number">1</span>)) &lt;&lt; ((<span class="number">2</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>)))))))); <span class="comment">// 66846720 11111111000000000000000000 3FC0000</span></span><br><span class="line">EXTENT_BITS_NFREE_WIDTH =((<span class="number">12</span> - <span class="number">3</span>) + <span class="number">1</span>);    <span class="comment">//10 1010 a </span></span><br><span class="line">EXTENT_BITS_NFREE_SHIFT =(<span class="number">8</span> + (<span class="number">2</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>)))))));    <span class="comment">//26 11010 1a </span></span><br><span class="line">EXTENT_BITS_NFREE_MASK =((((<span class="number">1</span> &lt;&lt; (((<span class="number">12</span> - <span class="number">3</span>) + <span class="number">1</span>))) - <span class="number">1</span>)) &lt;&lt; ((<span class="number">8</span> + (<span class="number">2</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>)))))))));  <span class="comment">// 68652367872 111111111100000000000000000000000000 FFC000000 </span></span><br><span class="line">EXTENT_BITS_SN_SHIFT =(((<span class="number">12</span> - <span class="number">3</span>) + <span class="number">1</span>) + (<span class="number">8</span> + (<span class="number">2</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>)))))))); <span class="comment">// 36 100100 24</span></span><br><span class="line">EXTENT_BITS_SN_MASK =(<span class="number">18446744073709551615</span> &lt;&lt; (((<span class="number">12</span> - <span class="number">3</span>) + <span class="number">1</span>) + (<span class="number">8</span> + (<span class="number">2</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">1</span> + (<span class="number">12</span> + <span class="number">0</span>))))))))); <span class="comment">//  FFFFFFFFFFFFFFFF000000000 </span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">e_bits = <span class="number">29863505920</span></span><br><span class="line"><span class="number">11011110100000000001111000000000000</span></span><br></pre></td></tr></table></figure>
+
+<p>通过rtree 信息直接检索所有的extent</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">p je_extents_rtree.root #遍历R树 是一个1&lt;&lt;18 容量的数组, root是头指针</span><br><span class="line">p je_extents_rtree.root[x].child # 每一个都是1个 1&lt;&lt;18容量的数组, child是头指针, 需要遍历非0x0的有效数</span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">最后找出有效的叶子节点</span></span><br></pre></td></tr></table></figure>
           <!--noindex-->
             <div class="post-button">
-              <a class="btn" href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/arm64%20%E6%8C%87%E4%BB%A4debug/#more" rel="contents">
+              <a class="btn" href="/2020/07/18/%E7%A8%B3%E5%AE%9A%E6%80%A7/jemalloc5%20%E8%84%9A%E6%9C%AC%E5%AE%9E%E7%8E%B0/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
@@ -754,7 +712,7 @@
 <li><p>hidl 出错</p>
 <p>等待进一步调试，manifest是正常的，需要加log调试</p>
 <blockquote>
-<p>HidlServiceManagement: Waited one second for <a href="mailto:&#x61;&#110;&#100;&#x72;&#x6f;&#x69;&#100;&#x2e;&#104;&#97;&#114;&#x64;&#x77;&#x61;&#114;&#101;&#x2e;&#x6b;&#x65;&#121;&#109;&#x61;&#115;&#x74;&#x65;&#x72;&#x40;&#x34;&#46;&#48;">&#x61;&#110;&#100;&#x72;&#x6f;&#x69;&#100;&#x2e;&#104;&#97;&#114;&#x64;&#x77;&#x61;&#114;&#101;&#x2e;&#x6b;&#x65;&#121;&#109;&#x61;&#115;&#x74;&#x65;&#x72;&#x40;&#x34;&#46;&#48;</a>::IKeymasterDevice&#x2F;default</p>
+<p>HidlServiceManagement: Waited one second for <a href="mailto:&#97;&#110;&#x64;&#114;&#111;&#x69;&#x64;&#46;&#104;&#97;&#x72;&#100;&#x77;&#x61;&#x72;&#x65;&#x2e;&#x6b;&#101;&#121;&#109;&#97;&#115;&#x74;&#101;&#x72;&#64;&#x34;&#x2e;&#48;">&#97;&#110;&#x64;&#114;&#111;&#x69;&#x64;&#46;&#104;&#97;&#x72;&#100;&#x77;&#x61;&#x72;&#x65;&#x2e;&#x6b;&#101;&#121;&#109;&#97;&#115;&#x74;&#101;&#x72;&#64;&#x34;&#x2e;&#48;</a>::IKeymasterDevice&#x2F;default</p>
 </blockquote>
 <p>stop hwservicemanager后， 自动重启到recovery</p>
 <p>这个是vdc命令触发的，先关掉<code>reboot_into_recovery</code></p>
@@ -905,107 +863,6 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/11/12/OTA%E7%9B%B8%E5%85%B3/Q%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E8%B0%83%E7%A0%94/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2019/11/12/OTA%E7%9B%B8%E5%85%B3/Q%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E8%B0%83%E7%A0%94/" class="post-title-link" itemprop="url">Q动态分区调研</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2019-11-12 18:15:54" itemprop="dateCreated datePublished" datetime="2019-11-12T18:15:54+08:00">2019-11-12</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-16 15:22:45" itemprop="dateModified" datetime="2024-04-16T15:22:45+08:00">2024-04-16</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2019/11/12/OTA%E7%9B%B8%E5%85%B3/Q%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E8%B0%83%E7%A0%94/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2019/11/12/OTA%E7%9B%B8%E5%85%B3/Q%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E8%B0%83%E7%A0%94/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h1 id="1-Q动态分区调研"><a href="#1-Q动态分区调研" class="headerlink" title="1. Q动态分区调研"></a>1. Q动态分区调研</h1><h2 id="1-1-相关文档"><a href="#1-1-相关文档" class="headerlink" title="1.1. 相关文档"></a>1.1. 相关文档</h2><p> [Android Bootcamp 2019 - Dynamic Partitions in Q (go_android-dynamic-partitions-slides).pdf](..&#x2F;..&#x2F;..&#x2F;google_document&#x2F;Android Bootcamp 2019 - Dynamic Partitions in Q (go_android-dynamic-partitions-slides).pdf) </p>
-<p> <a href="../../../google_document/06._Dynamic_Partitions_-_LPC_Android_MC_v2.pdf">06.<em>Dynamic_Partitions</em>-_LPC_Android_MC_v2.pdf</a> </p>
-<h2 id="1-2-代码路径"><a href="#1-2-代码路径" class="headerlink" title="1.2. 代码路径"></a>1.2. 代码路径</h2><p>bootable&#x2F;recovery&#x2F;updater&#x2F; <a href="../../../../work_space/q9/bootable/recovery/updater/dynamic_partitions.cpp">dynamic_partitions.cpp</a> </p>
-<p>system&#x2F;core&#x2F;fs_mgr&#x2F; <a href="/home/mi/work_space/q9/system/core/fs_mgr/liblp">liblp</a></p>
-<p>system&#x2F;core&#x2F;fastboot&#x2F;device  <a href="/home/mi/work_space/q9/system/core/fastboot/device">fastbootd</a></p>
-<p>build&#x2F;core&#x2F;Makefile</p>
-<h2 id="1-3-宏配置"><a href="#1-3-宏配置" class="headerlink" title="1.3. 宏配置"></a>1.3. 宏配置</h2>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2019/11/12/OTA%E7%9B%B8%E5%85%B3/Q%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E8%B0%83%E7%A0%94/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/11/12/OTA%E7%9B%B8%E5%85%B3/AB%E8%B0%83%E8%AF%95%E7%AC%94%E8%AE%B0/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1084,6 +941,107 @@
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2019/11/12/OTA%E7%9B%B8%E5%85%B3/AB%E8%B0%83%E8%AF%95%E7%AC%94%E8%AE%B0/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2019/11/12/OTA%E7%9B%B8%E5%85%B3/Q%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E8%B0%83%E7%A0%94/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2019/11/12/OTA%E7%9B%B8%E5%85%B3/Q%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E8%B0%83%E7%A0%94/" class="post-title-link" itemprop="url">Q动态分区调研</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-11-12 18:15:54" itemprop="dateCreated datePublished" datetime="2019-11-12T18:15:54+08:00">2019-11-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-04-16 15:22:45" itemprop="dateModified" datetime="2024-04-16T15:22:45+08:00">2024-04-16</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2019/11/12/OTA%E7%9B%B8%E5%85%B3/Q%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E8%B0%83%E7%A0%94/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2019/11/12/OTA%E7%9B%B8%E5%85%B3/Q%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E8%B0%83%E7%A0%94/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="1-Q动态分区调研"><a href="#1-Q动态分区调研" class="headerlink" title="1. Q动态分区调研"></a>1. Q动态分区调研</h1><h2 id="1-1-相关文档"><a href="#1-1-相关文档" class="headerlink" title="1.1. 相关文档"></a>1.1. 相关文档</h2><p> [Android Bootcamp 2019 - Dynamic Partitions in Q (go_android-dynamic-partitions-slides).pdf](..&#x2F;..&#x2F;..&#x2F;google_document&#x2F;Android Bootcamp 2019 - Dynamic Partitions in Q (go_android-dynamic-partitions-slides).pdf) </p>
+<p> <a href="../../../google_document/06._Dynamic_Partitions_-_LPC_Android_MC_v2.pdf">06.<em>Dynamic_Partitions</em>-_LPC_Android_MC_v2.pdf</a> </p>
+<h2 id="1-2-代码路径"><a href="#1-2-代码路径" class="headerlink" title="1.2. 代码路径"></a>1.2. 代码路径</h2><p>bootable&#x2F;recovery&#x2F;updater&#x2F; <a href="../../../../work_space/q9/bootable/recovery/updater/dynamic_partitions.cpp">dynamic_partitions.cpp</a> </p>
+<p>system&#x2F;core&#x2F;fs_mgr&#x2F; <a href="/home/mi/work_space/q9/system/core/fs_mgr/liblp">liblp</a></p>
+<p>system&#x2F;core&#x2F;fastboot&#x2F;device  <a href="/home/mi/work_space/q9/system/core/fastboot/device">fastbootd</a></p>
+<p>build&#x2F;core&#x2F;Makefile</p>
+<h2 id="1-3-宏配置"><a href="#1-3-宏配置" class="headerlink" title="1.3. 宏配置"></a>1.3. 宏配置</h2>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2019/11/12/OTA%E7%9B%B8%E5%85%B3/Q%E5%8A%A8%E6%80%81%E5%88%86%E5%8C%BA%E8%B0%83%E7%A0%94/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
