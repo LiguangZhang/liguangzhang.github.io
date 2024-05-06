@@ -20,20 +20,22 @@
     var CONFIG = {"hostname":"liguangzhang.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":"valine","storage":true,"lazyload":false,"nav":{"valine":{"order":-1}},"activeClass":"valine"},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":true,"preload":true},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
   </script>
 
-  <meta name="description" content="Android 4.4（API 级别 19）引入了存储访问框架 (SAF)。它可以让用户方便的浏览、打开文档、图片和其它的文件。用户可以通过标准的用户界面来浏览文件、打开最近访问的文件。 SAF框架包含下面三个部分:  Document provider:  一种ContentProvider，DocumentsProvider的子类。Android平台内置了多个，例如Downloads，Imag">
+  <meta name="description" content="Android 4.4（API 级别 19）引入了存储访问框架 (SAF)。它可以让用户方便的浏览、打开文档、图片和其它的文件。用户可以通过标准的用户界面来浏览文件、打开最近访问的文件。 SAF框架包含下面三个部分:  Document provider:   一种ContentProvider，DocumentsProvider的子类。Android平台内置了多个，例如Downloads，Ima">
 <meta property="og:type" content="article">
 <meta property="og:title" content="SAF框架">
 <meta property="og:url" content="https://liguangzhang.github.io/2018/07/01/%E5%AD%98%E5%82%A8%E7%9B%B8%E5%85%B3/SAF%E6%A1%86%E6%9E%B6/index.html">
 <meta property="og:site_name" content="blog">
-<meta property="og:description" content="Android 4.4（API 级别 19）引入了存储访问框架 (SAF)。它可以让用户方便的浏览、打开文档、图片和其它的文件。用户可以通过标准的用户界面来浏览文件、打开最近访问的文件。 SAF框架包含下面三个部分:  Document provider:  一种ContentProvider，DocumentsProvider的子类。Android平台内置了多个，例如Downloads，Imag">
+<meta property="og:description" content="Android 4.4（API 级别 19）引入了存储访问框架 (SAF)。它可以让用户方便的浏览、打开文档、图片和其它的文件。用户可以通过标准的用户界面来浏览文件、打开最近访问的文件。 SAF框架包含下面三个部分:  Document provider:   一种ContentProvider，DocumentsProvider的子类。Android平台内置了多个，例如Downloads，Ima">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://liguangzhang.github.io/images/Adapter.jpg">
 <meta property="og:image" content="https://liguangzhang.github.io/images/DocumentUI.png">
 <meta property="article:published_time" content="2018-06-30T16:00:00.000Z">
-<meta property="article:modified_time" content="2024-04-15T09:59:59.471Z">
+<meta property="article:modified_time" content="2024-05-06T05:59:40.420Z">
 <meta property="article:author" content="liguang.zhang">
 <meta property="article:tag" content="Android">
 <meta property="article:tag" content="AndroidP">
+<meta property="article:tag" content="DocumentUI">
+<meta property="article:tag" content="ExternalStorageProvider">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://liguangzhang.github.io/images/Adapter.jpg">
 
@@ -226,7 +228,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-15 17:59:59" itemprop="dateModified" datetime="2024-04-15T17:59:59+08:00">2024-04-15</time>
+                <time title="修改时间：2024-05-06 13:59:40" itemprop="dateModified" datetime="2024-05-06T13:59:40+08:00">2024-05-06</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -235,14 +237,6 @@
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
                   <a href="/categories/SAF/" itemprop="url" rel="index"><span itemprop="name">SAF</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/SAF/DocumentUI/" itemprop="url" rel="index"><span itemprop="name">DocumentUI</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/SAF/DocumentUI/ExternalStorageProvider/" itemprop="url" rel="index"><span itemprop="name">ExternalStorageProvider</span></a>
                 </span>
             </span>
 
@@ -274,9 +268,16 @@
         <p>Android 4.4（API 级别 19）引入了存储访问框架 (SAF)。它可以让用户方便的浏览、打开文档、图片和其它<br>的文件。用户可以通过标准的用户界面来浏览文件、打开最近访问的文件。</p>
 <p>SAF框架包含下面三个部分:</p>
 <ul>
-<li><code>Document provider</code>:<br>  一种ContentProvider，DocumentsProvider的子类。Android平台内置了多个，例如Downloads，Images，Videos</li>
-<li><code>Client App</code>:<br>  应用端，调用<code>ACTION_OPEN_DOCUMENT</code>&#x2F;<code>ACTION_CREATE_DOCUMENT</code>，并且接收provider返回的文件</li>
-<li><code>Picker</code>:<br>  系统界面，允许用户访问所有满足应用端搜索条件的provider提供的文档。例如平台的<code>DocumentsUI</code></li>
+<li><p><code>Document provider</code>:</p>
+<p>  一种ContentProvider，DocumentsProvider的子类。Android平台内置了多个，例如Downloads，Images，Videos</p>
+</li>
+<li><p><code>Client App</code>:</p>
+<pre><code>  应用端，调用`ACTION_OPEN_DOCUMENT`/`ACTION_CREATE_DOCUMENT`，并且接收provider返回的文件
+</code></pre>
+</li>
+<li><p><code>Picker</code>:</p>
+<p>  系统界面，允许用户访问所有满足应用端搜索条件的provider提供的文档。例如平台的<code>DocumentsUI</code></p>
+</li>
 </ul>
 <p>SAF 提供的部分功能如下：</p>
 <ul>
@@ -323,7 +324,7 @@
 </ul>
 <ol>
 <li>client app 发起 startActivity请求</li>
-<li>跳转到ScopedAccessActivity的onCreate函数中<br>  a.先从保存的sharePreference中检查key为userId + “|” + packageName + “|” + uuid + “|” + directory的是否指定了<br>  <code>   PERMISSION_NEVER_ASK</code>, 该动作是在弹出对话框点击不允许时勾选的,如果是这种情况,直接退出,返回给clientapp的结果为cancel.<br>  b. 调用showFragment弹出对话框提示用户是否给予给定的volume+directory权限.<br>  c. 判断目录是否是<code>STANDARD_DIRECTORIES</code>, 不是返回deny</li>
+<li>跳转到ScopedAccessActivity的onCreate函数中<br> a.先从保存的sharePreference中检查key为userId + “|” + packageName + “|” + uuid + “|” + directory的是否指定了<br> <code>   PERMISSION_NEVER_ASK</code>, 该动作是在弹出对话框点击不允许时勾选的,如果是这种情况,直接退出,返回给clientapp的结果为cancel.<br> b. 调用showFragment弹出对话框提示用户是否给予给定的volume+directory权限.<br> c. 判断目录是否是<code>STANDARD_DIRECTORIES</code>, 不是返回deny</li>
 </ol>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String[] STANDARD_DIRECTORIES = &#123;</span><br><span class="line">        DIRECTORY_MUSIC,</span><br><span class="line">        DIRECTORY_PODCASTS,</span><br><span class="line">        DIRECTORY_RINGTONES,</span><br><span class="line">        DIRECTORY_ALARMS,</span><br><span class="line">        DIRECTORY_NOTIFICATIONS,</span><br><span class="line">        DIRECTORY_PICTURES,</span><br><span class="line">        DIRECTORY_MOVIES,</span><br><span class="line">        DIRECTORY_DOWNLOADS,</span><br><span class="line">        DIRECTORY_DCIM,</span><br><span class="line">        DIRECTORY_DOCUMENTS</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
 
@@ -334,7 +335,7 @@
 <p>return new File(path.replace(“&#x2F;storage&#x2F;“, “&#x2F;mnt&#x2F;media_rw&#x2F;“));</p>
 </blockquote>
 <pre><code>  e. 调用getUriPermission返回requestedUri, 通过检索AUTHORITY名获得对应的provider实例, 调用provider的		getDocIdForFileCreateNewDir方法
-   最终调用到ExternalStorageProvider的 `getDocIdForFileMaybeCreate`方法,返回对应volume的 rootId + &#39;:&#39; + path; 最终返回通过buildTreeDocumentUri构造完的uri
+ 最终调用到ExternalStorageProvider的 `getDocIdForFileMaybeCreate`方法,返回对应volume的 rootId + &#39;:&#39; + path; 最终返回通过buildTreeDocumentUri构造完的uri
 </code></pre>
 <blockquote>
 <p> rootid为fsuuid</p>
@@ -551,6 +552,8 @@
           <div class="post-tags">
               <a href="/tags/Android/" rel="tag"># Android</a>
               <a href="/tags/AndroidP/" rel="tag"># AndroidP</a>
+              <a href="/tags/DocumentUI/" rel="tag"># DocumentUI</a>
+              <a href="/tags/ExternalStorageProvider/" rel="tag"># ExternalStorageProvider</a>
           </div>
 
         
@@ -646,13 +649,13 @@
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">94</span>
+        <span class="site-state-item-count">37</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">110</span>
+        <span class="site-state-item-count">131</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>

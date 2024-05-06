@@ -28,9 +28,11 @@
 <meta property="og:description" content="优化cachecache文件系统损坏问题因文件系统损坏, 可能导致可用空间信息不准确, 或cache空间变成一半.开机加入强制check cache, 可以解决可用空间错误的问题. http:&#x2F;&#x2F;gerritlvs.pt.miui.com&#x2F;#&#x2F;c&#x2F;641165&#x2F; 原生方案没有强制check cache. 开机阶段对cache分区进行检查, 如果出现过异常关机的情况, 会对cache分区进行修复.">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2019-11-12T10:15:54.000Z">
-<meta property="article:modified_time" content="2024-04-16T07:15:56.163Z">
+<meta property="article:modified_time" content="2024-05-06T06:18:17.574Z">
 <meta property="article:author" content="liguang.zhang">
 <meta property="article:tag" content="Android">
+<meta property="article:tag" content="recovery">
+<meta property="article:tag" content="cache 分区">
 <meta name="twitter:card" content="summary">
 
 <link rel="canonical" href="https://liguangzhang.github.io/2019/11/12/OTA%E7%9B%B8%E5%85%B3/%E4%BC%98%E5%8C%96cache/">
@@ -222,7 +224,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-16 15:15:56" itemprop="dateModified" datetime="2024-04-16T15:15:56+08:00">2024-04-16</time>
+                <time title="修改时间：2024-05-06 14:18:17" itemprop="dateModified" datetime="2024-05-06T14:18:17+08:00">2024-05-06</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -231,14 +233,6 @@
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
                   <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Android/cache-%E5%88%86%E5%8C%BA/" itemprop="url" rel="index"><span itemprop="name">cache 分区</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Android/cache-%E5%88%86%E5%8C%BA/recovery/" itemprop="url" rel="index"><span itemprop="name">recovery</span></a>
                 </span>
             </span>
 
@@ -382,6 +376,8 @@
       <footer class="post-footer">
           <div class="post-tags">
               <a href="/tags/Android/" rel="tag"># Android</a>
+              <a href="/tags/recovery/" rel="tag"># recovery</a>
+              <a href="/tags/cache-%E5%88%86%E5%8C%BA/" rel="tag"># cache 分区</a>
           </div>
 
         
@@ -477,13 +473,13 @@
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">94</span>
+        <span class="site-state-item-count">37</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">110</span>
+        <span class="site-state-item-count">131</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>

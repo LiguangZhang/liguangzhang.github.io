@@ -32,9 +32,10 @@
 <meta property="og:image" content="https://liguangzhang.github.io/arm%20%E8%99%9A%E6%8B%9F%E5%8C%96%E4%B8%AD%E6%96%AD.md#riscv%20%E7%9B%B4%E9%80%9A%E5%9C%BA%E6%99%AF">
 <meta property="og:image" content="https://liguangzhang.github.io/attachments/Pasted%20image%2020230515151813.png">
 <meta property="article:published_time" content="2022-10-11T10:15:54.000Z">
-<meta property="article:modified_time" content="2024-04-16T06:06:51.125Z">
+<meta property="article:modified_time" content="2024-05-06T07:53:13.039Z">
 <meta property="article:author" content="liguang.zhang">
 <meta property="article:tag" content="riscv">
+<meta property="article:tag" content="中断">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://gitee.com/zhangliguang1/tuchuang/raw/master/img/20221124162340.png">
 
@@ -227,7 +228,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-16 14:06:51" itemprop="dateModified" datetime="2024-04-16T14:06:51+08:00">2024-04-16</time>
+                <time title="修改时间：2024-05-06 15:53:13" itemprop="dateModified" datetime="2024-05-06T15:53:13+08:00">2024-05-06</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -236,14 +237,6 @@
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
                   <a href="/categories/%E8%99%9A%E6%8B%9F%E5%8C%96/" itemprop="url" rel="index"><span itemprop="name">虚拟化</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E8%99%9A%E6%8B%9F%E5%8C%96/RISCV/" itemprop="url" rel="index"><span itemprop="name">RISCV</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E8%99%9A%E6%8B%9F%E5%8C%96/RISCV/%E4%B8%AD%E6%96%AD/" itemprop="url" rel="index"><span itemprop="name">中断</span></a>
                 </span>
             </span>
 
@@ -357,10 +350,12 @@
 <p>在设备直通场景(设置了hstatus.VGEIN时), 中断控制器需要判断给哪个vcpu, 导致的直接结果就是要设置hgeip 的哪个bit, 同时硬件应该将 hip.VSEIP 置为hgeip 与 hstatus.VGEIN 逻辑与 的结果. 而hip.SGEIP 置为 hgeip &amp; hgeie 逻辑与的结果.</p>
 <p>假如中断控制器要发给第三个vcpu, 就需要将hgeip 的第三个bit 置1</p>
 <ul>
-<li><p>情景1 : 假设物理cpu的状态 V&#x3D;1 mode 正在运行第二个vcpu, hstatus.VGEIN &#x3D; 2:<br>  此时因为正在运行的是第二个vcpu, hstatus.VGEIN&#x3D;2, 则hip.VSEIP &#x3D; 0, 而 hip.SGEIP 为 1, 因为vsip.SEIP-&gt;sip.SEIP &#x3D; hip.VSEIP, 此时vsip.SEIP 没有置位(此时假设只有外部中断, SSIP STIP 都是0), 此时硬件根据vsip penging为无信号, 而hip.SGEIP 有信号, 不能将中断委托给vcpu, 而应将中断给到 host os HS-mode的vmm.</p>
+<li><p>情景1 : 假设物理cpu的状态 V&#x3D;1 mode 正在运行第二个vcpu, hstatus.VGEIN &#x3D; 2:</p>
+<p>  此时因为正在运行的是第二个vcpu, hstatus.VGEIN&#x3D;2, 则hip.VSEIP &#x3D; 0, 而 hip.SGEIP 为 1, 因为vsip.SEIP-&gt;sip.SEIP &#x3D; hip.VSEIP, 此时vsip.SEIP 没有置位(此时假设只有外部中断, SSIP STIP 都是0), 此时硬件根据vsip penging为无信号, 而hip.SGEIP 有信号, 不能将中断委托给vcpu, 而应将中断给到 host os HS-mode的vmm.</p>
 <p>  从vcpu陷入到hypervisor vmm 后, vmm 需要check hip.SGEIP &amp; hie SGEIE(或hip&amp;hie), 有待处理的虚拟外部中断, 进而查hgeip, 查到是第三个vcpu的, 则切换到第三个vcpu 运行, 切换前将hstatus.VGEIN 设置为3. 此时vsip.SEIP &#x3D; hip.VSEIP 会被置1(hgeip 逻辑与 hstatus.VGEIN) , 第三个vcpu 陷入V&#x3D;1 mode, 处理虚拟外部中断. 如guest os kernel 将sie.SEIE 置过位, 则guest os 会处理external 中断(10号guest external中断会转换成9 号external 中断), guest os 需要查询中断控制器, 判断外部中断是谁的, 该由谁的中断处理函数处理. 处理完后将中断控制器的pending 清0(该操作导致中断控制器把hgeip清0), 返回到 hypervisor vmm 后, vsip.SEIP &#x3D; hip.VSEIP 也会因hgeip 而清0.</p>
 </li>
-<li><p>情景2: 假设物理cpu的状态 V&#x3D;0 mode, 处于host下<br>  中断由host os接收<br>  hypervisor vmm 需要check hip.SGEIP &amp; hie SGEIE (或hip&amp;hie), 有待处理的虚拟外部中断, 进而查hgeip, 查到是第三个vcpu的, 则切换到第三个vcpu 运行, 切换前将hstatus.VGEIN 设置为3. 此时vsip.SEIP &#x3D; hip.VSEIP 会被置1(hgeip 逻辑与 hstatus.VGEIN) , 第三个vcpu 陷入V&#x3D;1 mode, 处理虚拟外部中断. 如guest os kernel 将sie.SEIE 置过位, 则guest os 会处理external 中断(10号guest external中断会转换成9 号external 中断), guest os 需要查询中断控制器, 判断外部中断是谁的, 该由谁的中断处理函数处理. 处理完后将中断控制器的pending 清0(该操作导致中断控制器把hgeip清0), 返回到 hypervisor vmm 后, vsip.SEIP &#x3D; hip.VSEIP 也会因hgeip 而清0.</p>
+<li><p>情景2: 假设物理cpu的状态 V&#x3D;0 mode, 处于host下</p>
+<p>  中断由host os接收<br>  hypervisor vmm 需要check hip.SGEIP &amp; hie SGEIE (或hip&amp;hie), 有待处理的虚拟外部中断, 进而查hgeip, 查到是第三个vcpu的, 则切换到第三个vcpu 运行, 切换前将hstatus.VGEIN 设置为3. 此时vsip.SEIP &#x3D; hip.VSEIP 会被置1(hgeip 逻辑与 hstatus.VGEIN) , 第三个vcpu 陷入V&#x3D;1 mode, 处理虚拟外部中断. 如guest os kernel 将sie.SEIE 置过位, 则guest os 会处理external 中断(10号guest external中断会转换成9 号external 中断), guest os 需要查询中断控制器, 判断外部中断是谁的, 该由谁的中断处理函数处理. 处理完后将中断控制器的pending 清0(该操作导致中断控制器把hgeip清0), 返回到 hypervisor vmm 后, vsip.SEIP &#x3D; hip.VSEIP 也会因hgeip 而清0.</p>
 </li>
 <li><p>情景3: 假设物理cpu的状态 V&#x3D;1 mode 正在运行第三个vcpu, hstatus.VGEIN &#x3D; 3:<br>  hgeip 逻辑与 hstatus.VGEIN 不为0, hip.VSEIP 置1.<br>  因为vsip.SEIP-&gt;sip.SEIP &#x3D; hip.VSEIP, 此时vsip.SEIP 置位, 此时硬件根据vsip penging有信号, hip.SGEIP 有信号, 应将中断给到 vcpu guest os.<br>  vcpu处理虚拟外部中断. 如guest os kernel 将sie.SEIE 置过位, 则guest os 会处理external 中断(10号guest external中断会转换成9 号external 中断), guest os 需要查询中断控制器, 判断外部中断是谁的, 该由谁的中断处理函数处理. 处理完后将中断控制器的pending 清0(该操作导致中断控制器把hgeip清0), 返回到 hypervisor vmm 后, vsip.SEIP &#x3D; hip.VSEIP 也会因hgeip 而清0.</p>
 </li>
@@ -392,6 +387,7 @@
       <footer class="post-footer">
           <div class="post-tags">
               <a href="/tags/riscv/" rel="tag"># riscv</a>
+              <a href="/tags/%E4%B8%AD%E6%96%AD/" rel="tag"># 中断</a>
           </div>
 
         
@@ -487,13 +483,13 @@
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">94</span>
+        <span class="site-state-item-count">37</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">110</span>
+        <span class="site-state-item-count">131</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>

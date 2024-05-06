@@ -28,10 +28,12 @@
 <meta property="og:description" content="问题背景在使用最新版本 qemu (8.0) 搭配 linux kernel (5.19.16) 模拟出的 riscv 主机上, 使用 riscv 版本的 qemu 跑 kvm-mode 的 guest kernel 无法执行.现象为没有 host kernel 的 log, 没有 guest kernel 的 log 输出. 问题初步分析在 kvm_riscv_vcpu_enter_exit 处">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2023-09-11T10:15:54.000Z">
-<meta property="article:modified_time" content="2024-04-16T06:09:42.241Z">
+<meta property="article:modified_time" content="2024-05-06T06:12:34.713Z">
 <meta property="article:author" content="liguang.zhang">
 <meta property="article:tag" content="riscv">
+<meta property="article:tag" content="qemu">
 <meta property="article:tag" content="kvm">
+<meta property="article:tag" content="bug">
 <meta name="twitter:card" content="summary">
 
 <link rel="canonical" href="https://liguangzhang.github.io/2023/09/11/hxd_new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/riscv%20kvm%20timer%20bug%20%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90/">
@@ -223,7 +225,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-16 14:09:42" itemprop="dateModified" datetime="2024-04-16T14:09:42+08:00">2024-04-16</time>
+                <time title="修改时间：2024-05-06 14:12:34" itemprop="dateModified" datetime="2024-05-06T14:12:34+08:00">2024-05-06</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -232,18 +234,6 @@
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
                   <a href="/categories/%E8%99%9A%E6%8B%9F%E5%8C%96/" itemprop="url" rel="index"><span itemprop="name">虚拟化</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E8%99%9A%E6%8B%9F%E5%8C%96/RISCV/" itemprop="url" rel="index"><span itemprop="name">RISCV</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E8%99%9A%E6%8B%9F%E5%8C%96/RISCV/qemu/" itemprop="url" rel="index"><span itemprop="name">qemu</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E8%99%9A%E6%8B%9F%E5%8C%96/RISCV/qemu/bug/" itemprop="url" rel="index"><span itemprop="name">bug</span></a>
                 </span>
             </span>
 
@@ -324,12 +314,14 @@
 <p>而最新的 linux kvm 版本合入了 sstc 的 feature, 则需要考虑 guest kernel 的兼容性, 同时兼容老的 kernel (不支持 sstc) 和新的 kernel(支持 sstc)</p>
 <p>来看下对应的处理逻辑:</p>
 <ul>
-<li>模拟的 riscv 主机支持 sstc 时:<ol>
+<li><p>模拟的 riscv 主机支持 sstc 时:</p>
+<ol>
 <li>对于支持 sstc 的新的 guest kernel, 在 guest 运行后, 就不用管 guest 的 timer tick 了, 但是 guest 退出运行后, 处于 block 时, 仍然需要关注 guest 的 timer tick.</li>
 <li>对于不支持 sstc 的旧的 guest kernel, 需要处理 guest 发过来的 sbi SBI_EXT_0_1_SET_TIMER 消息. 但 guest 运行时, 也不需要通过主机定时器来处理 guest 的 timer tick. 因为 host 是支持 sstc 的, 只是 guest kernel 未检测 sstc 而已. 只要 kvm 在收到 sbi SBI_EXT_0_1_SET_TIMER 后直接设置 vstimecmp 就可以了, 这样时间到了后, 硬件会设置 VSTIP, guest 就可以处理 timer tick 中断走到 tick 处理函数了.</li>
 </ol>
 </li>
-<li>模拟的 riscv 主机不支持 sstc 时:<ol>
+<li><p>模拟的 riscv 主机不支持 sstc 时:</p>
+<ol>
 <li>退回到通过 host kvm 设置定时器来处理 guest 的 timer tick.</li>
 </ol>
 </li>
@@ -364,7 +356,9 @@
       <footer class="post-footer">
           <div class="post-tags">
               <a href="/tags/riscv/" rel="tag"># riscv</a>
+              <a href="/tags/qemu/" rel="tag"># qemu</a>
               <a href="/tags/kvm/" rel="tag"># kvm</a>
+              <a href="/tags/bug/" rel="tag"># bug</a>
           </div>
 
         
@@ -377,8 +371,8 @@
       <i class="fa fa-chevron-left"></i> riscv kvm 方案代码调研
     </a></div>
       <div class="post-nav-item">
-    <a href="/2023/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/riscv-qemu%E5%88%86%E6%9E%90/" rel="next" title="riscv-qemu arch 分析">
-      riscv-qemu arch 分析 <i class="fa fa-chevron-right"></i>
+    <a href="/2023/10/11/hxd_new/riscv%E8%B0%83%E7%A0%94/%E8%99%9A%E6%8B%9F%E5%8C%96/RISCV%20kvm%20qemu%20%E8%99%9A%E6%8B%9F%E5%8C%96%E8%B0%83%E7%A0%94/" rel="next" title="riscv kvm qemu 虚拟化调研">
+      riscv kvm qemu 虚拟化调研 <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
       </footer>
@@ -460,13 +454,13 @@
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">94</span>
+        <span class="site-state-item-count">37</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">110</span>
+        <span class="site-state-item-count">131</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>

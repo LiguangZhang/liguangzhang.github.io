@@ -926,119 +926,6 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2020/07/19/%E7%A8%B3%E5%AE%9A%E6%80%A7/jemalloc%E8%B0%83%E7%A0%94/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="liguang.zhang">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/07/19/%E7%A8%B3%E5%AE%9A%E6%80%A7/jemalloc%E8%B0%83%E7%A0%94/" class="post-title-link" itemprop="url">jemalloc调研</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-07-19 18:15:54" itemprop="dateCreated datePublished" datetime="2020-07-19T18:15:54+08:00">2020-07-19</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-05-06 11:05:11" itemprop="dateModified" datetime="2024-05-06T11:05:11+08:00">2024-05-06</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Android/%E7%A8%B3%E5%AE%9A%E6%80%A7/" itemprop="url" rel="index"><span itemprop="name">稳定性</span></a>
-                </span>
-            </span>
-
-          
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2020/07/19/%E7%A8%B3%E5%AE%9A%E6%80%A7/jemalloc%E8%B0%83%E7%A0%94/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2020/07/19/%E7%A8%B3%E5%AE%9A%E6%80%A7/jemalloc%E8%B0%83%E7%A0%94/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>jemalloc中提供的malloc函数叫做<code>je_malloc</code>, 释放的函数是<code>je_free</code>.</p>
-<h2 id="jemalloc基础知识"><a href="#jemalloc基础知识" class="headerlink" title="jemalloc基础知识"></a>jemalloc基础知识</h2><h3 id="size-class"><a href="#size-class" class="headerlink" title="size_class"></a>size_class</h3><p>每个 <code>size_class</code> 代表 jemalloc 分配的内存大小，共有 NSIZES（232）?个小类（如果用户申请的大小位于两个小类之间，会取较大的，比如申请14字节，位于8和16字节之间，按16字节分配），分为2大类：</p>
-<ul>
-<li><code>small_class</code>（<em>小内存</em>） : 对于64位机器来说，通常区间是 [8, 14kb]，常见的有 8, 16, 32, 48, 64, …, 2kb, 4kb, 8kb，注意为了减少内存碎片并不都是2的次幂，比如如果没有48字节，那当申请33字节时，分配64字节显然会造成约50%的外部碎片</li>
-<li><code>large_class</code>（<em>大内存</em>）: 对于64位机器来说，通常区间是 [16kb, 7EiB]，从 4 * page_size 开始，常见的比如 16kb, 32kb, …, 1mb, 2mb, 4mb等</li>
-<li><code>size_index</code> : size 位于 <code>size_class</code> 中的索引号，区间为 [0，231]?，比如8字节则为0，14字节（按16计算）为1，4kb字节为28，当 size 是 <code>small_class</code> 时，<code>size_index</code> 也称作 <code>binind</code></li>
-</ul>
-<h3 id="base"><a href="#base" class="headerlink" title="base"></a>base</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">base_s</span> &#123;</span></span><br><span class="line">	<span class="comment">/* Associated arena&#x27;s index within the arenas array. */</span></span><br><span class="line">	<span class="type">unsigned</span>	ind;</span><br><span class="line">	<span class="comment">/* User-configurable extent hook functions.  Points to an extent_hooks_t. */</span>  extent分配回收等相关的函数指针</span><br><span class="line">	<span class="type">atomic_p_t</span>	extent_hooks;</span><br><span class="line">    </span><br><span class="line">	<span class="comment">/* Protects base_alloc() and base_stats_get() operations. */</span></span><br><span class="line">	<span class="type">malloc_mutex_t</span>	mtx;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Using THP when true (metadata_thp auto mode). */</span></span><br><span class="line">	<span class="type">bool</span>		auto_thp_switched;</span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Most recent size class in the series of increasingly large base</span></span><br><span class="line"><span class="comment">	 * extents.  Logarithmic spacing between subsequent allocations ensures</span></span><br><span class="line"><span class="comment">	 * that the total number of distinct mappings remains small.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="type">pszind_t</span>	pind_last;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Serial number generation state. */</span>   下一个extent的sn号</span><br><span class="line">	<span class="type">size_t</span>		extent_sn_next;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Chain of all blocks associated with base. */</span> blocks链表</span><br><span class="line">	<span class="type">base_block_t</span>	*blocks;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Heap of extents that track unused trailing space within blocks. */</span> extent堆的root节点[NSIZES]</span><br><span class="line">	<span class="type">extent_heap_t</span>	avail[NSIZES];</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Stats, only maintained if config_stats. */</span>  统计信息相关</span><br><span class="line">	<span class="type">size_t</span>		allocated;</span><br><span class="line">	<span class="type">size_t</span>		resident;</span><br><span class="line">	<span class="type">size_t</span>		mapped;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* Embedded at the beginning of every block of base-managed virtual memory. */</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">base_block_s</span> <span class="title">base_block_t</span> &#123;</span></span><br><span class="line">	<span class="comment">/* Total size of block&#x27;s virtual memory mapping. */</span> </span><br><span class="line">	<span class="type">size_t</span>		size;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Next block in list of base&#x27;s blocks. */</span></span><br><span class="line">	<span class="type">base_block_t</span>	*next;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Tracks unused trailing space. */</span>  保存extent的元数据信息</span><br><span class="line">	<span class="type">extent_t</span>	extent;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-
-<p>用于分配 jemalloc <code>元数据内存</code>的结构</p>
-<ul>
-<li><code>base.blocks.extent</code> : 存放每个 <code>size_class</code> 的 <code>extent</code> 元数据</li>
-<li>base.blocks是一个链表, 通过其next可以找到当前<code>ind</code>维护的所有的extent元数据信息</li>
-</ul>
-<h3 id="bin"><a href="#bin" class="headerlink" title="bin"></a>bin</h3>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2020/07/19/%E7%A8%B3%E5%AE%9A%E6%80%A7/jemalloc%E8%B0%83%E7%A0%94/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2020/07/19/%E7%A8%B3%E5%AE%9A%E6%80%A7/scudo%E9%85%8D%E7%BD%AE/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1070,7 +957,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-16 18:00:41" itemprop="dateModified" datetime="2024-04-16T18:00:41+08:00">2024-04-16</time>
+                <time title="修改时间：2024-05-06 13:57:45" itemprop="dateModified" datetime="2024-05-06T13:57:45+08:00">2024-05-06</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1078,11 +965,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Android/%E7%A8%B3%E5%AE%9A%E6%80%A7/" itemprop="url" rel="index"><span itemprop="name">稳定性</span></a>
+                  <a href="/categories/%E7%A8%B3%E5%AE%9A%E6%80%A7/" itemprop="url" rel="index"><span itemprop="name">稳定性</span></a>
                 </span>
             </span>
 
@@ -1166,6 +1049,115 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2020/07/19/%E7%A8%B3%E5%AE%9A%E6%80%A7/jemalloc%E8%B0%83%E7%A0%94/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="liguang.zhang">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/07/19/%E7%A8%B3%E5%AE%9A%E6%80%A7/jemalloc%E8%B0%83%E7%A0%94/" class="post-title-link" itemprop="url">jemalloc调研</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-07-19 18:15:54" itemprop="dateCreated datePublished" datetime="2020-07-19T18:15:54+08:00">2020-07-19</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-05-06 13:57:23" itemprop="dateModified" datetime="2024-05-06T13:57:23+08:00">2024-05-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%A8%B3%E5%AE%9A%E6%80%A7/" itemprop="url" rel="index"><span itemprop="name">稳定性</span></a>
+                </span>
+            </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/07/19/%E7%A8%B3%E5%AE%9A%E6%80%A7/jemalloc%E8%B0%83%E7%A0%94/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2020/07/19/%E7%A8%B3%E5%AE%9A%E6%80%A7/jemalloc%E8%B0%83%E7%A0%94/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>jemalloc中提供的malloc函数叫做<code>je_malloc</code>, 释放的函数是<code>je_free</code>.</p>
+<h2 id="jemalloc基础知识"><a href="#jemalloc基础知识" class="headerlink" title="jemalloc基础知识"></a>jemalloc基础知识</h2><h3 id="size-class"><a href="#size-class" class="headerlink" title="size_class"></a>size_class</h3><p>每个 <code>size_class</code> 代表 jemalloc 分配的内存大小，共有 NSIZES（232）?个小类（如果用户申请的大小位于两个小类之间，会取较大的，比如申请14字节，位于8和16字节之间，按16字节分配），分为2大类：</p>
+<ul>
+<li><code>small_class</code>（<em>小内存</em>） : 对于64位机器来说，通常区间是 [8, 14kb]，常见的有 8, 16, 32, 48, 64, …, 2kb, 4kb, 8kb，注意为了减少内存碎片并不都是2的次幂，比如如果没有48字节，那当申请33字节时，分配64字节显然会造成约50%的外部碎片</li>
+<li><code>large_class</code>（<em>大内存</em>）: 对于64位机器来说，通常区间是 [16kb, 7EiB]，从 4 * page_size 开始，常见的比如 16kb, 32kb, …, 1mb, 2mb, 4mb等</li>
+<li><code>size_index</code> : size 位于 <code>size_class</code> 中的索引号，区间为 [0，231]?，比如8字节则为0，14字节（按16计算）为1，4kb字节为28，当 size 是 <code>small_class</code> 时，<code>size_index</code> 也称作 <code>binind</code></li>
+</ul>
+<h3 id="base"><a href="#base" class="headerlink" title="base"></a>base</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">base_s</span> &#123;</span></span><br><span class="line">	<span class="comment">/* Associated arena&#x27;s index within the arenas array. */</span></span><br><span class="line">	<span class="type">unsigned</span>	ind;</span><br><span class="line">	<span class="comment">/* User-configurable extent hook functions.  Points to an extent_hooks_t. */</span>  extent分配回收等相关的函数指针</span><br><span class="line">	<span class="type">atomic_p_t</span>	extent_hooks;</span><br><span class="line">    </span><br><span class="line">	<span class="comment">/* Protects base_alloc() and base_stats_get() operations. */</span></span><br><span class="line">	<span class="type">malloc_mutex_t</span>	mtx;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Using THP when true (metadata_thp auto mode). */</span></span><br><span class="line">	<span class="type">bool</span>		auto_thp_switched;</span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * Most recent size class in the series of increasingly large base</span></span><br><span class="line"><span class="comment">	 * extents.  Logarithmic spacing between subsequent allocations ensures</span></span><br><span class="line"><span class="comment">	 * that the total number of distinct mappings remains small.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="type">pszind_t</span>	pind_last;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Serial number generation state. */</span>   下一个extent的sn号</span><br><span class="line">	<span class="type">size_t</span>		extent_sn_next;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Chain of all blocks associated with base. */</span> blocks链表</span><br><span class="line">	<span class="type">base_block_t</span>	*blocks;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Heap of extents that track unused trailing space within blocks. */</span> extent堆的root节点[NSIZES]</span><br><span class="line">	<span class="type">extent_heap_t</span>	avail[NSIZES];</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Stats, only maintained if config_stats. */</span>  统计信息相关</span><br><span class="line">	<span class="type">size_t</span>		allocated;</span><br><span class="line">	<span class="type">size_t</span>		resident;</span><br><span class="line">	<span class="type">size_t</span>		mapped;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* Embedded at the beginning of every block of base-managed virtual memory. */</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">base_block_s</span> <span class="title">base_block_t</span> &#123;</span></span><br><span class="line">	<span class="comment">/* Total size of block&#x27;s virtual memory mapping. */</span> </span><br><span class="line">	<span class="type">size_t</span>		size;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Next block in list of base&#x27;s blocks. */</span></span><br><span class="line">	<span class="type">base_block_t</span>	*next;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Tracks unused trailing space. */</span>  保存extent的元数据信息</span><br><span class="line">	<span class="type">extent_t</span>	extent;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>用于分配 jemalloc <code>元数据内存</code>的结构</p>
+<ul>
+<li><code>base.blocks.extent</code> : 存放每个 <code>size_class</code> 的 <code>extent</code> 元数据</li>
+<li>base.blocks是一个链表, 通过其next可以找到当前<code>ind</code>维护的所有的extent元数据信息</li>
+</ul>
+<h3 id="bin"><a href="#bin" class="headerlink" title="bin"></a>bin</h3>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/07/19/%E7%A8%B3%E5%AE%9A%E6%80%A7/jemalloc%E8%B0%83%E7%A0%94/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://liguangzhang.github.io/2020/07/19/%E7%A8%B3%E5%AE%9A%E6%80%A7/sigev%20%E8%BF%BD%E8%B8%AA/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1197,7 +1189,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2024-04-16 17:55:43" itemprop="dateModified" datetime="2024-04-16T17:55:43+08:00">2024-04-16</time>
+                <time title="修改时间：2024-05-06 13:57:52" itemprop="dateModified" datetime="2024-05-06T13:57:52+08:00">2024-05-06</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -1205,11 +1197,7 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Android/%E7%A8%B3%E5%AE%9A%E6%80%A7/" itemprop="url" rel="index"><span itemprop="name">稳定性</span></a>
+                  <a href="/categories/%E7%A8%B3%E5%AE%9A%E6%80%A7/" itemprop="url" rel="index"><span itemprop="name">稳定性</span></a>
                 </span>
             </span>
 
@@ -1456,13 +1444,13 @@
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">94</span>
+        <span class="site-state-item-count">37</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">110</span>
+        <span class="site-state-item-count">131</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
